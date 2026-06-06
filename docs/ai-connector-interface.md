@@ -94,14 +94,24 @@ dojo connect ai ollama \
   --model qwen2.5:14b
 ```
 
-Command/harness:
+Command/harness, one-command-for-everything quick path:
 
 ```bash
+# Minimal: use this AI command as Dojo's default for all AI-assisted tasks.
 dojo connect ai command hermes \
-  --command "hermes chat -Q --source dojo --max-turns 8 --stdin" \
+  --command "hermes chat -Q --stdin" \
+  --default \
+  --output stdout-json-or-extract
+
+# Optional advanced: declare harness/tool capabilities if the command can use them.
+dojo connect ai command hermes \
+  --command "hermes chat -Q --stdin" \
+  --default \
   --output stdout-json-or-extract \
   --cap web=harness,code=harness,skills,files
 ```
+
+Known adapters should hide provider-specific housekeeping flags from users. For example, Hermes supports `--source TAG`, but that is a session/source tag for Hermes bookkeeping and analytics, not the system prompt. Dojo may add `--source dojo` internally for the built-in Hermes preset, but the user-facing quick command should not require users to know or pass it.
 
 Claude Code/Codex/OpenCode can use the same command connector pattern:
 
@@ -161,25 +171,28 @@ For command connectors, a single command may not fit every task. Users may want 
 Examples:
 
 ```bash
+# Quick path: one default command for every AI task.
 dojo connect ai command hermes \
-  --command "hermes chat -Q --source dojo --stdin" \
+  --command "hermes chat -Q --stdin" \
+  --default \
   --output stdout-json-or-extract
 
+# Optional advanced overrides for users who want task-specific behavior.
 # Use a cheaper/faster command for routine grading.
 dojo connect ai task set answer.grade_freeform hermes \
-  --command "hermes chat -Q --source dojo-grader --max-turns 2 --stdin" \
+  --command "hermes chat -Q --max-turns 2 --stdin" \
   --timeout 45
 
 # Use a tool-enabled longer agent run for researched generation.
 dojo connect ai task set exercise.generate_researched hermes \
-  --command "hermes chat -Q --source dojo-researcher --max-turns 10 --stdin" \
+  --command "hermes chat -Q --max-turns 10 --stdin" \
   --cap web=harness \
   --cap code=harness \
   --timeout 240
 
 # Use a repair-only tiny command for JSON cleanup.
 dojo connect ai task set json.repair hermes \
-  --command "hermes chat -Q --source dojo-json-repair --max-turns 1 --stdin" \
+  --command "hermes chat -Q --max-turns 1 --stdin" \
   --timeout 30
 ```
 
@@ -194,23 +207,23 @@ ai:
       kind: command_harness
       default_invocation:
         command: hermes
-        args: ["chat", "-Q", "--source", "dojo", "--stdin"]
+        args: ["chat", "-Q", "--stdin"]
         output_mode: stdout_json_extract
       task_invocations:
         answer.grade_freeform:
-          args: ["chat", "-Q", "--source", "dojo-grader", "--max-turns", "2", "--stdin"]
+          args: ["chat", "-Q", "--max-turns", "2", "--stdin"]
           timeout_seconds: 45
           capabilities_override:
             web: {supported: false}
             code_execution: {supported: false}
         exercise.generate_researched:
-          args: ["chat", "-Q", "--source", "dojo-researcher", "--max-turns", "10", "--stdin"]
+          args: ["chat", "-Q", "--max-turns", "10", "--stdin"]
           timeout_seconds: 240
           capabilities_override:
             web: {supported: true, owner: harness}
             code_execution: {supported: true, owner: harness}
         json.repair:
-          args: ["chat", "-Q", "--source", "dojo-json-repair", "--max-turns", "1", "--stdin"]
+          args: ["chat", "-Q", "--max-turns", "1", "--stdin"]
           timeout_seconds: 30
 ```
 
