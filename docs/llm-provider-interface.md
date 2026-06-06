@@ -875,6 +875,201 @@ dojo connect provider show hermes
 
 The product should make the safe path natural and the powerful path explicit.
 
+## Who owns web search and code execution?
+
+Because Dojo does not control every possible LLM or harness, it should not assume the model can call tools directly. Split tool access into two execution modes:
+
+```text
+Dojo-owned tools
+  Dojo fetches/searches/runs/verifies locally, then gives bounded results to the LLM.
+
+Harness-owned tools
+  A configured harness such as Hermes, Claude Code, Codex, OpenCode, or a custom command uses its own tools and returns structured results.
+```
+
+Dojo should prefer Dojo-owned tools for reproducible core workflows and allow harness-owned tools for broad research/planning/generation when the user explicitly configures a capable harness.
+
+### Mode A: Dojo-owned tools
+
+Dojo owns the web/code step, not the LLM. The LLM receives only the sanitized, bounded outputs.
+
+Example web flow:
+
+```text
+dojo source add https://example.com/article
+  -> Dojo fetches page/transcript/PDF
+  -> Dojo stores source metadata + extracted text + citation anchors
+  -> LLM generates candidates from those chunks
+  -> Dojo quality gate requires source ids/citations
+```
+
+Example code/verifier flow:
+
+```text
+LLM draft exercise
+  -> Dojo runs deterministic verifier/sandbox
+  -> verifier confirms answer/rubric or returns counterexample
+  -> LLM may repair draft using verifier feedback
+  -> Dojo stores accepted candidate with verifier metadata
+```
+
+Advantages:
+
+- reproducible;
+- easier to test;
+- works with dumb/raw LLM APIs;
+- better privacy/cost control;
+- easier citations and audit trails;
+- safer sandboxing.
+
+This should be the default for MVP.
+
+### Mode B: Harness-owned tools
+
+Dojo delegates a bounded task to an external harness that may have its own tools.
+
+Example:
+
+```text
+Dojo request: exercise.generate_researched
+  requirements: web=true, citations=true, output_schema=ExerciseDraft[]
+  provider: hermes
+
+Hermes does search/fetch/tool work
+  -> returns structured draft JSON with citations
+  -> Dojo validates schema, citations, quality, duplicates
+```
+
+Advantages:
+
+- reuses users' existing subscriptions/auth/tools/skills;
+- avoids rebuilding an agent system inside Dojo;
+- good for research-heavy or ambiguous tasks;
+- can use existing Hermes/Claude/Codex/OpenCode workflows.
+
+Risks:
+
+- weaker reproducibility;
+- cost/usage may be unknown;
+- tool behavior varies by harness;
+- JSON may need repair;
+- citations may be incomplete or low quality;
+- privacy depends on harness configuration.
+
+Mitigation: harness output is always a **proposal**. Dojo validates before storing or scheduling anything.
+
+### Adapter contract for tool-capable providers
+
+Tool-capable providers should declare not only that they have tools, but who controls those tools and what evidence comes back.
+
+```yaml
+providers:
+  hermes:
+    type: command
+    tool_execution_owner: harness
+    capabilities:
+      web:
+        supported: true
+        owner: harness
+        modes: [search, fetch]
+        citation_required: true
+      code_execution:
+        supported: true
+        owner: harness
+        sandbox: unknown
+      structured_output: prompt_only
+
+  builtin:
+    type: builtin
+    tool_execution_owner: dojo
+    capabilities:
+      web:
+        supported: true
+        owner: dojo
+        modes: [fetch]
+        citation_required: true
+      code_execution:
+        supported: true
+        owner: dojo
+        sandbox: python_subprocess_or_container
+        network: false
+        filesystem: temp_only
+```
+
+Each LLM task can specify an execution strategy:
+
+```yaml
+tasks:
+  exercise.generate_from_source:
+    tool_strategy: dojo_first
+    allow_harness_tools: false
+
+  exercise.generate_researched:
+    tool_strategy: dojo_first_then_harness
+    allow_harness_tools: true
+    require_citations: true
+
+  answer.grade_verifiable:
+    tool_strategy: dojo_only
+    allow_harness_tools: false
+    required_capabilities: [code_execution]
+
+  campaign.plan_researched:
+    tool_strategy: harness_allowed
+    allow_harness_tools: true
+    require_citations: true
+```
+
+### Tool strategies
+
+Use a small set of strategy names instead of ad hoc booleans:
+
+```text
+dojo_only
+  Only Dojo-owned fetchers/verifiers/sandboxes may run tools.
+  Best for grading, tests, deterministic verification, privacy-sensitive data.
+
+dojo_first
+  Dojo tries local deterministic tooling first; if enough context exists, no harness tools.
+  Best for source-derived generation.
+
+dojo_first_then_harness
+  Dojo gathers/fetches what it can, then asks a harness only if more research/reasoning is needed.
+  Best for researched generation with citations.
+
+harness_allowed
+  A configured harness may use its own tools, but output still requires schema/provenance validation.
+  Best for campaign planning, topic consolidation, exploratory research.
+
+harness_only
+  Rare. Use only when the user explicitly wants a specific harness workflow.
+```
+
+### Practical MVP path
+
+Implement the following sequence:
+
+1. **Dojo-owned source fetching/import** for files, text, URLs, PDFs, and transcripts where feasible.
+2. **Dojo-owned deterministic verifiers** for common exercise families: arithmetic, algebra, grid/path, multiple choice, exact text, simple code-output checks.
+3. **Restricted code sandbox** for verifiable generation/grading, with network off, temp filesystem, CPU/time/memory limits, and no access to Dojo config/secrets.
+4. **Command provider adapter** for harnesses. It sends a request file/prompt and parses stdout JSON.
+5. **Capability and policy checks** that decide whether a task can use Dojo tools, harness tools, or neither.
+6. **Provenance/usage records** for every tool-assisted LLM result: provider, owner, citations, verifier version, sandbox status, prompt/schema hashes.
+
+### Why not expose Dojo tools directly to every LLM?
+
+Some providers are raw chat APIs, some are local endpoints, some are command-line harnesses, and some have their own tool systems. A universal “LLM calls Dojo tools” layer would either become a full agent framework or degrade to the lowest common denominator.
+
+Better boundary:
+
+```text
+Dojo owns canonical operations and validation.
+Providers/harnesses own optional intelligence/tool work.
+Adapters translate between them.
+```
+
+If a future provider supports tool/function calling well, Dojo can add a tool-calling adapter later. That should be an optimization, not the required architecture.
+
 ## Structured output and repair
 
 All LLM tasks that affect state should have schemas. If provider lacks native schema support:
