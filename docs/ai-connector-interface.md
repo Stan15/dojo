@@ -43,6 +43,255 @@ Dojo TaskRequest
 
 The connector is not the source of truth. The connector is a worker that returns evidence-bearing artifacts.
 
+## User-facing connection model
+
+The user should connect an AI system through one simple command family:
+
+```bash
+dojo connect ai
+```
+
+The guided flow should ask what kind of AI the user has, test it, infer capabilities where possible, then let the user assign roles.
+
+```text
+What do you want to connect?
+  1. OpenAI / Anthropic / Gemini / hosted API
+  2. Local OpenAI-compatible endpoint
+  3. Ollama / LM Studio / llama.cpp / vLLM
+  4. Hermes / Claude Code / Codex / OpenCode / other CLI harness
+  5. Custom command
+  6. No LLM for now
+```
+
+The output of connection is a saved connector descriptor plus optional role assignments. The user should not need to understand the whole artifact/capability model during onboarding; advanced users can inspect or edit it later.
+
+### Common setup commands
+
+Hosted provider:
+
+```bash
+dojo connect ai openai \
+  --api-key env:OPENAI_API_KEY \
+  --model gpt-4.1
+
+# or guided
+dojo connect ai --guided
+```
+
+Local OpenAI-compatible endpoint:
+
+```bash
+dojo connect ai openai-compatible local \
+  --base-url http://localhost:11434/v1 \
+  --model qwen2.5:14b \
+  --local-only
+```
+
+Ollama convenience path:
+
+```bash
+dojo connect ai ollama \
+  --model qwen2.5:14b
+```
+
+Command/harness:
+
+```bash
+dojo connect ai command hermes \
+  --command "hermes chat -Q --source dojo --max-turns 8 --stdin" \
+  --output stdout-json-or-extract \
+  --cap web=harness,code=harness,skills,files
+```
+
+Claude Code/Codex/OpenCode can use the same command connector pattern:
+
+```bash
+dojo connect ai command claude-code \
+  --command "claude -p" \
+  --output stdout-json-or-extract
+
+dojo connect ai command codex \
+  --command "codex exec" \
+  --output stdout-json-or-extract
+```
+
+Custom command with request-file input:
+
+```bash
+dojo connect ai command my-llm \
+  --command "/usr/local/bin/my-llm --input {request_json}" \
+  --input request-json-file \
+  --output stdout-json
+```
+
+### Role assignment
+
+After a connector is added, Dojo should ask what to use it for.
+
+```text
+Use connector "hermes" for:
+  [ ] default fallback
+  [x] exercise generation
+  [ ] live grading
+  [x] researched campaign planning
+  [x] source/topic research
+  [ ] JSON repair
+```
+
+Equivalent commands:
+
+```bash
+dojo connect ai role set writer hermes
+dojo connect ai role set researcher hermes
+dojo connect ai role set planner hermes
+dojo connect ai role set grader local_openai
+dojo connect ai role list
+```
+
+Roles should be task-level defaults, not hard dependencies. A command can still override:
+
+```bash
+dojo admin generate run --provider hermes
+dojo answer "..." --grader local_openai
+dojo campaign create "Improve memory" --planner hermes
+```
+
+### Capability testing
+
+Connection should include tests that produce a capability report.
+
+```bash
+dojo connect ai test hermes
+```
+
+Test categories:
+
+```text
+basic_chat           can produce a response
+structured_output    can return or be parsed into JSON
+schema_following     can satisfy a small schema
+latency              approximate response time
+usage_reporting      token/cost metadata available or unknown
+web                  can cite a fetched/search result, if declared
+code                 can solve or run a tiny verifier, if declared
+privacy              local-only or remote/unknown
+```
+
+Dojo should store results as observations, not absolute truth. Harness capabilities can change with user config.
+
+Example report:
+
+```text
+Connector: hermes
+Kind: command_harness
+Status: available
+
+Capabilities:
+  chat: yes
+  structured output: prompt-only, parseable in test
+  web: declared harness-owned, citation test passed
+  code execution: declared harness-owned, sandbox unknown
+  prompt cache: unknown
+  usage/cost reporting: unknown
+  local-only: no
+
+Recommended roles:
+  writer: yes
+  researcher: yes
+  planner: yes
+  live grader: no, unless latency is acceptable
+```
+
+### Privacy and cost prompts
+
+For remote or opaque connectors, setup should ask a small number of high-value questions:
+
+```text
+May Dojo send source excerpts to this connector? [y/N]
+May Dojo send raw answers for grading? [y/N]
+Daily budget for this connector? [$0.50]
+Use this connector for live grading? [y/N]
+```
+
+Equivalent config should be editable:
+
+```bash
+dojo connect ai policy set hermes --allow-source-text false
+dojo connect ai policy set anthropic --allow-raw-answers true --daily-budget 1.00
+dojo connect ai policy show hermes
+```
+
+### Generated config shape
+
+The guided flow should write a config like:
+
+```yaml
+ai:
+  connectors:
+    hermes:
+      kind: command_harness
+      command: hermes
+      args: ["chat", "-Q", "--source", "dojo", "--max-turns", "8", "--stdin"]
+      input_modes: [stdin, request_file]
+      output_modes: [stdout_json_extract]
+      capabilities:
+        chat: true
+        structured_output:
+          mode: prompt_only
+        web:
+          supported: true
+          owner: harness
+          citation_evidence: required_by_prompt
+        code_execution:
+          supported: true
+          owner: harness
+          sandbox: unknown
+        usage_reporting: unknown
+      policy:
+        allow_source_text: false
+        allow_raw_answers: false
+        allow_harness_tools: true
+        max_cost_usd_per_day: null
+
+  roles:
+    writer: hermes
+    researcher: hermes
+    planner: hermes
+    grader: local_openai
+```
+
+### Non-interactive setup
+
+Everything the guided flow does should have a non-interactive form:
+
+```bash
+dojo connect ai command hermes \
+  --command "hermes chat -Q --source dojo --max-turns 8 --stdin" \
+  --cap web=harness \
+  --cap code=harness \
+  --role writer \
+  --role researcher \
+  --allow-harness-tools \
+  --no-source-text \
+  --test
+```
+
+In `--json` or `--no-input` mode, missing required settings should fail with structured guidance rather than prompting.
+
+### User mental model
+
+For the user, setup should feel like:
+
+```text
+1. Choose what AI system you already use.
+2. Tell Dojo how to call it.
+3. Dojo tests what it can do.
+4. Pick what jobs it should handle.
+5. Set privacy/cost boundaries.
+```
+
+The internal connector model remains rich, but the onboarding flow stays small.
+
 ## Connector types
 
 ### Raw chat/API connector
