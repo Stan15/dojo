@@ -2,7 +2,7 @@
 
 Practice what you're learning.
 
-Dojo is a planned standalone, local-first source-to-practice app. It turns trusted material — notes, articles, videos, papers, conversations, projects — into active recall, spaced practice, and retention/atrophy feedback.
+Dojo is a planned standalone, local-first source-to-practice app. It turns trusted material — notes, articles, videos, papers, conversations, projects — into active recall, spaced practice, and retention/atrophy feedback, guided by what the user actually cares to retain about the topic at hand.
 
 This repository is the fresh productionized version of the earlier Cognitive Dojo prototype. The initial purpose of this repo is to define the clean product/API/CLI surface before implementation accretes around prototype-specific assumptions.
 

@@ -707,6 +707,174 @@ Future: Dojo may expose its own MCP server and may call external MCP tools throu
 
 Dojo core should not need to implement a full MCP client for MVP. Harnesses such as Hermes can supply tool access first.
 
+## Tool access for generation and grading
+
+Exercise generation and grading sometimes need web access or code execution, but they should not receive those powers by default. Treat tools as **task-scoped capabilities** that the router can grant only when the task, policy, provider, and privacy constraints justify them.
+
+### When exercise generation needs web access
+
+Web access is useful when Dojo is asked to generate practice from an external/current topic that is not already supplied as source text, for example:
+
+- “make me exercises about this current news/science topic”;
+- “research reputable basics before creating a campaign”;
+- “generate questions from a URL where the source text has not already been imported”;
+- “verify terminology or factual claims before generating source-grounded exercises.”
+
+Prefer the safer source-first path when possible:
+
+```text
+source URL/file/user text
+  -> deterministic fetch/import/extract with provenance
+  -> LLM generates from bounded source chunks
+```
+
+Use open web research as a higher-permission path:
+
+```text
+topic/goal
+  -> web-capable provider/harness gathers sources
+  -> Dojo stores source provenance/citations
+  -> generator creates candidates from cited snippets
+  -> local quality gate checks provenance and duplication
+```
+
+Generated exercises that depend on web research must include citations/source ids. Do not allow “I researched it” as provenance.
+
+### When exercise generation needs code execution
+
+Code execution is useful for:
+
+- generating math/science/computing exercises with verified answers;
+- checking shortest paths, combinatorics, statistics, algebra, simulations, or data transformations;
+- producing randomized variants with deterministic seeds;
+- validating that a proposed answer/rubric is internally consistent;
+- creating code-reading/debugging/programming exercises.
+
+Prefer sandboxed deterministic validators over arbitrary agent code whenever possible:
+
+```text
+LLM proposes draft + expected answer
+  -> local verifier recomputes answer/checks constraints
+  -> reject or repair if inconsistent
+```
+
+The LLM should not need unrestricted shell access for most generation. It needs access to a **verifier tool** or a restricted code sandbox.
+
+### When grading needs web access
+
+Grading should almost never browse the web during a live session. The correct answer/rubric should already be attached to the exercise. Web access may be appropriate only for:
+
+- asynchronous audit/regrade of source-derived free-form answers where source provenance is missing or disputed;
+- fact-checking a current-events answer after the session;
+- improving a bad rubric/candidate, not scoring the user in the hot path.
+
+Live grading should be fast, reproducible, and based on stored prompt/rubric/source context.
+
+### When grading needs code execution
+
+Code execution is more useful for grading than web access, especially for:
+
+- math exactness and symbolic equivalence;
+- program-output exercises;
+- small algorithmic tasks;
+- path/grid verification;
+- numerical tolerance checks;
+- property-based tests for code answers.
+
+Recommended flow:
+
+```text
+answer received
+  -> deterministic parser/scorer if available
+  -> sandboxed evaluator if the item declares one
+  -> LLM rubric grader only for subjective/free-form dimensions
+  -> normalized grade + confidence + provenance
+```
+
+For programming exercises, use per-exercise test specs in a locked-down sandbox. Store test version, timeout, stdout/stderr summary, and pass/fail details.
+
+### Capability declaration
+
+Providers and harnesses should expose tool capabilities separately instead of one vague `tools: true` flag:
+
+```yaml
+capabilities:
+  chat: true
+  structured_output: json_schema
+  system_prompt: true
+  web:
+    supported: true
+    modes: [search, fetch]
+    citation_required: true
+  code_execution:
+    supported: true
+    sandbox: python
+    network: false
+    filesystem: temp_only
+    timeout_seconds: 5
+  file_context: true
+  skills: true
+  can_run_agent_loop: true
+```
+
+Task requirements should be equally explicit:
+
+```yaml
+tasks:
+  exercise.generate:
+    role: writer
+    allow_tools: false
+    optional_capabilities: [code_execution]
+    require_citations_if_web_used: true
+
+  exercise.generate_researched:
+    role: researcher
+    allow_tools: true
+    required_capabilities: [web]
+    optional_capabilities: [code_execution]
+    require_citations_if_web_used: true
+
+  answer.grade_freeform:
+    role: grader
+    allow_tools: false
+    optional_capabilities: []
+
+  answer.grade_verifiable:
+    role: grader
+    allow_tools: true
+    required_capabilities: [code_execution]
+    allow_web: false
+```
+
+### Permission model
+
+Use least privilege:
+
+- default generation: no web, no arbitrary code;
+- source-derived generation: no web if source text is already imported;
+- researched generation/campaign planning: web allowed, citations required;
+- answer grading: no web in the live path;
+- verifiable grading: sandboxed code allowed only through declared scorer/verifier;
+- agent harnesses: allowed for broad research/planning, but outputs still pass Dojo validation gates.
+
+CLI examples:
+
+```bash
+dojo admin generate run --topic chemistry.batteries --provider local_openai
+
+dojo admin generate run --topic physics.relativity \
+  --provider hermes \
+  --allow-web \
+  --require-citations
+
+dojo answer "N1 E3 N1 E1 N2" \
+  --use-verifier path_grid
+
+dojo connect provider show hermes
+```
+
+The product should make the safe path natural and the powerful path explicit.
+
 ## Structured output and repair
 
 All LLM tasks that affect state should have schemas. If provider lacks native schema support:
