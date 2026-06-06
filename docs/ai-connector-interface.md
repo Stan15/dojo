@@ -45,158 +45,148 @@ The connector is not the source of truth. The connector is a worker that returns
 
 ## User-facing connection model
 
-The user should connect an AI system through one simple command family:
+MVP scope: **command connectors only**. Hosted APIs, OpenAI-compatible endpoints, Ollama, MCP, and direct SDK integrations can all be wrapped by commands for now. Dojo should not create first-class provider integrations until real usage proves that command wrapping is too painful for a specific class.
+
+The minimal command family is:
 
 ```bash
-dojo connect ai
+dojo ai add <name> -- <command...>
+dojo ai use <name>
+dojo ai test [name]
+dojo ai list
+dojo ai show <name>
+dojo ai remove <name>
 ```
 
-The guided flow should ask what kind of AI the user has, test it, infer capabilities where possible, then let the user assign roles.
+### Minimal quick path
+
+A user should be able to configure one AI command for every AI-assisted task with one command:
+
+```bash
+dojo ai add hermes --default -- hermes chat -Q --stdin
+```
+
+That writes one connector and makes it the global default. Dojo builds a typed TaskRequest internally, renders it into a plain-text prompt by default, sends that prompt to the command on stdin, then accepts useful text or parseable JSON on stdout. Commands that want the raw JSON envelope can opt into `stdin-json` or `request-json-file`.
+
+Equivalent explicit form:
+
+```bash
+dojo ai add hermes \
+  --default \
+  --input stdin-prompt \
+  --output stdout-json-or-text \
+  --timeout 120 \
+  -- hermes chat -Q --stdin
+```
+
+### Command separator rule
+
+Everything after `--` is the external command and its arguments. This avoids shell-quoting ambiguity and keeps the Dojo CLI small:
+
+```bash
+dojo ai add codex --default -- codex exec
+dojo ai add claude --default -- claude -p
+dojo ai add custom --default -- /usr/local/bin/my-llm --input -
+```
+
+If users need shell features such as pipes, redirection, aliases, or environment setup, they should create a wrapper script and point Dojo at it:
+
+```bash
+dojo ai add my-wrapper --default -- ~/.local/bin/dojo-ai-wrapper
+```
+
+### Built-in command presets are optional sugar
+
+Dojo may provide a few presets, but they should compile down to the same command descriptor rather than becoming separate connector implementations:
+
+```bash
+dojo ai preset hermes --default
+# expands to roughly: dojo ai add hermes --default -- hermes chat -Q --stdin
+
+dojo ai preset claude --default
+# expands to roughly: dojo ai add claude --default -- claude -p
+
+dojo ai preset codex --default
+# expands to roughly: dojo ai add codex --default -- codex exec
+```
+
+Known presets may hide provider-specific housekeeping flags. For example, Hermes supports `--source TAG`, but that is a session/source tag for Hermes bookkeeping, not the system prompt. Dojo may add `--source dojo` internally for a Hermes preset, but the user-facing command should not require users to know or pass it.
+
+This is not the same as hand-coding each provider's full behavior. The MVP should have **one generic command adapter** plus small preset definitions that only provide default command arguments, input/output defaults, and test prompts.
+
+### Custom command with request-file input
+
+Some commands do not read stdin well. The minimal surface supports a request file placeholder:
+
+```bash
+dojo ai add my-llm \
+  --input request-json-file \
+  --output stdout-json \
+  -- /usr/local/bin/my-llm --input {request_json}
+```
+
+Placeholders allowed in command args:
 
 ```text
-What do you want to connect?
-  1. OpenAI / Anthropic / Gemini / hosted API
-  2. Local OpenAI-compatible endpoint
-  3. Ollama / LM Studio / llama.cpp / vLLM
-  4. Hermes / Claude Code / Codex / OpenCode / other CLI harness
-  5. Custom command
-  6. No LLM for now
+{request_json}   path to the full TaskRequest JSON file
+{prompt_txt}     path to a rendered plain-text prompt file
+{output_json}    path where the command should write ConnectorResult JSON, if using file output
 ```
 
-The output of connection is a saved connector descriptor plus optional role assignments. The user should not need to understand the whole artifact/capability model during onboarding; advanced users can inspect or edit it later.
-
-### Common setup commands
-
-Hosted provider:
+### Minimal management commands
 
 ```bash
-dojo connect ai openai \
-  --api-key env:OPENAI_API_KEY \
-  --model gpt-4.1
+# List configured commands and defaults.
+dojo ai list
 
-# or guided
-dojo connect ai --guided
-```
+# Inspect saved command, policy, capabilities, and last test result.
+dojo ai show hermes
 
-Local OpenAI-compatible endpoint:
+# Set the global default connector.
+dojo ai use hermes
 
-```bash
-dojo connect ai openai-compatible local \
-  --base-url http://localhost:11434/v1 \
-  --model qwen2.5:14b \
-  --local-only
-```
+# Remove a connector.
+dojo ai remove hermes
 
-Ollama convenience path:
+# Run smoke tests against the connector.
+dojo ai test hermes
 
-```bash
-dojo connect ai ollama \
-  --model qwen2.5:14b
-```
-
-Command/harness, one-command-for-everything quick path:
-
-```bash
-# Minimal: use this AI command as Dojo's default for all AI-assisted tasks.
-dojo connect ai command hermes \
-  --command "hermes chat -Q --stdin" \
-  --default \
-  --output stdout-json-or-extract
-
-# Optional advanced: declare harness/tool capabilities if the command can use them.
-dojo connect ai command hermes \
-  --command "hermes chat -Q --stdin" \
-  --default \
-  --output stdout-json-or-extract \
-  --cap web=harness,code=harness,skills,files
-```
-
-Known adapters should hide provider-specific housekeeping flags from users. For example, Hermes supports `--source TAG`, but that is a session/source tag for Hermes bookkeeping and analytics, not the system prompt. Dojo may add `--source dojo` internally for the built-in Hermes preset, but the user-facing quick command should not require users to know or pass it.
-
-Claude Code/Codex/OpenCode can use the same command connector pattern:
-
-```bash
-dojo connect ai command claude-code \
-  --command "claude -p" \
-  --output stdout-json-or-extract
-
-dojo connect ai command codex \
-  --command "codex exec" \
-  --output stdout-json-or-extract
-```
-
-Custom command with request-file input:
-
-```bash
-dojo connect ai command my-llm \
-  --command "/usr/local/bin/my-llm --input {request_json}" \
-  --input request-json-file \
-  --output stdout-json
+# Print the exact request Dojo would send for a task without invoking AI.
+dojo ai request exercise.generate --dry-run --json
 ```
 
 ### Role assignment and per-task commands
 
-After a connector is added, Dojo should ask what to use it for.
-
-```text
-Use connector "hermes" for:
-  [ ] default fallback
-  [x] exercise generation
-  [ ] live grading
-  [x] researched campaign planning
-  [x] source/topic research
-  [ ] JSON repair
-```
-
-Equivalent commands:
+The MVP does not need many user-facing roles. Start with one default connector, then allow optional task-specific overrides only when users need them.
 
 ```bash
-dojo connect ai role set writer hermes
-dojo connect ai role set researcher hermes
-dojo connect ai role set planner hermes
-dojo connect ai role set grader local_openai
-dojo connect ai role list
+# One default connector for all AI tasks.
+dojo ai add hermes --default -- hermes chat -Q --stdin
+
+# Optional: set an existing connector as the default for one task family.
+dojo ai task set answer.grade_freeform --connector hermes
+
+# Optional: override the actual command for one task family.
+dojo ai task set answer.grade_freeform \
+  --connector hermes \
+  --timeout 45 \
+  -- hermes chat -Q --max-turns 2 --stdin
+
+# Optional: list or clear overrides.
+dojo ai task list
+dojo ai task show answer.grade_freeform
+dojo ai task clear answer.grade_freeform
 ```
 
-Roles should be task-level defaults, not hard dependencies. A command can still override:
+Task overrides are invocation profiles under the same connector. This avoids creating fake separate providers such as `hermes_grader`, `hermes_researcher`, and `hermes_repair` unless the user wants that.
+
+Keep role aliases as a later convenience, not as MVP surface. If added, they should map to task groups internally:
 
 ```bash
-dojo admin generate run --provider hermes
-dojo answer "..." --grader local_openai
-dojo campaign create "Improve memory" --planner hermes
+dojo ai role set grader hermes     # optional future sugar for answer.* tasks
+dojo ai role set writer hermes     # optional future sugar for exercise.* tasks
+dojo ai role list
 ```
-
-For command connectors, a single command may not fit every task. Users may want different command lines, flags, models, prompts, tool permissions, working directories, or harness modes depending on the task. The connector model should therefore support **task bindings**: one logical connector can expose multiple task-specific invocations.
-
-Examples:
-
-```bash
-# Quick path: one default command for every AI task.
-dojo connect ai command hermes \
-  --command "hermes chat -Q --stdin" \
-  --default \
-  --output stdout-json-or-extract
-
-# Optional advanced overrides for users who want task-specific behavior.
-# Use a cheaper/faster command for routine grading.
-dojo connect ai task set answer.grade_freeform hermes \
-  --command "hermes chat -Q --max-turns 2 --stdin" \
-  --timeout 45
-
-# Use a tool-enabled longer agent run for researched generation.
-dojo connect ai task set exercise.generate_researched hermes \
-  --command "hermes chat -Q --max-turns 10 --stdin" \
-  --cap web=harness \
-  --cap code=harness \
-  --timeout 240
-
-# Use a repair-only tiny command for JSON cleanup.
-dojo connect ai task set json.repair hermes \
-  --command "hermes chat -Q --max-turns 1 --stdin" \
-  --timeout 30
-```
-
-This avoids creating fake separate providers such as `hermes_grader`, `hermes_researcher`, and `hermes_repair` unless the user wants that. Internally those are invocation profiles under one connector.
 
 Suggested config shape:
 
@@ -230,10 +220,9 @@ ai:
 Resolution order:
 
 ```text
-explicit command flag
-  -> task-specific connector invocation
-  -> role connector default invocation
-  -> global default connector
+explicit per-call connector flag
+  -> task-specific invocation override
+  -> global default command connector
   -> deterministic fallback / safe failure
 ```
 
@@ -250,7 +239,7 @@ role = which connector/invocation is preferred for a class of tasks
 Connection should include tests that produce a capability report.
 
 ```bash
-dojo connect ai test hermes
+dojo ai test hermes
 ```
 
 Test categories:
@@ -305,48 +294,38 @@ Use this connector for live grading? [y/N]
 Equivalent config should be editable:
 
 ```bash
-dojo connect ai policy set hermes --allow-source-text false
-dojo connect ai policy set anthropic --allow-raw-answers true --daily-budget 1.00
-dojo connect ai policy show hermes
+dojo ai policy set hermes --allow-source-text false
+dojo ai policy set hermes --allow-raw-answers true --daily-budget 1.00
+dojo ai policy show hermes
 ```
 
 ### Generated config shape
 
-The guided flow should write a config like:
+The command-only MVP should write a config like:
 
 ```yaml
 ai:
+  default_connector: hermes
   connectors:
     hermes:
-      kind: command_harness
-      command: hermes
-      args: ["chat", "-Q", "--source", "dojo", "--max-turns", "8", "--stdin"]
-      input_modes: [stdin, request_file]
-      output_modes: [stdout_json_extract]
+      kind: command
+      command: ["hermes", "chat", "-Q", "--stdin"]
+      input_mode: stdin_prompt
+      output_mode: stdout_json_or_text
+      timeout_seconds: 120
       capabilities:
         chat: true
         structured_output:
           mode: prompt_only
-        web:
-          supported: true
-          owner: harness
-          citation_evidence: required_by_prompt
-        code_execution:
-          supported: true
-          owner: harness
-          sandbox: unknown
         usage_reporting: unknown
       policy:
         allow_source_text: false
         allow_raw_answers: false
-        allow_harness_tools: true
         max_cost_usd_per_day: null
-
-  roles:
-    writer: hermes
-    researcher: hermes
-    planner: hermes
-    grader: local_openai
+      task_invocations:
+        answer.grade_freeform:
+          command: ["hermes", "chat", "-Q", "--max-turns", "2", "--stdin"]
+          timeout_seconds: 45
 ```
 
 ### Non-interactive setup
@@ -354,15 +333,14 @@ ai:
 Everything the guided flow does should have a non-interactive form:
 
 ```bash
-dojo connect ai command hermes \
-  --command "hermes chat -Q --source dojo --max-turns 8 --stdin" \
-  --cap web=harness \
-  --cap code=harness \
-  --role writer \
-  --role researcher \
-  --allow-harness-tools \
+dojo ai add hermes \
+  --default \
+  --input stdin-prompt \
+  --output stdout-json-or-text \
+  --timeout 120 \
   --no-source-text \
-  --test
+  --test \
+  -- hermes chat -Q --stdin
 ```
 
 In `--json` or `--no-input` mode, missing required settings should fail with structured guidance rather than prompting.
@@ -443,57 +421,29 @@ A connector should declare capabilities with uncertainty allowed. Unknown is bet
 ```yaml
 connectors:
   hermes:
-    kind: command_harness
-    command: hermes
-    args: ["chat", "-Q", "--source", "dojo", "--max-turns", "8", "-q", "{prompt}"]
-    input_modes: [prompt_arg, stdin, request_file]
-    output_modes: [stdout_text, stdout_json_extract]
+    kind: command
+    command: ["hermes", "chat", "-Q", "--stdin"]
+    input_mode: stdin_prompt
+    output_mode: stdout_json_or_text
+    timeout_seconds: 120
     capabilities:
       chat: true
       structured_output:
         mode: prompt_only
         schemas: false
-      system_prompt: true
       prompt_cache:
         supported: unknown
       web:
-        supported: true
-        owner: harness
-        modes: [search, fetch]
-        citation_evidence: required_by_prompt
+        supported: unknown
+        owner: command
       code_execution:
-        supported: true
-        owner: harness
-        sandbox: unknown
-        network: unknown
-        filesystem: unknown
-      files:
-        supported: true
-        owner: harness
-      agent_loop: true
+        supported: unknown
+        owner: command
       usage_reporting: unknown
     safety:
       local_only: false
-      sends_data_remote: depends_on_harness
+      sends_data_remote: depends_on_command
       max_timeout_seconds: 180
-
-  local_openai:
-    kind: openai_compatible
-    base_url: http://localhost:11434/v1
-    model: qwen2.5:14b
-    capabilities:
-      chat: true
-      structured_output:
-        mode: json_schema
-        schemas: true
-      system_prompt: true
-      web:
-        supported: false
-      code_execution:
-        supported: false
-      usage_reporting: partial
-    safety:
-      local_only: true
 ```
 
 ## Task request envelope
@@ -893,9 +843,10 @@ Build the interface now, keep implementations narrow.
 
 MVP connectors:
 
-1. `builtin` deterministic/no-LLM connector.
-2. `openai_compatible` raw chat connector.
-3. `command` connector for Hermes/Claude/Codex/custom commands.
+1. `builtin` deterministic/no-LLM connector for safe fallback paths.
+2. `command` connector for Hermes/Claude/Codex/custom commands.
+
+Defer first-class `openai_compatible`, hosted API, Ollama, MCP, and SDK connectors. They can be reached through command wrappers until real usage shows that a generic command adapter is not enough.
 
 MVP artifacts:
 
