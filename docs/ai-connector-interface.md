@@ -124,7 +124,7 @@ dojo connect ai command my-llm \
   --output stdout-json
 ```
 
-### Role assignment
+### Role assignment and per-task commands
 
 After a connector is added, Dojo should ask what to use it for.
 
@@ -154,6 +154,82 @@ Roles should be task-level defaults, not hard dependencies. A command can still 
 dojo admin generate run --provider hermes
 dojo answer "..." --grader local_openai
 dojo campaign create "Improve memory" --planner hermes
+```
+
+For command connectors, a single command may not fit every task. Users may want different command lines, flags, models, prompts, tool permissions, working directories, or harness modes depending on the task. The connector model should therefore support **task bindings**: one logical connector can expose multiple task-specific invocations.
+
+Examples:
+
+```bash
+dojo connect ai command hermes \
+  --command "hermes chat -Q --source dojo --stdin" \
+  --output stdout-json-or-extract
+
+# Use a cheaper/faster command for routine grading.
+dojo connect ai task set answer.grade_freeform hermes \
+  --command "hermes chat -Q --source dojo-grader --max-turns 2 --stdin" \
+  --timeout 45
+
+# Use a tool-enabled longer agent run for researched generation.
+dojo connect ai task set exercise.generate_researched hermes \
+  --command "hermes chat -Q --source dojo-researcher --max-turns 10 --stdin" \
+  --cap web=harness \
+  --cap code=harness \
+  --timeout 240
+
+# Use a repair-only tiny command for JSON cleanup.
+dojo connect ai task set json.repair hermes \
+  --command "hermes chat -Q --source dojo-json-repair --max-turns 1 --stdin" \
+  --timeout 30
+```
+
+This avoids creating fake separate providers such as `hermes_grader`, `hermes_researcher`, and `hermes_repair` unless the user wants that. Internally those are invocation profiles under one connector.
+
+Suggested config shape:
+
+```yaml
+ai:
+  connectors:
+    hermes:
+      kind: command_harness
+      default_invocation:
+        command: hermes
+        args: ["chat", "-Q", "--source", "dojo", "--stdin"]
+        output_mode: stdout_json_extract
+      task_invocations:
+        answer.grade_freeform:
+          args: ["chat", "-Q", "--source", "dojo-grader", "--max-turns", "2", "--stdin"]
+          timeout_seconds: 45
+          capabilities_override:
+            web: {supported: false}
+            code_execution: {supported: false}
+        exercise.generate_researched:
+          args: ["chat", "-Q", "--source", "dojo-researcher", "--max-turns", "10", "--stdin"]
+          timeout_seconds: 240
+          capabilities_override:
+            web: {supported: true, owner: harness}
+            code_execution: {supported: true, owner: harness}
+        json.repair:
+          args: ["chat", "-Q", "--source", "dojo-json-repair", "--max-turns", "1", "--stdin"]
+          timeout_seconds: 30
+```
+
+Resolution order:
+
+```text
+explicit command flag
+  -> task-specific connector invocation
+  -> role connector default invocation
+  -> global default connector
+  -> deterministic fallback / safe failure
+```
+
+User-facing language should distinguish:
+
+```text
+connector = the AI system/account/harness, e.g. Hermes or local OpenAI endpoint
+invocation = how Dojo calls that connector for this task
+role = which connector/invocation is preferred for a class of tasks
 ```
 
 ### Capability testing
