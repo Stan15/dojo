@@ -21,6 +21,7 @@ Dojo should be:
 
 - [`docs/cli-interface-design.md`](docs/cli-interface-design.md) — future-aware CLI design to build features against.
 - [`docs/llm-provider-interface.md`](docs/llm-provider-interface.md) — provider/harness-agnostic LLM integration design.
+- [`docs/ai-connector-interface.md`](docs/ai-connector-interface.md) — task/artifact/capability connector interface for arbitrary LLMs, harnesses, tool use, and generated verifiers.
 - [`docs/terminal-ux-and-tech-stack.md`](docs/terminal-ux-and-tech-stack.md) — Python/Typer/Rich/Textual stack recommendation and input/choice interaction patterns.
 
 ## Early architecture target
