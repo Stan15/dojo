@@ -50,12 +50,12 @@ MVP scope: **command connectors only**. Hosted APIs, OpenAI-compatible endpoints
 The minimal command family is:
 
 ```bash
-dojo ai add <name> -- <command...>
-dojo ai use <name>
-dojo ai test [name]
-dojo ai list
-dojo ai show <name>
-dojo ai remove <name>
+dojo connect ai command <name> -- <command...>
+dojo connect ai use <name>
+dojo connect ai test [name]
+dojo connect ai list
+dojo connect ai show <name>
+dojo connect ai remove <name>
 ```
 
 ### Minimal quick path
@@ -63,7 +63,7 @@ dojo ai remove <name>
 A user should be able to configure one AI command for every AI-assisted task with one command:
 
 ```bash
-dojo ai add hermes --default -- hermes chat -Q --stdin
+dojo connect ai command hermes --default -- hermes chat -Q --stdin
 ```
 
 That writes one connector and makes it the global default. Dojo builds a typed TaskRequest internally, renders it into a plain-text prompt by default, sends that prompt to the command on stdin, then accepts useful text or parseable JSON on stdout. Commands that want the raw JSON envelope can opt into `stdin-json` or `request-json-file`.
@@ -71,7 +71,7 @@ That writes one connector and makes it the global default. Dojo builds a typed T
 Equivalent explicit form:
 
 ```bash
-dojo ai add hermes \
+dojo connect ai command hermes \
   --default \
   --input stdin-prompt \
   --output stdout-json-or-text \
@@ -84,15 +84,15 @@ dojo ai add hermes \
 Everything after `--` is the external command and its arguments. This avoids shell-quoting ambiguity and keeps the Dojo CLI small:
 
 ```bash
-dojo ai add codex --default -- codex exec
-dojo ai add claude --default -- claude -p
-dojo ai add custom --default -- /usr/local/bin/my-llm --input -
+dojo connect ai command codex --default -- codex exec
+dojo connect ai command claude --default -- claude -p
+dojo connect ai command custom --default -- /usr/local/bin/my-llm --input -
 ```
 
 If users need shell features such as pipes, redirection, aliases, or environment setup, they should create a wrapper script and point Dojo at it:
 
 ```bash
-dojo ai add my-wrapper --default -- ~/.local/bin/dojo-ai-wrapper
+dojo connect ai command my-wrapper --default -- ~/.local/bin/dojo-ai-wrapper
 ```
 
 ### Built-in command presets are optional sugar
@@ -100,14 +100,14 @@ dojo ai add my-wrapper --default -- ~/.local/bin/dojo-ai-wrapper
 Dojo may provide a few presets, but they should compile down to the same command descriptor rather than becoming separate connector implementations:
 
 ```bash
-dojo ai preset hermes --default
-# expands to roughly: dojo ai add hermes --default -- hermes chat -Q --stdin
+dojo connect ai preset hermes --default
+# expands to roughly: dojo connect ai command hermes --default -- hermes chat -Q --stdin
 
-dojo ai preset claude --default
-# expands to roughly: dojo ai add claude --default -- claude -p
+dojo connect ai preset claude --default
+# expands to roughly: dojo connect ai command claude --default -- claude -p
 
-dojo ai preset codex --default
-# expands to roughly: dojo ai add codex --default -- codex exec
+dojo connect ai preset codex --default
+# expands to roughly: dojo connect ai command codex --default -- codex exec
 ```
 
 Known presets may hide provider-specific housekeeping flags. For example, Hermes supports `--source TAG`, but that is a session/source tag for Hermes bookkeeping, not the system prompt. Dojo may add `--source dojo` internally for a Hermes preset, but the user-facing command should not require users to know or pass it.
@@ -119,7 +119,7 @@ This is not the same as hand-coding each provider's full behavior. The MVP shoul
 Some commands do not read stdin well. The minimal surface supports a request file placeholder:
 
 ```bash
-dojo ai add my-llm \
+dojo connect ai command my-llm \
   --input request-json-file \
   --output stdout-json \
   -- /usr/local/bin/my-llm --input {request_json}
@@ -137,22 +137,22 @@ Placeholders allowed in command args:
 
 ```bash
 # List configured commands and defaults.
-dojo ai list
+dojo connect ai list
 
 # Inspect saved command, policy, capabilities, and last test result.
-dojo ai show hermes
+dojo connect ai show hermes
 
 # Set the global default connector.
-dojo ai use hermes
+dojo connect ai use hermes
 
 # Remove a connector.
-dojo ai remove hermes
+dojo connect ai remove hermes
 
 # Run smoke tests against the connector.
-dojo ai test hermes
+dojo connect ai test hermes
 
 # Print the exact request Dojo would send for a task without invoking AI.
-dojo ai request exercise.generate --dry-run --json
+dojo connect ai request exercise.generate --dry-run --json
 ```
 
 ### Role assignment and per-task commands
@@ -161,21 +161,21 @@ The MVP does not need many user-facing roles. Start with one default connector, 
 
 ```bash
 # One default connector for all AI tasks.
-dojo ai add hermes --default -- hermes chat -Q --stdin
+dojo connect ai command hermes --default -- hermes chat -Q --stdin
 
 # Optional: set an existing connector as the default for one task family.
-dojo ai task set answer.grade_freeform --connector hermes
+dojo connect ai task set answer.grade_freeform --connector hermes
 
 # Optional: override the actual command for one task family.
-dojo ai task set answer.grade_freeform \
+dojo connect ai task set answer.grade_freeform \
   --connector hermes \
   --timeout 45 \
   -- hermes chat -Q --max-turns 2 --stdin
 
 # Optional: list or clear overrides.
-dojo ai task list
-dojo ai task show answer.grade_freeform
-dojo ai task clear answer.grade_freeform
+dojo connect ai task list
+dojo connect ai task show answer.grade_freeform
+dojo connect ai task clear answer.grade_freeform
 ```
 
 Task overrides are invocation profiles under the same connector. This avoids creating fake separate providers such as `hermes_grader`, `hermes_researcher`, and `hermes_repair` unless the user wants that.
@@ -183,9 +183,9 @@ Task overrides are invocation profiles under the same connector. This avoids cre
 Keep role aliases as a later convenience, not as MVP surface. If added, they should map to task groups internally:
 
 ```bash
-dojo ai role set grader hermes     # optional future sugar for answer.* tasks
-dojo ai role set writer hermes     # optional future sugar for exercise.* tasks
-dojo ai role list
+dojo connect ai role set grader hermes     # optional future sugar for answer.* tasks
+dojo connect ai role set writer hermes     # optional future sugar for exercise.* tasks
+dojo connect ai role list
 ```
 
 Suggested config shape:
@@ -239,7 +239,7 @@ role = which connector/invocation is preferred for a class of tasks
 Connection should include tests that produce a capability report.
 
 ```bash
-dojo ai test hermes
+dojo connect ai test hermes
 ```
 
 Test categories:
@@ -294,9 +294,9 @@ Use this connector for live grading? [y/N]
 Equivalent config should be editable:
 
 ```bash
-dojo ai policy set hermes --allow-source-text false
-dojo ai policy set hermes --allow-raw-answers true --daily-budget 1.00
-dojo ai policy show hermes
+dojo connect ai policy set hermes --allow-source-text false
+dojo connect ai policy set hermes --allow-raw-answers true --daily-budget 1.00
+dojo connect ai policy show hermes
 ```
 
 ### Generated config shape
@@ -333,7 +333,7 @@ ai:
 Everything the guided flow does should have a non-interactive form:
 
 ```bash
-dojo ai add hermes \
+dojo connect ai command hermes \
   --default \
   --input stdin-prompt \
   --output stdout-json-or-text \
