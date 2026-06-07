@@ -161,10 +161,11 @@ cat notes.md | dojo add --title "My notes" --topic ml.transformers
 
 Default behavior:
 
-1. Create a source record.
-2. Extract candidate practice items.
-3. Keep them as candidates unless policy explicitly allows queueing.
-4. Print next recommended actions.
+1. Create one source record for the whole file/URL/text.
+2. Extract one or more topic spans from the source. `--topic` is a hint/default parent topic, not a claim that the whole source has only one topic.
+3. Extract candidate practice items, each with its own topic/subtopic and source span/provenance.
+4. Keep them as candidates unless policy explicitly allows queueing.
+5. Print next recommended actions.
 
 Example output:
 
@@ -187,6 +188,24 @@ dojo add notes.md --topic math.linear_algebra --quality reviewed
 dojo add notes.md --topic math.linear_algebra --no-generate
 dojo add notes.md --topic math.linear_algebra --provider openai
 dojo add notes.md --topic math.linear_algebra --local-only
+```
+
+Multi-topic source behavior:
+
+```bash
+# Hint that the article is broadly about batteries, while allowing finer inferred topics.
+dojo add article.md --topic chemistry.batteries --generate
+
+# Let Dojo infer topics without a starting hint.
+dojo add article.md --generate
+```
+
+A source can contain several topic spans, for example `chemistry.batteries.electrolytes`, `chemistry.batteries.anodes`, and `physics.thermodynamics`. The source record remains one durable object, while candidates point to source spans and carry their own topic paths. Review/queue commands should support filtering by inferred topic:
+
+```bash
+dojo source topics src_abc123
+dojo source candidates src_abc123 --topic chemistry.batteries.electrolytes
+dojo queue --source src_abc123 --topic chemistry.batteries.electrolytes --limit 2
 ```
 
 `dojo add` is a wrapper over `source`, `queue`, and generation services. It must not become a separate implementation path.

@@ -283,7 +283,7 @@ Minimum TaskRequest fields:
   "task": "exercise.generate",
   "intent": "Generate candidate practice items from this source/topic.",
   "context_blocks": [],
-  "expected_artifacts": ["exercise_draft"],
+  "expected_artifacts": ["topic_span", "exercise_draft"],
   "output_schema": {}
 }
 ```
@@ -291,13 +291,15 @@ Minimum TaskRequest fields:
 Acceptance criteria:
 
 - Prompt asks for a small JSON array of candidate drafts.
-- Prompt includes topic, source title, source text when policy allows it, and output constraints.
-- Result validator accepts at least one candidate with prompt, answer/rubric, topic, and difficulty/quality metadata.
+- Prompt tells the connector that a source may contain multiple subtopics; `--topic` is only a user hint/default parent topic.
+- Prompt includes source title, source text when policy allows it, optional topic hint, and output constraints.
+- Result validator accepts topic spans and at least one candidate with prompt, answer/rubric, topic path, source span reference, and difficulty/quality metadata.
 - Invalid output is saved as a failed generation attempt with diagnostics, not silently discarded.
 
 Tests:
 
 - deterministic fake connector returns valid candidate JSON;
+- fake connector can return candidates across two different subtopics for one source;
 - malformed connector output yields validation error;
 - source text is omitted when policy forbids it.
 
@@ -321,8 +323,9 @@ dojo admin generate run --source <source-id> --connector hermes
 Acceptance criteria:
 
 - Source text becomes a TaskRequest.
+- A single source may produce multiple topic spans and candidates across different subtopics.
 - Connector result creates source candidates, not active exercises directly.
-- Candidate records include provenance: source id/title, connector name, task id, prompt/schema version, raw output reference, validation status.
+- Candidate records include provenance: source id/title, source span/offset or excerpt hash, inferred topic path, connector name, task id, prompt/schema version, raw output reference, validation status.
 - CLI prints the next manual step: review/queue/start.
 
 Manual verification:
