@@ -14,6 +14,7 @@ class ExerciseGenerateRequest:
     max_candidates: int = 5
     mission: str | None = None
     existing_topics: list[str] | None = None
+    learner_hypotheses: list[str] | None = None
 
     def to_task_request(self) -> dict[str, Any]:
         req = {
@@ -37,6 +38,16 @@ class ExerciseGenerateRequest:
             req["mission_instruction"] = self.mission
         if self.existing_topics:
             req["existing_topics"] = self.existing_topics
+        if self.learner_hypotheses:
+            req["learner_profile"] = {
+                "active_hypotheses": self.learner_hypotheses
+            }
+            # Append instructions to target these misconceptions/patterns
+            req["instructions"] += (
+                " Design practice items that specifically address the learner's "
+                "active profile hypotheses/misconceptions: "
+                f"{'; '.join(self.learner_hypotheses)}."
+            )
         return req
 
 

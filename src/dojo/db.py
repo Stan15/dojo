@@ -112,7 +112,19 @@ class Attempt(SQLModel, table=True):
     user_answer: str
     score: float
     latency_seconds: float
+    skip_reason: Optional[str] = Field(default=None)
+    feedback: Optional[str] = Field(default=None)
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+
+class LearnerHypothesis(SQLModel, table=True):
+    __tablename__ = "learner_hypotheses"
+    id: str = Field(primary_key=True)
+    key: str
+    description: str
+    status: str = Field(default="active")
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 _engines = {}
@@ -234,7 +246,20 @@ def _attempt_from_model(model: Attempt) -> dict[str, Any]:
         "user_answer": model.user_answer,
         "score": model.score,
         "latency_seconds": model.latency_seconds,
+        "skip_reason": model.skip_reason,
+        "feedback": model.feedback,
         "created_at": model.created_at,
+    }
+
+
+def _hypothesis_from_model(model: LearnerHypothesis) -> dict[str, Any]:
+    return {
+        "id": model.id,
+        "key": model.key,
+        "description": model.description,
+        "status": model.status,
+        "created_at": model.created_at,
+        "updated_at": model.updated_at,
     }
 
 
@@ -623,6 +648,8 @@ def save_attempt(
     user_answer: str,
     score: float,
     latency_seconds: float,
+    skip_reason: Optional[str] = None,
+    feedback: Optional[str] = None,
 ) -> dict[str, Any]:
     attempt = Attempt(
         id=id,
@@ -633,6 +660,8 @@ def save_attempt(
         user_answer=user_answer,
         score=score,
         latency_seconds=latency_seconds,
+        skip_reason=skip_reason,
+        feedback=feedback,
     )
     session.add(attempt)
     session.commit()
@@ -644,3 +673,43 @@ def list_attempts(session: Session) -> list[dict[str, Any]]:
     statement = select(Attempt).order_by(Attempt.created_at.desc())
     results = session.exec(statement).all()
     return [_attempt_from_model(a) for a in results]
+
+
+def save_learner_hypothesis(
+    session: Session,
+    id: str,
+    key: str,
+    description: str,
+    status: str = "active",
+) -> dict[str, Any]:
+    existing = session.get(LearnerHypothesis, id)
+    if existing:
+        existing.key = key
+        existing.description = description
+        existing.status = status
+        existing.updated_at = datetime.now(timezone.utc).isoformat()
+        hypothesis = existing
+    else:
+        hypothesis = LearnerHypothesis(
+            id=id,
+            key=key,
+            description=description,
+            status=status,
+        )
+        session.add(hypothesis)
+    session.commit()
+    if existing:
+        session.refresh(existing)
+        hypothesis = existing
+    else:
+        session.refresh(hypothesis)
+    return _hypothesis_from_model(hypothesis)
+
+
+def list_learner_hypotheses(session: Session, status: Optional[str] = None) -> list[dict[str, Any]]:
+    statement = select(LearnerHypothesis)
+    if status is not None:
+        statement = statement.where(LearnerHypothesis.status == status)
+    statement = statement.order_by(LearnerHypothesis.created_at.desc())
+    results = session.exec(statement).all()
+    return [_hypothesis_from_model(h) for h in results]
