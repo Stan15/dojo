@@ -725,9 +725,10 @@ class DojoAPI:
                 "version": 1,
                 "instructions": (
                     "Analyze the learner's recent practice attempts, skip reasons, and feedback. "
-                    "Synthesize stable learner hypotheses (misconceptions, pattern strengths/weaknesses, scaffolding rules). "
+                    "Pay close attention to user responses to diagnostic/pedagogical questions (indicated by free-form answers targeting learning style/goals) to extract goals, preferences, prior knowledge, or misconceptions. "
+                    "Synthesize stable learner hypotheses (misconceptions, pattern strengths/weaknesses, scaffolding rules, learning style/goals). "
                     "Return a JSON list/object of hypotheses under 'hypotheses'. "
-                    "Each hypothesis must have a machine-readable 'key' (like 'misconception.lists_vs_tuples') "
+                    "Each hypothesis must have a machine-readable 'key' (like 'misconception.lists_vs_tuples' or 'preference.practical_code') "
                     "and a human-readable 'description'."
                 ),
                 "attempts": formatted_attempts,
@@ -808,3 +809,16 @@ class DojoAPI:
                 "hypotheses": saved_hypotheses,
                 "diagnostics": diagnostics,
             }
+
+    def save_config(self, key: str, value: str) -> dict[str, Any]:
+        with db.connect(self.db_path) as session:
+            return db.save_config(session, key, value)
+
+    def get_config(self, key: str) -> str | None:
+        with db.connect(self.db_path) as session:
+            return db.get_config(session, key)
+
+    def list_configs(self) -> dict[str, str]:
+        with db.connect(self.db_path) as session:
+            return db.list_configs(session)
+

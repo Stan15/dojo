@@ -23,7 +23,8 @@ class ExerciseGenerateRequest:
             "instructions": (
                 "Draft practice candidates from the provided source references. "
                 "If topic is provided, treat it as an optional parent-topic hint, not a single-topic assertion. "
-                "Return candidates that may span multiple subtopics."
+                "Return candidates that may span multiple subtopics. "
+                "If you realize you lack sufficient context about the user's goals, prior knowledge, or learning style for this topic to generate useful, calibrated exercises, or if you determine a pedagogical intervention is needed, you may instead generate 1–3 highly targeted, concise diagnostic questions to help personalize future sessions (set their 'quality' to 'diagnostic')."
             ),
             "source": {
                 "id": self.source_id,
@@ -75,8 +76,9 @@ def _normalize_candidate(item: dict[str, Any]) -> tuple[dict[str, Any] | None, s
     missing = [name for name, value in (("prompt", prompt), ("topic_path", topic_path), ("source_refs", source_refs)) if not value]
     if missing:
         return None, f"candidate missing required fields: {', '.join(missing)}"
-    if answer is None and rubric is None:
-        return None, "candidate needs either answer or rubric"
+    if item.get("quality") != "diagnostic":
+        if answer is None and rubric is None:
+            return None, "candidate needs either answer or rubric"
     normalized = {
         "prompt": prompt,
         "answer": answer,

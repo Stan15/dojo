@@ -127,6 +127,13 @@ class LearnerHypothesis(SQLModel, table=True):
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
+class Config(SQLModel, table=True):
+    __tablename__ = "configs"
+    key: str = Field(primary_key=True)
+    value: str
+    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+
 _engines = {}
 
 def get_engine(path: str | Path | None = None):
@@ -523,7 +530,7 @@ def promote_candidate(session: Session, candidate_id: str) -> dict[str, Any]:
         existing_ex.topic_path = candidate.topic_path
         existing_ex.source_refs = candidate.source_refs
         existing_ex.difficulty = candidate.difficulty
-        existing_ex.quality = "reviewed"
+        existing_ex.quality = candidate.quality if candidate.quality == "diagnostic" else "reviewed"
         existing_ex.updated_at = datetime.now(timezone.utc).isoformat()
         exercise = existing_ex
     else:
@@ -537,7 +544,7 @@ def promote_candidate(session: Session, candidate_id: str) -> dict[str, Any]:
             topic_path=candidate.topic_path,
             source_refs=candidate.source_refs,
             difficulty=candidate.difficulty,
-            quality="reviewed",
+            quality=candidate.quality if candidate.quality == "diagnostic" else "reviewed",
         )
         session.add(exercise)
         
@@ -713,3 +720,29 @@ def list_learner_hypotheses(session: Session, status: Optional[str] = None) -> l
     statement = statement.order_by(LearnerHypothesis.created_at.desc())
     results = session.exec(statement).all()
     return [_hypothesis_from_model(h) for h in results]
+
+
+def save_config(session: Session, key: str, value: str) -> dict[str, Any]:
+    existing = session.get(Config, key)
+    if existing:
+        existing.value = value
+        existing.updated_at = datetime.now(timezone.utc).isoformat()
+        config = existing
+    else:
+        config = Config(key=key, value=value)
+        session.add(config)
+    session.commit()
+    session.refresh(config)
+    return {"key": config.key, "value": config.value, "updated_at": config.updated_at}
+
+
+def get_config(session: Session, key: str) -> str | None:
+    config = session.get(Config, key)
+    return config.value if config else None
+
+
+def list_configs(session: Session) -> dict[str, str]:
+    statement = select(Config)
+    results = session.exec(statement).all()
+    return {c.key: c.value for c in results}
+
