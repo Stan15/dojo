@@ -233,8 +233,25 @@ class DojoAPI:
         with db.connect(self.db_path) as session:
             return db.remove_candidate(session, candidate_id)
 
+    def _enforce_queue_limit(self, session):
+        stmt = select(db.Attempt.exercise_id).where(
+            (db.Attempt.skip_reason == None) | (db.Attempt.skip_reason != "forgot")
+        )
+        non_forgot_attempted_ids = set(session.exec(stmt).all())
+        statement = select(db.Exercise).where(
+            db.Exercise.quality != "archived",
+            db.Exercise.quality != "too_easy",
+            db.Exercise.quality != "too_hard",
+            db.Exercise.quality != "bad_quality"
+        )
+        all_ex = session.exec(statement).all()
+        due_count = len([ex for ex in all_ex if ex.id not in non_forgot_attempted_ids])
+        if due_count >= 20:
+            raise ValueError("Active queue is full (limit: 20). Practice due exercises first before queueing more.")
+
     def promote_candidate(self, candidate_id: str) -> dict[str, Any]:
         with db.connect(self.db_path) as session:
+            self._enforce_queue_limit(session)
             return db.promote_candidate(session, candidate_id)
 
     def promote_source_topic(
@@ -248,6 +265,7 @@ class DojoAPI:
             promoted_exercises = []
             count_limit = limit if limit is not None else len(candidates)
             for c in candidates[:count_limit]:
+                self._enforce_queue_limit(session)
                 ex = db.promote_candidate(session, c["id"])
                 promoted_exercises.append(ex)
             return promoted_exercises
@@ -269,22 +287,121 @@ class DojoAPI:
             if active_session and reset:
                 db.update_practice_session(session, active_session["id"], status="completed")
                 
-            statement = select(Exercise)
+            # Check due count
+            stmt = select(db.Attempt.exercise_id).where(
+                (db.Attempt.skip_reason == None) | (db.Attempt.skip_reason != "forgot")
+            )
+            non_forgot_attempted_ids = set(session.exec(stmt).all())
+            
+            statement = select(db.Exercise).where(
+                db.Exercise.quality != "archived",
+                db.Exercise.quality != "too_easy",
+                db.Exercise.quality != "too_hard",
+                db.Exercise.quality != "bad_quality"
+            )
+            all_ex = session.exec(statement).all()
             if topic:
-                all_exercises = session.exec(statement).all()
-                exercises = [
-                    ex for ex in all_exercises
+                filtered = [
+                    ex for ex in all_ex
                     if ex.topic_path == topic or ex.topic_path.startswith(topic + ".")
                 ]
             else:
-                exercises = session.exec(statement).all()
-                
-            exercises = sorted(exercises, key=lambda x: x.created_at)
+                filtered = all_ex
+            due_exercises = [ex for ex in filtered if ex.id not in non_forgot_attempted_ids]
             
-            if not exercises:
+            if len(due_exercises) < 3:
+                # Trigger JIT Generation!
+                sources = db.list_sources(session)
+                if sources:
+                    sources = sorted(sources, key=lambda x: x["created_at"], reverse=True)
+                    target_source = sources[0]
+                    if topic:
+                        for s in sources:
+                            cands = db.list_candidates(session, s["id"], topic_path=topic)
+                            if cands:
+                                target_source = s
+                                break
+                                
+                    active_hyps = db.list_learner_hypotheses(session, status="active")
+                    hyp_descriptions = [h["description"] for h in active_hyps]
+                    
+                    topics_set = set()
+                    for ex in session.exec(select(db.Exercise)).all():
+                        topics_set.add(ex.topic_path)
+                    for camp in session.exec(select(db.Campaign)).all():
+                        topics_set.add(camp.topic_path)
+                    existing_topics = sorted(list(topics_set))
+                    
+                    full_source = db.get_source(session, target_source["id"])
+                    if full_source:
+                        content_lines = full_source["content"].splitlines()
+                        source_refs = [{
+                            "source_id": target_source["id"],
+                            "span": {
+                                "start_line": 1,
+                                "end_line": len(content_lines) or 1,
+                                "anchor_text": full_source["title"],
+                            }
+                        }]
+                        
+                        request = generate.ExerciseGenerateRequest(
+                            source_id=target_source["id"],
+                            source_title=full_source["title"],
+                            source_refs=source_refs,
+                            topic=topic,
+                            mission=full_source["mission"],
+                            existing_topics=existing_topics,
+                            learner_hypotheses=hyp_descriptions if hyp_descriptions else None,
+                        )
+                        
+                        result = connectors.invoke_command_connector(self.db_path, request.to_task_request())
+                        
+                        if result.status == "ok":
+                            val = generate.validate_exercise_generate_output(result.parsed_stdout or result.raw_stdout)
+                            if val["ok"]:
+                                for cand in val["candidates"]:
+                                    cand_id = f"cand_{uuid.uuid4().hex[:8]}"
+                                    db.save_candidate(
+                                        session,
+                                        id=cand_id,
+                                        source_id=target_source["id"],
+                                        prompt=cand["prompt"],
+                                        answer=cand.get("answer"),
+                                        rubric=cand.get("rubric"),
+                                        topic_path=cand["topic_path"],
+                                        source_refs=cand["source_refs"],
+                                        difficulty=cand.get("difficulty"),
+                                    )
+                                    db.promote_candidate(session, cand_id)
+                                    
+            # Re-query due exercises after JIT generation
+            stmt = select(db.Attempt.exercise_id).where(
+                (db.Attempt.skip_reason == None) | (db.Attempt.skip_reason != "forgot")
+            )
+            non_forgot_attempted_ids = set(session.exec(stmt).all())
+            
+            statement = select(db.Exercise).where(
+                db.Exercise.quality != "archived",
+                db.Exercise.quality != "too_easy",
+                db.Exercise.quality != "too_hard",
+                db.Exercise.quality != "bad_quality"
+            )
+            all_ex = session.exec(statement).all()
+            if topic:
+                filtered = [
+                    ex for ex in all_ex
+                    if ex.topic_path == topic or ex.topic_path.startswith(topic + ".")
+                ]
+            else:
+                filtered = all_ex
+            due_exercises = [ex for ex in filtered if ex.id not in non_forgot_attempted_ids]
+            
+            due_exercises = sorted(due_exercises, key=lambda x: x.created_at)
+            
+            if not due_exercises:
                 raise ValueError("no active exercises in queue; ingest and queue sources first")
                 
-            selected = exercises[:limit]
+            selected = due_exercises[:limit]
             exercise_ids = [ex.id for ex in selected]
             
             session_id = f"sess_{uuid.uuid4().hex[:8]}"
@@ -441,4 +558,253 @@ class DojoAPI:
                 "average_score": avg_score,
                 "average_latency_seconds": avg_latency,
                 "recent_attempts": attempts[:10]
+            }
+
+    def get_due_count(self, topic: str | None = None) -> int:
+        with db.connect(self.db_path) as session:
+            stmt = select(db.Attempt.exercise_id).where(
+                (db.Attempt.skip_reason == None) | (db.Attempt.skip_reason != "forgot")
+            )
+            non_forgot_attempted_ids = set(session.exec(stmt).all())
+            statement = select(db.Exercise).where(
+                db.Exercise.quality != "archived",
+                db.Exercise.quality != "too_easy",
+                db.Exercise.quality != "too_hard",
+                db.Exercise.quality != "bad_quality"
+            )
+            all_ex = session.exec(statement).all()
+            if topic:
+                filtered = [
+                    ex for ex in all_ex
+                    if ex.topic_path == topic or ex.topic_path.startswith(topic + ".")
+                ]
+            else:
+                filtered = all_ex
+            due_count = len([ex for ex in filtered if ex.id not in non_forgot_attempted_ids])
+            return due_count
+
+    def get_learner_hypotheses(self, status: str = "active") -> list[dict[str, Any]]:
+        with db.connect(self.db_path) as session:
+            return db.list_learner_hypotheses(session, status=status)
+
+    def save_learner_hypothesis(self, key: str, description: str, status: str = "active") -> dict[str, Any]:
+        with db.connect(self.db_path) as session:
+            statement = select(db.LearnerHypothesis).where(db.LearnerHypothesis.key == key)
+            existing = session.exec(statement).first()
+            if existing:
+                hyp_id = existing.id
+            else:
+                hyp_id = f"hyp_{uuid.uuid4().hex[:8]}"
+            return db.save_learner_hypothesis(session, id=hyp_id, key=key, description=description, status=status)
+
+    def skip_active_exercise(self, reason: str, feedback: str | None = None, session_id: str | None = None) -> dict[str, Any]:
+        if reason not in ("forgot", "too_easy", "too_hard", "bad_quality"):
+            raise ValueError(f"invalid skip reason: {reason}. Must be forgot, too_easy, too_hard, or bad_quality")
+            
+        with db.connect(self.db_path) as session:
+            target_session_id = session_id
+            if not target_session_id:
+                active = db.get_active_practice_session(session)
+                if not active:
+                    raise ValueError("no active practice session; start one first")
+                target_session_id = active["id"]
+                
+            ps = db.get_practice_session(session, target_session_id)
+            if ps is None:
+                raise ValueError(f"unknown practice session: {target_session_id}")
+                
+            if ps["status"] == "completed":
+                raise ValueError(f"practice session {target_session_id} is already completed")
+                
+            index = ps["current_index"]
+            exercise_ids = ps["exercise_ids"]
+            if index >= len(exercise_ids):
+                db.update_practice_session(session, target_session_id, status="completed")
+                raise ValueError(f"practice session {target_session_id} is completed")
+                
+            exercise_id = exercise_ids[index]
+            ex = session.get(Exercise, exercise_id)
+            if not ex:
+                raise ValueError(f"error: exercise {exercise_id} not found in database")
+                
+            started_at_str = ps["current_attempt_started_at"]
+            if started_at_str:
+                started_at = datetime.fromisoformat(started_at_str)
+                now = datetime.now(timezone.utc)
+                latency = (now - started_at).total_seconds()
+                if latency < 0:
+                    latency = 0.0
+            else:
+                latency = 0.0
+                
+            attempt_id = f"att_{uuid.uuid4().hex[:8]}"
+            db.save_attempt(
+                session,
+                id=attempt_id,
+                session_id=target_session_id,
+                exercise_id=exercise_id,
+                source_id=ex.source_id,
+                prompt=ex.prompt,
+                user_answer="[SKIPPED]",
+                score=0.0,
+                latency_seconds=latency,
+                skip_reason=reason,
+                feedback=feedback,
+            )
+            
+            # Archive/update exercise quality dynamically by setting it to the skip reason
+            ex.quality = reason
+            ex.updated_at = datetime.now(timezone.utc).isoformat()
+            session.add(ex)
+            
+            next_index = index + 1
+            is_completed = next_index >= len(exercise_ids)
+            status = "completed" if is_completed else "active"
+            
+            db.update_practice_session(
+                session,
+                target_session_id,
+                current_index=next_index,
+                current_attempt_started_at="",
+                status=status
+            )
+            
+            return {
+                "session_id": target_session_id,
+                "exercise_id": exercise_id,
+                "attempt_id": attempt_id,
+                "skip_reason": reason,
+                "feedback": feedback,
+                "is_session_completed": is_completed,
+                "next_index": next_index,
+                "total_exercises": len(exercise_ids),
+            }
+
+    def correct_last_attempt(self, feedback: str | None = None, session_id: str | None = None) -> dict[str, Any]:
+        with db.connect(self.db_path) as session:
+            statement = select(db.Attempt)
+            if session_id:
+                statement = statement.where(db.Attempt.session_id == session_id)
+            else:
+                active_sess = db.get_active_practice_session(session)
+                if active_sess:
+                    statement = statement.where(db.Attempt.session_id == active_sess["id"])
+                    
+            statement = statement.order_by(db.Attempt.created_at.desc())
+            last_attempt = session.exec(statement).first()
+            if not last_attempt:
+                raise ValueError("No attempts found to correct")
+                
+            last_attempt.score = 1.0
+            if feedback:
+                last_attempt.feedback = feedback
+            session.add(last_attempt)
+            session.commit()
+            session.refresh(last_attempt)
+            return db._attempt_from_model(last_attempt)
+
+    def consolidate_learner_profile(self) -> dict[str, Any]:
+        with db.connect(self.db_path) as session:
+            statement = select(db.Attempt).order_by(db.Attempt.created_at.desc()).limit(20)
+            attempts = session.exec(statement).all()
+            
+            formatted_attempts = []
+            for a in attempts:
+                formatted_attempts.append({
+                    "exercise_id": a.exercise_id,
+                    "prompt": a.prompt,
+                    "user_answer": a.user_answer,
+                    "score": a.score,
+                    "skip_reason": a.skip_reason,
+                    "feedback": a.feedback,
+                    "created_at": a.created_at,
+                })
+                
+            request = {
+                "task": "profile.consolidate",
+                "version": 1,
+                "instructions": (
+                    "Analyze the learner's recent practice attempts, skip reasons, and feedback. "
+                    "Synthesize stable learner hypotheses (misconceptions, pattern strengths/weaknesses, scaffolding rules). "
+                    "Return a JSON list/object of hypotheses under 'hypotheses'. "
+                    "Each hypothesis must have a machine-readable 'key' (like 'misconception.lists_vs_tuples') "
+                    "and a human-readable 'description'."
+                ),
+                "attempts": formatted_attempts,
+            }
+            
+            result = connectors.invoke_command_connector(self.db_path, request)
+            
+            diagnostics = []
+            saved_hypotheses = []
+            if result.status == "ok":
+                raw_data = result.parsed_stdout
+                if isinstance(raw_data, str):
+                    try:
+                        raw_data = json.loads(raw_data)
+                    except Exception as exc:
+                        diagnostics.append(f"Failed to parse raw output as JSON: {exc}")
+                        
+                hypotheses_to_save = []
+                if isinstance(raw_data, dict):
+                    hypotheses_to_save = raw_data.get("hypotheses") or []
+                    if not isinstance(hypotheses_to_save, list):
+                        hypotheses_to_save = []
+                elif isinstance(raw_data, list):
+                    hypotheses_to_save = raw_data
+                    
+                consolidated_keys = {hyp.get("key") for hyp in hypotheses_to_save if hyp.get("key")}
+                
+                # Deactivate active hypotheses that are no longer reported
+                active_stmt = select(db.LearnerHypothesis).where(db.LearnerHypothesis.status == "active")
+                for existing_hyp in session.exec(active_stmt).all():
+                    if existing_hyp.key not in consolidated_keys:
+                        existing_hyp.status = "resolved"
+                        existing_hyp.updated_at = datetime.now(timezone.utc).isoformat()
+                        session.add(existing_hyp)
+                
+                for idx, hyp in enumerate(hypotheses_to_save):
+                    if not isinstance(hyp, dict):
+                        diagnostics.append(f"Hypothesis at index {idx} is not a dict")
+                        continue
+                    key = hyp.get("key")
+                    description = hyp.get("description")
+                    if not key or not description:
+                        diagnostics.append(f"Hypothesis at index {idx} missing key or description")
+                        continue
+                        
+                    stmt = select(db.LearnerHypothesis).where(db.LearnerHypothesis.key == key)
+                    existing = session.exec(stmt).first()
+                    if existing:
+                        hyp_id = existing.id
+                    else:
+                        hyp_id = f"hyp_{uuid.uuid4().hex[:8]}"
+                        
+                    saved = db.save_learner_hypothesis(
+                        session,
+                        id=hyp_id,
+                        key=key,
+                        description=description,
+                        status="active"
+                    )
+                    saved_hypotheses.append(saved)
+            else:
+                diagnostics.append(result.error or "connector execution failed")
+                
+            db.record_generation_run(
+                session,
+                task="profile.consolidate",
+                request=request,
+                raw_output=result.raw_stdout,
+                status=result.status,
+                diagnostics={"diagnostics": diagnostics, "stderr": result.stderr_tail},
+            )
+            
+            if result.status != "ok":
+                raise ValueError(f"Profile consolidation failed: {result.error or 'connector execution failed'}")
+                
+            return {
+                "status": result.status,
+                "hypotheses": saved_hypotheses,
+                "diagnostics": diagnostics,
             }
