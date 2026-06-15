@@ -70,6 +70,7 @@ class DojoAPI:
                     topic=topic,
                     mission=mission,
                     existing_topics=existing_topics,
+                    source_content=content,
                 )
                 
                 result = connectors.invoke_command_connector(self.db_path, request.to_task_request())
@@ -355,6 +356,7 @@ class DojoAPI:
                             existing_topics=existing_topics,
                             learner_hypotheses=hyp_descriptions if hyp_descriptions else None,
                             instructions=custom_instructions,
+                            source_content=full_source["content"],
                         )
                         
                         result = connectors.invoke_command_connector(self.db_path, request.to_task_request())

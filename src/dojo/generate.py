@@ -16,6 +16,7 @@ class ExerciseGenerateRequest:
     existing_topics: list[str] | None = None
     learner_hypotheses: list[str] | None = None
     instructions: str | None = None
+    source_content: str | None = None
 
     def to_task_request(self) -> dict[str, Any]:
         default_instructions = (
@@ -32,6 +33,7 @@ class ExerciseGenerateRequest:
                 "id": self.source_id,
                 "title": self.source_title,
                 "refs": self.source_refs,
+                "content": self.source_content,
             },
             "topic_hint": self.topic,
             "max_candidates": self.max_candidates,

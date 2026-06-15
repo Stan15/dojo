@@ -473,6 +473,7 @@ def test_custom_instructions_configuration(tmp_path):
         # First argument is db_path, second is request dict
         req = call_args[1]
         assert req["instructions"] == "Custom JIT instructions."
+        assert req["source"]["content"] == "C"
         
     # Verify consolidate uses custom instructions
     with patch("dojo.connectors.invoke_command_connector") as mock_invoke:
