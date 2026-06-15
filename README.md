@@ -6,6 +6,10 @@ Dojo is a planned standalone, local-first source-to-practice app. It turns trust
 
 This repository is the fresh productionized version of the earlier Cognitive Dojo prototype. The initial purpose of this repo is to define the clean product/API/CLI surface before implementation accretes around prototype-specific assumptions.
 
+## Foundational pedagogy
+
+Agents and humans implementing this repo should read [`AGENTS.md`](AGENTS.md) and [`docs/pedagogy-foundation.md`](docs/pedagogy-foundation.md) first. The pedagogy foundation is the backbone of the production product: mission-grounded teaching, source-backed knowledge, zone-of-proximal-development calibration, active production before feedback, retrieval practice, spacing, interleaving, durable evidence, and adaptation without bombardment.
+
 ## Product stance
 
 Dojo should be:
