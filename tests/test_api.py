@@ -418,3 +418,83 @@ def test_diagnostic_question_lifecycle(tmp_path):
         assert active[0]["key"] == "preference.practical_code"
 
 
+def test_custom_instructions_configuration(tmp_path):
+    from unittest.mock import patch
+    from dojo.connectors import CommandConnectorResult
+    
+    db_path = tmp_path / "dojo.sqlite3"
+    api = DojoAPI(db_path)
+    
+    # Ingest source
+    res = api.add_source(title="S", content="C", kind="text")
+    source_id = res["source_id"]
+    
+    # Configure custom prompts
+    api.save_config("prompt.exercise_generate_instructions", "Custom JIT instructions.")
+    api.save_config("prompt.profile_consolidate_instructions", "Custom consolidate instructions.")
+    
+    # Verify JIT uses custom instructions
+    with patch("dojo.connectors.invoke_command_connector") as mock_invoke:
+        mock_invoke.return_value = CommandConnectorResult(
+            status="ok",
+            connector_name="mock-agent",
+            input_mode="stdin-prompt",
+            output_mode="stdout-json-or-text",
+            request={},
+            raw_stdout=json.dumps({
+                "candidates": [
+                    {
+                        "prompt": "Q",
+                        "answer": "A",
+                        "topic_path": "T",
+                        "source_refs": [{"source_id": source_id, "span": {"start_line": 1, "end_line": 1, "anchor_text": "C"}}]
+                    }
+                ]
+            }),
+            raw_stderr="",
+            stderr_tail="",
+            exit_code=0,
+            duration_seconds=0.1,
+            parse_status="json",
+            parsed_stdout={
+                "candidates": [
+                    {
+                        "prompt": "Q",
+                        "answer": "A",
+                        "topic_path": "T",
+                        "source_refs": [{"source_id": source_id, "span": {"start_line": 1, "end_line": 1, "anchor_text": "C"}}]
+                    }
+                ]
+            }
+        )
+        api.start_practice_session(limit=1)
+        assert mock_invoke.call_count == 1
+        call_args = mock_invoke.call_args[0]
+        # First argument is db_path, second is request dict
+        req = call_args[1]
+        assert req["instructions"] == "Custom JIT instructions."
+        
+    # Verify consolidate uses custom instructions
+    with patch("dojo.connectors.invoke_command_connector") as mock_invoke:
+        mock_invoke.return_value = CommandConnectorResult(
+            status="ok",
+            connector_name="mock-agent",
+            input_mode="stdin-prompt",
+            output_mode="stdout-json-or-text",
+            request={},
+            raw_stdout=json.dumps({"hypotheses": []}),
+            raw_stderr="",
+            stderr_tail="",
+            exit_code=0,
+            duration_seconds=0.1,
+            parse_status="json",
+            parsed_stdout={"hypotheses": []}
+        )
+        api.consolidate_learner_profile()
+        assert mock_invoke.call_count == 1
+        call_args = mock_invoke.call_args[0]
+        req = call_args[1]
+        assert req["instructions"] == "Custom consolidate instructions."
+
+
+

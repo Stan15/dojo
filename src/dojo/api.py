@@ -344,6 +344,8 @@ class DojoAPI:
                             }
                         }]
                         
+                        custom_instructions = db.get_config(session, "prompt.exercise_generate_instructions")
+                        
                         request = generate.ExerciseGenerateRequest(
                             source_id=target_source["id"],
                             source_title=full_source["title"],
@@ -352,6 +354,7 @@ class DojoAPI:
                             mission=full_source["mission"],
                             existing_topics=existing_topics,
                             learner_hypotheses=hyp_descriptions if hyp_descriptions else None,
+                            instructions=custom_instructions,
                         )
                         
                         result = connectors.invoke_command_connector(self.db_path, request.to_task_request())
@@ -720,17 +723,21 @@ class DojoAPI:
                     "created_at": a.created_at,
                 })
                 
+            custom_consolidate_instructions = db.get_config(session, "prompt.profile_consolidate_instructions")
+            
+            default_consolidate_instructions = (
+                "Analyze the learner's recent practice attempts, skip reasons, and feedback. "
+                "Pay close attention to user responses to diagnostic/pedagogical questions (indicated by free-form answers targeting learning style/goals) to extract goals, preferences, prior knowledge, or misconceptions. "
+                "Synthesize stable learner hypotheses (misconceptions, pattern strengths/weaknesses, scaffolding rules, learning style/goals). "
+                "Return a JSON list/object of hypotheses under 'hypotheses'. "
+                "Each hypothesis must have a machine-readable 'key' (like 'misconception.lists_vs_tuples' or 'preference.practical_code') "
+                "and a human-readable 'description'."
+            )
+            
             request = {
                 "task": "profile.consolidate",
                 "version": 1,
-                "instructions": (
-                    "Analyze the learner's recent practice attempts, skip reasons, and feedback. "
-                    "Pay close attention to user responses to diagnostic/pedagogical questions (indicated by free-form answers targeting learning style/goals) to extract goals, preferences, prior knowledge, or misconceptions. "
-                    "Synthesize stable learner hypotheses (misconceptions, pattern strengths/weaknesses, scaffolding rules, learning style/goals). "
-                    "Return a JSON list/object of hypotheses under 'hypotheses'. "
-                    "Each hypothesis must have a machine-readable 'key' (like 'misconception.lists_vs_tuples' or 'preference.practical_code') "
-                    "and a human-readable 'description'."
-                ),
+                "instructions": custom_consolidate_instructions or default_consolidate_instructions,
                 "attempts": formatted_attempts,
             }
             

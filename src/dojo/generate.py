@@ -15,17 +15,19 @@ class ExerciseGenerateRequest:
     mission: str | None = None
     existing_topics: list[str] | None = None
     learner_hypotheses: list[str] | None = None
+    instructions: str | None = None
 
     def to_task_request(self) -> dict[str, Any]:
+        default_instructions = (
+            "Draft practice candidates from the provided source references. "
+            "If topic is provided, treat it as an optional parent-topic hint, not a single-topic assertion. "
+            "Return candidates that may span multiple subtopics. "
+            "If you realize you lack sufficient context about the user's goals, prior knowledge, or learning style for this topic to generate useful, calibrated exercises, or if you determine a pedagogical intervention is needed, you may instead generate 1–3 highly targeted, concise diagnostic questions to help personalize future sessions (set their 'quality' to 'diagnostic')."
+        )
         req = {
             "task": "exercise.generate",
             "version": 1,
-            "instructions": (
-                "Draft practice candidates from the provided source references. "
-                "If topic is provided, treat it as an optional parent-topic hint, not a single-topic assertion. "
-                "Return candidates that may span multiple subtopics. "
-                "If you realize you lack sufficient context about the user's goals, prior knowledge, or learning style for this topic to generate useful, calibrated exercises, or if you determine a pedagogical intervention is needed, you may instead generate 1–3 highly targeted, concise diagnostic questions to help personalize future sessions (set their 'quality' to 'diagnostic')."
-            ),
+            "instructions": self.instructions or default_instructions,
             "source": {
                 "id": self.source_id,
                 "title": self.source_title,
