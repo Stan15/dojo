@@ -320,3 +320,101 @@ def test_learner_hypotheses_and_consolidation(tmp_path):
         assert len(resolved_hyps) == 1
         assert resolved_hyps[0]["key"] == "misconception.test"
 
+
+def test_diagnostic_question_lifecycle(tmp_path):
+    from unittest.mock import patch
+    from dojo.connectors import CommandConnectorResult
+    
+    db_path = tmp_path / "dojo.sqlite3"
+    api = DojoAPI(db_path)
+    
+    # Ingest source
+    res = api.add_source(title="S", content="C", kind="text")
+    source_id = res["source_id"]
+    
+    # Mock connector output to return a diagnostic question
+    with patch("dojo.connectors.invoke_command_connector") as mock_invoke:
+        mock_invoke.return_value = CommandConnectorResult(
+            status="ok",
+            connector_name="mock-agent",
+            input_mode="stdin-prompt",
+            output_mode="stdout-json-or-text",
+            request={},
+            raw_stdout=json.dumps({
+                "candidates": [
+                    {
+                        "prompt": "What is your main goal?",
+                        "answer": None,
+                        "topic_path": "diag",
+                        "source_refs": [{"source_id": source_id, "span": {"start_line": 1, "end_line": 1, "anchor_text": "C"}}],
+                        "quality": "diagnostic"
+                    }
+                ]
+            }),
+            raw_stderr="",
+            stderr_tail="",
+            exit_code=0,
+            duration_seconds=0.1,
+            parse_status="json",
+            parsed_stdout={
+                "candidates": [
+                    {
+                        "prompt": "What is your main goal?",
+                        "answer": None,
+                        "topic_path": "diag",
+                        "source_refs": [{"source_id": source_id, "span": {"start_line": 1, "end_line": 1, "anchor_text": "C"}}],
+                        "quality": "diagnostic"
+                    }
+                ]
+            }
+        )
+        
+        # Start practice session (triggers JIT because due count is 0)
+        sess_res = api.start_practice_session(limit=1)
+        session = sess_res["session"]
+        assert len(session["exercise_ids"]) == 1
+        
+        # Reveal prompt
+        prompt_res = api.reveal_prompt()
+        assert prompt_res["prompt"] == "What is your main goal?"
+        
+        # Submit answer (diagnostic prompt has no answer, so any answer is correct)
+        ans_res = api.submit_answer("I want to learn code writing.")
+        assert ans_res["score"] == 1.0
+        
+    # Now verify that consolidate_learner_profile parses diagnostic attempt
+    with patch("dojo.connectors.invoke_command_connector") as mock_invoke:
+        mock_invoke.return_value = CommandConnectorResult(
+            status="ok",
+            connector_name="mock-agent",
+            input_mode="stdin-prompt",
+            output_mode="stdout-json-or-text",
+            request={},
+            raw_stdout=json.dumps({
+                "hypotheses": [
+                    {"key": "preference.practical_code", "description": "Learner wants practical code templates"}
+                ]
+            }),
+            raw_stderr="",
+            stderr_tail="",
+            exit_code=0,
+            duration_seconds=0.1,
+            parse_status="json",
+            parsed_stdout={
+                "hypotheses": [
+                    {"key": "preference.practical_code", "description": "Learner wants practical code templates"}
+                ]
+            }
+        )
+        
+        consolidate_res = api.consolidate_learner_profile()
+        assert consolidate_res["status"] == "ok"
+        assert len(consolidate_res["hypotheses"]) == 1
+        assert consolidate_res["hypotheses"][0]["key"] == "preference.practical_code"
+        
+        # Verify it is active in the database
+        active = api.get_learner_hypotheses(status="active")
+        assert len(active) == 1
+        assert active[0]["key"] == "preference.practical_code"
+
+

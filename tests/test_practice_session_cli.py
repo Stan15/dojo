@@ -182,3 +182,17 @@ def test_correct_cli(tmp_path):
     res = json.loads(out)
     assert res["score"] == 1.0
     assert res["feedback"] == "typo override"
+
+
+def test_config_cli(tmp_path):
+    # Set config
+    out = run_cli(tmp_path, "--json", "config", "set", "schedule.enabled", "true").stdout
+    res = json.loads(out)
+    assert res["key"] == "schedule.enabled"
+    assert res["value"] == "true"
+    
+    # Show configs
+    out_show = run_cli(tmp_path, "--json", "config", "show").stdout
+    res_show = json.loads(out_show)
+    assert res_show["schedule.enabled"] == "true"
+
