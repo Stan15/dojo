@@ -99,6 +99,13 @@ The product should build storage strength with desirable difficulty:
 
 Do not over-promote an item or skill based on a single fluent response.
 
+### Strategy customization and novelty ratios
+
+Not all items or skills benefit from the same repetition scheduling:
+- **Repetitive Retrievability (Knowledge/Facts):** Static items (e.g. key glossary terms, exact vocabulary, rules) benefit from spaced repetition of the exact same item to cement retrievability.
+- **Generative Novelty (Skills/Procedures):** Dynamic items (e.g. coding syntax application, problem solving, analysis tasks) require varied, novel cues matching the skill path to ensure the user does not merely memorize the specific prompt. Scheduling for these must prioritize refreshing via alternative candidate exercises rather than exact item repetition.
+- **Personalized Adaptation:** The training frequency, ideal novelty ratio, and optimal scheduling interval should be calibrated against the user's specific learning goals, demonstrated latency, and custom style.
+
 ## Active production before feedback
 
 The learner should produce an answer, prediction, sketch, explanation, choice, or attempt before seeing the solution whenever possible.

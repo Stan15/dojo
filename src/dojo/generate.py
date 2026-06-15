@@ -12,9 +12,11 @@ class ExerciseGenerateRequest:
     source_refs: list[dict[str, Any]]
     topic: str | None = None
     max_candidates: int = 5
+    mission: str | None = None
+    existing_topics: list[str] | None = None
 
     def to_task_request(self) -> dict[str, Any]:
-        return {
+        req = {
             "task": "exercise.generate",
             "version": 1,
             "instructions": (
@@ -31,6 +33,11 @@ class ExerciseGenerateRequest:
             "max_candidates": self.max_candidates,
             "expected_artifacts": ["topic_span", "exercise_draft"],
         }
+        if self.mission:
+            req["mission_instruction"] = self.mission
+        if self.existing_topics:
+            req["existing_topics"] = self.existing_topics
+        return req
 
 
 def _coerce_output(raw: str | list[Any] | dict[str, Any]) -> Any:

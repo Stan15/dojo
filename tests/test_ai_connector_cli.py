@@ -1,18 +1,5 @@
 import json
-import os
-import subprocess
-import sys
-from pathlib import Path
-
-
-def run_cli(tmp_path, *args, check=True):
-    cmd = [sys.executable, "-m", "dojo.cli", "--db", str(tmp_path / "dojo.sqlite3"), *args]
-    env = os.environ.copy()
-    env["PYTHONPATH"] = str(Path(__file__).resolve().parents[1] / "src")
-    result = subprocess.run(cmd, text=True, capture_output=True, check=False, env=env)
-    if check and result.returncode != 0:
-        raise AssertionError(f"command failed: {cmd}\nstdout={result.stdout}\nstderr={result.stderr}")
-    return result
+from helpers import run_cli
 
 
 def test_connect_ai_command_persists_descriptor_defaults_and_default_marker(tmp_path):
