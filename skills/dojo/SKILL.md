@@ -40,7 +40,7 @@ dojo add --text "Calculus notes here." --title "Calculus" --topic "math.calculus
     ```
 
 ### 4. Running Practice Sessions
-*   **Start Session:** Open or resume a practice session (returns `session_id`):
+*   **Start Session:** Open or resume a practice session (returns `session_id`). If the due queue has fewer than 3 exercises, it automatically generates 3–5 new items from active sources using the default AI connector:
     ```bash
     dojo start [--topic <topic>] [--limit <limit>]
     ```
@@ -56,3 +56,33 @@ dojo add --text "Calculus notes here." --title "Calculus" --topic "math.calculus
     ```bash
     dojo progress
     ```
+
+### 5. Managing Queue & Feedback
+*   **Check Due Count:** Query the number of active unattempted exercises:
+    ```bash
+    dojo due [--topic <topic>]
+    ```
+*   **Skip Exercise:** Skip the active exercise in a session with a specific reason and optional feedback text:
+    ```bash
+    dojo skip --reason <forgot|too_easy|too_hard|bad_quality> [--feedback <feedback>] [--session <session-id>]
+    ```
+    *   *Forgot:* Keeps the exercise in rotation (remains due/active).
+    *   *Too Easy / Too Hard / Bad Quality:* Archives the exercise dynamically (removes from active queue).
+*   **Correct Attempt:** Override a rigid grader mistake on the last attempt to `1.0` (correct) with optional explanation notes:
+    ```bash
+    dojo correct [--feedback <notes>] [--session <session-id>]
+    ```
+
+### 6. Learner Profile Consolidation (Admin)
+*   **Consolidate Hypotheses:** Periodically consolidate recent attempts, skips, and free-form feedback into stable learner profile hypotheses:
+    ```bash
+    dojo admin consolidate
+    ```
+    *   Invokes the default AI connector internally with the task `profile.consolidate` to analyze the last 20 attempts.
+    *   Upserts active misconceptions and resolves outdated hypotheses.
+    *   Active hypotheses are automatically injected into future JIT generation runs to calibrate difficulty and target weak areas.
+
+## Curator / Integration Guidelines
+1.  **Avoid Volatile Adjustments:** Do not attempt to alter lesson campaigns directly on every single user comment. Instead, rely on `dojo skip` and `dojo correct` to log raw feedback, and trigger `dojo admin consolidate` periodically (e.g., at the end of a session or when requested) to synthesize stable hypotheses.
+2.  **JIT Replenishment:** Rely on `dojo start`'s automatic JIT replenishment logic to generate new practice items on demand, preventing excess advance generation and maintaining adaptive flexibility.
+

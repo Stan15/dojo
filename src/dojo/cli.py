@@ -849,6 +849,87 @@ def cmd_install(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_due(args: argparse.Namespace) -> int:
+    api = DojoAPI(_db_path(args))
+    count = api.get_due_count(topic=args.topic)
+    if _use_json(args):
+        _print_json({"due_count": count})
+    else:
+        console.print(f"You have [bold cyan]{count}[/bold cyan] exercises due.")
+    return 0
+
+
+def cmd_skip(args: argparse.Namespace) -> int:
+    api = DojoAPI(_db_path(args))
+    try:
+        res = api.skip_active_exercise(reason=args.reason, feedback=args.feedback, session_id=args.session)
+    except ValueError as exc:
+        raise SystemExit(str(exc))
+        
+    if _use_json(args):
+        _print_json(res)
+    else:
+        feedback_text = (
+            f"[bold cyan]Skipped Exercise:[/bold cyan] {res['exercise_id']}\n"
+            f"[bold cyan]Reason:[/bold cyan] {res['skip_reason']}\n"
+        )
+        if res['feedback']:
+            feedback_text += f"[bold cyan]Feedback:[/bold cyan] {res['feedback']}\n"
+        feedback_text += "\n"
+        if res["is_session_completed"]:
+            feedback_text += "[bold green]Practice session completed![/bold green] Run 'dojo progress' to check your metrics."
+        else:
+            feedback_text += f"Run [bold]dojo ready[/bold] for the next exercise ({res['next_index'] + 1}/{res['total_exercises']})."
+        console.print(Panel(feedback_text, title="Exercise Skipped", expand=False))
+    return 0
+
+
+def cmd_correct(args: argparse.Namespace) -> int:
+    api = DojoAPI(_db_path(args))
+    try:
+        res = api.correct_last_attempt(feedback=args.feedback, session_id=args.session)
+    except ValueError as exc:
+        raise SystemExit(str(exc))
+        
+    if _use_json(args):
+        _print_json(res)
+    else:
+        feedback_text = (
+            f"[bold cyan]Corrected Attempt ID:[/bold cyan] {res['id']}\n"
+            f"[bold cyan]Exercise ID:[/bold cyan] {res['exercise_id']}\n"
+            f"[bold cyan]New Score:[/bold cyan] [bold green]1.0[/bold green] (Override)\n"
+        )
+        if res['feedback']:
+            feedback_text += f"[bold cyan]Feedback/Note:[/bold cyan] {res['feedback']}\n"
+        console.print(Panel(feedback_text, title="Attempt Corrected", expand=False))
+    return 0
+
+
+def cmd_admin_consolidate(args: argparse.Namespace) -> int:
+    api = DojoAPI(_db_path(args))
+    try:
+        res = api.consolidate_learner_profile()
+    except ValueError as exc:
+        raise SystemExit(str(exc))
+        
+    if _use_json(args):
+        _print_json(res)
+    else:
+        console.print("[bold green]Profile consolidation completed successfully.[/bold green]")
+        if res["hypotheses"]:
+            console.print("\n[bold]Consolidated Active Hypotheses:[/bold]")
+            table = Table()
+            table.add_column("Key", style="cyan")
+            table.add_column("Description", style="green")
+            table.add_column("Status", style="magenta")
+            for h in res["hypotheses"]:
+                table.add_row(h["key"], h["description"], h["status"])
+            console.print(table)
+        else:
+            console.print("No active learner hypotheses/misconceptions identified.")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="dojo")
     parser.add_argument("--db", help="SQLite database path")
@@ -920,6 +1001,26 @@ def build_parser() -> argparse.ArgumentParser:
     p_install = sub.add_parser("install")
     p_install.add_argument("agent", nargs="?", choices=["hermes", "openclaw"])
     p_install.set_defaults(func=cmd_install)
+
+    p_due = sub.add_parser("due")
+    p_due.add_argument("--topic")
+    p_due.set_defaults(func=cmd_due)
+
+    p_skip = sub.add_parser("skip")
+    p_skip.add_argument("--reason", default="forgot", choices=["forgot", "too_easy", "too_hard", "bad_quality"])
+    p_skip.add_argument("--feedback")
+    p_skip.add_argument("--session")
+    p_skip.set_defaults(func=cmd_skip)
+
+    p_correct = sub.add_parser("correct")
+    p_correct.add_argument("--feedback")
+    p_correct.add_argument("--session")
+    p_correct.set_defaults(func=cmd_correct)
+
+    p_admin = sub.add_parser("admin")
+    p_admin_sub = p_admin.add_subparsers(dest="admin_command", required=True)
+    p_consolidate = p_admin_sub.add_parser("consolidate")
+    p_consolidate.set_defaults(func=cmd_admin_consolidate)
 
     connect = sub.add_parser("connect")
     connect_sub = connect.add_subparsers(dest="connect_command", required=True)
