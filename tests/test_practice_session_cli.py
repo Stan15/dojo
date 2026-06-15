@@ -136,3 +136,49 @@ def test_progress_stats(tmp_path):
     assert res["total_attempts"] == 2
     assert res["average_score"] == 0.5
     assert len(res["recent_attempts"]) == 2
+
+
+def test_due_cli(tmp_path):
+    setup_test_data(tmp_path)
+    
+    # Check initial due count
+    out = run_cli(tmp_path, "--json", "due").stdout
+    res = json.loads(out)
+    assert res["due_count"] == 2
+    
+    # Filter by topic that matches
+    out_topic = run_cli(tmp_path, "--json", "due", "--topic", "geo.france").stdout
+    res_topic = json.loads(out_topic)
+    assert res_topic["due_count"] == 1
+    
+    # Filter by topic that does not match
+    out_none = run_cli(tmp_path, "--json", "due", "--topic", "math").stdout
+    res_none = json.loads(out_none)
+    assert res_none["due_count"] == 0
+
+
+def test_skip_cli(tmp_path):
+    setup_test_data(tmp_path)
+    run_cli(tmp_path, "start")
+    run_cli(tmp_path, "ready")
+    
+    # Skip the active exercise
+    out = run_cli(tmp_path, "--json", "skip", "--reason", "forgot", "--feedback", "forgot france capital").stdout
+    res = json.loads(out)
+    assert res["skip_reason"] == "forgot"
+    assert res["feedback"] == "forgot france capital"
+    assert res["is_session_completed"] is False
+    assert res["next_index"] == 1
+
+
+def test_correct_cli(tmp_path):
+    setup_test_data(tmp_path)
+    run_cli(tmp_path, "start")
+    run_cli(tmp_path, "ready")
+    run_cli(tmp_path, "answer", "Wrong") # Incorrect answer recorded
+    
+    # Correct it using CLI
+    out = run_cli(tmp_path, "--json", "correct", "--feedback", "typo override").stdout
+    res = json.loads(out)
+    assert res["score"] == 1.0
+    assert res["feedback"] == "typo override"
