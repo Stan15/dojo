@@ -75,6 +75,15 @@ api = DojoAPI(db_path=None)
     *   Synthesizes the last 20 attempts using the default AI connector (`profile.consolidate`).
     *   Outdated active hypotheses not returned by the connector are set to `"resolved"`.
 
+### Configuration Preferences
+
+*   `save_config(key, value) -> dict`
+    *   Saves or updates a learner configuration preference key-value pair.
+*   `get_config(key) -> str | None`
+    *   Retrieves the value of a configuration key.
+*   `list_configs() -> dict[str, str]`
+    *   Retrieves all saved configuration key-value pairs.
+
 ---
 
 ## 2. CLI Command Specification
@@ -96,6 +105,8 @@ api = DojoAPI(db_path=None)
 | `dojo correct` | `[--feedback <txt>]` | Overrides the score of the last attempt to `1.0`. |
 | `dojo progress` | None | Lists accuracy, latency, and recent attempts. |
 | `dojo admin consolidate` | None | Periodically synthesizes stable hypotheses from attempts. |
+| `dojo config set` | `<key> <value>` | Sets a learner configuration preference. |
+| `dojo config show` | None | Lists all active configuration preferences. |
 | `dojo install` | `<hermes | openclaw>` | Installs skill and auto-configures default AI connector. |
 | `dojo connect ai command` | `<name> -- argv` | Registers a command-based AI connector. |
 | `dojo connect ai list` | None | Lists registered AI connectors. |
@@ -125,3 +136,10 @@ During the practice loop, a source acts as:
 ### Active Queue Guardrail
 *   Dojo enforces a strict cap of **20 active due exercises** at any given time.
 *   If the due count is $\ge 20$, promotion via reviews or queue commands is blocked. This prevents cognitive overload and bombardment, forcing the learner to practice due items before adding more material.
+
+### Pedagogical Diagnostic Loops & Gaps
+To maintain an optimal zone of proximal development and prevent learner overload or intimidation, Dojo supports dynamic pedagogical diagnostic sessions:
+1.  **JIT Gap Detection:** During JIT exercise generation (`exercise.generate`), if the default AI connector determines that it lacks sufficient context about the learner's background, goals, or learning style relative to the current source/topic to create useful, calibrated exercises, or if it determines that a pedagogical intervention is required, it can target its generation output at producing 1–3 targeted, highly concise diagnostic questions (marked with `quality="diagnostic"`).
+2.  **Scoring Bypass:** Diagnostic exercises do not have a defined answer or grading rubric. Consequently, any answer submitted by the user is considered correct and receives a score of `1.0` automatically.
+3.  **Synthesis and Calibration:** Direct user responses to diagnostic questions are saved as standard `Attempt` records. When `consolidate_learner_profile()` is invoked, the AI connector processes these responses to synthesize new, active `LearnerHypothesis` records (e.g. `preference.practical_code` or `goals.career_transition`). These hypotheses automatically guide subsequent candidate generation sessions to deliver a highly tailored training experience.
+
