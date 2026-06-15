@@ -73,7 +73,7 @@ dojo add --text "Calculus notes here." --title "Calculus" --topic "math.calculus
     dojo correct [--feedback <notes>] [--session <session-id>]
     ```
 
-### 6. Learner Profile Consolidation (Admin)
+### 6. Learner Profile Consolidation & Preferences (Admin)
 *   **Consolidate Hypotheses:** Periodically consolidate recent attempts, skips, and free-form feedback into stable learner profile hypotheses:
     ```bash
     dojo admin consolidate
@@ -81,8 +81,22 @@ dojo add --text "Calculus notes here." --title "Calculus" --topic "math.calculus
     *   Invokes the default AI connector internally with the task `profile.consolidate` to analyze the last 20 attempts.
     *   Upserts active misconceptions and resolves outdated hypotheses.
     *   Active hypotheses are automatically injected into future JIT generation runs to calibrate difficulty and target weak areas.
+*   **Manage Preferences (Config):** View and set configuration preferences:
+    ```bash
+    dojo config show
+    dojo config set <key> <value>
+    ```
+    *   Common keys: `schedule.enabled` (`"true"`/`"false"`), `schedule.daily_time_utc` (`"HH:MM"`).
 
 ## Curator / Integration Guidelines
-1.  **Avoid Volatile Adjustments:** Do not attempt to alter lesson campaigns directly on every single user comment. Instead, rely on `dojo skip` and `dojo correct` to log raw feedback, and trigger `dojo admin consolidate` periodically (e.g., at the end of a session or when requested) to synthesize stable hypotheses.
-2.  **JIT Replenishment:** Rely on `dojo start`'s automatic JIT replenishment logic to generate new practice items on demand, preventing excess advance generation and maintaining adaptive flexibility.
+1.  **Agent-Delegated Daily Scheduling:**
+    *   At startup or on change, the agent MUST inspect the configurations using `dojo config show --json`.
+    *   If `schedule.enabled` is `"true"` and `schedule.daily_time_utc` is set, the agent framework must register a recurring daily background task.
+    *   When the timer fires, the agent initiates the daily study reminder and starts the practice session conversationally.
+2.  **Handling Diagnostic Questions:**
+    *   If JIT candidate generation returns diagnostic/pedagogical questions (indicated by `"quality": "diagnostic"`), Dojo serves them during the practice session.
+    *   The agent should converse naturally to get the user's response to the diagnostic question, then submit the answer via `dojo answer "<response>"`.
+    *   These responses are later consolidated by `dojo admin consolidate` into stable, calibrating hypotheses.
+3.  **Avoid Volatile Adjustments:** Do not attempt to alter lesson campaigns directly on every single user comment. Instead, rely on `dojo skip` and `dojo correct` to log raw feedback, and trigger `dojo admin consolidate` periodically (e.g., at the end of a session or when requested) to synthesize stable hypotheses.
+4.  **JIT Replenishment:** Rely on `dojo start`'s automatic JIT replenishment logic to generate new practice items on demand, preventing excess advance generation and maintaining adaptive flexibility.
 

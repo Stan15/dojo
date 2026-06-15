@@ -930,7 +930,36 @@ def cmd_admin_consolidate(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_config_set(args: argparse.Namespace) -> int:
+    api = DojoAPI(_db_path(args))
+    res = api.save_config(args.key, args.value)
+    if _use_json(args):
+        _print_json(res)
+    else:
+        console.print(f"[bold green]Config set successfully:[/bold green] [cyan]{args.key}[/cyan] = [green]{args.value}[/green]")
+    return 0
+
+
+def cmd_config_show(args: argparse.Namespace) -> int:
+    api = DojoAPI(_db_path(args))
+    configs = api.list_configs()
+    if _use_json(args):
+        _print_json(configs)
+    else:
+        if not configs:
+            console.print("[yellow]No configuration preferences set yet.[/yellow]")
+            return 0
+        table = Table(title="Dojo Learner Configuration Preferences")
+        table.add_column("Key", style="cyan")
+        table.add_column("Value", style="green")
+        for k, v in sorted(configs.items()):
+            table.add_row(k, v)
+        console.print(table)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
+
     parser = argparse.ArgumentParser(prog="dojo")
     parser.add_argument("--db", help="SQLite database path")
     parser.add_argument("--json", action="store_true", help="output structured JSON instead of human-friendly text")
@@ -1021,6 +1050,15 @@ def build_parser() -> argparse.ArgumentParser:
     p_admin_sub = p_admin.add_subparsers(dest="admin_command", required=True)
     p_consolidate = p_admin_sub.add_parser("consolidate")
     p_consolidate.set_defaults(func=cmd_admin_consolidate)
+
+    p_config = sub.add_parser("config")
+    p_config_sub = p_config.add_subparsers(dest="config_command", required=True)
+    p_config_set = p_config_sub.add_parser("set")
+    p_config_set.add_argument("key")
+    p_config_set.add_argument("value")
+    p_config_set.set_defaults(func=cmd_config_set)
+    p_config_show = p_config_sub.add_parser("show")
+    p_config_show.set_defaults(func=cmd_config_show)
 
     connect = sub.add_parser("connect")
     connect_sub = connect.add_subparsers(dest="connect_command", required=True)
