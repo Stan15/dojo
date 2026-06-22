@@ -62,8 +62,10 @@ api = DojoAPI(db_path=None)
 *   `skip_active_exercise(reason, feedback=None, session_id=None) -> dict`
     *   Skips the active exercise with a reason (`forgot`, `too_easy`, `too_hard`, `bad_quality`) and optional notes.
     *   If `"forgot"`, the exercise remains due in rotation. For other reasons, it is archived.
-*   `correct_last_attempt(feedback=None, session_id=None) -> dict`
-    *   Overrides the last recorded attempt score in the session (or globally) to `1.0` (correct).
+*   `correct_last_attempt(score=1.0, feedback=None, session_id=None) -> dict`
+    *   Overrides the last recorded attempt score (default `1.0`) in the session (or globally) and resets consolidated status to `False`.
+*   `add_learner_feedback(content, campaign_id=None, attempt_id=None) -> dict`
+    *   Saves a learner feedback comment as a learner hypothesis scoped under `feedback.user.<uuid>`. If `attempt_id` is provided, links it directly to that attempt and its campaign. If both are `None`, defaults to campaign-level routing based on the last attempt's campaign (with `attempt_id = None`).
 
 ### Learner Profile Consolidation
 
@@ -71,8 +73,8 @@ api = DojoAPI(db_path=None)
     *   Lists consolidated learner hypotheses (misconceptions/patterns).
 *   `save_learner_hypothesis(key, description, status="active") -> dict`
     *   Upserts a hypothesis key-description record.
-*   `consolidate_learner_profile() -> dict`
-    *   Synthesizes the last 20 attempts using the default AI connector (`profile.consolidate`).
+*   `consolidate_learner_profile(campaign_id=None) -> dict`
+    *   Synthesizes the unconsolidated attempts and active feedback using the default AI connector (`profile.consolidate`). If `campaign_id` is provided, consolidates just that campaign; if not, loops over and consolidates all active campaigns.
     *   Outdated active hypotheses not returned by the connector are set to `"resolved"`.
 
 ### Configuration Preferences
@@ -102,12 +104,15 @@ api = DojoAPI(db_path=None)
 | `dojo answer` | `<answer> [--session <id>]` | Submits response and scores correctness. |
 | `dojo due` | `[--topic <path>]` | Returns the count of active due exercises. |
 | `dojo skip` | `--reason <reason> [--feedback <txt>]` | Skips exercise (`forgot` keeps due; others archive). |
-| `dojo correct` | `[--feedback <txt>]` | Overrides the score of the last attempt to `1.0`. |
+| `dojo correct` | `[--feedback <txt>] [--score <n>]` | Overrides the score (default `1.0`) of the last attempt. |
+| `dojo feedback` | `<comment> [--campaign <id>] [--attempt <id>]` | Logs a user feedback comment (campaign default; no guessing). |
 | `dojo progress` | None | Lists accuracy, latency, and recent attempts. |
-| `dojo admin consolidate` | None | Periodically synthesizes stable hypotheses from attempts. |
+| `dojo admin consolidate` | `[--campaign <id>]` | Synthesizes stable hypotheses from attempts/feedback. |
 | `dojo config set` | `<key> <value>` | Sets a learner configuration preference. |
 | `dojo config show` | None | Lists all active configuration preferences. |
-| `dojo install` | `<hermes | openclaw>` | Installs skill and auto-configures default AI connector. |
+| `dojo install` | `[<agent>] [--dest <path>] [--argv <cmd>]` | Installs skill and auto-configures default AI connector. |
+| `dojo campaign plan` | `<goal>` | Proposes a syllabus outline and refinement questions for a learning goal. |
+| `dojo campaign create` | `<goal> [--level <lvl>] [--name <str>] [--exclude <str>] [--feedback <str>]` | Finalizes planning, generates syllabus source, and registers the campaign. |
 | `dojo connect ai command` | `<name> -- argv` | Registers a command-based AI connector. |
 | `dojo connect ai list` | None | Lists registered AI connectors. |
 | `dojo connect ai test` | `[<name>]` | Tests AI connector connectivity. |

@@ -1,102 +1,74 @@
 ---
 name: dojo
-description: Guidance on using the Dojo Learning System CLI to ingest notes, manage candidate exercises, and run practice recall sessions.
+description: "Use Dojo for learning/training/studying knowledge: ingest notes, create learning campaigns, generate/practice candidate exercises, and run active recall sessions. Trigger on phrases like 'I want to learn X', 'help me study X', 'quiz me', 'practice recall', 'train on X', or 'give me exercises' when the context is knowledge/learning rather than physical fitness."
+owner: github.com/Stan15/dojo
 ---
 
 # Dojo Learning System Skill
 
-This skill allows the agent to interact with the Dojo Learning System CLI, enabling it to ingest notes, manage exercises, and run study sessions.
+Dojo is a local-first active practice and learning engine (incorporating candidate generation, review queueing, practice sessions, recall scoring, and automatic profile consolidation). The agent interacts with Dojo entirely by executing standard CLI commands (passing `--json` to receive structured JSON output).
 
-## Overview of CLI Commands
+## Trigger / Recognition Rules
 
-All commands support the `--json` flag to return structured JSON envelopes, and should be run with `--json` in agent/non-interactive environments.
+Use this skill when the user asks to:
+*   Learn, study, train, drill, quiz, review, memorize, or practice recall on a knowledge topic.
+*   Get practice exercises, questions, or flashcards for a subject.
+*   Create a learning plan, syllabus, or study campaign.
+*   Turn raw notes, text, files, or URLs into practice material.
 
-### 1. Ingesting Sources & Generating Candidates
-To add a text source and automatically generate practice candidates:
-```bash
-dojo add --text "Calculus notes here." --title "Calculus" --topic "math.calculus" --mission "Learn derivatives" --generate
-```
-*   `--generate`: Triggers exercise candidate drafting via the configured AI connector.
-*   Outputs a JSON object containing the `source_id` (e.g., `src_abcdef12`).
+**Proactive Suggestion Guidance:**
+*   If the user says *"I want to learn X"* or *"help me study X"*, suggest:
+    *"I can set this up as a Dojo learning campaign and generate practice exercises. Would you like me to plan it?"*
+    Then run `dojo campaign plan "X" --json` to get the syllabus and refinement questions.
+*   If the user says *"train"* or *"give me exercises"* without clear context:
+    *   If the recent conversation involves Dojo, programming, reading, or learning tools, assume Dojo.
+    *   Otherwise ask: *"Do you mean Dojo learning practice exercises, or a physical workout?"*
 
-### 2. Inspecting Candidates
-*   **List Topics:** List inferred topics and candidate counts for a source:
-    ```bash
-    dojo source topics <source-id>
-    ```
-*   **List Candidates:** List all candidate drafts for a source, optionally filtered by topic:
-    ```bash
-    dojo source candidates <source-id> [--topic <topic>]
-    ```
 
-### 3. Queueing/Promoting Candidates
-*   **Bulk Queue:** Promote candidate drafts matching a topic from a source to active exercises:
-    ```bash
-    dojo queue --source <source-id> [--topic <topic>] [--limit <limit>]
-    ```
-*   **Queue by ID:** Promote a single candidate to active exercise:
-    ```bash
-    dojo queue <candidate-id>
-    ```
+## Goal-Oriented Campaign Ingestion
 
-### 4. Running Practice Sessions
-*   **Start Session:** Open or resume a practice session (returns `session_id`). If the due queue has fewer than 3 exercises, it automatically generates 3–5 new items from active sources using the default AI connector:
-    ```bash
-    dojo start [--topic <topic>] [--limit <limit>]
-    ```
-*   **Reveal Prompt:** Get the active prompt and start the timer (run with `--json` or `--no-input` to avoid TTY block):
-    ```bash
-    dojo ready [--session <session-id>]
-    ```
-*   **Answer Prompt:** Submit the answer to the active prompt. Calculates latency and evaluates correctness:
-    ```bash
-    dojo answer <user-answer> [--session <session-id>]
-    ```
-*   **Progress Dashboard:** List recall latency, accuracy, and recent attempts:
-    ```bash
-    dojo progress
-    ```
+When the user asks to study a new topic or goal without providing raw text/files (e.g. "I want to learn Docker Compose" or "help me improve my memory"), follow this two-step collaborative protocol to plan and launch their campaign:
 
-### 5. Managing Queue & Feedback
-*   **Check Due Count:** Query the number of active unattempted exercises:
-    ```bash
-    dojo due [--topic <topic>]
-    ```
-*   **Skip Exercise:** Skip the active exercise in a session with a specific reason and optional feedback text:
-    ```bash
-    dojo skip --reason <forgot|too_easy|too_hard|bad_quality> [--feedback <feedback>] [--session <session-id>]
-    ```
-    *   *Forgot:* Keeps the exercise in rotation (remains due/active).
-    *   *Too Easy / Too Hard / Bad Quality:* Archives the exercise dynamically (removes from active queue).
-*   **Correct Attempt:** Override a rigid grader mistake on the last attempt to `1.0` (correct) with optional explanation notes:
-    ```bash
-    dojo correct [--feedback <notes>] [--session <session-id>]
-    ```
+1. **Plan Proposal:**
+   Run `dojo campaign plan "<goal>" --json`.
+   * Extract the returned proposed syllabus and the list of `refinement_questions`.
+   * Present the syllabus outline to the user and ask them the refinement questions (e.g., to confirm scope, target level, or specific exclusions).
+   * Note: Dojo automatically checks existing topic trees and formats them for consolidation, preventing namespace duplicates.
 
-### 6. Learner Profile Consolidation & Preferences (Admin)
-*   **Consolidate Hypotheses:** Periodically consolidate recent attempts, skips, and free-form feedback into stable learner profile hypotheses:
-    ```bash
-    dojo admin consolidate
-    ```
-    *   Invokes the default AI connector internally with the task `profile.consolidate` to analyze the last 20 attempts.
-    *   Upserts active misconceptions and resolves outdated hypotheses.
-    *   Active hypotheses are automatically injected into future JIT generation runs to calibrate difficulty and target weak areas.
-*   **Manage Preferences (Config):** View and set configuration preferences:
-    ```bash
-    dojo config show
-    dojo config set <key> <value>
-    ```
-    *   Common keys: `schedule.enabled` (`"true"`/`"false"`), `schedule.daily_time_utc` (`"HH:MM"`).
+2. **Finalize & Create:**
+   Once the user replies with their preferences:
+   * Run `dojo campaign create "<goal>" --level "<beginner|intermediate|advanced>" --feedback "<user refinements>" --json` (optionally pass `--exclude "<exclusions>"` and `--name "<override-name>"` if relevant).
+   * Confirm the successful creation of the campaign to the user and show them the final attack plan phases.
+   * Start practicing immediately by launching the practice loop!
 
-## Curator / Integration Guidelines
-1.  **Agent-Delegated Daily Scheduling:**
-    *   At startup or on change, the agent MUST inspect the configurations using `dojo config show --json`.
-    *   If `schedule.enabled` is `"true"` and `schedule.daily_time_utc` is set, the agent framework must register a recurring daily background task.
-    *   When the timer fires, the agent initiates the daily study reminder and starts the practice session conversationally.
-2.  **Handling Diagnostic Questions:**
-    *   If JIT candidate generation returns diagnostic/pedagogical questions (indicated by `"quality": "diagnostic"`), Dojo serves them during the practice session.
-    *   The agent should converse naturally to get the user's response to the diagnostic question, then submit the answer via `dojo answer "<response>"`.
-    *   These responses are later consolidated by `dojo admin consolidate` into stable, calibrating hypotheses.
-3.  **Avoid Volatile Adjustments:** Do not attempt to alter lesson campaigns directly on every single user comment. Instead, rely on `dojo skip` and `dojo correct` to log raw feedback, and trigger `dojo admin consolidate` periodically (e.g., at the end of a session or when requested) to synthesize stable hypotheses.
-4.  **JIT Replenishment:** Rely on `dojo start`'s automatic JIT replenishment logic to generate new practice items on demand, preventing excess advance generation and maintaining adaptive flexibility.
+## The Core Active Practice Loop
 
+When the user requests to start a study session or when a scheduled practice timer triggers, follow this step-by-step protocol:
+
+1. **Initialize the Session:**
+   Run `dojo start --json` (optionally pass `--topic <path>` if a specific topic or campaign was requested).
+   * Extract the returned `session_id` and the total number of exercises.
+   * Note: Dojo automatically consolidates the learner's profile under the hood during this initialization call to ensure strategies and difficulty are calibrated.
+
+2. **Present Exercises Iteratively:**
+   For each exercise in the session:
+   * **Get Prompt:** Run `dojo ready --session <session-id> --json`.
+   * **Deliver Prompt:** Present the returned `prompt` text verbatim to the user.
+   * **Wait for Reply:** Stop and wait for the user's response. Do NOT make any tool calls until the user replies.
+   * **Submit Response:** Run `dojo answer "<user-response>" --session <session-id> --json`.
+   * **Report Grade:** Inform the user if they were correct (`score == 1.0`). If incorrect, display the correct answer.
+   * **Loop Check:** Check `is_session_completed`. If `true`, break the loop.
+
+3. **Show Progress:**
+   Announce session completion and run `dojo progress` to print the learner's accuracy and latency metrics.
+
+## Progressive Help & Discoverability
+
+All Dojo commands are fully self-documenting. Rather than memorizing advanced rules, parameters, and flags, the agent **MUST** run `dojo <command> --help` to dynamically retrieve parameters and guidelines whenever the user asks to perform advanced operations:
+
+* **Scheduling:** Run `dojo config --help` to see configuration preferences (e.g. `schedule.enabled`, `schedule.daily_time_utc`). To register recurring practice reminders, use the host agent's scheduler or task registration tool (e.g. via the agent's cron command, background scheduler, or system cron) to trigger this practice loop.
+* **Skips:** Run `dojo skip --help` to skip an active exercise with a specific reason.
+* **Corrections:** Run `dojo correct --help` to override incorrect scoring on the last attempt.
+* **Feedback:** Run `dojo feedback --help` to log specific or general learning feedback.
+* **Ingestion:** Run `dojo add --help` to ingest new text files or notes and generate candidates.
+* **Review:** Run `dojo source --help` or `dojo queue --help` to review and promote candidate exercises.

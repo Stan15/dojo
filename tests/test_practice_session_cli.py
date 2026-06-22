@@ -22,7 +22,7 @@ def setup_test_data(tmp_path):
             content="Paris is the capital of France. Berlin is the capital of Germany.",
             kind="text",
         )
-        
+
         # Save exercises
         db.save_candidate(
             session,
@@ -42,7 +42,7 @@ def setup_test_data(tmp_path):
             topic_path="geo.germany",
             source_refs={"span": "Berlin"},
         )
-        
+
         # Promote them to exercises
         db.promote_candidate(session, "cand_1")
         db.promote_candidate(session, "cand_2")
@@ -140,17 +140,17 @@ def test_progress_stats(tmp_path):
 
 def test_due_cli(tmp_path):
     setup_test_data(tmp_path)
-    
+
     # Check initial due count
     out = run_cli(tmp_path, "--json", "due").stdout
     res = json.loads(out)
     assert res["due_count"] == 2
-    
+
     # Filter by topic that matches
     out_topic = run_cli(tmp_path, "--json", "due", "--topic", "geo.france").stdout
     res_topic = json.loads(out_topic)
     assert res_topic["due_count"] == 1
-    
+
     # Filter by topic that does not match
     out_none = run_cli(tmp_path, "--json", "due", "--topic", "math").stdout
     res_none = json.loads(out_none)
@@ -161,7 +161,7 @@ def test_skip_cli(tmp_path):
     setup_test_data(tmp_path)
     run_cli(tmp_path, "start")
     run_cli(tmp_path, "ready")
-    
+
     # Skip the active exercise
     out = run_cli(tmp_path, "--json", "skip", "--reason", "forgot", "--feedback", "forgot france capital").stdout
     res = json.loads(out)
@@ -176,7 +176,7 @@ def test_correct_cli(tmp_path):
     run_cli(tmp_path, "start")
     run_cli(tmp_path, "ready")
     run_cli(tmp_path, "answer", "Wrong") # Incorrect answer recorded
-    
+
     # Correct it using CLI
     out = run_cli(tmp_path, "--json", "correct", "--feedback", "typo override").stdout
     res = json.loads(out)
@@ -190,9 +190,76 @@ def test_config_cli(tmp_path):
     res = json.loads(out)
     assert res["key"] == "schedule.enabled"
     assert res["value"] == "true"
-    
+
     # Show configs
     out_show = run_cli(tmp_path, "--json", "config", "show").stdout
     res_show = json.loads(out_show)
     assert res_show["schedule.enabled"] == "true"
 
+
+def test_feedback_cli(tmp_path):
+    db_path = setup_test_data(tmp_path)
+
+    # Create a campaign
+    with db.connect(db_path) as session:
+        session.add(db.Campaign(
+            id="camp_geo",
+            name="Geography Campaign",
+            topic_path="geo",
+            mission="Learn geography",
+            attack_plan_json="[]",
+            strategy_profile_json="{}",
+        ))
+        session.commit()
+
+    run_cli(tmp_path, "start")
+    run_cli(tmp_path, "ready")
+    run_cli(tmp_path, "answer", "Paris")
+
+    out = run_cli(tmp_path, "--json", "feedback", "The maps are neat").stdout
+    res = json.loads(out)
+    assert res["topic_path"] == "geo"
+    assert res["description"] == "The maps are neat"
+    assert res["key"].startswith("feedback.user.")
+
+
+def test_correct_with_score_cli(tmp_path):
+    setup_test_data(tmp_path)
+    run_cli(tmp_path, "start")
+    run_cli(tmp_path, "ready")
+    run_cli(tmp_path, "answer", "Wrong")
+
+    out = run_cli(tmp_path, "--json", "correct", "--score", "0.5", "--feedback", "partial credit").stdout
+    res = json.loads(out)
+    assert res["score"] == 0.5
+    assert res["feedback"] == "partial credit"
+    assert res["consolidated"] is False
+
+
+def test_feedback_with_attempt_cli(tmp_path):
+    db_path = setup_test_data(tmp_path)
+
+    # Create a campaign
+    with db.connect(db_path) as session:
+        session.add(db.Campaign(
+            id="camp_geo",
+            name="Geography Campaign",
+            topic_path="geo",
+            mission="Learn geography",
+            attack_plan_json="[]",
+            strategy_profile_json="{}",
+        ))
+        session.commit()
+
+    run_cli(tmp_path, "start")
+    run_cli(tmp_path, "ready")
+    ans_out = run_cli(tmp_path, "--json", "answer", "Paris").stdout
+    ans = json.loads(ans_out)
+    attempt_id = ans["attempt_id"]
+
+    # Feedback with explicit attempt ID
+    out = run_cli(tmp_path, "--json", "feedback", "This Q was excellent", "--attempt", attempt_id).stdout
+    res = json.loads(out)
+    assert res["topic_path"] == "geo"
+    assert res["attempt_id"] == attempt_id
+    assert res["description"] == "This Q was excellent"

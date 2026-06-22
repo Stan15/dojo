@@ -38,3 +38,5 @@ dist/
 # Logs/cache
 *.log
 .cache/
+scratch/
+
