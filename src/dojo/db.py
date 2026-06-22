@@ -52,10 +52,15 @@ class Campaign(SQLModel, table=True):
     __tablename__ = "campaigns"
     id: str = Field(primary_key=True)
     name: str
+    source_id: Optional[str] = Field(default=None, foreign_key="sources.id")
     topic_path: Optional[str] = None
     mission: str
     attack_plan_json: str
+    pedagogical_journal_json: str = Field(default="[]")
+    strategy_profile_json: str = Field(default="{}")
     active_phase_index: int = Field(default=0)
+    syllabus_markdown: Optional[str] = Field(default=None)
+    sources_config_json: str = Field(default="[]")
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
@@ -63,7 +68,7 @@ class Campaign(SQLModel, table=True):
 class Candidate(SQLModel, table=True):
     __tablename__ = "candidates"
     id: str = Field(primary_key=True)
-    source_id: str = Field(foreign_key="sources.id")
+    source_id: Optional[str] = Field(default=None, foreign_key="sources.id")
     prompt: str
     answer: Optional[str] = None
     rubric: Optional[str] = None
@@ -79,7 +84,7 @@ class Exercise(SQLModel, table=True):
     __tablename__ = "exercises"
     id: str = Field(primary_key=True)
     candidate_id: Optional[str] = Field(default=None, foreign_key="candidates.id")
-    source_id: str = Field(foreign_key="sources.id")
+    source_id: Optional[str] = Field(default=None, foreign_key="sources.id")
     prompt: str
     answer: Optional[str] = None
     rubric: Optional[str] = None
@@ -107,13 +112,15 @@ class Attempt(SQLModel, table=True):
     id: str = Field(primary_key=True)
     session_id: Optional[str] = Field(default=None, foreign_key="practice_sessions.id")
     exercise_id: str = Field(foreign_key="exercises.id")
-    source_id: str = Field(foreign_key="sources.id")
+    source_id: Optional[str] = Field(default=None, foreign_key="sources.id")
     prompt: str
     user_answer: str
     score: float
     latency_seconds: float
     skip_reason: Optional[str] = Field(default=None)
     feedback: Optional[str] = Field(default=None)
+    campaign_id: Optional[str] = Field(default=None, foreign_key="campaigns.id")
+    consolidated: bool = Field(default=False)
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
@@ -123,6 +130,8 @@ class LearnerHypothesis(SQLModel, table=True):
     key: str
     description: str
     status: str = Field(default="active")
+    topic_path: Optional[str] = Field(default=None)
+    attempt_id: Optional[str] = Field(default=None, foreign_key="attempts.id")
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
@@ -153,6 +162,108 @@ def connect(path: str | Path | None = None) -> Session:
 def init_db(path: str | Path | None = None) -> None:
     engine = get_engine(path)
     SQLModel.metadata.create_all(engine)
+    # Ensure campaigns.source_id column exists (milestone 3 migration)
+    try:
+        with engine.begin() as conn:
+            conn.exec_driver_sql("ALTER TABLE campaigns ADD COLUMN source_id VARCHAR")
+    except Exception:
+        pass
+    # Ensure campaigns.strategy_profile_json column exists (milestone 3 migration)
+    try:
+        with engine.begin() as conn:
+            conn.exec_driver_sql("ALTER TABLE campaigns ADD COLUMN strategy_profile_json VARCHAR DEFAULT '{}'")
+    except Exception:
+        pass
+    # Ensure campaigns.pedagogical_journal_json column exists (milestone 3 migration)
+    try:
+        with engine.begin() as conn:
+            conn.exec_driver_sql("ALTER TABLE campaigns ADD COLUMN pedagogical_journal_json VARCHAR DEFAULT '[]'")
+    except Exception:
+        pass
+    # Ensure attempts columns exist (milestone 3 migration)
+    try:
+        with engine.begin() as conn:
+            conn.exec_driver_sql("ALTER TABLE attempts ADD COLUMN skip_reason VARCHAR")
+    except Exception:
+        pass
+    try:
+        with engine.begin() as conn:
+            conn.exec_driver_sql("ALTER TABLE attempts ADD COLUMN feedback VARCHAR")
+    except Exception:
+        pass
+    try:
+        with engine.begin() as conn:
+            conn.exec_driver_sql("ALTER TABLE attempts ADD COLUMN campaign_id VARCHAR")
+    except Exception:
+        pass
+    try:
+        with engine.begin() as conn:
+            conn.exec_driver_sql("ALTER TABLE attempts ADD COLUMN consolidated BOOLEAN DEFAULT 0")
+    except Exception:
+        pass
+    # Ensure campaigns.syllabus_markdown column exists
+    try:
+        with engine.begin() as conn:
+            conn.exec_driver_sql("ALTER TABLE campaigns ADD COLUMN syllabus_markdown VARCHAR")
+    except Exception:
+        pass
+    # Ensure campaigns.sources_config_json column exists
+    try:
+        with engine.begin() as conn:
+            conn.exec_driver_sql("ALTER TABLE campaigns ADD COLUMN sources_config_json VARCHAR DEFAULT '[]'")
+    except Exception:
+        pass
+
+    # Migrate source_id to nullable for candidates, exercises, and attempts
+    _make_column_nullable(engine, "candidates", "source_id")
+    _make_column_nullable(engine, "exercises", "source_id")
+    _make_column_nullable(engine, "attempts", "source_id")
+
+
+def _make_column_nullable(engine, table_name, column_name):
+    try:
+        with engine.connect() as conn:
+            cursor = conn.exec_driver_sql(f"PRAGMA table_info({table_name})")
+            columns = cursor.fetchall()
+    except Exception:
+        return
+
+    col_info = None
+    for col in columns:
+        if col[1] == column_name:
+            col_info = col
+            break
+
+    if col_info is None:
+        return
+
+    notnull = col_info[3]
+    if notnull == 1:
+        try:
+            with engine.begin() as conn:
+                conn.exec_driver_sql(f"ALTER TABLE {table_name} RENAME TO _old_{table_name}")
+
+            SQLModel.metadata.create_all(engine)
+
+            with engine.connect() as conn:
+                cursor_old = conn.exec_driver_sql(f"PRAGMA table_info(_old_{table_name})")
+                old_cols = {row[1] for row in cursor_old.fetchall()}
+                cursor_new = conn.exec_driver_sql(f"PRAGMA table_info({table_name})")
+                new_cols = {row[1] for row in cursor_new.fetchall()}
+
+            shared_cols = [col for col in old_cols if col in new_cols]
+            if shared_cols:
+                cols_str = ", ".join(shared_cols)
+                with engine.begin() as conn:
+                    conn.exec_driver_sql(f"INSERT INTO {table_name} ({cols_str}) SELECT {cols_str} FROM _old_{table_name}")
+                    conn.exec_driver_sql(f"DROP TABLE _old_{table_name}")
+        except Exception:
+            try:
+                with engine.begin() as conn:
+                    conn.exec_driver_sql(f"DROP TABLE IF EXISTS {table_name}")
+                    conn.exec_driver_sql(f"ALTER TABLE _old_{table_name} RENAME TO {table_name}")
+            except Exception:
+                pass
 
 
 def _connector_from_model(model: AIConnector) -> dict[str, Any]:
@@ -189,10 +300,15 @@ def _campaign_from_model(model: Campaign) -> dict[str, Any]:
     return {
         "id": model.id,
         "name": model.name,
+        "source_id": model.source_id,
         "topic_path": model.topic_path,
         "mission": model.mission,
         "attack_plan": json.loads(model.attack_plan_json),
+        "pedagogical_journal": json.loads(model.pedagogical_journal_json or "[]"),
+        "strategy_profile": json.loads(model.strategy_profile_json or "{}"),
         "active_phase_index": model.active_phase_index,
+        "syllabus_markdown": model.syllabus_markdown,
+        "sources_config": json.loads(model.sources_config_json or "[]"),
         "created_at": model.created_at,
         "updated_at": model.updated_at,
     }
@@ -249,6 +365,8 @@ def _attempt_from_model(model: Attempt) -> dict[str, Any]:
         "session_id": model.session_id,
         "exercise_id": model.exercise_id,
         "source_id": model.source_id,
+        "campaign_id": model.campaign_id,
+        "consolidated": model.consolidated,
         "prompt": model.prompt,
         "user_answer": model.user_answer,
         "score": model.score,
@@ -265,6 +383,8 @@ def _hypothesis_from_model(model: LearnerHypothesis) -> dict[str, Any]:
         "key": model.key,
         "description": model.description,
         "status": model.status,
+        "topic_path": model.topic_path,
+        "attempt_id": model.attempt_id,
         "created_at": model.created_at,
         "updated_at": model.updated_at,
     }
@@ -284,14 +404,19 @@ def save_ai_connector(
 ) -> dict[str, Any]:
     if not argv:
         raise ValueError("command connector argv cannot be empty")
-    
+
     existing = session.get(AIConnector, name)
     if existing and not replace:
         raise ValueError(f"AI connector already exists: {name}; pass --replace to update")
-        
+
     if is_default:
-        session.execute(SQLModel.metadata.tables["ai_connectors"].update().values(is_default=0))
-        
+        session.execute(
+            SQLModel.metadata.tables["ai_connectors"]
+            .update()
+            .where(SQLModel.metadata.tables["ai_connectors"].c.name != name)
+            .values(is_default=0)
+        )
+
     if existing:
         existing.kind = kind
         existing.argv_json = json.dumps(argv)
@@ -312,7 +437,7 @@ def save_ai_connector(
             is_default=int(is_default),
         )
         session.add(connector)
-        
+
     session.commit()
     session.refresh(connector)
     return _connector_from_model(connector)
@@ -333,7 +458,12 @@ def set_default_ai_connector(session: Session, name: str) -> dict[str, Any]:
     connector = session.get(AIConnector, name)
     if connector is None:
         raise ValueError(f"unknown AI connector: {name}")
-    session.execute(SQLModel.metadata.tables["ai_connectors"].update().values(is_default=0))
+    session.execute(
+        SQLModel.metadata.tables["ai_connectors"]
+        .update()
+        .where(SQLModel.metadata.tables["ai_connectors"].c.name != name)
+        .values(is_default=0)
+    )
     connector.is_default = 1
     connector.updated_at = datetime.now(timezone.utc).isoformat()
     session.commit()
@@ -443,7 +573,7 @@ def save_candidate(
     session: Session,
     *,
     id: str,
-    source_id: str,
+    source_id: Optional[str] = None,
     prompt: str,
     answer: str | None = None,
     rubric: dict[str, Any] | None = None,
@@ -490,15 +620,14 @@ def get_candidate(session: Session, id: str) -> dict[str, Any] | None:
 
 
 def list_candidates(
-    session: Session, source_id: str, topic_path: str | None = None
+    session: Session, source_id: Optional[str] = None, topic_path: str | None = None
 ) -> list[dict[str, Any]]:
+    statement = select(Candidate)
+    if source_id is not None:
+        statement = statement.where(Candidate.source_id == source_id)
     if topic_path:
-        statement = select(Candidate).where(
-            Candidate.source_id == source_id,
-            Candidate.topic_path.like(f"{topic_path}%"),
-        ).order_by(Candidate.created_at.asc())
-    else:
-        statement = select(Candidate).where(Candidate.source_id == source_id).order_by(Candidate.created_at.asc())
+        statement = statement.where(Candidate.topic_path.like(f"{topic_path}%"))
+    statement = statement.order_by(Candidate.created_at.asc())
     results = session.exec(statement).all()
     return [_candidate_from_model(c) for c in results]
 
@@ -517,9 +646,9 @@ def promote_candidate(session: Session, candidate_id: str) -> dict[str, Any]:
     candidate = session.get(Candidate, candidate_id)
     if candidate is None:
         raise ValueError(f"unknown candidate: {candidate_id}")
-    
+
     exercise_id = f"ex_{candidate_id.split('_', 1)[-1]}" if "_" in candidate_id else f"ex_{candidate_id}"
-    
+
     existing_ex = session.get(Exercise, exercise_id)
     if existing_ex:
         existing_ex.candidate_id = candidate_id
@@ -547,7 +676,7 @@ def promote_candidate(session: Session, candidate_id: str) -> dict[str, Any]:
             quality=candidate.quality if candidate.quality == "diagnostic" else "reviewed",
         )
         session.add(exercise)
-        
+
     session.delete(candidate)
     session.commit()
     session.refresh(exercise)
@@ -559,17 +688,26 @@ def save_campaign(
     *,
     id: str,
     name: str,
+    source_id: str | None = None,
     topic_path: str | None = None,
     mission: str,
     attack_plan: dict[str, Any],
+    pedagogical_journal: list[dict[str, Any]] | None = None,
+    strategy_profile: dict[str, Any] | None = None,
     active_phase_index: int = 0,
 ) -> dict[str, Any]:
     existing = session.get(Campaign, id)
     if existing:
         existing.name = name
+        if source_id is not None:
+            existing.source_id = source_id
         existing.topic_path = topic_path
         existing.mission = mission
         existing.attack_plan_json = json.dumps(attack_plan)
+        if pedagogical_journal is not None:
+            existing.pedagogical_journal_json = json.dumps(pedagogical_journal)
+        if strategy_profile is not None:
+            existing.strategy_profile_json = json.dumps(strategy_profile)
         existing.active_phase_index = active_phase_index
         existing.updated_at = datetime.now(timezone.utc).isoformat()
         campaign = existing
@@ -577,9 +715,12 @@ def save_campaign(
         campaign = Campaign(
             id=id,
             name=name,
+            source_id=source_id,
             topic_path=topic_path,
             mission=mission,
             attack_plan_json=json.dumps(attack_plan),
+            pedagogical_journal_json=json.dumps(pedagogical_journal or []),
+            strategy_profile_json=json.dumps(strategy_profile or {}),
             active_phase_index=active_phase_index,
         )
         session.add(campaign)
@@ -650,13 +791,15 @@ def save_attempt(
     id: str,
     session_id: Optional[str],
     exercise_id: str,
-    source_id: str,
+    source_id: Optional[str],
     prompt: str,
     user_answer: str,
     score: float,
     latency_seconds: float,
     skip_reason: Optional[str] = None,
     feedback: Optional[str] = None,
+    campaign_id: Optional[str] = None,
+    consolidated: bool = False,
 ) -> dict[str, Any]:
     attempt = Attempt(
         id=id,
@@ -669,6 +812,8 @@ def save_attempt(
         latency_seconds=latency_seconds,
         skip_reason=skip_reason,
         feedback=feedback,
+        campaign_id=campaign_id,
+        consolidated=consolidated,
     )
     session.add(attempt)
     session.commit()
@@ -688,12 +833,18 @@ def save_learner_hypothesis(
     key: str,
     description: str,
     status: str = "active",
+    topic_path: Optional[str] = None,
+    attempt_id: Optional[str] = None,
 ) -> dict[str, Any]:
     existing = session.get(LearnerHypothesis, id)
     if existing:
         existing.key = key
         existing.description = description
         existing.status = status
+        if topic_path is not None:
+            existing.topic_path = topic_path
+        if attempt_id is not None:
+            existing.attempt_id = attempt_id
         existing.updated_at = datetime.now(timezone.utc).isoformat()
         hypothesis = existing
     else:
@@ -702,6 +853,8 @@ def save_learner_hypothesis(
             key=key,
             description=description,
             status=status,
+            topic_path=topic_path,
+            attempt_id=attempt_id,
         )
         session.add(hypothesis)
     session.commit()
@@ -713,10 +866,20 @@ def save_learner_hypothesis(
     return _hypothesis_from_model(hypothesis)
 
 
-def list_learner_hypotheses(session: Session, status: Optional[str] = None) -> list[dict[str, Any]]:
+def list_learner_hypotheses(
+    session: Session,
+    status: Optional[str] = None,
+    topic_path: Optional[str] = None,
+) -> list[dict[str, Any]]:
     statement = select(LearnerHypothesis)
     if status is not None:
         statement = statement.where(LearnerHypothesis.status == status)
+    if topic_path is not None:
+        statement = statement.where(
+            (LearnerHypothesis.topic_path == None) |
+            (LearnerHypothesis.topic_path == topic_path) |
+            (LearnerHypothesis.topic_path.like(topic_path + ".%"))
+        )
     statement = statement.order_by(LearnerHypothesis.created_at.desc())
     results = session.exec(statement).all()
     return [_hypothesis_from_model(h) for h in results]
@@ -745,4 +908,3 @@ def list_configs(session: Session) -> dict[str, str]:
     statement = select(Config)
     results = session.exec(statement).all()
     return {c.key: c.value for c in results}
-
