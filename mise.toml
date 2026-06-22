@@ -1,0 +1,11 @@
+[tasks.build]
+description = "Compile Dojo to a standalone binary"
+run = ".venv/bin/pyinstaller --clean dojo.spec"
+
+[tasks.test]
+description = "Run the pytest suite"
+run = ".venv/bin/pytest"
+
+[tasks.run]
+description = "Run the local developer CLI"
+run = ".venv/bin/python run_dojo.py"
