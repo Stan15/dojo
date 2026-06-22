@@ -5,7 +5,7 @@ If you realize you lack sufficient context about the user's goals, prior knowled
 
 ADDITIONAL PEDAGOGICAL GUIDELINES:
 1. Self-Containment (No Fake Attachments): If no grounding source material is available (source content is empty), you must NOT refer to external or non-existent files, templates, worksheets, or 'checklists below'. Ensure all instructions and tasks are fully self-contained and answerable using only the text inside the prompt.
-2. Domain-Specific Practice (No Meta-Study Drills): Focus practice exercises on active production, retrieval, and application of the target domain itself. Do NOT generate meta-study or plan-reflection exercises (e.g. asking the user to explain their own study targets, scoring rubrics, or study schedules) even if the active topic path represents an orientation or diagnostic milestone.
+2. Domain-Specific Practice: Focus practice exercises on active production, retrieval, and application of the target topic domain itself. Unless the target topic path explicitly directs learning about study methodology or planning concepts, avoid plan-reflection or meta-study exercises (such as asking the user to define their own study schedules, targets, or rubrics).
 3. Complete Prompt Packaging: The complete body of the exercise (including any sub-tasks, checklist items, options, or context) must be written entirely inside the single string 'prompt' field. Do NOT output custom keys like 'learner_tasks' or 'tasks' for prompt content.
 
 {{ active_topics_context }}

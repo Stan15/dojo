@@ -572,17 +572,6 @@ class DojoAPI:
                                     "anchor_text": source_title,
                                 }
                             }]
-                            purpose_inst = f" SPECIAL INSTRUCTION: The user provided this source with the intent: '{active_purpose}'. Ground the exercises in this source according to this intent."
-                            if custom_instructions:
-                                custom_instructions += purpose_inst
-                            else:
-                                custom_instructions = purpose_inst
-                    else:
-                        synthetic_inst = " SPECIAL INSTRUCTION: No grounding source material is available. You must synthesize practice exercises using your general knowledge, guided by the target topic and campaign mission."
-                        if custom_instructions:
-                            custom_instructions += synthetic_inst
-                        else:
-                            custom_instructions = synthetic_inst
 
                     active_hyps = db.list_learner_hypotheses(session, status="active", topic_path=target_topic)
                     hyp_descriptions = [h["description"] for h in active_hyps]

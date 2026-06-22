@@ -25,23 +25,29 @@ class ExerciseGenerateRequest:
         from .schemas import get_schema_instruction
         schema_instruction = get_schema_instruction("exercise.generate")
 
-        from .prompts import load_prompt
-        active_topics_context = f"The active phase targets multiple topics: {', '.join(self.active_topics)}." if self.active_topics else ""
-        phase_focus_context = f"Pedagogical Focus: {self.phase_focus}" if self.phase_focus else ""
-        learner_profile_context = (
-            f"Design practice items that specifically address the learner's active profile hypotheses/misconceptions: {'; '.join(self.learner_hypotheses)}."
-            if self.learner_hypotheses else ""
-        )
-        placeholders = {
-            "active_topics_context": active_topics_context,
-            "phase_focus_context": phase_focus_context,
-            "learner_profile_context": learner_profile_context,
-            "schema_instructions": schema_instruction,
-        }
-        instructions = load_prompt("exercise_generate.md", placeholders)
-
         if self.instructions:
-            instructions = self.instructions + "\n\n" + instructions
+            instructions = self.instructions + schema_instruction
+            if self.active_topics:
+                instructions += f" The active phase targets multiple topics: {', '.join(self.active_topics)}."
+            if self.phase_focus:
+                instructions += f" Pedagogical Focus: {self.phase_focus}"
+            if self.learner_hypotheses:
+                instructions += f" Design practice items that specifically address the learner's active profile hypotheses/misconceptions: {'; '.join(self.learner_hypotheses)}."
+        else:
+            from .prompts import load_prompt
+            active_topics_context = f"The active phase targets multiple topics: {', '.join(self.active_topics)}." if self.active_topics else ""
+            phase_focus_context = f"Pedagogical Focus: {self.phase_focus}" if self.phase_focus else ""
+            learner_profile_context = (
+                f"Design practice items that specifically address the learner's active profile hypotheses/misconceptions: {'; '.join(self.learner_hypotheses)}."
+                if self.learner_hypotheses else ""
+            )
+            placeholders = {
+                "active_topics_context": active_topics_context,
+                "phase_focus_context": phase_focus_context,
+                "learner_profile_context": learner_profile_context,
+                "schema_instructions": schema_instruction,
+            }
+            instructions = load_prompt("exercise_generate.md", placeholders)
 
         if self.strategy:
             scaffolding = self.strategy.get("scaffolding")
