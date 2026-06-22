@@ -33,6 +33,17 @@ class ExerciseGenerateRequest:
                 instructions += f" Pedagogical Focus: {self.phase_focus}"
             if self.learner_hypotheses:
                 instructions += f" Design practice items that specifically address the learner's active profile hypotheses/misconceptions: {'; '.join(self.learner_hypotheses)}."
+            if self.strategy:
+                scaffolding = self.strategy.get("scaffolding")
+                difficulty = self.strategy.get("difficulty")
+                if scaffolding == "high":
+                    instructions += "\nProvide extra context, helpful hints, or structural scaffolding for the learner."
+                elif scaffolding == "low":
+                    instructions += "\nAvoid hints, extra context, or explanatory setup; keep the prompt direct and challenging."
+                if difficulty == "beginner":
+                    instructions += "\nTarget fundamental/introductory concepts and keep complexity low."
+                elif difficulty == "advanced":
+                    instructions += "\nTarget complex, high-level combined applications or edge cases."
         else:
             from .prompts import load_prompt
             active_topics_context = f"The active phase targets multiple topics: {', '.join(self.active_topics)}." if self.active_topics else ""
@@ -41,40 +52,49 @@ class ExerciseGenerateRequest:
                 f"Design practice items that specifically address the learner's active profile hypotheses/misconceptions: {'; '.join(self.learner_hypotheses)}."
                 if self.learner_hypotheses else ""
             )
+            
+            strategy_context = ""
+            if self.strategy:
+                strat_lines = []
+                scaffolding = self.strategy.get("scaffolding")
+                difficulty = self.strategy.get("difficulty")
+                if scaffolding == "high":
+                    strat_lines.append("Provide extra context, helpful hints, or structural scaffolding for the learner.")
+                elif scaffolding == "low":
+                    strat_lines.append("Avoid hints, extra context, or explanatory setup; keep the prompt direct and challenging.")
+                if difficulty == "beginner":
+                    strat_lines.append("Target fundamental/introductory concepts and keep complexity low.")
+                elif difficulty == "advanced":
+                    strat_lines.append("Target complex, high-level combined applications or edge cases.")
+                if strat_lines:
+                    strategy_context = "\n".join(strat_lines)
+
             placeholders = {
                 "active_topics_context": active_topics_context,
                 "phase_focus_context": phase_focus_context,
                 "learner_profile_context": learner_profile_context,
+                "strategy_context": strategy_context,
                 "schema_instructions": schema_instruction,
             }
             instructions = load_prompt("exercise_generate.md", placeholders)
-
-        if self.strategy:
-            scaffolding = self.strategy.get("scaffolding")
-            difficulty = self.strategy.get("difficulty")
-            if scaffolding == "high":
-                instructions += "\nProvide extra context, helpful hints, or structural scaffolding for the learner."
-            elif scaffolding == "low":
-                instructions += "\nAvoid hints, extra context, or explanatory setup; keep the prompt direct and challenging."
-            if difficulty == "beginner":
-                instructions += "\nTarget fundamental/introductory concepts and keep complexity low."
-            elif difficulty == "advanced":
-                instructions += "\nTarget complex, high-level combined applications or edge cases."
 
         req = {
             "task": "exercise.generate",
             "version": 1,
             "instructions": instructions,
-            "source": {
-                "id": self.source_id,
-                "title": self.source_title,
-                "refs": self.source_refs,
-                "content": self.source_content,
-            },
             "topic_hint": self.topic,
             "max_candidates": self.max_candidates,
             "expected_artifacts": ["topic_span", "exercise_draft"],
         }
+        
+        if self.source_content or self.source_id:
+            req["source"] = {
+                "id": self.source_id,
+                "title": self.source_title,
+                "refs": self.source_refs,
+                "content": self.source_content,
+            }
+
         if self.active_topics:
             req["active_topics"] = self.active_topics
         if self.phase_focus:
@@ -89,12 +109,6 @@ class ExerciseGenerateRequest:
             req["learner_profile"] = {
                 "active_hypotheses": self.learner_hypotheses
             }
-            # Append instructions to target these misconceptions/patterns
-            req["instructions"] += (
-                " Design practice items that specifically address the learner's "
-                "active profile hypotheses/misconceptions: "
-                f"{'; '.join(self.learner_hypotheses)}."
-            )
         return req
 
 

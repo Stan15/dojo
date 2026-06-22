@@ -11,12 +11,13 @@ FALLBACK_TEMPLATES = {
         "Return candidates that may span multiple subtopics.\n"
         "If you realize you lack sufficient context about the user's goals, prior knowledge, or learning style for this topic to generate useful, calibrated exercises, or if you determine a pedagogical intervention is needed, you may instead generate 1–3 highly targeted, concise diagnostic questions to help personalize future sessions (set their 'quality' to 'diagnostic').\n\n"
         "ADDITIONAL PEDAGOGICAL GUIDELINES:\n"
-        "1. Self-Containment (No Fake Attachments): If no grounding source material is available (source content is empty), you must NOT refer to external or non-existent files, templates, worksheets, or 'checklists below'. Ensure all instructions and tasks are fully self-contained and answerable using only the text inside the prompt.\n"
-        "2. Domain-Specific Practice: Focus practice exercises on active production, retrieval, and application of the target topic domain itself. Unless the target topic path explicitly directs learning about study methodology or planning concepts, avoid plan-reflection or meta-study exercises (such as asking the user to define their own study schedules, targets, or rubrics).\n"
+        "1. Self-Containment: Ensure all instructions, tasks, and questions are fully self-contained. Do not refer to external or non-existent files, worksheets, or checklists. Every exercise must be fully complete and answerable using only the text provided in its prompt.\n"
+        "2. Domain-Specific Practice (No Learner-as-Teacher Tasks): Focus practice exercises on active production, retrieval, and application of the target topic domain itself. Do not ask the learner to perform the teacher's role (e.g. asking them to design their own curriculum, define grading rubrics, or schedule their own practice calendar). It is, however, completely appropriate for the system to ask the student targeted diagnostic or clarifying questions about their learning goals, targets, or prior knowledge at strategic milestones.\n"
         "3. Complete Prompt Packaging: The complete body of the exercise (including any sub-tasks, checklist items, options, or context) must be written entirely inside the single string 'prompt' field. Do NOT output custom keys like 'learner_tasks' or 'tasks' for prompt content.\n\n"
         "{{ active_topics_context }}\n"
         "{{ phase_focus_context }}\n"
         "{{ learner_profile_context }}\n"
+        "{{ strategy_context }}\n"
         "{{ schema_instructions }}"
     ),
     "profile_consolidate.md": (

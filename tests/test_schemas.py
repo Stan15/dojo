@@ -128,12 +128,14 @@ def test_prompt_loader_interpolation():
         "active_topics_context": "Active topic context",
         "phase_focus_context": "Phase focus context",
         "learner_profile_context": "Learner profile context",
+        "strategy_context": "Strategy context",
         "schema_instructions": '{"type": "object", "properties": {"thinking": {"type": "string"}}}'
     }
     result = load_prompt("exercise_generate.md", placeholders)
     assert "Active topic context" in result
     assert "Phase focus context" in result
     assert "Learner profile context" in result
+    assert "Strategy context" in result
     assert '{"type": "object"' in result
 
 
