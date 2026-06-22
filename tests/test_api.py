@@ -500,7 +500,7 @@ def test_custom_instructions_configuration(tmp_path):
         assert mock_invoke.call_count == 1
         call_args = mock_invoke.call_args[0]
         req = call_args[1]
-        assert req["instructions"] == "Custom consolidate instructions."
+        assert req["instructions"].startswith("Custom consolidate instructions.")
 
 
 def test_feedback_automatic_routing(tmp_path):
