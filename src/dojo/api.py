@@ -1435,32 +1435,27 @@ class DojoAPI:
         custom_consolidate_instructions = db.get_config(session, "prompt.profile_consolidate_instructions")
 
         default_consolidate_instructions = (
-            "Analyze the learner's recent practice attempts, user feedback, and goals. "
-            "Refine the campaign mission instructions to better match the user's focus. "
-            "Calibrate the strategy profile parameters (set mode to 'practice' or 'diagnostic', difficulty to 'beginner', 'intermediate', or 'advanced', and scaffolding to 'high', 'medium', or 'low'). "
-            "Review the pedagogical journal history. Note that stable, consistent progression is highly preferred. "
-            "Only change/revise the attack plan if the user is stuck, exhibits major prerequisites gaps, or pivots interest. "
-            "If the active phase index is 0 (diagnostic onboarding), you MUST design a comprehensive hierarchical syllabus outline (in markdown) and the initial study plan starting from Phase 1.\n"
-            "If you revise the attack plan or design it for the first time, return: \n"
-            "  1. 'revised_attack_plan': The fully updated list of curriculum phases (each phase has 'phase', 'topics' list, and 'criteria' dict).\n"
-            "  2. 'syllabus_markdown': The comprehensive Markdown syllabus of the campaign (only if active_phase_index is 0 or if restructuring the syllabus).\n"
-            "  3. 'source_topic_mappings': A dictionary mapping linked source IDs to the list of canonical topic paths they cover in the syllabus (e.g. {'src_123': ['docker.compose']}).\n"
-            "  4. 'journal_entry': An object logging the action ('CREATE', 'INSERT_REMEDIATION', 'SKIP_PHASES', 'RE_ORDER', 'CALIBRATE_STRATEGY', or 'PIVOT'), trigger, status, and pedagogical hypothesis.\n"
-            "Synthesize stable learner hypotheses (misconceptions, patterns, learning style/goals). "
-            "Return a JSON object containing:\n"
-            "  - 'hypotheses': list of key-description-topic_path objects.\n"
-            "  - 'refined_mission': updated mission string (optional).\n"
-            "  - 'calibrated_strategy': JSON object matching strategy parameters (optional).\n"
-            "  - 'revised_attack_plan': list of new phases (optional).\n"
-            "  - 'syllabus_markdown': updated markdown syllabus (optional).\n"
-            "  - 'source_topic_mappings': updated source-topic mappings (optional).\n"
-            "  - 'journal_entry': journal entry explaining change (optional)."
+            "Analyze the learner's recent practice attempts, user feedback, and goals.\n"
+            "Refine the campaign mission instructions to better match the user's focus.\n"
+            "Calibrate the strategy profile parameters (set mode to 'practice' or 'diagnostic', difficulty to 'beginner', 'intermediate', or 'advanced', and scaffolding to 'high', 'medium', or 'low').\n"
+            "Review the pedagogical journal history. Note that stable, consistent progression is highly preferred.\n"
+            "Only change/revise the attack plan if the user is stuck, exhibits major prerequisites gaps, or pivots interest.\n\n"
+            "ADDITIONAL PEDAGOGICAL GUIDELINES:\n"
+            "1. Self-Stated Constraints & Timeline-Awareness: Analyze the user's self-stated availability, constraints, target deadlines, or upcoming milestones. "
+            "If the user indicates a tight timeline or immediate target, compress the attack plan to focus purely on the highest-leverage active topics, and scale down completion criteria (e.g. min_attempts) to fit the time horizon. "
+            "If no deadline exists, design a progressive, comprehensive path optimized for long-term retention.\n"
+            "2. Goal-Based Progression: If the active phase index is 0 (diagnostic onboarding), you MUST design a comprehensive syllabus outline (in markdown) and the initial study plan starting from Phase 1.\n"
+            "3. Structured Outputs: Use the 'thinking' field for all your internal reasoning, constraints analysis, and pedagogical decision making. Ensure all other keys strictly match the output schema."
         )
+
+        from .schemas import get_schema_instruction, ProfileConsolidateResponse
+        schema_instruction = get_schema_instruction("profile.consolidate")
+        instructions = (custom_consolidate_instructions or default_consolidate_instructions) + schema_instruction
 
         request = {
             "task": "profile.consolidate",
             "version": 1,
-            "instructions": custom_consolidate_instructions or default_consolidate_instructions,
+            "instructions": instructions,
             "attempts": formatted_attempts,
             "campaign": {
                 "id": campaign.id,
@@ -1490,7 +1485,14 @@ class DojoAPI:
                 except Exception as exc:
                     diagnostics.append(f"Failed to parse raw output as JSON: {exc}")
 
-            if not isinstance(raw_data, dict):
+            if isinstance(raw_data, dict):
+                try:
+                    # Validate raw output against Pydantic schema
+                    ProfileConsolidateResponse.model_validate(raw_data)
+                except Exception as exc:
+                    self.log.warning(f"Profile consolidation response validation warning: {exc}")
+                    diagnostics.append(f"Response validation warning: {exc}")
+            else:
                 raw_data = {}
 
             # 1. Update Campaign Mission if LLM returned refined_mission
