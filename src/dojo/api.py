@@ -1433,31 +1433,17 @@ class DojoAPI:
 
         # Prep task request JSON
         custom_consolidate_instructions = db.get_config(session, "prompt.profile_consolidate_instructions")
-
-        default_consolidate_instructions = (
-            "Analyze the learner's recent practice attempts, user feedback, and goals.\n"
-            "Refine the campaign mission instructions to better match the user's focus.\n"
-            "Calibrate the strategy profile parameters (set mode to 'practice' or 'diagnostic', difficulty to 'beginner', 'intermediate', or 'advanced', and scaffolding to 'high', 'medium', or 'low').\n"
-            "Review the pedagogical journal history. Note that stable, consistent progression is highly preferred.\n"
-            "Only change/revise the attack plan if the user is stuck, exhibits major prerequisites gaps, or pivots interest.\n\n"
-            "ADDITIONAL PEDAGOGICAL GUIDELINES:\n"
-            "1. Self-Stated Constraints & Timeline-Awareness: Analyze the user's self-stated availability, constraints, target deadlines, or upcoming milestones. "
-            "If the user indicates a tight timeline or immediate target, compress the attack plan to focus purely on the highest-leverage active topics, and scale down completion criteria (e.g. min_attempts) to fit the time horizon. "
-            "If no deadline exists, design a progressive, comprehensive path optimized for long-term retention.\n"
-            "2. Learner Hypotheses (Misconceptions/Patterns): You own the lifecycle of the user's diagnostic hypotheses. "
-            "Review the provided list of currently active hypotheses and the latest attempts. "
-            "Create new hypotheses if new patterns emerge. Update descriptions of active hypotheses to reflect progress or remaining gaps. "
-            "If a hypothesis has been resolved (i.e. user consistently demonstrates correct production on the topic), ARCHIVE it by omitting it from the returned hypotheses list. "
-            "If a hypothesis still needs monitoring or retention checks, keep returning it.\n"
-            "3. Skips Analysis: Pay close attention to exercises skipped with reasons like 'too_easy' (indicates need for higher difficulty/lower scaffolding) or 'too_hard' (indicates need for lower difficulty/higher scaffolding or prerequisite review). "
-            "Use these skip signals to adjust strategy profile parameters.\n"
-            "4. Goal-Based Progression: If the active phase index is 0 (diagnostic onboarding), you MUST design a comprehensive syllabus outline (in markdown) and the initial study plan starting from Phase 1.\n"
-            "5. Structured Outputs: Use the 'thinking' field for all your internal reasoning, constraints analysis, and pedagogical decision making. Ensure all other keys strictly match the output schema."
-        )
-
         from .schemas import get_schema_instruction, ProfileConsolidateResponse
         schema_instruction = get_schema_instruction("profile.consolidate")
-        instructions = (custom_consolidate_instructions or default_consolidate_instructions) + schema_instruction
+
+        if custom_consolidate_instructions:
+            instructions = custom_consolidate_instructions + schema_instruction
+        else:
+            from .prompts import load_prompt
+            placeholders = {
+                "schema_instructions": schema_instruction,
+            }
+            instructions = load_prompt("profile_consolidate.md", placeholders)
 
         request = {
             "task": "profile.consolidate",

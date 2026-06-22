@@ -21,12 +21,41 @@ class CandidateDraft(BaseModel):
         description="Difficulty level calibrated to the user ('beginner', 'intermediate', 'advanced')."
     )
 
+class TopicSpan(BaseModel):
+    existing_topic: str = Field(
+        description="The parent topic namespace namespace (e.g. language.french.tef.nclc7)."
+    )
+    active_topics_covered: List[str] = Field(
+        description="The specific subtopics from the active topics list covered by the drafted exercises."
+    )
+    mission_alignment: str = Field(
+        description="Text description of how the drafted exercises align with the user's campaign mission."
+    )
+    note: Optional[str] = Field(
+        default=None,
+        description="Any generation details, assumptions, or warnings."
+    )
+
+class ExerciseDraft(BaseModel):
+    set_title: str = Field(
+        description="Title describing this JIT practice set."
+    )
+    target_outcome: str = Field(
+        description="Target outcome or objective for this practice set."
+    )
+    candidates: List[CandidateDraft] = Field(
+        description="List of drafted practice candidates."
+    )
+
 class ExerciseGenerateResponse(BaseModel):
     thinking: str = Field(
         description="Your internal scratchpad, analysis, and reasoning about the target topic, strategy, and constraints before drafting candidates."
     )
-    candidates: List[CandidateDraft] = Field(
-        description="List of drafted practice candidates."
+    topic_span: TopicSpan = Field(
+        description="The topic scope and mission alignment details."
+    )
+    exercise_draft: ExerciseDraft = Field(
+        description="The exercise drafts containing candidate practice questions."
     )
 
 class HypothesisEntry(BaseModel):

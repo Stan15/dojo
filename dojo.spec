@@ -5,7 +5,7 @@ a = Analysis(
     ['run_dojo.py'],
     pathex=['src'],
     binaries=[],
-    datas=[('skills/dojo', 'skills/dojo')],
+    datas=[('skills/dojo', 'skills/dojo'), ('src/dojo/prompts', 'dojo/prompts')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

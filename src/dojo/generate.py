@@ -22,36 +22,44 @@ class ExerciseGenerateRequest:
     phase_focus: str | None = None
 
     def to_task_request(self) -> dict[str, Any]:
-        default_instructions = (
-            "Draft practice candidates from the provided source references.\n"
-            "If topic is provided, treat it as an optional parent-topic hint, not a single-topic assertion. "
-            "Return candidates that may span multiple subtopics.\n"
-            "If you realize you lack sufficient context about the user's goals, prior knowledge, or learning style for this topic to generate useful, calibrated exercises, or if you determine a pedagogical intervention is needed, you may instead generate 1–3 highly targeted, concise diagnostic questions to help personalize future sessions (set their 'quality' to 'diagnostic').\n\n"
-            "ADDITIONAL PEDAGOGICAL GUIDELINES:\n"
-            "1. Self-Containment (No Fake Attachments): If no grounding source material is available (source content is empty), you must NOT refer to external or non-existent files, templates, worksheets, or 'checklists below'. Ensure all instructions and tasks are fully self-contained and answerable using only the text inside the prompt.\n"
-            "2. Domain-Specific Practice (No Meta-Study Drills): Focus practice exercises on active production, retrieval, and application of the target domain itself. Do NOT generate meta-study or plan-reflection exercises (e.g. asking the user to explain their own study targets, scoring rubrics, or study schedules) even if the active topic path represents an orientation or diagnostic milestone.\n"
-            "3. Complete Prompt Packaging: The complete body of the exercise (including any sub-tasks, checklist items, options, or context) must be written entirely inside the single string 'prompt' field. Do NOT output custom keys like 'learner_tasks' or 'tasks' for prompt content."
-        )
         from .schemas import get_schema_instruction
         schema_instruction = get_schema_instruction("exercise.generate")
-        instructions = (self.instructions or default_instructions) + schema_instruction
 
-        if self.active_topics:
-            instructions += f" The active phase targets multiple topics: {', '.join(self.active_topics)}."
-        if self.phase_focus:
-            instructions += f" Pedagogical Focus: {self.phase_focus}"
+        if self.instructions:
+            instructions = self.instructions + schema_instruction
+            if self.active_topics:
+                instructions += f" The active phase targets multiple topics: {', '.join(self.active_topics)}."
+            if self.phase_focus:
+                instructions += f" Pedagogical Focus: {self.phase_focus}"
+            if self.learner_hypotheses:
+                instructions += f" Design practice items that specifically address the learner's active profile hypotheses/misconceptions: {'; '.join(self.learner_hypotheses)}."
+        else:
+            from .prompts import load_prompt
+            active_topics_context = f"The active phase targets multiple topics: {', '.join(self.active_topics)}." if self.active_topics else ""
+            phase_focus_context = f"Pedagogical Focus: {self.phase_focus}" if self.phase_focus else ""
+            learner_profile_context = (
+                f"Design practice items that specifically address the learner's active profile hypotheses/misconceptions: {'; '.join(self.learner_hypotheses)}."
+                if self.learner_hypotheses else ""
+            )
+            placeholders = {
+                "active_topics_context": active_topics_context,
+                "phase_focus_context": phase_focus_context,
+                "learner_profile_context": learner_profile_context,
+                "schema_instructions": schema_instruction,
+            }
+            instructions = load_prompt("exercise_generate.md", placeholders)
 
         if self.strategy:
             scaffolding = self.strategy.get("scaffolding")
             difficulty = self.strategy.get("difficulty")
             if scaffolding == "high":
-                instructions += " Provide extra context, helpful hints, or structural scaffolding for the learner."
+                instructions += "\nProvide extra context, helpful hints, or structural scaffolding for the learner."
             elif scaffolding == "low":
-                instructions += " Avoid hints, extra context, or explanatory setup; keep the prompt direct and challenging."
+                instructions += "\nAvoid hints, extra context, or explanatory setup; keep the prompt direct and challenging."
             if difficulty == "beginner":
-                instructions += " Target fundamental/introductory concepts and keep complexity low."
+                instructions += "\nTarget fundamental/introductory concepts and keep complexity low."
             elif difficulty == "advanced":
-                instructions += " Target complex, high-level combined applications or edge cases."
+                instructions += "\nTarget complex, high-level combined applications or edge cases."
 
         req = {
             "task": "exercise.generate",
@@ -227,6 +235,17 @@ def validate_exercise_generate_output(raw: str | list[Any] | dict[str, Any], def
     except json.JSONDecodeError as exc:
         return {"ok": False, "candidates": [], "diagnostics": [f"malformed JSON: {exc.msg}"]}
 
+    diagnostics: list[str] = []
+
+    # Try Pydantic validation if it's a dict and appears to use the new schema structure
+    if isinstance(data, dict) and ("exercise_draft" in data or "thinking" in data):
+        from .schemas import ExerciseGenerateResponse
+        try:
+            ExerciseGenerateResponse.model_validate(data)
+        except Exception as exc:
+            # We treat validation errors as warnings so we fallback gracefully
+            diagnostics.append(f"Response validation warning: {exc}")
+
     parent_topic = default_topic
     artifacts: list[Any] = []
     if isinstance(data, list):
@@ -256,7 +275,6 @@ def validate_exercise_generate_output(raw: str | list[Any] | dict[str, Any], def
         return {"ok": False, "candidates": [], "diagnostics": ["output must be a JSON object or array"]}
 
     candidates: list[dict[str, Any]] = []
-    diagnostics: list[str] = []
     for idx, item in enumerate(candidate_items, start=1):
         if not isinstance(item, dict):
             diagnostics.append(f"candidate {idx} is not an object")

@@ -51,15 +51,25 @@ def test_validate_exercise_generate_output_with_response_wrapper():
     # wrapped in ExerciseGenerateResponse schema
     raw_payload = {
         "thinking": "We need to generate exercises.",
-        "candidates": [
-            {
-                "prompt": "Write a python script.",
-                "topic_path": "test.topic",
-                "difficulty": "intermediate",
-                "answer": "print('hello')",
-                "rubric": "Code should print hello."
-            }
-        ]
+        "topic_span": {
+            "existing_topic": "test.topic",
+            "active_topics_covered": ["test.topic"],
+            "mission_alignment": "Aligns with testing",
+            "note": None
+        },
+        "exercise_draft": {
+            "set_title": "Python Basics",
+            "target_outcome": "Demonstrate python printing",
+            "candidates": [
+                {
+                    "prompt": "Write a python script.",
+                    "topic_path": "test.topic",
+                    "difficulty": "intermediate",
+                    "answer": "print('hello')",
+                    "rubric": "Code should print hello."
+                }
+            ]
+        }
     }
 
     val = validate_exercise_generate_output(raw_payload)
@@ -110,3 +120,63 @@ def test_profile_consolidate_response_validation():
     assert validated.hypotheses[0].key == "test_hyp"
     assert validated.revised_attack_plan[0].criteria.min_attempts == 5
     assert validated.journal_entry.action == "CREATE"
+
+
+def test_prompt_loader_interpolation():
+    from dojo.prompts import load_prompt
+    placeholders = {
+        "active_topics_context": "Active topic context",
+        "phase_focus_context": "Phase focus context",
+        "learner_profile_context": "Learner profile context",
+        "schema_instructions": '{"type": "object", "properties": {"thinking": {"type": "string"}}}'
+    }
+    result = load_prompt("exercise_generate.md", placeholders)
+    assert "Active topic context" in result
+    assert "Phase focus context" in result
+    assert "Learner profile context" in result
+    assert '{"type": "object"' in result
+
+
+def test_prompt_loader_signature_verification():
+    import warnings
+    from dojo.prompts import load_prompt
+
+    placeholders = {
+        "active_topics_context": "Active topic context",
+        "phase_focus_context": "Phase focus context",
+    }
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        load_prompt("exercise_generate.md", placeholders)
+        assert len(w) >= 1
+        assert any("remaining un-interpolated placeholders" in str(warn.message) for warn in w)
+
+
+def test_schemas_pydantic_validation():
+    from dojo.schemas import ExerciseGenerateResponse
+    valid_data = {
+        "thinking": "Valid reasoning",
+        "topic_span": {
+            "existing_topic": "math.arithmetic",
+            "active_topics_covered": ["math.arithmetic"],
+            "mission_alignment": "Practices basic addition"
+        },
+        "exercise_draft": {
+            "set_title": "Addition practice",
+            "target_outcome": "Fluency in simple addition",
+            "candidates": [
+                {
+                    "prompt": "Evaluate 2 + 2",
+                    "answer": "4",
+                    "topic_path": "math.arithmetic",
+                    "source_refs": [],
+                    "difficulty": "intermediate"
+                }
+            ]
+        }
+    }
+    resp = ExerciseGenerateResponse.model_validate(valid_data)
+    assert resp.thinking == "Valid reasoning"
+    assert resp.topic_span.existing_topic == "math.arithmetic"
+    assert resp.exercise_draft.set_title == "Addition practice"
+    assert len(resp.exercise_draft.candidates) == 1
