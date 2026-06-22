@@ -23,12 +23,18 @@ class ExerciseGenerateRequest:
 
     def to_task_request(self) -> dict[str, Any]:
         default_instructions = (
-            "Draft practice candidates from the provided source references. "
+            "Draft practice candidates from the provided source references.\n"
             "If topic is provided, treat it as an optional parent-topic hint, not a single-topic assertion. "
-            "Return candidates that may span multiple subtopics. "
-            "If you realize you lack sufficient context about the user's goals, prior knowledge, or learning style for this topic to generate useful, calibrated exercises, or if you determine a pedagogical intervention is needed, you may instead generate 1–3 highly targeted, concise diagnostic questions to help personalize future sessions (set their 'quality' to 'diagnostic')."
+            "Return candidates that may span multiple subtopics.\n"
+            "If you realize you lack sufficient context about the user's goals, prior knowledge, or learning style for this topic to generate useful, calibrated exercises, or if you determine a pedagogical intervention is needed, you may instead generate 1–3 highly targeted, concise diagnostic questions to help personalize future sessions (set their 'quality' to 'diagnostic').\n\n"
+            "ADDITIONAL PEDAGOGICAL GUIDELINES:\n"
+            "1. Self-Containment (No Fake Attachments): If no grounding source material is available (source content is empty), you must NOT refer to external or non-existent files, templates, worksheets, or 'checklists below'. Ensure all instructions and tasks are fully self-contained and answerable using only the text inside the prompt.\n"
+            "2. Domain-Specific Practice (No Meta-Study Drills): Focus practice exercises on active production, retrieval, and application of the target domain itself. Do NOT generate meta-study or plan-reflection exercises (e.g. asking the user to explain their own study targets, scoring rubrics, or study schedules) even if the active topic path represents an orientation or diagnostic milestone.\n"
+            "3. Complete Prompt Packaging: The complete body of the exercise (including any sub-tasks, checklist items, options, or context) must be written entirely inside the single string 'prompt' field. Do NOT output custom keys like 'learner_tasks' or 'tasks' for prompt content."
         )
-        instructions = self.instructions or default_instructions
+        from .schemas import get_schema_instruction
+        schema_instruction = get_schema_instruction("exercise.generate")
+        instructions = (self.instructions or default_instructions) + schema_instruction
 
         if self.active_topics:
             instructions += f" The active phase targets multiple topics: {', '.join(self.active_topics)}."
@@ -108,6 +114,50 @@ def _normalize_candidate(item: dict[str, Any], default_topic: str | None = None)
     if source_refs is None:
         source_refs = []
     
+    # Format and append any extra structural keys to the prompt to prevent data loss
+    extra_prompt_text = []
+
+    # 1. Check for checklists or tasks (lists of strings/dicts or dicts)
+    for key in ("learner_tasks", "tasks", "checklist", "questions", "options"):
+        val = item.get(key)
+        if val:
+            if isinstance(val, list):
+                extra_prompt_text.append(f"\n\n### {key.replace('_', ' ').title()}:")
+                for subval in val:
+                    if isinstance(subval, dict):
+                        # e.g. {"task": "...", "description": "..."} or {"question": "..."}
+                        lines = []
+                        for k, v in subval.items():
+                            lines.append(f"**{k.title()}**: {v}")
+                        extra_prompt_text.append("- " + " | ".join(lines))
+                    else:
+                        extra_prompt_text.append(f"- {subval}")
+            elif isinstance(val, dict):
+                extra_prompt_text.append(f"\n\n### {key.replace('_', ' ').title()}:")
+                for k, v in val.items():
+                    extra_prompt_text.append(f"- **{k.title()}**: {v}")
+            elif isinstance(val, str):
+                extra_prompt_text.append(f"\n\n### {key.replace('_', ' ').title()}:\n{val}")
+
+    # 2. Check for scaffolding
+    for key in ("scaffolding_details", "scaffolding"):
+        val = item.get(key)
+        if val:
+            if isinstance(val, dict):
+                extra_prompt_text.append(f"\n\n### Scaffolding:")
+                for k, v in val.items():
+                    if isinstance(v, list):
+                        extra_prompt_text.append(f"- **{k.title()}**:")
+                        for item_v in v:
+                            extra_prompt_text.append(f"  - {item_v}")
+                    else:
+                        extra_prompt_text.append(f"- **{k.title()}**: {v}")
+            elif isinstance(val, str):
+                extra_prompt_text.append(f"\n\n### Scaffolding:\n{val}")
+
+    if extra_prompt_text:
+        prompt = (prompt or "") + "\n" + "\n".join(extra_prompt_text)
+
     answer = (
         item.get("answer") or
         item.get("expected_answer") or
