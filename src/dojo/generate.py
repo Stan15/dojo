@@ -17,6 +17,9 @@ class ExerciseGenerateRequest:
     learner_hypotheses: list[str] | None = None
     instructions: str | None = None
     source_content: str | None = None
+    strategy: dict[str, Any] | None = None
+    active_topics: list[str] | None = None
+    phase_focus: str | None = None
 
     def to_task_request(self) -> dict[str, Any]:
         default_instructions = (
@@ -25,10 +28,29 @@ class ExerciseGenerateRequest:
             "Return candidates that may span multiple subtopics. "
             "If you realize you lack sufficient context about the user's goals, prior knowledge, or learning style for this topic to generate useful, calibrated exercises, or if you determine a pedagogical intervention is needed, you may instead generate 1–3 highly targeted, concise diagnostic questions to help personalize future sessions (set their 'quality' to 'diagnostic')."
         )
+        instructions = self.instructions or default_instructions
+
+        if self.active_topics:
+            instructions += f" The active phase targets multiple topics: {', '.join(self.active_topics)}."
+        if self.phase_focus:
+            instructions += f" Pedagogical Focus: {self.phase_focus}"
+
+        if self.strategy:
+            scaffolding = self.strategy.get("scaffolding")
+            difficulty = self.strategy.get("difficulty")
+            if scaffolding == "high":
+                instructions += " Provide extra context, helpful hints, or structural scaffolding for the learner."
+            elif scaffolding == "low":
+                instructions += " Avoid hints, extra context, or explanatory setup; keep the prompt direct and challenging."
+            if difficulty == "beginner":
+                instructions += " Target fundamental/introductory concepts and keep complexity low."
+            elif difficulty == "advanced":
+                instructions += " Target complex, high-level combined applications or edge cases."
+
         req = {
             "task": "exercise.generate",
             "version": 1,
-            "instructions": self.instructions or default_instructions,
+            "instructions": instructions,
             "source": {
                 "id": self.source_id,
                 "title": self.source_title,
@@ -39,6 +61,12 @@ class ExerciseGenerateRequest:
             "max_candidates": self.max_candidates,
             "expected_artifacts": ["topic_span", "exercise_draft"],
         }
+        if self.active_topics:
+            req["active_topics"] = self.active_topics
+        if self.phase_focus:
+            req["phase_focus"] = self.phase_focus
+        if self.strategy:
+            req["strategy_profile"] = self.strategy
         if self.mission:
             req["mission_instruction"] = self.mission
         if self.existing_topics:
@@ -69,15 +97,62 @@ def _candidate_from_artifact(artifact: dict[str, Any]) -> dict[str, Any] | None:
     return payload
 
 
-def _normalize_candidate(item: dict[str, Any]) -> tuple[dict[str, Any] | None, str | None]:
+def _normalize_candidate(item: dict[str, Any], default_topic: str | None = None) -> tuple[dict[str, Any] | None, str | None]:
     prompt = item.get("prompt")
-    topic_path = item.get("topic_path") or item.get("topic")
-    source_refs = item.get("source_refs") or item.get("source_ref") or item.get("provenance")
-    answer = item.get("answer")
-    rubric = item.get("rubric")
+    topic_path = item.get("topic_path") or item.get("topic") or default_topic
+    source_refs = None
+    for key in ("source_refs", "source_ref", "provenance"):
+        if key in item:
+            source_refs = item[key]
+            break
+    if source_refs is None:
+        source_refs = []
+    
+    answer = (
+        item.get("answer") or
+        item.get("expected_answer") or
+        item.get("expected_answer_elements") or
+        item.get("answer_key") or
+        item.get("correct_answer") or
+        item.get("solution") or
+        item.get("ideal_response") or
+        item.get("sample_response") or
+        item.get("model_rewrite") or
+        item.get("sample_answer") or
+        item.get("model_answer")
+    )
+    rubric = (
+        item.get("rubric") or
+        item.get("expected_response") or
+        item.get("self_check") or
+        item.get("success_criteria") or
+        item.get("answer_key_or_rubric") or
+        item.get("evaluation_rubric") or
+        item.get("grading_rubric") or
+        item.get("grading_criteria") or
+        item.get("rubric_criteria") or
+        item.get("score_guidance") or
+        item.get("expected_answer_features") or
+        item.get("rubric_diagnosis") or
+        item.get("rubric_focus") or
+        item.get("rubric_spec")
+    )
+
+    if answer is not None:
+        if isinstance(answer, (dict, list)):
+            answer = json.dumps(answer, ensure_ascii=False)
+        else:
+            answer = str(answer)
+
     if isinstance(source_refs, dict):
         source_refs = [source_refs]
-    missing = [name for name, value in (("prompt", prompt), ("topic_path", topic_path), ("source_refs", source_refs)) if not value]
+    missing = []
+    if not prompt:
+        missing.append("prompt")
+    if not topic_path:
+        missing.append("topic_path")
+    if source_refs is None:
+        missing.append("source_refs")
     if missing:
         return None, f"candidate missing required fields: {', '.join(missing)}"
     if item.get("quality") != "diagnostic":
@@ -96,17 +171,34 @@ def _normalize_candidate(item: dict[str, Any]) -> tuple[dict[str, Any] | None, s
     return normalized, None
 
 
-def validate_exercise_generate_output(raw: str | list[Any] | dict[str, Any]) -> dict[str, Any]:
+def validate_exercise_generate_output(raw: str | list[Any] | dict[str, Any], default_topic: str | None = None) -> dict[str, Any]:
     try:
         data = _coerce_output(raw)
     except json.JSONDecodeError as exc:
         return {"ok": False, "candidates": [], "diagnostics": [f"malformed JSON: {exc.msg}"]}
 
+    parent_topic = default_topic
     artifacts: list[Any] = []
     if isinstance(data, list):
         candidate_items = data
     elif isinstance(data, dict):
+        if not parent_topic:
+            parent_topic = data.get("topic_path") or data.get("topic")
+        if not parent_topic and "exercise_draft" in data:
+            draft = data["exercise_draft"]
+            if isinstance(draft, dict):
+                parent_topic = draft.get("topic_path") or draft.get("topic")
+
         candidate_items = data.get("candidates") or []
+        if not candidate_items and "exercise_draft" in data:
+            draft = data["exercise_draft"]
+            if isinstance(draft, dict):
+                candidate_items = draft.get("candidates") or []
+        if not candidate_items:
+            for val in data.values():
+                if isinstance(val, list) and len(val) > 0 and isinstance(val[0], dict) and ("prompt" in val[0] or "topic_path" in val[0] or "topic" in val[0]):
+                    candidate_items = val
+                    break
         artifacts = data.get("artifacts") or []
         if not candidate_items and artifacts:
             candidate_items = [c for c in (_candidate_from_artifact(a) for a in artifacts if isinstance(a, dict)) if c]
@@ -119,10 +211,187 @@ def validate_exercise_generate_output(raw: str | list[Any] | dict[str, Any]) -> 
         if not isinstance(item, dict):
             diagnostics.append(f"candidate {idx} is not an object")
             continue
-        normalized, error = _normalize_candidate(item)
+        normalized, error = _normalize_candidate(item, default_topic=parent_topic)
         if error:
             diagnostics.append(f"candidate {idx}: {error}")
         else:
             candidates.append(normalized)  # type: ignore[arg-type]
 
     return {"ok": bool(candidates) and not diagnostics, "candidates": candidates, "diagnostics": diagnostics}
+
+
+import re
+
+def parse_markdown_headings(content: str) -> list[dict[str, Any]]:
+    lines = content.splitlines()
+    headings = []
+    stack = []
+
+    for idx, line in enumerate(lines):
+        line_num = idx + 1
+        match = re.match(r'^(#{1,6})\s+(.+)$', line)
+        if match:
+            level = len(match.group(1))
+            title = match.group(2).strip()
+
+            while stack and stack[-1]["level"] >= level:
+                popped = stack.pop()
+                headings[popped["idx"]]["end_line"] = line_num - 1
+
+            heading_path = [h["title"] for h in stack] + [title]
+
+            heading_node = {
+                "idx": len(headings),
+                "title": title,
+                "level": level,
+                "start_line": line_num,
+                "end_line": len(lines),
+                "heading_path": heading_path,
+            }
+            headings.append(heading_node)
+            stack.append(heading_node)
+
+    return headings
+
+
+def score_heading(heading_path: list[str], target_topic: str) -> float:
+    topic_parts = [p.lower().strip() for p in target_topic.split(".") if p.strip()]
+    if not topic_parts:
+        return 0.0
+
+    heading_words_by_level = []
+    for title in heading_path:
+        words = set(re.findall(r'\w+', title.lower()))
+        heading_words_by_level.append(words)
+
+    score = 0.0
+    for i, part in enumerate(topic_parts):
+        weight = 2.0 ** i
+        matched = False
+        for level_words in heading_words_by_level:
+            if part in level_words:
+                score += weight
+                matched = True
+                break
+        if not matched:
+            for title in heading_path:
+                if part in title.lower():
+                    score += 0.5 * weight
+                    break
+
+    # Leaf component bonus
+    leaf_part = topic_parts[-1]
+    leaf_title = heading_path[-1].lower()
+    leaf_words = set(re.findall(r'\w+', leaf_title))
+    if leaf_part in leaf_words:
+        score += 2.0 ** len(topic_parts)
+    elif leaf_part in leaf_title:
+        score += 0.5 * (2.0 ** len(topic_parts))
+
+    return score
+
+
+def expand_window(headings: list[dict[str, Any]], matched_idx: int, total_lines: int, min_lines: int) -> tuple[int, int]:
+    matched = headings[matched_idx]
+    start = matched["start_line"]
+    end = matched["end_line"]
+
+    if end - start + 1 >= min_lines:
+        return start, end
+
+    current_level = matched["level"]
+    for i in range(matched_idx - 1, -1, -1):
+        h = headings[i]
+        if h["level"] < current_level:
+            start = h["start_line"]
+            end = max(end, h["end_line"])
+            current_level = h["level"]
+            if end - start + 1 >= min_lines:
+                break
+
+    start = max(1, start)
+    end = min(total_lines, end)
+    return start, end
+
+
+def resolve_paragraph_window(content: str, target_topic: str, min_lines: int) -> tuple[int, int]:
+    lines = content.splitlines()
+    total_lines = len(lines)
+    if total_lines <= min_lines:
+        return 1, total_lines
+
+    paragraphs = []
+    curr_start = 1
+    for idx, line in enumerate(lines):
+        if not line.strip():
+            if idx >= curr_start - 1:
+                paragraphs.append((curr_start, idx + 1))
+            curr_start = idx + 2
+    if curr_start <= total_lines:
+        paragraphs.append((curr_start, total_lines))
+
+    if not paragraphs:
+        return 1, min(total_lines, min_lines)
+
+    topic_parts = [p.lower().strip() for p in target_topic.split(".") if p.strip()]
+
+    best_para_idx = 0
+    best_score = -1.0
+    for p_idx, (start, end) in enumerate(paragraphs):
+        para_text = "\n".join(lines[start-1:end]).lower()
+        score = 0.0
+        for part in topic_parts:
+            if part in para_text:
+                score += 1.0
+        if score > best_score:
+            best_score = score
+            best_para_idx = p_idx
+
+    start_para = best_para_idx
+    end_para = best_para_idx
+
+    while True:
+        curr_start = paragraphs[start_para][0]
+        curr_end = paragraphs[end_para][1]
+        if curr_end - curr_start + 1 >= min_lines:
+            break
+        expanded = False
+        if start_para > 0:
+            start_para -= 1
+            expanded = True
+        if end_para < len(paragraphs) - 1:
+            end_para += 1
+            expanded = True
+        if not expanded:
+            break
+
+    return paragraphs[start_para][0], paragraphs[end_para][1]
+
+
+def resolve_source_context(content: str, title: str, target_topic: str, min_lines: int = 100) -> tuple[str, int, int]:
+    if not content.strip():
+        return "", 1, 1
+
+    lines = content.splitlines()
+    total_lines = len(lines)
+
+    headings = parse_markdown_headings(content)
+    best_heading_idx = -1
+    best_score = 0.0
+
+    for idx, h in enumerate(headings):
+        score = score_heading(h["heading_path"], target_topic)
+        if score > best_score:
+            best_score = score
+            best_heading_idx = idx
+
+    if best_heading_idx != -1 and best_score > 0.0:
+        start_line, end_line = expand_window(headings, best_heading_idx, total_lines, min_lines)
+    else:
+        start_line, end_line = resolve_paragraph_window(content, target_topic, min_lines)
+
+    start_line = max(1, min(start_line, total_lines))
+    end_line = max(start_line, min(end_line, total_lines))
+
+    sliced_content = "\n".join(lines[start_line - 1 : end_line])
+    return sliced_content, start_line, end_line

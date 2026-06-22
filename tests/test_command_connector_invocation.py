@@ -70,3 +70,21 @@ def test_text_stdout_nonzero_timeout_and_missing_default_are_structured(tmp_path
     missing = invoke_command_connector(db_path, {"task": "x"})
     assert missing.status == "failed"
     assert "no default AI connector" in missing.error
+
+
+def test_robust_json_parsing_markdown_and_conversational(tmp_path):
+    # Test 1: Markdown codeblock wrapped JSON
+    argv = script(tmp_path, "print('Some preamble\\n```json\\n{\"key\": \"val\"}\\n```\\nSome postamble')")
+    db_path = add_connector(tmp_path, argv=argv)
+    result = invoke_command_connector(db_path, {"task": "test_md"})
+    assert result.status == "ok"
+    assert result.parse_status == "json"
+    assert result.parsed_stdout == {"key": "val"}
+
+    # Test 2: Conversational text with leading/trailing text and braces
+    argv = script(tmp_path, "print('session_id: 123456\\n{\\n  \"foo\": \"bar\"\\n}\\nGoodbye!')")
+    db_path = add_connector(tmp_path, name="conv", argv=argv)
+    result = invoke_command_connector(db_path, {"task": "test_conv"}, connector_name="conv")
+    assert result.status == "ok"
+    assert result.parse_status == "json"
+    assert result.parsed_stdout == {"foo": "bar"}
