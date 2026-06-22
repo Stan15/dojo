@@ -1444,8 +1444,15 @@ class DojoAPI:
             "1. Self-Stated Constraints & Timeline-Awareness: Analyze the user's self-stated availability, constraints, target deadlines, or upcoming milestones. "
             "If the user indicates a tight timeline or immediate target, compress the attack plan to focus purely on the highest-leverage active topics, and scale down completion criteria (e.g. min_attempts) to fit the time horizon. "
             "If no deadline exists, design a progressive, comprehensive path optimized for long-term retention.\n"
-            "2. Goal-Based Progression: If the active phase index is 0 (diagnostic onboarding), you MUST design a comprehensive syllabus outline (in markdown) and the initial study plan starting from Phase 1.\n"
-            "3. Structured Outputs: Use the 'thinking' field for all your internal reasoning, constraints analysis, and pedagogical decision making. Ensure all other keys strictly match the output schema."
+            "2. Learner Hypotheses (Misconceptions/Patterns): You own the lifecycle of the user's diagnostic hypotheses. "
+            "Review the provided list of currently active hypotheses and the latest attempts. "
+            "Create new hypotheses if new patterns emerge. Update descriptions of active hypotheses to reflect progress or remaining gaps. "
+            "If a hypothesis has been resolved (i.e. user consistently demonstrates correct production on the topic), ARCHIVE it by omitting it from the returned hypotheses list. "
+            "If a hypothesis still needs monitoring or retention checks, keep returning it.\n"
+            "3. Skips Analysis: Pay close attention to exercises skipped with reasons like 'too_easy' (indicates need for higher difficulty/lower scaffolding) or 'too_hard' (indicates need for lower difficulty/higher scaffolding or prerequisite review). "
+            "Use these skip signals to adjust strategy profile parameters.\n"
+            "4. Goal-Based Progression: If the active phase index is 0 (diagnostic onboarding), you MUST design a comprehensive syllabus outline (in markdown) and the initial study plan starting from Phase 1.\n"
+            "5. Structured Outputs: Use the 'thinking' field for all your internal reasoning, constraints analysis, and pedagogical decision making. Ensure all other keys strictly match the output schema."
         )
 
         from .schemas import get_schema_instruction, ProfileConsolidateResponse

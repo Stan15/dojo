@@ -68,6 +68,10 @@ All Dojo commands are fully self-documenting. Rather than memorizing advanced ru
 
 * **Scheduling:** Run `dojo config --help` to see configuration preferences (e.g. `schedule.enabled`, `schedule.daily_time_utc`). To register recurring practice reminders, use the host agent's scheduler or task registration tool (e.g. via the agent's cron command, background scheduler, or system cron) to trigger this practice loop.
 * **Skips:** Run `dojo skip --help` to skip an active exercise with a specific reason.
+  * **Guidance**: Explain the consequence of skip reasons to the user when they struggle:
+    * `too_easy` / `too_hard` / `bad_quality`: Dojo **archives** the exercise so the user never sees it again, and uses this signal to calibrate difficulty and scaffolding.
+    * `forgot`: Dojo keeps the exercise **due** in review rotation so they re-encounter it.
+    * Recommend passing `--feedback "<comment>"` to explain their rationale so the consolidation engine can synthesize hypotheses and tailor future candidates.
 * **Corrections:** Run `dojo correct --help` to override incorrect scoring on the last attempt.
 * **Feedback:** Run `dojo feedback --help` to log specific or general learning feedback.
 * **Ingestion:** Run `dojo add --help` to ingest new text files or notes and generate candidates.
