@@ -1533,12 +1533,135 @@ def cmd_campaign_export(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_task_list(args: argparse.Namespace) -> int:
+    from .store import DojoStore
+
+    store = DojoStore(_db_path(args))
+    filters = {"status": args.status} if args.status else None
+    tasks = store.tasks.list(filters=filters)
+    _print_json({
+        "tasks": [
+            {
+                "id": t.id, "kind": t.kind, "status": t.status,
+                "campaign_id": t.campaign_id, "created_at": t.created_at,
+                "payload_bytes": t.payload_bytes, "submissions": t.submissions,
+            }
+            for t in tasks
+        ],
+        "next": "fulfill each pending task: read its prompt (dojo task show <id> --prompt), "
+                "produce the JSON it asks for, then: dojo task submit <id>",
+    })
+    return 0
+
+
+def cmd_task_show(args: argparse.Namespace) -> int:
+    from .store import DojoStore
+
+    store = DojoStore(_db_path(args))
+    task = store.tasks.get(args.task_id)
+    if task is None:
+        _print_json({"ok": False, "error": f"no such task: {args.task_id}"})
+        return 1
+    if args.prompt:
+        print(task.prompt)
+        return 0
+    _print_json({**task.model_dump(exclude={"prompt"}), "prompt": task.prompt})
+    return 0
+
+
+def cmd_task_submit(args: argparse.Namespace) -> int:
+    from .store import DojoStore
+    from .tasks import service
+
+    store = DojoStore(_db_path(args))
+    if args.file:
+        raw = Path(args.file).read_text(encoding="utf-8")
+    else:
+        raw = sys.stdin.read()
+    outcome = service.submit(store, args.task_id, raw)
+    _print_json({
+        "ok": outcome.ok, "task_id": outcome.task_id, "status": outcome.status,
+        "errors": outcome.errors, "applied": outcome.applied,
+        "next": None if outcome.ok else (
+            "fix the listed errors and resubmit the corrected JSON"
+            if outcome.status == "pending" else "task is closed; re-run the originating command to re-emit"
+        ),
+    })
+    return 0 if outcome.ok else 1
+
+
+def cmd_task_run(args: argparse.Namespace) -> int:
+    """Drains pending tasks through a one-string fulfiller command (QUESTIONS.md
+    Q1): prompt on stdin → stdout salvage-extracted → the same validated submit
+    path every other fulfiller uses."""
+    import shlex
+    import subprocess as sp
+
+    from .store import DojoStore
+    from .tasks import service
+
+    store = DojoStore(_db_path(args))
+    command = args.command or store.configs.get_value("fulfiller.command")
+    if not command:
+        _print_json({
+            "ok": False,
+            "error": "no fulfiller command: pass --command or set `dojo config set fulfiller.command \"<cmd>\"`",
+        })
+        return 1
+
+    pending = store.tasks.list(filters={"status": "pending"})
+    if args.limit:
+        pending = pending[: args.limit]
+    results, ok_count = [], 0
+    for task in pending:
+        try:
+            proc = sp.run(
+                shlex.split(command), input=task.prompt,
+                capture_output=True, text=True, timeout=args.timeout,
+            )
+            if proc.returncode != 0:
+                results.append({"task_id": task.id, "ok": False,
+                                "error": f"fulfiller exited {proc.returncode}: {proc.stderr.strip()[:200]}"})
+                continue
+            outcome = service.submit(store, task.id, proc.stdout)
+            ok_count += outcome.ok
+            results.append({"task_id": task.id, "ok": outcome.ok,
+                            "status": outcome.status, "errors": outcome.errors})
+        except sp.TimeoutExpired:
+            results.append({"task_id": task.id, "ok": False,
+                            "error": f"fulfiller timed out after {args.timeout}s"})
+    _print_json({
+        "ok": ok_count == len(pending),
+        "fulfilled": ok_count, "attempted": len(pending), "results": results,
+    })
+    return 0 if ok_count == len(pending) else 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="dojo")
     parser.add_argument("--db", help="Dojo root directory (backward compatible option name)")
     parser.add_argument("--json", action="store_true", help="output structured JSON instead of human-friendly text")
     parser.add_argument("--no-input", action="store_true", help="disable all interactive prompts")
     sub = parser.add_subparsers(dest="command", required=True)
+
+    p_task = sub.add_parser("task", help="the AI task queue (ADR 010)")
+    p_task_sub = p_task.add_subparsers(dest="task_command", required=True)
+    p_task_list = p_task_sub.add_parser("list")
+    p_task_list.add_argument("--status", choices=["pending", "fulfilled", "failed"])
+    p_task_list.set_defaults(func=cmd_task_list)
+    p_task_show = p_task_sub.add_parser("show")
+    p_task_show.add_argument("task_id")
+    p_task_show.add_argument("--prompt", action="store_true", help="print only the prompt body")
+    p_task_show.set_defaults(func=cmd_task_show)
+    p_task_submit = p_task_sub.add_parser("submit")
+    p_task_submit.add_argument("task_id")
+    p_task_submit.add_argument("--file", help="read the result JSON from a file instead of stdin")
+    p_task_submit.set_defaults(func=cmd_task_submit)
+    p_task_run = p_task_sub.add_parser("run")
+    p_task_run.add_argument("--command", help="fulfiller command (default: fulfiller.command config)")
+    p_task_run.add_argument("--limit", type=int)
+    p_task_run.add_argument("--timeout", type=int, default=300)
+    p_task_run.set_defaults(func=cmd_task_run)
 
     p_add = sub.add_parser("add")
     p_add.add_argument("path", nargs="?")
