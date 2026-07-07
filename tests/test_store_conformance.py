@@ -315,3 +315,22 @@ class TestMarkdownBackendPhysics:
 
         got = md_store.sources.get(src.id)
         assert got is not None and got.id == src.id
+
+    def test_doctor_surfaces_unaudited_changes(self, md_store: DojoStore):
+        """ADR 011: a failing audit setup must become visible, not stay swallowed."""
+        md_store.campaigns.save(make_campaign())
+        results = md_store.doctor.run()
+        assert any("uncommitted" in e for e in results["Version control audit"])
+
+        md_store.audit("recovery point")
+        results = md_store.doctor.run()
+        assert results["Version control audit"] == []
+
+    def test_doctor_flags_content_without_git(self, md_store: DojoStore):
+        import shutil
+
+        md_store.campaigns.save(make_campaign())
+        md_store.audit("recovery point")
+        shutil.rmtree(md_store.dojo_dir / ".git")
+        results = md_store.doctor.run()
+        assert any("no git repository" in e.lower() for e in results["Version control audit"])

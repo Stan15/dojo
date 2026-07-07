@@ -26,14 +26,17 @@ class DoctorService(BaseRepository):
             "Ingested sources": [],
             "Campaigns structure": [],
             "Archived campaigns and sessions": [],
-            "Generation run audits": []
+            "Generation run audits": [],
+            "Version control audit": [],
         }
         if not self.engine.dojo_dir.exists():
             return results
 
+        results["Version control audit"].extend(self._check_audit_health())
+
         # 1. Check root directory layout
         allowed_root_dirs = {"campaigns", "sources", "archive", "runs", "connectors", ".git"}
-        allowed_root_files = {".index.json", "dojo.lock", "config.yaml", ".gitignore", "dojo.log"}
+        allowed_root_files = {".index.json", "dojo.lock", "config.yaml", ".gitignore", "dojo.log", "active_session.json"}
 
         for p in self.engine.dojo_dir.iterdir():
             name = p.name
@@ -113,6 +116,42 @@ class DoctorService(BaseRepository):
 
         return results
 
+    def _check_audit_health(self) -> list[str]:
+        """Audit commits are best-effort at command boundaries (ADR 011); this is
+        where a silently failing git setup becomes visible instead of lost."""
+        import subprocess
+
+        errors = []
+        if not (self.engine.dojo_dir / ".git").exists():
+            # Doctor also gates installs on arbitrary/fresh directories, where a
+            # missing repo is expected. It is only a problem once learning data
+            # exists that isn't being protected by recovery points.
+            has_content = any(
+                (self.engine.dojo_dir / d).exists() and any((self.engine.dojo_dir / d).iterdir())
+                for d in ("campaigns", "sources")
+            )
+            if has_content:
+                errors.append(
+                    "Store has content but no git repository — recovery points are not being recorded."
+                )
+            return errors
+        try:
+            status = subprocess.run(
+                ["git", "status", "--porcelain"],
+                cwd=self.engine.dojo_dir, capture_output=True, text=True, timeout=10,
+            )
+            if status.returncode != 0:
+                errors.append(f"git status failed: {status.stderr.strip()[:200]}")
+            elif status.stdout.strip():
+                dirty = len(status.stdout.strip().splitlines())
+                errors.append(
+                    f"{dirty} uncommitted change(s) in the store — a previous command's "
+                    "audit commit likely failed (check git author config)."
+                )
+        except Exception as e:
+            errors.append(f"git unavailable: {e}")
+        return errors
+
     def _validate_campaign_directory(self, camp_dir: Path, is_archived: bool = False) -> list[str]:
         errors = []
         camp_id = camp_dir.name[5:]
@@ -159,13 +198,14 @@ class DoctorService(BaseRepository):
         rel_prefix = f"archive/campaigns/camp_{camp_id}/{sub_name}" if is_archived else f"campaigns/camp_{camp_id}/{sub_name}"
 
         schema_map = {
-            "exercises": (Exercise, "prompt"),
-            "candidates": (Candidate, "prompt"),
-            "attempts": (Attempt, "prompt"),
-            "insights": (Insight, "description"),
+            "exercises": Exercise,
+            "candidates": Candidate,
+            "attempts": Attempt,
+            "insights": Insight,
         }
 
-        schema_cls, body_field = schema_map[sub_name]
+        schema_cls = schema_map[sub_name]
+        body_field = schema_cls._body_field
 
         for p in sub_dir.iterdir():
             if p.is_dir():
