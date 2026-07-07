@@ -4,23 +4,38 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
 
 ## Open
 
-1. **Subprocess connectors** (was Q3): keep as secondary adapter behind the task
-   contract, or drop until asked for? **Proceeding on default: keep, demoted,
-   re-seated on task records (M2).**
-   *Elaboration:* today's prototype lets you register an external command as the
-   AI (`dojo connect ai command mymodel -- ~/bin/ollama-wrapper.sh`); dojo runs
-   that subprocess whenever it needs generation/grading. In the new design
-   (ADR 010) your harness — Claude Code etc. — does the AI work itself, so most
-   users never need a connector. The question is whether we keep the subprocess
-   path for the two agent-less scenarios: (a) headless automation, e.g. a nightly
-   cron running `dojo task run` so your queue is replenished before you wake up,
-   and (b) plain-CLI users with no harness who want a local model to power
-   generation. "Re-seated on task records" means it stops being its own pipeline:
-   it just reads the same pending task files and submits through the same
-   validated `dojo task submit` path the harness uses — one contract, so it can
-   never behave differently from the harness path. Cost of keeping: ~500 lines +
-   tests. My default: keep it, because (a) is genuinely useful for a daily-ritual
-   product. sure, we can keep it, but if there is a way we can do things in such a way that there is a unified interface, that is always nice. but if there is real need for them to have a stratified interface, then sure. also, keep in mind, we want the tool to be dead simple for our users to setup and use. i wonder what is in the contents of that model-wrapper.sh. i wonder if the fact that we have to have th users write an sh file already means it's complex? if it doesn't boil down to just a single string command thing, like perhaps "hermes -Q" in teh config file? if there's a real need, tell me to inform my decision on how best to handle it. think deeply about this. also keep in mind that hermes (or in general, ai agent) cron jobs are a use case too (idk if htis affects anything or it's completely tangential) 
+1. **Fulfiller runner** (was "subprocess connectors" — refined per your 2026-07-07
+   notes, which changed my recommendation):
+
+   Your three concerns, answered:
+   - **Unified interface: guaranteed.** The task contract is the only interface.
+     Every fulfiller — harness in conversation, agent cron job, or local model —
+     does the identical three steps: read the task's prompt → produce JSON →
+     `dojo task submit`. Nothing is stratified; the runner below is just an
+     *automation* of those three steps, not a second pipeline.
+   - **The .sh wrapper was a symptom, and it dies.** The prototype needed wrapper
+     scripts because its connector protocol demanded custom I/O framing. Under
+     the task contract, dojo owns the plumbing: it runs your command, pipes the
+     prompt to stdin, reads stdout, extracts the JSON, and submits it through the
+     same validated path. Config becomes **one string**:
+     `dojo config set fulfiller.command "ollama run llama3"`. No shell file, no
+     protocol to learn. (A wrapper remains *possible* for exotic tools, never
+     required.)
+   - **Agent cron is the harness path, not a connector use case.** A scheduled
+     agent (Hermes cron / Claude Code scheduled task) running `dojo daily --json`
+     fulfills tasks itself — zero setup beyond the skill. So the runner only
+     serves one persona: plain system cron or CLI user with a local model and
+     **no agent at all**.
+
+   Consequence: the old `connectors.py` (~500 lines: own protocol, progress UI,
+   input modes) is deleted either way. The remaining decision is small:
+
+   **Ship `dojo task run` (one-string-config runner, ~100 lines) in v1, or tag it
+   backlog until a real agent-less user asks?**
+   **My recommendation & default: ship it in v1** — it is cheap against the new
+   contract, it makes `dojo` complete without any agent, and it is the natural
+   test harness for the task contract itself (we can drive it with a mock command
+   in CI). 
 
 ## Answered (2026-07-07)
 
