@@ -352,9 +352,11 @@ that prove it; fixtures precede implementations for anything format-shaped.
 - **M2 — Task contract + prompts** *(lead; prompt fixtures first)*
   Task entity + lifecycle, envelope emission, `task submit/run`, appliers per kind
   (idempotent, fuzz-tested — I5), budgeted context compiler (I6 tests), prompt
-  templates from `design/prompts.md`, connector adapter re-seated on task records.
+  templates from `design/prompts.md`, connector adapter re-seated on task records,
+  two-tier prompt eval with ratcheted per-model baselines (ADR 016; `pytest -m
+  eval` against a real fulfiller, deterministic compliance scoring).
   *Proof: applier idempotency; invalid-payload state-hash tests; byte-budget
-  assertions.*
+  assertions; committed baseline scorecard.*
 - **M3 — Pedagogy engine** *(lead)*
   py-fsrs integration behind the `scheduling` boundary (ADR 014; seeded property
   tests on our wrapper), topic-level skill SR, Tier-1 allocator,
