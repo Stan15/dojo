@@ -97,6 +97,23 @@ class TestGenerateHappyPath:
         wrapped = f"Sure! Here you go:\n```json\n{valid_generate_payload(2)}\n```\nHope this helps!"
         assert service.submit(store, task_id, wrapped).ok
 
+    def test_json_salvaged_from_harness_echo(self, store: DojoStore):
+        """Harness CLIs echo the prompt (containing JSON skeletons) before the
+        answer — the LAST top-level object must win."""
+        task_id = emit_generate(store, n_items=2)
+        task = store.tasks.get(task_id)
+        harness_shaped = (
+            "session id: 019f3ee0\n--------\nuser\n"
+            f"{task.prompt}\n\n"          # echoed prompt, includes the OUTPUT skeleton
+            "codex\n"
+            f"{valid_generate_payload(2)}\n"
+            "tokens used\n8 376\n"
+            f"{valid_generate_payload(2)}\n"  # some harnesses repeat the final message
+        )
+        outcome = service.submit(store, task_id, harness_shaped)
+        assert outcome.ok, outcome.errors
+        assert len(store.candidates.list(CAMP_ID)) == 2
+
 
 class TestGenerateRejections:
     def test_too_many_items_rejected(self, store: DojoStore):

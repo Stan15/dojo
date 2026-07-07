@@ -1,0 +1,29 @@
+# Grading: an answer with the right tense but the wrong auxiliary — a fair
+# grader lands mid-band and quotes the learner, not the answer key.
+kind: attempt.grade
+seed:
+  campaign:
+    id: tef-french
+    name: French TEF
+    mission: Reach NCLC 7 oral French by October.
+  exercise:
+    id: ex_cond
+    topic_path: french.grammar.conditional
+    difficulty: intermediate
+    prompt: "Traduisez : He would have gone."
+    answer: Il serait allé.
+    rubric: |-
+      - past conditional formed correctly
+      - être used as the auxiliary for aller
+  attempts:
+    - id: att_g1
+      session_id: sess_1
+      exercise_id: ex_cond
+      score: 0.0
+      latency_seconds: 22.0
+      user_answer: Il aurait allé, je crois.
+compile:
+  fn: grade
+  attempt_id: att_g1
+quality_checks:
+  expected_score_band: [0.3, 0.7]   # quality signal, recorded not gating

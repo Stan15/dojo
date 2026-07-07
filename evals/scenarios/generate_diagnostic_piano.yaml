@@ -1,0 +1,12 @@
+# Diagnostic calibration: brand-new campaign, no evidence yet.
+kind: exercise.diagnostic
+seed:
+  campaign:
+    id: piano-sight
+    name: Piano Sight-Reading
+    mission: Sight-read intermediate piano pieces at tempo within six months.
+compile:
+  fn: diagnostic
+  topic_path: piano.sight_reading
+  n_items: 2
+quality_checks: {}

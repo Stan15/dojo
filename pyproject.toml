@@ -26,3 +26,5 @@ where = ["src"]
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+markers = ["eval: real-model prompt evals (ADR 016); needs DOJO_EVAL_FULFILLER"]
+addopts = "-m 'not eval'"

@@ -1,0 +1,32 @@
+# Grounded generation: source slice + an active misconception to target.
+kind: exercise.generate
+seed:
+  campaign:
+    id: tef-french
+    name: French TEF
+    mission: Reach NCLC 7 oral French by October for the TEF Canada exam.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  insights:
+    - id: ins_aux
+      key: conditional.aux_choice
+      description: Picks avoir over être for motion verbs in past conditional.
+      topic_path: french.grammar.conditional
+  attempts:
+    - id: att_1
+      session_id: sess_1
+      exercise_id: ex_1
+      score: 0.3
+      latency_seconds: 41.0
+      user_answer: Il aurait allé.
+compile:
+  fn: generate
+  topic_path: french.grammar.conditional
+  n_items: 3
+  difficulty: intermediate
+  source_slice: |
+    Le conditionnel passé se forme avec l'auxiliaire (avoir ou être) au
+    conditionnel présent, suivi du participe passé du verbe. Les verbes de
+    mouvement comme aller, venir, partir utilisent être : « il serait allé ».
+    L'accord du participe passé suit les règles de l'auxiliaire employé.
+quality_checks:
+  any_item_mentions: ["être", "serait", "aux"]   # targets the seeded misconception

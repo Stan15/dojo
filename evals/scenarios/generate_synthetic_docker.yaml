@@ -1,0 +1,15 @@
+# Synthetic generation: no source, standard domain knowledge, different domain.
+kind: exercise.generate
+seed:
+  campaign:
+    id: docker-oncall
+    name: Docker Compose
+    mission: Debug and operate docker-compose stacks confidently during on-call.
+    strategy_profile: {difficulty: beginner, scaffolding: high}
+compile:
+  fn: generate
+  topic_path: docker.compose.services
+  n_items: 3
+  difficulty: beginner
+quality_checks:
+  any_item_mentions: ["compose", "service", "container"]

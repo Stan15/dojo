@@ -55,23 +55,36 @@ def emit(store, compiled: CompiledTask) -> Task:
 
 def extract_json(raw: str) -> Any:
     """Salvages a JSON object from model output: bare, fenced, or embedded in
-    prose. Raises ValueError with a plain message when nothing parses."""
+    prose. Harness CLIs (e.g. `codex exec`) echo the prompt — which itself
+    contains JSON skeletons — before the answer, so when several top-level
+    objects appear, the LAST one wins: the answer always follows the echo.
+    Raises ValueError with a plain message when nothing parses."""
     text = raw.strip()
     try:
         return json.loads(text)
     except json.JSONDecodeError:
         pass
-    for fenced in _FENCE.findall(text):
+    for fenced in reversed(_FENCE.findall(text)):
         try:
             return json.loads(fenced.strip())
         except json.JSONDecodeError:
             continue
-    start, end = text.find("{"), text.rfind("}")
-    if start != -1 and end > start:
+
+    decoder = json.JSONDecoder()
+    last_obj, pos = None, 0
+    while True:
+        start = text.find("{", pos)
+        if start == -1:
+            break
         try:
-            return json.loads(text[start : end + 1])
+            obj, end = decoder.raw_decode(text[start:])
+            if isinstance(obj, dict):
+                last_obj = obj
+            pos = start + end  # skip objects nested inside this parse
         except json.JSONDecodeError:
-            pass
+            pos = start + 1
+    if last_obj is not None:
+        return last_obj
     raise ValueError("no JSON object found in the submission")
 
 
