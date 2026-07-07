@@ -172,6 +172,101 @@ class TestFuzzInvariant:
             )
 
 
+class TestReflectApplier:
+    def _seed_reflection(self, store: DojoStore) -> str:
+        from dojo.schemas import Insight
+        store.insights.save(CAMP_ID, Insight(
+            id="ins_old", key="conditional.aux_choice",
+            description="Picks avoir over être for motion verbs.",
+        ))
+        for i in range(3):
+            store.attempts.save(CAMP_ID, Attempt(
+                id=f"att_{i}", session_id="s1", exercise_id=f"ex_{i}", campaign_id=CAMP_ID,
+                score=0.3, latency_seconds=10.0, user_answer="…",
+            ))
+        compiled = compiler.compile_reflect(store, store.campaigns.get(CAMP_ID), window_n=15)
+        return service.emit(store, compiled).id
+
+    def test_full_reflection_applies(self, store: DojoStore):
+        task_id = self._seed_reflection(store)
+        outcome = service.submit(store, task_id, json.dumps({
+            "insight_updates": [
+                {"op": "update", "id": "ins_old", "text": "Aux-choice errors persist under time pressure.",
+                 "evidence": ["att_0", "att_2"], "reason": "same mistake twice more"},
+                {"op": "create", "key": "listening.numbers", "text": "Mishears French decimal numbers in fast speech.",
+                 "evidence": ["att_1"], "reason": "recurred across sessions"},
+            ],
+            "strategy": {"difficulty": None, "scaffolding": "high", "reason": "accuracy 0.3 over window"},
+            "plan_revision": None,
+            "journal": "Raised scaffolding; tracked new listening pattern.",
+        }))
+        assert outcome.ok, outcome.errors
+        camp = store.campaigns.get(CAMP_ID)
+        assert camp.strategy_profile["scaffolding"] == "high"
+        assert camp.pedagogical_journal[-1]["action"] == "REFLECT"
+        insights = {i.key: i for i in store.insights.list(CAMP_ID)}
+        assert "listening.numbers" in insights
+        assert "att_2" in insights["conditional.aux_choice"].sources
+        assert all(store.attempts.get(CAMP_ID, f"att_{i}").reflected for i in range(3))
+
+    def test_citing_unseen_attempt_rejected(self, store: DojoStore):
+        task_id = self._seed_reflection(store)
+        outcome = service.submit(store, task_id, json.dumps({
+            "insight_updates": [
+                {"op": "create", "key": "x.y", "text": "Invented pattern.",
+                 "evidence": ["att_hallucinated"], "reason": "made up"},
+            ],
+            "strategy": None, "plan_revision": None, "journal": "no",
+        }))
+        assert not outcome.ok and "unknown attempt id" in outcome.errors[0]
+        assert len(store.insights.list(CAMP_ID)) == 1, "state untouched"
+
+    def test_touching_unknown_insight_rejected(self, store: DojoStore):
+        task_id = self._seed_reflection(store)
+        outcome = service.submit(store, task_id, json.dumps({
+            "insight_updates": [
+                {"op": "resolve", "id": "ins_ghost", "reason": "mastered"},
+            ],
+            "strategy": None, "plan_revision": None, "journal": "no",
+        }))
+        assert not outcome.ok and "unknown insight id" in outcome.errors[0]
+
+    def test_three_creates_rejected_by_schema(self, store: DojoStore):
+        task_id = self._seed_reflection(store)
+        updates = [
+            {"op": "create", "key": f"k.{i}", "text": "t", "evidence": ["att_0"], "reason": "r"}
+            for i in range(3)
+        ]
+        outcome = service.submit(store, task_id, json.dumps({
+            "insight_updates": updates, "strategy": None, "plan_revision": None, "journal": "j",
+        }))
+        assert not outcome.ok and any("new insights" in e for e in outcome.errors)
+
+
+class TestPlanApplier:
+    def test_plan_records_proposal_without_creating_state(self, store: DojoStore):
+        compiled = compiler.compile_plan(store, goal="Learn Docker Compose in 3 weeks")
+        task_id = service.emit(store, compiled).id
+        before = len(store.campaigns.list())
+        outcome = service.submit(store, task_id, json.dumps({
+            "mission": "Debug and operate compose stacks during on-call.",
+            "topics": [
+                {"path": "docker.compose.services", "kind": "skill", "summary": "define and wire services"},
+                {"path": "docker.compose.volumes", "kind": "recall", "summary": "volume syntax"},
+            ],
+            "phases": [
+                {"phase": 1, "topics": ["docker.compose.services"],
+                 "criteria": {"min_attempts": 5, "min_accuracy": 0.6}, "focus": "calibration"},
+            ],
+            "refinement_questions": ["Which compose version does your team run?"],
+        }))
+        assert outcome.ok, outcome.errors
+        assert outcome.applied["refinement_questions"]
+        assert len(store.campaigns.list()) == before, (
+            "plan is a proposal (review-before-trust): no campaign until create"
+        )
+
+
 class TestGradeApplier:
     def _seed_attempt(self, store: DojoStore) -> tuple[str, Exercise]:
         ex = Exercise(

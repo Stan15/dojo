@@ -31,6 +31,9 @@ from ..schemas import (
     Candidate,
     GenerateResult,
     GradeResult,
+    Insight,
+    PlanResult,
+    ReflectResult,
     RESULT_SCHEMAS,
     Task,
 )
@@ -237,8 +240,99 @@ def apply_grade(store, task: Task, result: GradeResult) -> dict[str, Any]:
     return {"attempt_id": attempt_id, "score": result.score, "error_tag": result.error_tag}
 
 
+def apply_reflect(store, task: Task, result: ReflectResult) -> dict[str, Any]:
+    ctx = task.context
+    campaign_id = ctx["campaign_id"]
+    campaign = store.campaigns.get(campaign_id)
+    if campaign is None:
+        raise ApplyRejection(f"campaign {campaign_id} not found")
+
+    seen_attempts = set(ctx.get("attempt_ids", []))
+    existing = {ins.id: ins for ins in store.insights.list(campaign_id)}
+
+    # Every citation must point at evidence the model was actually shown, and
+    # every touched insight must exist — weak models cannot invent references.
+    reasons = []
+    for i, upd in enumerate(result.insight_updates):
+        for ev in upd.evidence:
+            if ev not in seen_attempts:
+                reasons.append(f"insight_updates[{i}] cites unknown attempt id {ev!r}")
+        if upd.op in ("update", "resolve") and upd.id not in existing:
+            reasons.append(f"insight_updates[{i}] targets unknown insight id {upd.id!r}")
+    if reasons:
+        raise ApplyRejection(*reasons)
+
+    created, updated, resolved = [], [], []
+    for i, upd in enumerate(result.insight_updates):
+        if upd.op == "create":
+            ins_id = f"ins_{task.id[4:]}_{i}"  # task-derived: re-apply overwrites
+            store.insights.save(campaign_id, Insight(
+                id=ins_id, key=upd.key, description=upd.text,
+                sources=list(upd.evidence), generation_run=task.id,
+            ))
+            created.append(ins_id)
+        elif upd.op == "update":
+            ins = existing[upd.id]
+            ins.description = upd.text
+            ins.sources = list(dict.fromkeys([*ins.sources, *upd.evidence]))
+            ins.updated_at = datetime.now(timezone.utc).isoformat()
+            store.insights.save(campaign_id, ins)
+            updated.append(upd.id)
+        else:
+            ins = existing[upd.id]
+            ins.status = "resolved"
+            ins.updated_at = datetime.now(timezone.utc).isoformat()
+            store.insights.save(campaign_id, ins)
+            resolved.append(upd.id)
+
+    if result.strategy:
+        if result.strategy.difficulty:
+            campaign.strategy_profile["difficulty"] = result.strategy.difficulty
+        if result.strategy.scaffolding:
+            campaign.strategy_profile["scaffolding"] = result.strategy.scaffolding
+    if result.plan_revision:
+        campaign.attack_plan = result.plan_revision.phases
+
+    campaign.pedagogical_journal.append({
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "action": "REFLECT",
+        "trigger": f"reflection over {len(seen_attempts)} attempts (task {task.id})",
+        "status": "applied",
+        "hypothesis": result.journal,
+    })
+    campaign.updated_at = datetime.now(timezone.utc).isoformat()
+    store.campaigns.save(campaign)
+
+    for att_id in seen_attempts:
+        att = store.attempts.get(campaign_id, att_id)
+        if att and not att.reflected:
+            att.reflected = True
+            store.attempts.save(campaign_id, att)
+
+    return {
+        "created": created, "updated": updated, "resolved": resolved,
+        "strategy_changed": result.strategy is not None,
+        "plan_revised": result.plan_revision is not None,
+        "journal": result.journal,
+    }
+
+
+def apply_plan(store, task: Task, result: PlanResult) -> dict[str, Any]:
+    """Deliberately writes NO domain state (review-before-trust, I2): the
+    fulfilled task carries the proposal; `dojo campaign create` materializes it
+    deterministically after the learner confirms."""
+    return {
+        "mission": result.mission,
+        "topics": [t.model_dump() for t in result.topics],
+        "phases": [p.model_dump() for p in result.phases],
+        "refinement_questions": result.refinement_questions,
+    }
+
+
 APPLIERS: dict[str, Callable[..., dict[str, Any]]] = {
     "exercise.generate": apply_generate,
     "exercise.diagnostic": apply_generate,
     "attempt.grade": apply_grade,
+    "campaign.reflect": apply_reflect,
+    "campaign.plan": apply_plan,
 }
