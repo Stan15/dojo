@@ -513,7 +513,11 @@ class Attempt(StoredEntity):
     score: float
     latency_seconds: float
     skip_reason: Optional[str] = None
-    feedback: Optional[str] = None
+    feedback: Optional[str] = None  # the learner's own comment (reflection input)
+    grader: Optional[str] = None  # "exact" | "self" | "ai" — I10: who produced the score
+    grade_feedback: Optional[str] = None  # grader → learner, one correction
+    grade_evidence: Optional[str] = None  # verbatim quote from the answer
+    error_tag: Optional[str] = None  # compact pattern label, feeds reflection
     reflected: bool = False
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     prompt: str = ""  # The prompt at the time of attempt
