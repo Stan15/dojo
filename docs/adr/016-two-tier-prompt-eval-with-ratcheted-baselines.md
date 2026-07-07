@@ -39,10 +39,22 @@ Two tiers, both in `pytest`, split by what they need to run:
    update the baseline in the same commit as the prompt change that earned them.
    Baselines are per-model — scores are only comparable within a model.
 
-4. **Reference fulfiller: `codex exec`** (available on the owner's machine),
-   driven through the same one-string fulfiller contract as production
-   (`prompt on stdin → JSON on stdout → salvage-extract`). Skipped automatically
-   when the command is unavailable (honest skip count, never a silent pass).
+4. **Fulfiller-agnostic by construction.** The eval runner takes any fulfiller
+   command string (`DOJO_EVAL_FULFILLER="<cmd>"`, same one-string contract as
+   production: prompt on stdin → JSON on stdout → salvage-extract) and derives
+   the baseline slug from it. Multiple fulfillers can each maintain their own
+   committed baseline, and the system's model-neutrality principle (blueprint
+   §9.3) is *itself* testable by running the same corpus across capability
+   tiers. `codex exec` is simply the first locally available fulfiller — never
+   assumed, never special-cased. Evals skip with an honest count when no
+   fulfiller is configured; they never silently pass.
+
+5. **Reproducibility, honestly bounded.** The scenario corpus and scoring are
+   fully deterministic; model sampling is not. Mitigations: scores aggregate
+   over `DOJO_EVAL_SAMPLES` runs (default 1, raise for stability), the ratchet
+   compares against the baseline with the baseline's recorded sample count, and
+   scorecards record the command string + date so drift in the external model
+   is diagnosable rather than mysterious.
 
 ## Consequences
 - Prompt iteration gets a safety net: cheap byte-level pins always; real-model
