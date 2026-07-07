@@ -328,7 +328,43 @@ Why: verbatim-copy rule + server-side existence validation (ADR 013) makes
 misfiling structurally shallow; the `stay_inbox`/`propose_campaign` hatches mean a
 weak model is never forced to jam a capture somewhere wrong.
 
-## 8. What implementation must preserve (M2 acceptance)
+## 8. File layout — prompts are editable artifacts, not code
+
+(Product-owner requirement 2026-07-07, confirming ADR 009's prompt-as-a-skill
+direction.) Every prompt lives as its own markdown template so iteration never
+touches Python:
+
+```
+src/dojo/prompts/
+  exercise_generate.md     # one template per task kind — the §3–§7 texts
+  attempt_grade.md
+  campaign_reflect.md
+  campaign_plan.md
+  capture_route.md
+  fragments/
+    grounding_grounded.md  # compiler-selected variants ({{grounding_rule}})
+    grounding_synthetic.md
+    generate_diagnostic.md # TASK-line + rule swap for diagnostic mode
+```
+
+Rules that keep this maintainable:
+
+- **`{{ name }}` injects values only — never logic.** No conditionals, no loops,
+  no filters in templates. All branching stays in the compiler (§1 rule 5); a
+  mode variant is a separate fragment file the compiler picks, so every template
+  reads exactly as it will be sent.
+- **The loader is strict**: unknown placeholders in a template and leftover
+  un-interpolated placeholders after rendering are both hard errors (the
+  prototype's warning-only loader hardens to raise). A typo in a template must
+  fail a test, not silently ship a `{{ strategy_line }}` literal to a model.
+- **Golden fixtures pin every template**: each task kind × mode has a compiled
+  payload fixture; editing a template forces the fixture diff into the same
+  commit, which is exactly the review you want on prompt changes.
+- Embedded-fallback copies of templates (the prototype's `FALLBACK_TEMPLATES`
+  dict) are dropped — packaged data files are the single source of truth;
+  a missing template is a broken install, and the doctor says so honestly.
+
+## 9. What implementation must preserve (M2 acceptance)
 
 1. Compiled payloads match golden fixtures byte-for-byte (per mode: grounded /
    synthetic / diagnostic) and stay within §2 budgets.
