@@ -19,7 +19,7 @@ until they say "continue".
   - `src/dojo/connectors.py` — subprocess AI connectors (single-turn, value injection).
   - `src/dojo/generate.py` — LLM output salvage parsing + heading-window source slicing.
   - `src/dojo/schemas.py` — Pydantic entities + LLM response schemas.
-  - `tests/test_dojo.py` — one consolidated suite, 10 tests, green.
+  - `tests/test_dojo.py` — one consolidated suite, 9 tests, green (verified 2026-07-07).
   - `skills/dojo/SKILL.md` — host-agent skill (~78 lines).
 - **Strong pedagogy docs** (authoritative): `product-north-star.md`,
   `pedagogy-foundation.md`, ADRs 001–009.
