@@ -78,7 +78,7 @@ class ExerciseGenerateRequest:
                 "strategy_context": strategy_context,
                 "schema_instructions": schema_instruction,
             }
-            instructions = load_prompt("exercise_generate.md", placeholders)
+            instructions = load_prompt("legacy_exercise_generate.md", placeholders)
 
         req = {
             "task": "exercise.generate",

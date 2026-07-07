@@ -1388,7 +1388,7 @@ class DojoAPI:
         if custom_consolidate_instructions:
             instructions = custom_consolidate_instructions + schema_instruction
         else:
-            instructions = load_prompt("profile_consolidate.md", {"schema_instructions": schema_instruction})
+            instructions = load_prompt("legacy_profile_consolidate.md", {"schema_instructions": schema_instruction})
 
         request = {
             "task": "profile.consolidate",

@@ -1,74 +1,88 @@
+"""Prompt template loading.
+
+Templates are editable markdown artifacts (design/prompts.md §8): one file per
+task kind plus compiler-selected fragments. `{{ name }}` injects values only —
+no logic ever lives in a template; all branching happens in the compiler by
+choosing which template/fragment to render.
+
+`render()` is strict by design: a typo'd placeholder must fail a test, not
+silently ship a literal `{{ strategy_line }}` to a model.
+
+`load_prompt()` is the legacy loader for the pre-task-contract pipeline; it dies
+with that pipeline (see docs/STATE.md).
+"""
+from __future__ import annotations
+
+import re
 import sys
 import warnings
-import re
 from pathlib import Path
 
-# Fallback templates in case files are missing or unreadable in a frozen binary
-FALLBACK_TEMPLATES = {
-    "exercise_generate.md": (
-        "Draft practice candidates from the provided source references.\n"
-        "If topic is provided, treat it as an optional parent-topic hint, not a single-topic assertion. "
-        "Return candidates that may span multiple subtopics.\n"
-        "If you realize you lack sufficient context about the user's goals, prior knowledge, or learning style for this topic to generate useful, calibrated exercises, or if you determine a pedagogical intervention is needed, you may instead generate 1–3 highly targeted, concise diagnostic questions to help personalize future sessions (set their 'quality' to 'diagnostic').\n\n"
-        "ADDITIONAL PEDAGOGICAL GUIDELINES:\n"
-        "1. Self-Containment: Ensure all instructions, tasks, and questions are fully self-contained. Do not refer to external or non-existent files, worksheets, or checklists. Every exercise must be fully complete and answerable using only the text provided in its prompt.\n"
-        "2. Domain-Specific Practice (No Learner-as-Teacher Tasks): Focus practice exercises on active production, retrieval, and application of the target topic domain itself. Do not ask the learner to perform the teacher's role (e.g. asking them to design their own curriculum, define grading rubrics, or schedule their own practice calendar). It is, however, completely appropriate for the system to ask the student targeted diagnostic or clarifying questions about their learning goals, targets, or prior knowledge at strategic milestones.\n"
-        "3. Complete Prompt Packaging: The complete body of the exercise (including any sub-tasks, checklist items, options, or context) must be written entirely inside the single string 'prompt' field. Do NOT output custom keys like 'learner_tasks' or 'tasks' for prompt content.\n\n"
-        "{{ active_topics_context }}\n"
-        "{{ phase_focus_context }}\n"
-        "{{ learner_profile_context }}\n"
-        "{{ strategy_context }}\n"
-        "{{ schema_instructions }}"
-    ),
-    "profile_consolidate.md": (
-        "Analyze the learner's recent practice attempts, user feedback, and goals to refine the campaign mission and strategy.\n\n"
-        "PEDAGOGICAL PRINCIPLES FOR CONSOLIDATION:\n"
-        "1. Stability & Pacing: Prefer a stable, consistent attack plan. Avoid unnecessary churn. Proactively refine the active or future phases only when the learner is stuck, exhibits prerequisites gaps, demonstrates mastery ahead of schedule, or shifts interest.\n"
-        "2. Self-Stated Constraints & Timeline-Awareness: Adapt the plan to the learner's constraints. If they face a tight timeline or milestone, compress the attack plan to target the highest-leverage concepts first and scale down completion criteria.\n"
-        "3. Hypothesis-Driven Calibration: Actively manage learner hypotheses (misconceptions/patterns). Create new hypotheses for new mistake patterns, refine active ones, and archive them when the learner consistently demonstrates correct production. Use these hypotheses to adjust difficulty and scaffolding.\n"
-        "4. Goal-Based Progression: Sequence the attack plan logically to match the learner's overall mission. Ensure early stages focus on low-stakes diagnostic calibration to discover baseline capabilities, and design subsequent phases to build and interleave complex skills progressively.\n"
-        "5. Behavioral Signals (Skips & Feedback): Treat skips (e.g. 'too_easy', 'too_hard') and user feedback as critical calibration signals. Adjust strategy parameters (mode, difficulty, scaffolding) to keep the learner in their Zone of Proximal Development.\n\n"
-        "{{ schema_instructions }}"
-    )
-}
+_PLACEHOLDER = re.compile(r"\{\{\s*(\w+)\s*\}\}")
+
+
+def _templates_dir() -> Path:
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        return Path(sys._MEIPASS) / "dojo" / "prompts"
+    return Path(__file__).parent
+
+
+class TemplateError(ValueError):
+    """A template problem is a programming/packaging bug, never a runtime shrug."""
+
+
+def render(template_name: str, values: dict[str, str]) -> str:
+    """Renders `template_name` (e.g. "attempt_grade.md" or "fragments/x.md")
+    with value-only interpolation.
+
+    Raises TemplateError when the template is missing, when the template needs a
+    placeholder `values` doesn't provide, or when interpolation leaves any
+    `{{ }}` behind (e.g. a value smuggled a placeholder in). Extra keys in
+    `values` are fine — compilers may pass a superset.
+    """
+    path = _templates_dir() / template_name
+    if not path.exists():
+        raise TemplateError(f"Prompt template not found: {template_name} (broken install?)")
+    text = path.read_text(encoding="utf-8")
+
+    needed = set(_PLACEHOLDER.findall(text))
+    missing = needed - values.keys()
+    if missing:
+        raise TemplateError(
+            f"Template {template_name} needs placeholders not provided: {sorted(missing)}"
+        )
+
+    def _sub(match: re.Match) -> str:
+        return str(values[match.group(1)])
+
+    result = _PLACEHOLDER.sub(_sub, text)
+
+    leftover = set(_PLACEHOLDER.findall(result))
+    if leftover:
+        raise TemplateError(
+            f"Rendering {template_name} left un-interpolated placeholders {sorted(leftover)} — "
+            "an injected value contained '{{ }}'."
+        )
+    return result.strip()
+
 
 def load_prompt(filename: str, placeholders: dict[str, str]) -> str:
-    """
-    Loads prompt template from the local prompts folder. Falls back to embedded defaults if missing.
-    Interpolates {{ placeholder }} double-brace variables safely, asserting no unmatched variables remain.
-    """
-    template_text = None
-    
-    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
-        base_path = Path(sys._MEIPASS) / "dojo" / "prompts"
-    else:
-        base_path = Path(__file__).parent
-        
-    prompt_file = base_path / filename
-    if prompt_file.exists():
-        try:
-            template_text = prompt_file.read_text(encoding="utf-8")
-        except Exception as exc:
-            warnings.warn(f"Failed to read prompt file {filename}: {exc}. Using fallback template.")
-            
-    if template_text is None:
-        template_text = FALLBACK_TEMPLATES.get(filename)
-        if template_text is None:
-            raise FileNotFoundError(f"Prompt template {filename} not found and no fallback exists.")
+    """Legacy loader (pre-task-contract pipeline). Warns instead of raising on
+    leftover placeholders; scheduled for deletion with that pipeline."""
+    path = _templates_dir() / filename
+    if not path.exists():
+        raise FileNotFoundError(f"Prompt template {filename} not found.")
+    template_text = path.read_text(encoding="utf-8")
 
-    found_placeholders = re.findall(r"\{\{\s*(\w+)\s*\}\}", template_text)
-    
     result_text = template_text
     for key, val in placeholders.items():
         placeholder_pat = re.compile(r"\{\{\s*" + re.escape(key) + r"\s*\}\}")
         result_text = placeholder_pat.sub(val, result_text)
-        
-    remaining_placeholders = re.findall(r"\{\{\s*(\w+)\s*\}\}", result_text)
-    if remaining_placeholders:
+
+    remaining = _PLACEHOLDER.findall(result_text)
+    if remaining:
         warnings.warn(
             f"Prompt template {filename} contains remaining un-interpolated placeholders: "
-            f"{', '.join(set(remaining_placeholders))}. Missing keys from placeholders input: "
-            f"{list(placeholders.keys())}"
+            f"{', '.join(sorted(set(remaining)))}."
         )
-        
     return result_text
