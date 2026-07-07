@@ -7,8 +7,13 @@ _Last updated: 2026-07-07_
 **Implementation** — gate opened by product owner 2026-07-07 ("you can continue"),
 after design review. Their pre-gate additions, all resolved: SR library reuse
 (py-fsrs, ADR 014), Anki interop decision (import/export backlog, no sync,
-ADR 015), capture confirm-by-default (Q6, ADR 013 updated). Currently executing
-**M0 — truth pass** (blueprint §10).
+ADR 015), capture confirm-by-default (Q6, ADR 013 updated).
+
+**M0 (truth pass) is complete**: pydantic declared, fpdf2 → optional `dojo[pdf]`
+extra with lazy import, ADR 003b renumbered, version/python badges aligned,
+SQLite-era claims corrected in api-specification/README/development-approach,
+OP #10 re-diagnosed (artifacts were never tracked). Gate green (9 passed).
+Next: **M1 — domain model + Store protocol + conformance suite** (blueprint §10).
 
 ## What exists today (honest inventory)
 
