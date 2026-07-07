@@ -9,7 +9,6 @@ from typing import Any, Dict, List, Optional
 from . import connectors
 from . import generate
 from .logger import get_logger
-from .pdf_generator import render_markdown_to_pdf
 from .schemas import (
     Source,
     Campaign,
@@ -1791,6 +1790,13 @@ class DojoAPI:
 
         syllabus = campaign.syllabus_markdown or f"# {campaign.name}\n\nSyllabus is empty."
         if format.lower() == "pdf":
+            try:
+                from .pdf_generator import render_markdown_to_pdf
+            except ImportError as exc:
+                raise ValueError(
+                    "PDF export requires the optional 'pdf' extra: pip install 'dojo[pdf]'. "
+                    "Alternatively use --format markdown."
+                ) from exc
             out = output_path or (self.store.dojo_dir / f"camp_{campaign_id}_syllabus.pdf")
             render_markdown_to_pdf(syllabus, out)
             return {"format": "pdf", "path": str(out), "syllabus": syllabus}

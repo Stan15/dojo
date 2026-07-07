@@ -7,6 +7,20 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
 1. **Subprocess connectors** (was Q3): keep as secondary adapter behind the task
    contract, or drop until asked for? **Proceeding on default: keep, demoted,
    re-seated on task records (M2).**
+   *Elaboration:* today's prototype lets you register an external command as the
+   AI (`dojo connect ai command mymodel -- ~/bin/ollama-wrapper.sh`); dojo runs
+   that subprocess whenever it needs generation/grading. In the new design
+   (ADR 010) your harness — Claude Code etc. — does the AI work itself, so most
+   users never need a connector. The question is whether we keep the subprocess
+   path for the two agent-less scenarios: (a) headless automation, e.g. a nightly
+   cron running `dojo task run` so your queue is replenished before you wake up,
+   and (b) plain-CLI users with no harness who want a local model to power
+   generation. "Re-seated on task records" means it stops being its own pipeline:
+   it just reads the same pending task files and submits through the same
+   validated `dojo task submit` path the harness uses — one contract, so it can
+   never behave differently from the harness path. Cost of keeping: ~500 lines +
+   tests. My default: keep it, because (a) is genuinely useful for a daily-ritual
+   product.
 
 ## Answered (2026-07-07)
 
