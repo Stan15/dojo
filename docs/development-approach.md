@@ -25,7 +25,7 @@ Keep the product logic in a core library, with clients/adapters around it:
 
 ```text
 Dojo core services
-  -> SQLite/local state
+  -> local state (markdown store behind the Store protocol; ADR 011)
   -> stable CLI
   -> optional TUI/web/mobile clients
   -> optional adapters: Hermes, Telegram, MCP, browser capture
@@ -39,7 +39,7 @@ Provider-specific or platform-specific behavior should sit behind explicit inter
 Use the smallest coherent production slice. Prefer:
 
 - Python core and CLI first;
-- SQLite for local state;
+- markdown-file storage behind the `Store` protocol (ADR 011) for local state;
 - typed request/result boundaries for AI tasks;
 - command-backed AI connectors before provider-specific SDK lock-in;
 - integration/E2E tests at seams;

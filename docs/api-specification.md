@@ -1,6 +1,12 @@
 # Dojo API & Command Specification
 
-This document provides the authoritative technical reference for the implemented Dojo programmatic Python API (`DojoAPI`), the CLI command-line interface, and key architectural nuances.
+> **Status (2026-07-07):** this documents the **prototype** surface as implemented
+> today. The authoritative v1 design is [`docs/design/blueprint.md`](design/blueprint.md);
+> where the two conflict, the blueprint wins, and this document will be rewritten
+> as milestones M1–M3 land the new surface (Store protocol, task contract,
+> `dojo daily`/`capture`/`inbox`).
+
+This document provides the technical reference for the implemented Dojo programmatic Python API (`DojoAPI`), the CLI command-line interface, and key architectural nuances.
 
 ---
 
@@ -11,9 +17,11 @@ The programmatic Python API is defined in [`src/dojo/api.py`](file:///Users/stan
 ### Initialization
 ```python
 from dojo.api import DojoAPI
-api = DojoAPI(db_path=None)
+api = DojoAPI(dojo_dir=None)
 ```
-*   `db_path`: Absolute path to the SQLite database. If omitted, defaults to `~/.local/share/dojo/dojo.sqlite3`. Initializes/migrates tables automatically.
+*   `dojo_dir`: Path to the Dojo data directory. If omitted, defaults to
+    `~/.local/share/dojo/`. Storage is markdown files with YAML frontmatter,
+    versioned by git (see ADR 011); directory structure is created automatically.
 
 ### Source & Candidate Methods
 

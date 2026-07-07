@@ -1,7 +1,7 @@
 # Dojo: Active Practice for Serious Learners
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/Stan15/dojo)
-[![Python](https://img.shields.io/badge/python-3.8+-green.svg)](https://python.org)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/Stan15/dojo)
+[![Python](https://img.shields.io/badge/python-3.11+-green.svg)](https://python.org)
 [![Local First](https://img.shields.io/badge/local--first-100%25-brightgreen.svg)](#design-philosophy)
 
 **Dojo** is a standalone, local-first learning engine that transforms your trusted study materials—notes, articles, books, papers, video transcripts, and projects—into calibrated active recall practice. 
@@ -151,7 +151,7 @@ This copies the agent-agnostic skill configurations (`skills/dojo/SKILL.md`) to 
 
 ## 🛡️ Design Principles
 
-*   **100% Local-First**: Your learning metrics, sqlite database, sources, and configurations reside entirely on your local machine.
+*   **100% Local-First**: Your learning metrics, sources, and configurations reside entirely on your local machine — as human-readable markdown files with YAML frontmatter, versioned by git.
 *   **Simple by Default, Precise when Needed**: Human-friendly Rich layouts for terminals, alongside stateless `--json` / `--no-input` modes for agents and automation.
 *   **Durable Storage Strength**: Leverages spaced retrieval concepts to build durable mental storage strength.
 
