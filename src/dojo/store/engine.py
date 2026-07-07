@@ -55,7 +55,7 @@ def init_git(dojo_dir: Path):
             subprocess.run(["git", "init", "-q"], cwd=dojo_dir, check=True)
             gitignore = dojo_dir / ".gitignore"
             if not gitignore.exists():
-                gitignore.write_text("dojo.lock\n.index.json\n*.tmp\n", encoding="utf-8")
+                gitignore.write_text("dojo.lock\n.index.json\ndojo.log\n*.tmp\n", encoding="utf-8")
         except Exception:
             pass
 

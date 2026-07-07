@@ -9,11 +9,27 @@ after design review. Their pre-gate additions, all resolved: SR library reuse
 (py-fsrs, ADR 014), Anki interop decision (import/export backlog, no sync,
 ADR 015), capture confirm-by-default (Q6, ADR 013 updated).
 
-**M0 (truth pass) is complete**: pydantic declared, fpdf2 → optional `dojo[pdf]`
-extra with lazy import, ADR 003b renumbered, version/python badges aligned,
-SQLite-era claims corrected in api-specification/README/development-approach,
-OP #10 re-diagnosed (artifacts were never tracked). Gate green (9 passed).
-Next: **M1 — domain model + Store protocol + conformance suite** (blueprint §10).
+**M0 (truth pass) complete** — see OPEN-PROBLEMS #1–4, #10.
+
+**M1 (domain + store contract) complete** — gate green, 28 passed:
+- Conformance suite (`tests/test_store_conformance.py`) is the executable ADR 011
+  contract: round-trips, ID references, human-edit passthrough, rename-stable
+  identity, filter/default semantics, audit batching, doctor VC health.
+- `Attempt` migrated to `session_id`/`exercise_id`/`campaign_id` — fixed two
+  latent bugs (phantom-filename refs; due-filter comparing paths to IDs).
+- Facade collapsed: repository-style access; exercises/candidates/attempts/
+  insights are one generic `CampaignScopedRepository`; bodies come from
+  `_body_field` ClassVars; writes never auto-commit; `cli.main()` makes one
+  recovery point per command; doctor surfaces audit failures.
+- Verified end-to-end with the real CLI (config → audit commit → doctor clean).
+- Store `Protocol` typing classes deliberately deferred to when the second
+  backend materializes — the conformance suite is the binding contract today.
+- `archived_implementation/` retained per owner (Q4).
+
+Next: **M2 — task contract + appliers + budgeted compiler + prompt templates**
+(blueprint §10, `docs/design/prompts.md`). NOTE: the owner's connectors answer in
+QUESTIONS.md ends mid-sentence ("sure, we can keep it, but ") — resolve that
+condition before building the connector-side task drain (`dojo task run`).
 
 ## What exists today (honest inventory)
 
