@@ -1,86 +1,64 @@
 # STATE
 
-_Last updated: 2026-07-07_
+_Last updated: 2026-07-07 (late session)_
 
 ## Phase
 
-**Implementation** — gate opened by product owner 2026-07-07 ("you can continue"),
-after design review. Their pre-gate additions, all resolved: SR library reuse
-(py-fsrs, ADR 014), Anki interop decision (import/export backlog, no sync,
-ADR 015), capture confirm-by-default (Q6, ADR 013 updated).
+**Implementation.** M0 ✅ M1 ✅ **M2 ✅ (task contract — the architecture's heart).**
+Next: Tier-3 judged evals + wide pedagogical corpus (owner priority), then M3
+(pedagogy engine: py-fsrs scheduling, `dojo daily`, packet builder).
 
-**M0 (truth pass) complete** — see OPEN-PROBLEMS #1–4, #10.
+## What M2 delivered (all committed, 94 tests green + 4 eval-marked)
 
-**M1 (domain + store contract) complete** — gate green, 28 passed:
-- Conformance suite (`tests/test_store_conformance.py`) is the executable ADR 011
-  contract: round-trips, ID references, human-edit passthrough, rename-stable
-  identity, filter/default semantics, audit batching, doctor VC health.
-- `Attempt` migrated to `session_id`/`exercise_id`/`campaign_id` — fixed two
-  latent bugs (phantom-filename refs; due-filter comparing paths to IDs).
-- Facade collapsed: repository-style access; exercises/candidates/attempts/
-  insights are one generic `CampaignScopedRepository`; bodies come from
-  `_body_field` ClassVars; writes never auto-commit; `cli.main()` makes one
-  recovery point per command; doctor surfaces audit failures.
-- Verified end-to-end with the real CLI (config → audit commit → doctor clean).
-- Store `Protocol` typing classes deliberately deferred to when the second
-  backend materializes — the conformance suite is the binding contract today.
-- `archived_implementation/` retained per owner (Q4).
-
-Next: **M2 — task contract + appliers + budgeted compiler + prompt templates**
-(blueprint §10, `docs/design/prompts.md`). NOTE: the owner's connectors answer in
-QUESTIONS.md ends mid-sentence ("sure, we can keep it, but ") — resolve that
-condition before building the connector-side task drain (`dojo task run`).
-
-## What exists today (honest inventory)
-
-- **Working-ish prototype**, mid-refactor from SQLite to a git-versioned markdown
-  store. Checkpointed at commit `374fd04`.
-  - `src/dojo/store/` — new markdown storage engine (frontmatter + body, mtime index,
-    file locking, auto git commits). Functional but leaks paths into domain objects.
-  - `src/dojo/api.py` — 1,810-line `DojoAPI` monolith holding all business logic.
-  - `src/dojo/cli.py` — argparse CLI, `--json` envelopes, installer, doctor.
-  - `src/dojo/connectors.py` — subprocess AI connectors (single-turn, value injection).
-  - `src/dojo/generate.py` — LLM output salvage parsing + heading-window source slicing.
-  - `src/dojo/schemas.py` — Pydantic entities + LLM response schemas.
-  - `tests/test_dojo.py` — one consolidated suite, 9 tests, green (verified 2026-07-07).
-  - `skills/dojo/SKILL.md` — host-agent skill (~78 lines).
-- **Strong pedagogy docs** (authoritative): `product-north-star.md`,
-  `pedagogy-foundation.md`, ADRs 001–009.
-- **Stale docs**: `api-specification.md` and parts of README still describe the SQLite
-  era; two ADRs share number 003; `pyproject.toml` is missing the `pydantic` dependency
-  it uses; version strings disagree (README 1.0.0 vs pyproject 0.1.0).
-- `archived_implementation/` — the pre-refactor SQLite implementation, kept for
-  reference only.
-
-## Done this session
-
-- Adopted `agentic-dev-method` (incl. updated §0 philosophy); created scaffolding
-  (CLAUDE.md → CLAUDE_START, STATE, INSIGHTS, OPEN-PROBLEMS, QUESTIONS); test gate set.
-- Wrote the authoritative v1 design: `docs/design/blueprint.md` — invariants I1–I10,
-  correctness arguments for the three compounding zones (scheduler, store
-  round-trip, task boundary), milestones M0–M6 with named tests and delegation.
-- ADRs 010–013: harness-first task fulfillment (inverts the connector model);
-  store protocol with markdown contract; deterministic pedagogy core (Tier-1
-  allocation ≠ memory, state on stable nodes); frictionless capture with validated
-  routing.
-- `docs/design/prompts.md`: all five task prompts crafted for unknown-caliber
-  models, with payload byte budgets and the floor-not-ceiling neutrality principle
-  (fulfiller profiles scale budgets; bounded note fields as strong-model
-  side-channel).
-- Product-owner requirements folded in this session: quick capture ("I just
-  learned X"), two-tier scheduling, token hyper-awareness, model-strength
-  neutrality.
+- **Task contract end-to-end (ADR 010):** `Task` entity in `tasks/` (prompt as md
+  body) → budgeted compiler (`src/dojo/tasks/compiler.py`, I6 byte budgets +
+  fulfiller tiers) → `dojo task list/show/submit/run` → validated appliers
+  (`src/dojo/tasks/service.py`, I5: salvage → schema → cross-checks → idempotent
+  apply; fuzz-pinned state-hash invariance).
+- **All five flows rewired, zero blocking on AI:** add-source generation, session
+  JIT replenishment (no-session envelope when queue empty), answer grading
+  (exact/auto graders deterministic; AI grading = emitted task with verbatim-
+  evidence anchor), reflection (insights/strategy/plan under rails), campaign
+  planning (`campaign plan` task → `create --from-task` materialization, I2).
+- **Prompts as artifacts:** six templates + fragments in `src/dojo/prompts/`,
+  strict `render()` (raises on any placeholder problem), `limits.py` as single
+  source for every numeric promise, golden byte-pins.
+- **Evals (ADR 016):** Tier 1 golden payloads; Tier 2 `pytest -m eval` with
+  fulfiller-agnostic runner + ratcheted per-model baselines — **first real
+  baseline committed: codex 4/4 scenarios, 100% first-shot compliance, all
+  quality signals true.** Tier 3 (LLM-judged pedagogical quality: binary rubric
+  criteria, evidence-anchored verdicts, judge calibration gate against planted
+  good/bad references, (driver,judge)-pair baselines, longitudinal
+  learning-loop scenarios) is DESIGNED in ADR 016 — implementation is the next
+  work item, and the owner wants a WIDE, thoughtfully crafted corpus.
+- **Legacy deleted** (owner rule: git is the archive): connectors.py,
+  generate.py, legacy templates/loader-fallbacks/schemas, connect-ai CLI,
+  generation runs, wrapper-script generation. api.py 1810 → 1148 lines.
 
 ## NEXT ACTIONS (in order)
 
-1. Finish M0 — truth pass: purge build artifacts + gitignore; pyproject fixes
-   (add pydantic, resolve fpdf2, version alignment); rename duplicate ADR 003 →
-   003b; fix stale api-specification.md/README falsehoods. Gate stays green.
-2. Milestone 1 — domain model (ID-based refs) + `Store` protocol + `MarkdownStore`
-   conformance/round-trip suite (blueprint §10; keep `archived_implementation/`).
-3. Milestone 2 — task contract + appliers + budgeted compiler + prompt templates
-   from `docs/design/prompts.md`.
+1. **Tier 3 evals + corpus** (todo): implement judge runner per ADR 016 §Tier 3;
+   craft the wide scenario corpus stretching pedagogy + personalization
+   (recurring-error targeting, skip-signal calibration, deadline compression,
+   plateau handling, mastery resolution, preference adherence; longitudinal
+   reflect→generate chains). Run real baseline with codex as driver AND judge.
+2. README viral-grade rewrite (owner ask) — keep truthful to current surface.
+3. M3 — pedagogy engine (blueprint §10): py-fsrs behind `scheduling` boundary,
+   topic-level skill SR, Tier-1 allocator, packet builder, `dojo daily`,
+   `dojo why`, offline-floor test.
+4. M4 — capture/inbox/route + `dojo capture`; M5 — skill/envelope polish (SKILL.md
+   ≤60 lines, `dojo stats`); M6 — real-harness E2E + ship.
+
+## Standing owner directives (beyond blueprint)
+
+- No context bloat; model-strength neutrality (floor-not-ceiling; §1b prompts.md).
+- Delete-over-retain (git is the archive). `archived_implementation/` exempt (Q4).
+- Prompts live in .md files, value-only `{{ }}` injection.
+- Eval system: reproducible, fulfiller-agnostic, (driver,judge)-pair baselines;
+  codex locally available for real runs — never hardcoded.
+- Maintain README (viral-grade) and this STATE continuously.
 
 ## Open questions
 
-See `QUESTIONS.md` (all have stated defaults; none block design review).
+QUESTIONS.md Q1 (fulfiller runner) — answered by owner notes + built as designed;
+runner shipped as `dojo task run`. No open questions.
