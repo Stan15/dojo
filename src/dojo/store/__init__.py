@@ -6,17 +6,17 @@ from pydantic import BaseModel
 from .engine import StorageEngine, slugify
 from .base import (
     CampaignScopedRepository,
+    RootScopedRepository,
     attempt_filename,
     sequenced_filename,
     slug_filename,
 )
-from .sources import SourceRepository
 from .campaigns import CampaignRepository
 from .sessions import SessionRepository
 from .configs import ConfigRepository
 from .doctor import DoctorService
 
-from ..schemas import Attempt, Candidate, Exercise, Insight
+from ..schemas import Attempt, Candidate, Exercise, Insight, Source, Task
 
 
 class DojoStore:
@@ -29,7 +29,12 @@ class DojoStore:
 
     def __init__(self, dojo_dir: str | Path | None = None):
         self.engine = StorageEngine(dojo_dir)
-        self.sources = SourceRepository(self.engine)
+        self.sources = RootScopedRepository(
+            self.engine, entity_type="source", schema_cls=Source, subdir="sources",
+        )
+        self.tasks = RootScopedRepository(
+            self.engine, entity_type="task", schema_cls=Task, subdir="tasks",
+        )
         self.campaigns = CampaignRepository(self.engine)
         self.sessions = SessionRepository(self.engine)
         self.configs = ConfigRepository(self.engine)

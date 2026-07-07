@@ -321,6 +321,33 @@ class Insight(StoredEntity):
     description: str
 
 
+class Task(StoredEntity):
+    """A pending unit of AI judgment (ADR 010) — the only seam between the
+    deterministic core and whatever model fulfills it.
+
+    The compiled prompt is the markdown body, so any fulfiller (harness,
+    subprocess connector, future API worker) can be pointed at the file itself
+    instead of re-emitting the payload through a conversation.
+    """
+
+    _body_field: ClassVar[Optional[str]] = "prompt"
+
+    id: str
+    kind: str  # exercise.generate | attempt.grade | campaign.reflect | campaign.plan | capture.route
+    status: str = "pending"  # pending | fulfilled | failed
+    campaign_id: Optional[str] = None
+    context: Dict[str, Any] = Field(default_factory=dict)  # applier inputs (session_id, n_items, …)
+    submissions: int = 0
+    max_submissions: int = 3  # first try + 2 retries (I5)
+    error_history: List[str] = Field(default_factory=list)
+    payload_bytes: int = 0
+    response_bytes: int = 0
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    # Omitted from frontmatter, maps to the Markdown file body
+    prompt: str = ""
+
+
 class PracticeSession(StoredEntity):
     id: str
     status: str = "active"

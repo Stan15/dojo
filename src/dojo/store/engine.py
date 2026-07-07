@@ -22,6 +22,7 @@ from ..schemas import (
     Insight,
     PracticeSession,
     AttackPlanPhase,
+    Task,
 )
 
 T = TypeVar("T", bound=BaseModel)
@@ -138,6 +139,7 @@ def _get_schema_default(entity_type: str | None, key: str) -> Any:
         "candidate": Candidate,
         "attempt": Attempt,
         "insight": Insight,
+        "task": Task,
     }
     model = model_map.get(entity_type)
     if not model:
@@ -177,6 +179,7 @@ class StorageEngine:
         self.dojo_dir.mkdir(parents=True, exist_ok=True)
         (self.dojo_dir / "campaigns").mkdir(exist_ok=True)
         (self.dojo_dir / "sources").mkdir(exist_ok=True)
+        (self.dojo_dir / "tasks").mkdir(exist_ok=True)
         (self.dojo_dir / "archive" / "campaigns").mkdir(parents=True, exist_ok=True)
         (self.dojo_dir / "archive" / "sessions").mkdir(parents=True, exist_ok=True)
 
@@ -321,6 +324,8 @@ class StorageEngine:
         parts = rel_path.split("/")
         if len(parts) == 2 and parts[0] == "sources":
             return "source"
+        if len(parts) == 2 and parts[0] == "tasks":
+            return "task"
         if len(parts) >= 3 and parts[0] == "campaigns":
             # campaigns/camp_name/sub/...
             sub = parts[2]

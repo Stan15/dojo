@@ -32,6 +32,7 @@ from dojo.schemas import (
     Exercise,
     Insight,
     Source,
+    Task,
 )
 from dojo.store import DojoStore
 
@@ -126,6 +127,17 @@ def make_attempt() -> Attempt:
     )
 
 
+def make_task() -> Task:
+    return Task(
+        id="tsk_j9k0",
+        kind="exercise.generate",
+        campaign_id=CAMP_ID,
+        context={"n_items": 3, "topic_path": "french.oral.part_a", "mode": "grounded"},
+        payload_bytes=4096,
+        prompt="You are drafting practice exercises for one learner.\n\n## MISSION\nReach NCLC 7.",
+    )
+
+
 def make_insight() -> Insight:
     return Insight(
         id="ins_g7h8",
@@ -175,6 +187,19 @@ class TestRoundTrip:
         ins = make_insight()
         store.insights.save(CAMP_ID, ins)
         assert store.insights.get(CAMP_ID, ins.id).model_dump() == ins.model_dump()
+
+    def test_task(self, store: DojoStore):
+        tsk = make_task()
+        store.tasks.save(tsk)
+        assert store.tasks.get(tsk.id).model_dump() == tsk.model_dump()
+
+    def test_task_status_filter(self, store: DojoStore):
+        tsk = make_task()
+        store.tasks.save(tsk)
+        assert [t.id for t in store.tasks.list(filters={"status": "pending"})] == [tsk.id]
+        tsk.status = "fulfilled"
+        store.tasks.save(tsk)
+        assert store.tasks.list(filters={"status": "pending"}) == []
 
     def test_update_in_place_keeps_single_record(self, store: DojoStore):
         store.campaigns.save(make_campaign())

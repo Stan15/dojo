@@ -14,6 +14,7 @@ from ..schemas import (
     Insight,
     PracticeSession,
     AttackPlanPhase,
+    Task,
 )
 
 class DoctorService(BaseRepository):
@@ -27,6 +28,7 @@ class DoctorService(BaseRepository):
             "Campaigns structure": [],
             "Archived campaigns and sessions": [],
             "Generation run audits": [],
+            "Task queue": [],
             "Version control audit": [],
         }
         if not self.engine.dojo_dir.exists():
@@ -35,7 +37,7 @@ class DoctorService(BaseRepository):
         results["Version control audit"].extend(self._check_audit_health())
 
         # 1. Check root directory layout
-        allowed_root_dirs = {"campaigns", "sources", "archive", "runs", "connectors", ".git"}
+        allowed_root_dirs = {"campaigns", "sources", "tasks", "archive", "runs", "connectors", ".git"}
         allowed_root_files = {".index.json", "dojo.lock", "config.yaml", ".gitignore", "dojo.log", "active_session.json"}
 
         for p in self.engine.dojo_dir.iterdir():
@@ -60,6 +62,20 @@ class DoctorService(BaseRepository):
                         self.engine.read_markdown_file(f"sources/{p.name}", Source, "content")
                     except Exception as e:
                         results["Ingested sources"].append(f"Invalid source file '{p.name}': {e}")
+
+        # 2b. Check tasks
+        tasks_dir = self.engine.dojo_dir / "tasks"
+        if tasks_dir.exists():
+            for p in tasks_dir.iterdir():
+                if p.is_dir():
+                    results["Task queue"].append(f"Unexpected directory in tasks/: {p.name}")
+                elif not p.name.endswith(".md"):
+                    results["Task queue"].append(f"Unexpected non-markdown file in tasks/: {p.name}")
+                else:
+                    try:
+                        self.engine.read_markdown_file(f"tasks/{p.name}", Task, "prompt")
+                    except Exception as e:
+                        results["Task queue"].append(f"Invalid task file '{p.name}': {e}")
 
         # 3. Check campaigns
         campaigns_dir = self.engine.dojo_dir / "campaigns"

@@ -40,6 +40,76 @@ def slug_filename(repo: "CampaignScopedRepository", campaign_id: str, entity: An
     return f"{slugify(entity.id)}.md"
 
 
+class RootScopedRepository(BaseRepository, Generic[E]):
+    """Entities living as markdown files in one root-level directory (sources,
+    tasks), looked up by frontmatter `id` — same identity physics as
+    campaign-scoped entities, without the campaign prefix."""
+
+    def __init__(
+        self,
+        engine: StorageEngine,
+        *,
+        entity_type: str,
+        schema_cls: type[E],
+        subdir: str,
+    ):
+        super().__init__(engine)
+        self.entity_type = entity_type
+        self.schema_cls = schema_cls
+        self.subdir = subdir
+        body_field = getattr(schema_cls, "_body_field", None)
+        if not body_field:
+            raise ValueError(f"{schema_cls.__name__} must declare _body_field")
+        self.body_field: str = body_field
+
+    def _find_path(self, id: str) -> Optional[str]:
+        self.engine.sync_index()
+        for rel_path, info in self.engine.index["files"].items():
+            if info.get("type") == self.entity_type and info.get("data", {}).get("id") == id:
+                return rel_path
+        return None
+
+    def list(self, filters: dict[str, Any] | None = None) -> List[E]:
+        self.engine.sync_index()
+        results: List[E] = []
+        for rel_path, info in self.engine.index["files"].items():
+            if info.get("type") == self.entity_type:
+                if _match_filter(info.get("data", {}), filters, self.entity_type):
+                    try:
+                        results.append(
+                            self.engine.read_markdown_file(rel_path, self.schema_cls, self.body_field)
+                        )
+                    except Exception as e:
+                        self.engine.logger.error(
+                            f"Skipping unreadable {self.entity_type} at {rel_path}: {e}"
+                        )
+        return sorted(results, key=lambda x: getattr(x, "created_at", x.id))
+
+    def get(self, id: str) -> Optional[E]:
+        rel_path = self._find_path(id)
+        if not rel_path:
+            return None
+        try:
+            return self.engine.read_markdown_file(rel_path, self.schema_cls, self.body_field)
+        except Exception as e:
+            self.engine.logger.error(f"Error reading {self.entity_type} {id}: {e}")
+            return None
+
+    def save(self, entity: E):
+        rel_path = self._find_path(entity.id) or f"{self.subdir}/{entity.id}.md"
+        with self.engine.write_lock():
+            self.engine.write_markdown_file(rel_path, entity, self.body_field)
+            self.engine.sync_index()
+
+    def delete(self, id: str):
+        rel_path = self._find_path(id)
+        if not rel_path:
+            return
+        with self.engine.write_lock():
+            self.engine.delete_file(rel_path)
+            self.engine.sync_index()
+
+
 class CampaignScopedRepository(BaseRepository, Generic[E]):
     def __init__(
         self,
