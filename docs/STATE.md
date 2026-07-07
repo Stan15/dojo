@@ -4,9 +4,11 @@ _Last updated: 2026-07-07_
 
 ## Phase
 
-**Design** — complete and awaiting product-owner approval to enter **Implementation**.
-The human explicitly gated this transition: do not begin implementation milestones
-until they say "continue".
+**Implementation** — gate opened by product owner 2026-07-07 ("you can continue"),
+after design review. Their pre-gate additions, all resolved: SR library reuse
+(py-fsrs, ADR 014), Anki interop decision (import/export backlog, no sync,
+ADR 015), capture confirm-by-default (Q6, ADR 013 updated). Currently executing
+**M0 — truth pass** (blueprint §10).
 
 ## What exists today (honest inventory)
 
@@ -50,12 +52,13 @@ until they say "continue".
 
 ## NEXT ACTIONS (in order)
 
-1. **BLOCKED ON HUMAN**: product owner reviews `docs/design/blueprint.md` +
-   `QUESTIONS.md` and opens the implementation gate.
-2. Milestone 0 — repo truth pass (fix pyproject deps, renumber ADR 003b, align
-   version strings, rewrite stale docs to match the blueprint). Tests: gate stays green.
-3. Milestone 1 — domain model + `Store` protocol + `MarkdownStore` conformance suite
-   (see blueprint §10 for the full milestone plan and per-milestone test gates).
+1. Finish M0 — truth pass: purge build artifacts + gitignore; pyproject fixes
+   (add pydantic, resolve fpdf2, version alignment); rename duplicate ADR 003 →
+   003b; fix stale api-specification.md/README falsehoods. Gate stays green.
+2. Milestone 1 — domain model (ID-based refs) + `Store` protocol + `MarkdownStore`
+   conformance/round-trip suite (blueprint §10; keep `archived_implementation/`).
+3. Milestone 2 — task contract + appliers + budgeted compiler + prompt templates
+   from `docs/design/prompts.md`.
 
 ## Open questions
 

@@ -1,29 +1,25 @@
 # QUESTIONS for the product owner
 
-Non-blocking. Each has the default I will proceed on if unanswered. Answer inline
-whenever convenient.
+Non-blocking. Each open question has the default I will proceed on if unanswered.
 
-1. **Grading source of truth.** For free-form answers, default flow is: harness grades
-   against the stored rubric (task `attempt.grade`), learner can override with
-   `dojo correct`. Alternative: self-assessment first (learner rates own recall,
-   Anki-style), AI grading only on request — cheaper in tokens, slightly weaker
-   evidence. **Default: AI-grades with rubric when a harness is present; self-report
-   fallback offline.**
+## Open
 
-2. **Daily packet size.** Default packet: 5 items, ~10 minutes, hard cap 8. Bigger?
-   Smaller? **Default: 5, configurable `daily.packet_size`.**
+1. **Subprocess connectors** (was Q3): keep as secondary adapter behind the task
+   contract, or drop until asked for? **Proceeding on default: keep, demoted,
+   re-seated on task records (M2).**
 
-3. **Subprocess connectors.** Keep as secondary supported adapter (headless cron
-   replenishment, non-agent users), or drop entirely until someone asks? Keeping costs
-   ~500 lines of maintained code. **Default: keep, but demoted and quarantined behind
-   the same task contract.**
+## Answered (2026-07-07)
 
-4. **`archived_implementation/`.** Delete after M1 (git history preserves it), or keep
-   in-tree? **Default: delete at end of M1.**
-
-5. **Python floor.** pyproject says `>=3.11`; README badge says 3.8+. **Default: 3.11.**
-
-6. **Capture routing autonomy.** When you capture a fact and routing confidence is
-   high, should the item auto-file into the campaign (you see it at next review), or
-   always ask you to confirm the route first? **Default: auto-file, with the route
-   noted in the item's provenance and reversible via `dojo inbox`.**
+- **Grading source of truth** — AI grades against rubric when a harness is
+  present; self-report fallback offline; `dojo correct` overrides. *(agreed)*
+- **Daily packet size** — 5 default, hard cap 8, `daily.packet_size` config. *(agreed)*
+- **`archived_implementation/`** — stays in-tree for easy reference until the
+  owner clears it; excluded from packaging/tests. Blueprint M1 updated.
+- **Python floor** — 3.11. *(agreed)*
+- **Capture routing** — routes are proposals awaiting **confirmation by default**
+  (inline in conversation or via `dojo inbox`); `capture.autofile: true` opts into
+  auto-filing. ADR 013 + blueprint §8 updated.
+- **SR scheduling library** — reuse over build: **py-fsrs** (MIT, official FSRS-6
+  reference impl) behind a dojo-owned boundary. ADR 014.
+- **Anki integration** — no live sync (would split scheduling authority and starve
+  the evidence loop); deck **import** and one-way **export** are backlog. ADR 015.

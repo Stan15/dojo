@@ -242,9 +242,11 @@ carries its one-line reason (I9): *"French: 6 items due, untouched 3 days, exam 
 ### Tier 2 — two lanes inside a campaign
 
 - **Retain lane.** Memory state attaches to the *stable node*:
-  - `recall` exercises (facts): FSRS-inspired per-item state — `{due, stability,
-    difficulty, reps, lapses}` — few floats in frontmatter, updated by a pure
-    function of (state, score, latency, clock).
+  - `recall` exercises (facts): an FSRS-6 card per item — `{due, stability,
+    difficulty, reps, lapses}` in frontmatter — updated via **py-fsrs** (MIT,
+    ADR 014) behind a thin dojo-owned `scheduling` boundary; score bands map to
+    ratings in one pure function (0.0/0.3→Again, 0.7→Hard, 1.0→Good, fast-1.0 or
+    too_easy skip→Easy).
   - `skill` topics: per-**topic** SR state in `topics.yaml` — `{level, due,
     last_outcome}`. When a skill topic comes due, the scheduler requests a **novel**
     exercise (`exercise.generate`) instead of repeating an old one (ADR 007's
@@ -284,10 +286,13 @@ items kill the system's coverage.
   each + topic tree paths — budgeted, I6).
 - The route result proposes: `attach(campaign, topic_path)` | `new_topic(campaign,
   parent, name)` | `propose_campaign(name, mission)` | `stay_inbox(reason)`, with
-  confidence. The core **validates the target exists** (weak-model safety), then:
-  high confidence → auto-file (Q6 default) with the route recorded in provenance,
-  reversible via `dojo inbox`; low confidence or `propose_campaign` → stays in
-  inbox, surfaced in the next `daily` envelope ("1 capture awaiting a home").
+  confidence. The core **validates the target exists** (weak-model safety), then
+  (product-owner decision, Q6): **the proposed route waits for learner
+  confirmation by default**, surfaced immediately in the capture's envelope and
+  nagged via `dojo inbox` and the next `daily` envelope ("1 capture awaiting
+  confirmation"). `capture.autofile: true` in config lets high-confidence routes
+  file automatically — always recorded in provenance, always reversible via
+  `dojo inbox`.
 - A routed capture is a Source like any other: it grounds a fact-candidate
   immediately (capture → candidate in one flow), subject to the same review gate
   and queue caps as everything else. No new pipeline — captures are just the
@@ -338,8 +343,9 @@ that prove it; fixtures precede implementations for anything format-shaped.
 - **M1 — Domain + Store protocol + markdown backend** *(lead)*
   ID-based entities, `Store` protocol, markdown conformance + round-trip property
   suite (I7), one-commit-per-command audit batching, `doctor` extended to format
-  validation. Collapse the pass-through facade. Delete `archived_implementation/`
-  at close (Q4). *Proof: conformance suite; seeded round-trip; human-edit
+  validation. Collapse the pass-through facade. `archived_implementation/` stays
+  in-tree for now (Q4: owner wants it referenceable; excluded from packaging and
+  test collection). *Proof: conformance suite; seeded round-trip; human-edit
   passthrough fixture.*
 - **M2 — Task contract + prompts** *(lead; prompt fixtures first)*
   Task entity + lifecycle, envelope emission, `task submit/run`, appliers per kind
@@ -348,7 +354,8 @@ that prove it; fixtures precede implementations for anything format-shaped.
   *Proof: applier idempotency; invalid-payload state-hash tests; byte-budget
   assertions.*
 - **M3 — Pedagogy engine** *(lead)*
-  FSRS-lite (pure, seeded property tests), topic-level skill SR, Tier-1 allocator,
+  py-fsrs integration behind the `scheduling` boundary (ADR 014; seeded property
+  tests on our wrapper), topic-level skill SR, Tier-1 allocator,
   packet builder (I3/I8 property tests), `dojo daily`, `dojo why`, offline floor
   (I4 test: no fulfiller configured → session still works, skips counted).
 - **M4 — Capture + reflection + planning** *(lead)*
@@ -366,7 +373,8 @@ that prove it; fixtures precede implementations for anything format-shaped.
   finalize docs, tag v1.0.
 - **Backlog (explicitly not v1):** Postgres backend (conformance suite makes it a
   bounded task), the app, PDF packets, semantic retrieval for huge sources,
-  multi-learner.
+  multi-learner, Anki interop (import + one-way export only — never live sync;
+  ADR 015).
 
 ## 11. Observability & degradation surfaces
 

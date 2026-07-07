@@ -21,10 +21,12 @@ the AI — yet a weak model must not be able to file things into nonexistent pla
    parent, name)`, `propose_campaign(name, mission)`, `stay_inbox(reason)` — with
    a confidence.
 3. **Code validates the route**: targets must exist in the registry (nonexistent →
-   rejected, item stays in inbox). High confidence auto-files with the route
-   recorded in provenance and reversible via `dojo inbox`; low confidence or new
-   campaign proposals wait for the learner, surfaced in the next `daily` envelope
-   ("1 capture awaiting a home") so the inbox cannot silently rot.
+   rejected, item stays in inbox). The validated route is a **proposal awaiting
+   learner confirmation by default** (product-owner decision 2026-07-07, Q6) —
+   confirmed inline in the capturing conversation or later via `dojo inbox`, and
+   nagged in the next `daily` envelope so the inbox cannot silently rot.
+   `capture.autofile: true` opts into auto-filing high-confidence routes, always
+   recorded in provenance and reversible via `dojo inbox`.
 4. **A routed capture is an ordinary Source** — the smallest one. It grounds a
    fact-candidate through the same review gate and queue caps as everything else.
    No parallel pipeline.
