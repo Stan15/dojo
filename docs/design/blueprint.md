@@ -312,7 +312,14 @@ bill. Three mechanisms, all tested (I6):
    fields carry word caps enforced by validators, and the prototype's unbounded
    mandatory `thinking` field becomes a bounded `plan` field (≤ 2 sentences) only
    where planning measurably helps.
-3. **Interaction-surface discipline.** SKILL.md ≤ 60 lines (trigger + envelope
+3. **No assumption of model strength, in either direction.** Every constraint is
+   either a pedagogical invariant (correct for any model) or a validation floor
+   (invisible to strong models). Budgets scale via an optional fulfiller profile
+   (`fulfiller.tier: frugal|standard|rich`); bounded free fields (`note`,
+   `reason`) act as a structured side-channel so a strong model's surplus
+   observations feed the next reflection instead of being discarded
+   (see `design/prompts.md` §1b).
+4. **Interaction-surface discipline.** SKILL.md ≤ 60 lines (trigger + envelope
    protocol + nothing else); every JSON envelope carries a short `next` hint so the
    agent never needs documentation in context; `--help` is the manual, loaded only
    on demand. Every task run records `payload_bytes`/`response_bytes`;
