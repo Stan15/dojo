@@ -198,19 +198,36 @@ def apply_generate(store, task: Task, result: GenerateResult) -> dict[str, Any]:
 
     ids = []
     for i, item in enumerate(result.items):
-        cand_id = f"cand_{task.id[4:]}_{i}"  # task-derived: a re-apply overwrites, never duplicates
-        store.candidates.save(campaign_id, Candidate(
-            id=cand_id,
-            topic_path=ctx["topic_path"],
-            difficulty=ctx.get("difficulty", "intermediate"),
-            generation_run=task.id,
-            quality="diagnostic" if diagnostic else "candidate",
-            answer=item.answer,
-            rubric=item.rubric,
-            prompt=item.prompt,
-        ))
-        ids.append(cand_id)
-    return {"candidates": ids, "note": result.note}
+        if diagnostic:
+            # Diagnostics bypass the candidate gate (I2 note): the learner
+            # answering them IS the review — there is no content to trust.
+            ex_id = f"ex_{task.id[4:]}_{i}"  # task-derived: re-apply overwrites
+            from ..schemas import Exercise
+
+            store.exercises.save(campaign_id, Exercise(
+                id=ex_id,
+                topic_path=ctx["topic_path"],
+                difficulty=ctx.get("difficulty", "intermediate"),
+                generation_run=task.id,
+                quality="diagnostic",
+                prompt=item.prompt,
+            ))
+            ids.append(ex_id)
+        else:
+            cand_id = f"cand_{task.id[4:]}_{i}"  # task-derived: re-apply overwrites
+            store.candidates.save(campaign_id, Candidate(
+                id=cand_id,
+                topic_path=ctx["topic_path"],
+                difficulty=ctx.get("difficulty", "intermediate"),
+                generation_run=task.id,
+                quality="candidate",
+                answer=item.answer,
+                rubric=item.rubric,
+                prompt=item.prompt,
+            ))
+            ids.append(cand_id)
+    key = "exercises" if diagnostic else "candidates"
+    return {key: ids, "note": result.note}
 
 
 def _normalize(text: str) -> str:

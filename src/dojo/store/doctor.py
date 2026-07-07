@@ -27,7 +27,6 @@ class DoctorService(BaseRepository):
             "Ingested sources": [],
             "Campaigns structure": [],
             "Archived campaigns and sessions": [],
-            "Generation run audits": [],
             "Task queue": [],
             "Version control audit": [],
         }
@@ -37,7 +36,7 @@ class DoctorService(BaseRepository):
         results["Version control audit"].extend(self._check_audit_health())
 
         # 1. Check root directory layout
-        allowed_root_dirs = {"campaigns", "sources", "tasks", "archive", "runs", "connectors", ".git"}
+        allowed_root_dirs = {"campaigns", "sources", "tasks", "archive", ".git"}
         allowed_root_files = {".index.json", "dojo.lock", "config.yaml", ".gitignore", "dojo.log", "active_session.json"}
 
         for p in self.engine.dojo_dir.iterdir():
@@ -114,21 +113,6 @@ class DoctorService(BaseRepository):
                                 results["Archived campaigns and sessions"].append(f"Invalid archived session file '{sp.name}': {e}")
                 else:
                     results["Archived campaigns and sessions"].append(f"Unexpected item in archive/: {p.name}")
-
-        # 5. Check runs
-        runs_dir = self.engine.dojo_dir / "runs"
-        if runs_dir.exists():
-            for p in runs_dir.iterdir():
-                if not p.is_dir():
-                    results["Generation run audits"].append(f"Unexpected file in runs/: {p.name}")
-                elif not re.match(r"^\d{4}-\d{2}-\d{2}$", p.name):
-                    results["Generation run audits"].append(f"Unexpected directory in runs/ (must be YYYY-MM-DD): {p.name}")
-                else:
-                    for rp in p.iterdir():
-                        if rp.is_dir():
-                            results["Generation run audits"].append(f"Unexpected directory in runs/{p.name}/: {rp.name}")
-                        elif not rp.name.endswith(".json"):
-                            results["Generation run audits"].append(f"Unexpected file in runs/{p.name}/: {rp.name}")
 
         return results
 

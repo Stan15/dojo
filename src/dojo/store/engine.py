@@ -284,7 +284,7 @@ class StorageEngine:
                     continue
                 path = Path(root) / f
                 rel = str(path.relative_to(self.dojo_dir))
-                if rel in {".index.json", "dojo.lock", "dojo.log", "config.yaml", "active_session.json"} or rel.startswith("connectors/"):
+                if rel in {".index.json", "dojo.lock", "dojo.log", "config.yaml", "active_session.json"}:
                     continue
                 all_files.append((rel, path))
 

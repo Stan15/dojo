@@ -1,4 +1,4 @@
-# ADR 016: Two-Tier Prompt Evaluation with Ratcheted Baselines
+# ADR 016: Prompt Evaluation with Ratcheted Baselines (Three Tiers)
 
 ## Status
 Accepted (2026-07-07). Product-owner requirement: "benchmark our harness system on
@@ -55,6 +55,50 @@ Two tiers, both in `pytest`, split by what they need to run:
    compares against the baseline with the baseline's recorded sample count, and
    scorecards record the command string + date so drift in the external model
    is diagnosable rather than mysterious.
+
+## Tier 3 — judged pedagogical quality (owner requirement, 2026-07-07)
+
+Compliance says the output is *usable*; Tier 3 asks whether it is *good
+pedagogy* — and whether the system demonstrably learns from the learner's
+signals. An LLM judge is inherently noisy, so every design choice below exists
+to buy reliability:
+
+1. **Binary rubric criteria, never scales.** Each scenario carries a
+   hand-crafted `judge_rubric`: yes/no questions with weights ("Does at least
+   one exercise directly target the seeded aux-choice misconception?", "Are the
+   three exercises distinct sub-skills, not rephrasings?", "Given 0.3 recent
+   accuracy, is every item single-step?"). Binary votes aggregate reliably;
+   1–10 scores do not. Scenario score = weighted pass fraction.
+
+2. **Judge answers are evidence-anchored and validated.** The judge must quote
+   verbatim from the judged output for every verdict; quotes are checked as
+   substrings mechanically (the same trick that disciplines grading). A verdict
+   without real evidence is discarded as a judge failure, not counted.
+
+3. **Judge calibration gate.** Every scenario commits a planted **good** and
+   **bad** reference output (hand-written exemplars). Before judging real
+   outputs, the judge grades both references blind; if it fails to score
+   good > bad, the run aborts as "judge unreliable" — noise is refused, not
+   averaged in. This also detects silent drift in an external judge model.
+
+4. **Variance is measured, then thresholded.** N driver samples × K judge votes
+   per criterion (majority wins); scorecards record mean and spread per
+   scenario. The ratchet flags regression only when the new mean falls below
+   the baseline mean by more than the recorded spread — so a minor prompt tweak
+   produces a readable verdict instead of coin-flip noise.
+
+5. **Baselines key on the (driver, judge) pair.** Scorecards live at
+   `evals/baselines/<driver-slug>__<judge-slug>.json`; comparisons are only
+   ever within the same pair, so "same model + same grader = comparable" holds
+   by construction.
+
+6. **Longitudinal scenarios test the learning loop itself.** The crown-jewel
+   scenarios are scripted multi-step histories: seed rich signals (recurring
+   error patterns, too_easy skips, stated deadlines) → run reflect → apply →
+   run generation → judge whether generation *visibly used* what reflection
+   learned (targets the weakness, skips the mastered, respects the deadline
+   compression). This is the pedagogical-strength flex: not "is the exercise
+   nice" but "did the system adapt".
 
 ## Consequences
 - Prompt iteration gets a safety net: cheap byte-level pins always; real-model

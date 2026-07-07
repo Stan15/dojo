@@ -6,8 +6,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from . import connectors
-from . import generate
 from .logger import get_logger
 from .schemas import (
     Source,
@@ -18,10 +16,8 @@ from .schemas import (
     Insight,
     PracticeSession,
     AttackPlanPhase,
-    ProfileConsolidateResponse,
 )
 from .store import DojoStore, slugify
-from .prompts import load_prompt
 
 
 class DojoAPI:
@@ -60,99 +56,50 @@ class DojoAPI:
         )
         self.store.sources.save(source)
 
-        candidates_count = 0
-        diagnostics = []
-        run_path = None
-
+        tasks = []
         if generate_candidates:
-            # Collect existing topics from all campaigns & exercises
-            existing_topics = self.get_all_topic_paths()
+            from .tasks import flows
+            from .tasks.grounding import resolve_source_context
 
-            content_lines = content.splitlines()
-            source_refs = [{
-                "source_id": source_id,
-                "span": {
-                    "start_line": 1,
-                    "end_line": len(content_lines) or 1,
-                    "anchor_text": title,
+            campaign = None
+            camps = self.store.campaigns.list()
+            if campaign_hint := (topic and next(
+                (c for c in camps if c.topic_path and topic.startswith(c.topic_path)), None
+            )):
+                campaign = campaign_hint
+            elif camps:
+                campaign = camps[0]
+            if campaign is None:
+                return {
+                    "source_id": source.id,
+                    "title": source.title,
+                    "kind": source.kind,
+                    "tasks": [],
+                    "note": "source saved; no campaign exists yet, so no generation was requested — "
+                            "create a campaign first (dojo campaign plan \"<goal>\")",
                 }
-            }]
 
-            request = generate.ExerciseGenerateRequest(
-                source_id=source_id,
-                source_title=title,
-                source_refs=source_refs,
-                topic=topic,
-                mission=mission,
-                existing_topics=existing_topics,
-                source_content=content,
+            target_topic = topic or campaign.topic_path or slugify(title).replace("-", "_")
+            slice_text, _, _ = resolve_source_context(content, title, target_topic)
+            task = flows.request_generation(
+                self.store, campaign,
+                topic_path=target_topic,
+                n_items=3,
+                source_slice=slice_text,
             )
+            tasks.append(flows.task_ref(task))
+            self.log.info(f"Emitted generation task {task.id} for source '{source_id}'")
 
-            result = connectors.invoke_command_connector(self.store, request.to_task_request())
-
-            if result.status == "ok":
-                val = generate.validate_exercise_generate_output(
-                    result.parsed_stdout or result.raw_stdout, default_topic=topic
-                )
-                if val["candidates"]:
-                    # Create a temporary dummy campaign ID or try to resolve matching active campaigns
-                    campaign_id = "default"
-                    active_camps = self.store.campaigns.list()
-                    if active_camps:
-                        campaign_id = active_camps[0].id
-
-                    for cand_data in val["candidates"]:
-                        cand_id = f"cand_{uuid.uuid4().hex[:8]}"
-                        candidate = Candidate(
-                            id=cand_id,
-                            topic_path=cand_data["topic_path"],
-                            difficulty=cand_data.get("difficulty") or "intermediate",
-                            generation_run=None,
-                            prompt=cand_data["prompt"],
-                            answer=cand_data.get("answer"),
-                            rubric=cand_data.get("rubric"),
-                        )
-                        self.store.candidates.save(campaign_id, candidate)
-                        candidates_count += 1
-                    if not val["ok"]:
-                        diagnostics = val["diagnostics"]
-                else:
-                    diagnostics = val["diagnostics"] or ["no valid candidates generated"]
-            else:
-                diagnostics = [result.error or "connector execution failed"]
-
-            run_path = self.record_generation_run(
-                task="exercise.generate",
-                request=request.to_task_request(),
-                raw_output=result.raw_stdout,
-                status=result.status,
-                diagnostics={"diagnostics": diagnostics, "stderr": result.stderr_tail},
-            )
-
-            if run_path and candidates_count > 0:
-                # Update candidates with their generation run path
-                campaign_id = active_camps[0].id if active_camps else "default"
-                candidates = self.store.candidates.list(campaign_id)
-                for cand in candidates:
-                    if not cand.generation_run:
-                        cand.generation_run = run_path
-                        self.store.candidates.save(campaign_id, cand)
-
-            self.log.info(f"Candidate generation completed: source='{source_id}', candidates={candidates_count}, run_path={run_path}, errors={bool(diagnostics)}")
-
-        output = {
+        return {
             "source_id": source.id,
             "title": source.title,
             "kind": source.kind,
-            "candidates_count": candidates_count,
+            "tasks": tasks,
+            "next": (
+                "fulfill the generation task, then review candidates (dojo source review)"
+                if tasks else None
+            ),
         }
-        if run_path:
-            # Backwards compatibility: CLI expects integer or string run_id. Path works.
-            output["generation_run_id"] = run_path
-        if diagnostics:
-            output["diagnostics"] = diagnostics
-
-        return output
 
     def list_sources(self) -> list[dict[str, Any]]:
         return [s.model_dump() for s in self.store.sources.list()]
@@ -424,208 +371,64 @@ class DojoAPI:
             if ex.id not in non_forgot_attempted_ids
         ]
 
-        # 6. Trigger JIT generation if queue is low
+        # 6. Replenishment (ADR 003b via ADR 010): when the queue runs low,
+        # emit a generation task and keep going — sessions never block on AI (I4).
+        pending_tasks = []
         if len(due_exercises) < 3 and resolved_campaign:
+            from .tasks import flows
+            from .tasks.grounding import resolve_source_context
+
             strategy = resolved_campaign.strategy_profile
             is_diagnostic = (
-                strategy.get("mode") == "diagnostic" or
-                any(t.endswith(".diagnostic") for t in active_topics)
+                strategy.get("mode") == "diagnostic"
+                or any(t.endswith(".diagnostic") for t in active_topics)
             )
-
-            if is_diagnostic:
-                # Onboarding / Diagnostic generation
-                request = {
-                    "task": "exercise.generate",
-                    "version": 1,
-                    "instructions": (
-                        "You are in onboarding/diagnostic mode. "
-                        f"The user's goal is: '{resolved_campaign.name}'. "
-                        "Based on this goal, you must return a JSON object containing:\n"
-                        "1. 'title': A suggested campaign title.\n"
-                        "2. 'base_topic': A clean, dot-separated topic path namespace (e.g. 'math.quaternions' or 'devops.docker').\n"
-                        "3. 'diagnostic_questions': A list of 2-3 targeted diagnostic questions to assess their level and success definition."
-                    ),
-                    "source": {
-                        "id": None,
-                        "title": resolved_campaign.name,
-                        "refs": [],
-                        "content": ""
-                    },
-                    "topic_hint": target_topic or "diagnostic",
-                    "max_candidates": 3,
-                    "expected_artifacts": ["diagnostic_questions"]
+            target_topic = (
+                active_topics[0] if active_topics
+                else (resolved_campaign.topic_path or "general")
+            )
+            if len(active_topics) > 1:
+                # feed the thinnest topic first
+                topic_counts = {
+                    t: sum(1 for ex in all_ex if ex.topic_path == t or ex.topic_path.startswith(t + "."))
+                    for t in active_topics
                 }
+                target_topic = min(active_topics, key=lambda t: topic_counts[t])
 
-                result = connectors.invoke_command_connector(self.store, request)
-                diagnostics = []
-                if result.status == "ok":
-                    data = result.parsed_stdout or {}
-                    title = data.get("title") or resolved_campaign.name
-                    base_topic = data.get("base_topic") or resolved_campaign.topic_path or "topic"
-                    diagnostic_questions = data.get("diagnostic_questions") or [
-                        "What is your background?",
-                        "What is your main goal?"
-                    ]
-
-                    # Update Campaign details
-                    resolved_campaign.name = title
-                    resolved_campaign.topic_path = base_topic
-                    resolved_campaign.attack_plan = [
-                        AttackPlanPhase(
-                            phase=0,
-                            topics=[f"{base_topic}.diagnostic"],
-                            criteria={"min_attempts": len(diagnostic_questions), "min_accuracy": 0.0}
-                        )
-                    ]
-                    self.store.campaigns.save(resolved_campaign)
-
-                    target_topic = f"{base_topic}.diagnostic"
-                    active_topics = [f"{base_topic}.diagnostic"]
-
-                    for q in diagnostic_questions:
-                        cand_id = f"cand_{uuid.uuid4().hex[:8]}"
-                        candidate = Candidate(
-                            id=cand_id,
-                            prompt=q,
-                            topic_path=f"{base_topic}.diagnostic",
-                            difficulty="intermediate",
-                            quality="diagnostic",
-                        )
-                        self.store.candidates.save(resolved_campaign.id, candidate)
-                        # Auto-promote diagnostic questions
-                        self.promote_candidate(cand_id)
-                else:
-                    diagnostics = [result.error or "connector execution failed"]
-
-                self.record_generation_run(
-                    task="exercise.generate.diagnostic",
-                    request=request,
-                    raw_output=result.raw_stdout,
-                    status=result.status,
-                    diagnostics={"diagnostics": diagnostics, "stderr": result.stderr_tail},
-                )
-            else:
-                # Regular JIT generation
-                target_topic = active_topics[0] if active_topics else resolved_campaign.topic_path
-                # Balance topics if multiple
-                if len(active_topics) > 1:
-                    topic_counts = {}
-                    for t in active_topics:
-                        count = sum(1 for ex in all_ex if ex.topic_path == t or ex.topic_path.startswith(t + "."))
-                        topic_counts[t] = count
-                    target_topic = min(active_topics, key=lambda t: topic_counts[t])
-
-                # Locate linked source
-                sources_config = resolved_campaign.sources_config
-                active_source_id = None
-                active_purpose = "Primary study material"
-                for link in sources_config:
-                    sid = link["source_id"]
+            source_slice = None
+            if not is_diagnostic:
+                for link in resolved_campaign.sources_config:
                     topics = link.get("topics") or []
-                    if not topics or any(target_topic == t or target_topic.startswith(t + ".") for t in topics):
-                        active_source_id = sid
-                        active_purpose = link.get("purpose", "Primary study material")
+                    if not topics or any(
+                        target_topic == t or target_topic.startswith(t + ".") for t in topics
+                    ):
+                        full_source = self.store.sources.get(link["source_id"])
+                        if full_source:
+                            source_slice, _, _ = resolve_source_context(
+                                full_source.content, full_source.title, target_topic or "", min_lines=100
+                            )
                         break
 
-                source_refs = []
-                source_content = ""
-                source_title = resolved_campaign.name
-
-                if active_source_id:
-                    full_source = self.store.sources.get(active_source_id)
-                    if full_source:
-                        source_title = full_source.title
-                        source_content, start_line, end_line = generate.resolve_source_context(
-                            full_source.content,
-                            source_title,
-                            target_topic or "",
-                            min_lines=100
-                        )
-                        source_refs = [{
-                            "source_id": active_source_id,
-                            "span": {
-                                "start_line": start_line,
-                                "end_line": end_line,
-                                "anchor_text": source_title,
-                            }
-                        }]
-
-                # Collect active insights matching topic
-                active_insights = self.store.insights.list(resolved_campaign.id, filters={"status": "active"})
-                insight_descs = []
-                for ins in active_insights:
-                    if target_topic and (ins.topic_path == target_topic or (ins.topic_path and target_topic.startswith(ins.topic_path + "."))):
-                        insight_descs.append(ins.description)
-
-                custom_instructions = self.store.configs.get("prompt.exercise_generate_instructions")
-                existing_topics = self.get_all_topic_paths()
-
-                req = generate.ExerciseGenerateRequest(
-                    source_id=active_source_id or "",
-                    source_title=source_title,
-                    source_refs=source_refs,
-                    topic=target_topic,
-                    mission=resolved_campaign.mission,
-                    existing_topics=existing_topics,
-                    learner_hypotheses=insight_descs if insight_descs else None,
-                    instructions=custom_instructions,
-                    source_content=source_content,
-                    strategy=strategy if strategy else None,
-                    active_topics=active_topics,
-                    phase_focus=phase_focus,
-                )
-
-                result = connectors.invoke_command_connector(self.store, req.to_task_request())
-                diagnostics = []
-                if result.status == "ok":
-                    val = generate.validate_exercise_generate_output(
-                        result.parsed_stdout or result.raw_stdout, default_topic=target_topic
-                    )
-                    if val["candidates"]:
-                        for cand_data in val["candidates"]:
-                            cand_id = f"cand_{uuid.uuid4().hex[:8]}"
-                            candidate = Candidate(
-                                id=cand_id,
-                                topic_path=cand_data["topic_path"],
-                                difficulty=cand_data.get("difficulty") or "intermediate",
-                                prompt=cand_data["prompt"],
-                                answer=cand_data.get("answer"),
-                                rubric=cand_data.get("rubric"),
-                            )
-                            self.store.candidates.save(resolved_campaign.id, candidate)
-                            self.promote_candidate(cand_id)
-                        if not val["ok"]:
-                            diagnostics = val.get("diagnostics") or []
-                    else:
-                        diagnostics = val.get("diagnostics") or ["no valid candidates generated"]
-                else:
-                    diagnostics = [result.error or "connector execution failed"]
-
-                self.record_generation_run(
-                    task="exercise.generate.jit",
-                    request=req.to_task_request(),
-                    raw_output=result.raw_stdout,
-                    status=result.status,
-                    diagnostics={"diagnostics": diagnostics, "stderr": result.stderr_tail},
-                )
-
-            # Re-query due list
-            if resolved_campaign:
-                all_ex = self.store.exercises.list(resolved_campaign.id)
-            due_exercises = [
-                ex for ex in all_ex
-                if ex.quality not in ("archived", "too_easy", "too_hard", "bad_quality")
-                and ex.id not in non_forgot_attempted_ids
-            ]
-            if active_topics:
-                due_exercises = [
-                    ex for ex in due_exercises
-                    if any(ex.topic_path == t or ex.topic_path.startswith(t + ".") for t in active_topics)
-                ]
+            task = flows.request_generation(
+                self.store, resolved_campaign,
+                topic_path=target_topic,
+                n_items=2 if is_diagnostic else 3,  # calibration stays short (pedagogy: 1-3)
+                source_slice=source_slice, diagnostic=is_diagnostic,
+            )
+            pending_tasks.append(flows.task_ref(task))
+            self.log.info(f"Queue low ({len(due_exercises)} due): emitted generation task {task.id}")
 
         due_exercises = sorted(due_exercises, key=lambda x: x.created_at)
 
         if not due_exercises:
+            if pending_tasks:
+                return {
+                    "is_new": False,
+                    "session": None,
+                    "tasks": pending_tasks,
+                    "next": "no exercises are due yet: fulfill the generation task(s), "
+                            "then run start again",
+                }
             raise ValueError("no active exercises in queue; ingest and queue sources first")
 
         selected = due_exercises[:limit]
@@ -642,7 +445,8 @@ class DojoAPI:
 
         return {
             "is_new": True,
-            "session": ps.model_dump()
+            "session": ps.model_dump(),
+            "tasks": pending_tasks,
         }
 
     def get_active_practice_session(self) -> dict[str, Any] | None:
@@ -755,10 +559,17 @@ class DojoAPI:
 
         user_ans = user_answer.strip()
         correct_ans = ex.answer
-        if correct_ans:
-            score = 1.0 if user_ans.lower() == correct_ans.strip().lower() else 0.0
+
+        # Deterministic scoring floor (I4); AI grading is an emitted task, never a block.
+        pending_grade_task = None
+        if ex.quality == "diagnostic":
+            score, grader = 1.0, "auto"  # calibration answers are information, not tests
+        elif correct_ans and user_ans.lower() == correct_ans.strip().lower():
+            score, grader = 1.0, "exact"
+        elif ex.rubric or correct_ans:
+            score, grader = 0.0, None  # provisional until the grade task lands
         else:
-            score = 1.0
+            score, grader = 1.0, "auto"  # nothing to grade against
 
         attempt_id = f"att_{uuid.uuid4().hex[:8]}"
 
@@ -768,11 +579,20 @@ class DojoAPI:
             exercise_id=exercise_id,
             campaign_id=campaign_id,
             score=score,
+            grader=grader,
             latency_seconds=latency,
             user_answer=user_ans,
             prompt=ex.prompt,
         )
         self.store.attempts.save(campaign_id, attempt)
+
+        if grader is None:
+            from .tasks import flows
+
+            campaign = self.store.campaigns.get(campaign_id)
+            task = flows.request_grade(self.store, campaign, ex, attempt)
+            pending_grade_task = flows.task_ref(task)
+            self.log.info(f"Emitted grade task {task.id} for attempt {attempt_id}")
 
         next_index = idx + 1
         is_completed = next_index >= len(exercise_ids)
@@ -796,6 +616,9 @@ class DojoAPI:
             "exercise_id": exercise_id,
             "attempt_id": attempt_id,
             "score": score,
+            "grader": grader,
+            "pending_grade": pending_grade_task is not None,
+            "tasks": [pending_grade_task] if pending_grade_task else [],
             "latency_seconds": latency,
             "user_answer": user_ans,
             "correct_answer": correct_ans,
@@ -1040,164 +863,39 @@ class DojoAPI:
     # Reflection & Consolidation logic
     # ==========================================
     def reflect_campaign(self, campaign_id: str | None = None) -> dict[str, Any]:
-        """Convenience method wrapper to call consolidate_learner_profile."""
+        """Alias retained for the CLI verb `dojo reflect`."""
         return self.consolidate_learner_profile(campaign_id=campaign_id)
 
     def consolidate_learner_profile(self, campaign_id: str | None = None) -> dict[str, Any]:
-        if campaign_id is None:
+        """Emits reflection tasks (ADR 010) for campaigns with unreflected
+        evidence. Never blocks on AI: fulfillers apply results via task submit,
+        where apply_reflect owns insight/strategy/plan mutation under rails."""
+        from .tasks import flows
+
+        if campaign_id:
+            campaigns = [self.store.campaigns.get(campaign_id)]
+            if campaigns[0] is None:
+                raise ValueError(f"campaign {campaign_id} not found")
+        else:
             campaigns = self.store.campaigns.list()
-            if not campaigns:
-                return self._consolidate_global_fallback()
-            results = []
-            all_insights = []
-            all_diagnostics = []
-            for c in campaigns:
-                res = self._consolidate_single_campaign(c.id)
-                results.append(res)
-                all_insights.extend(res.get("insights") or [])
-                all_diagnostics.extend(res.get("diagnostics") or [])
-            return {
-                "status": "ok",
-                "campaigns": results,
-                "insights": all_insights,
-                "diagnostics": all_diagnostics
-            }
-        else:
-            return self._consolidate_single_campaign(campaign_id)
 
-    def _consolidate_global_fallback(self) -> dict[str, Any]:
-        # Collect recent attempts across all campaigns
-        attempts = []
-        for camp in self.store.campaigns.list():
-            attempts.extend(self.store.attempts.list(camp.id))
-
-        attempts = sorted(attempts, key=lambda x: x.created_at, reverse=True)[:20]
-
-        # Scan active insights
-        active_insights = []
-        for camp in self.store.campaigns.list():
-            active_insights.extend(self.store.insights.list(camp.id, filters={"status": "active"}))
-
-        formatted_attempts = []
-        for a in attempts:
-            formatted_attempts.append({
-                "exercise_id": a.exercise_id,
-                "prompt": a.prompt,
-                "user_answer": a.user_answer,
-                "score": a.score,
-                "skip_reason": a.skip_reason,
-                "feedback": a.feedback,
-                "created_at": a.created_at,
-            })
-
-        custom_consolidate_instructions = self.store.configs.get("prompt.profile_consolidate_instructions")
-        default_instructions = (
-            "Analyze the learner's recent practice attempts, skip reasons, and feedback. "
-            "Pay close attention to user responses to diagnostic/pedagogical questions (indicated by free-form answers targeting learning style/goals) to extract goals, preferences, prior knowledge, or misconceptions. "
-            "Synthesize stable learner hypotheses (misconceptions, pattern strengths/weaknesses, scaffolding rules, learning style/goals). "
-            "Return a JSON list/object of hypotheses under 'hypotheses'. "
-            "Each hypothesis must have a machine-readable 'key' (like 'misconception.lists_vs_tuples' or 'preference.practical_code') "
-            "and a human-readable 'description'."
-        )
-
-        request = {
-            "task": "profile.consolidate",
-            "version": 1,
-            "instructions": custom_consolidate_instructions or default_instructions,
-            "attempts": formatted_attempts,
-            "active_hypotheses": [h.description for h in active_insights],
-        }
-
-        result = connectors.invoke_command_connector(self.store, request)
-        diagnostics = []
-        saved_insights = []
-
-        if result.status == "ok":
-            raw_data = result.parsed_stdout
-            if isinstance(raw_data, str):
-                try:
-                    raw_data = json.loads(raw_data)
-                except Exception as exc:
-                    diagnostics.append(f"Failed to parse raw output as JSON: {exc}")
-
-            insights_to_save = []
-            if isinstance(raw_data, dict):
-                insights_to_save = raw_data.get("hypotheses") or []
-            elif isinstance(raw_data, list):
-                insights_to_save = raw_data
-
-            consolidated_keys = {ins.get("key") for ins in insights_to_save if ins.get("key")}
-
-            # Resolve active insights no longer reported
-            campaign_id = "default"
-            camps = self.store.campaigns.list()
-            if camps:
-                campaign_id = camps[0].id
-
-            for existing_ins in active_insights:
-                if existing_ins.key not in consolidated_keys:
-                    existing_ins.status = "resolved"
-                    existing_ins.updated_at = datetime.now(timezone.utc).isoformat()
-                    # Resolve physically in store
-                    self.store.insights.save(campaign_id, existing_ins)
-
-            for idx, ins_data in enumerate(insights_to_save):
-                if not isinstance(ins_data, dict):
-                    diagnostics.append(f"Insight at index {idx} is not a dict")
-                    continue
-                key = ins_data.get("key")
-                description = ins_data.get("description")
-                if not key or not description:
-                    diagnostics.append(f"Insight at index {idx} missing key or description")
-                    continue
-
-                # Deduplicate by key matching filename
-                existing_ins = None
-                for ins in active_insights:
-                    if ins.key == key:
-                        existing_ins = ins
-                        break
-
-                if existing_ins:
-                    # Deduplication / Merge: append sources and update description
-                    existing_ins.description = description
-                    existing_ins.updated_at = datetime.now(timezone.utc).isoformat()
-                    self.store.insights.save(campaign_id, existing_ins)
-                    saved_insights.append(existing_ins)
-                else:
-                    insight_id = f"ins_{uuid.uuid4().hex[:8]}"
-                    new_ins = Insight(
-                        id=insight_id,
-                        key=key,
-                        description=description,
-                        status="active"
-                    )
-                    self.store.insights.save(campaign_id, new_ins)
-                    saved_insights.append(new_ins)
-
-            # Mark processed attempts as reflected
-            for a in attempts:
-                a.reflected = True
-                self.store.attempts.save(campaign_id, a)
-
-        else:
-            diagnostics.append(result.error or "connector execution failed")
-
-        self.record_generation_run(
-            task="profile.consolidate",
-            request=request,
-            raw_output=result.raw_stdout,
-            status=result.status,
-            diagnostics={"diagnostics": diagnostics, "stderr": result.stderr_tail},
-        )
-
-        if result.status != "ok":
-            raise ValueError(f"Profile consolidation failed: {result.error or 'connector execution failed'}")
+        tasks, skipped = [], []
+        for camp in campaigns:
+            task = flows.request_reflection(self.store, camp.id)
+            if task:
+                tasks.append(flows.task_ref(task))
+            else:
+                skipped.append({"campaign_id": camp.id, "reason": "no unreflected attempts"})
+            self._evaluate_campaign_phase_advancement(camp)
 
         return {
-            "status": result.status,
-            "insights": [i.model_dump() for i in saved_insights],
-            "diagnostics": diagnostics,
+            "status": "tasks_emitted" if tasks else "nothing_to_reflect",
+            "tasks": tasks,
+            "skipped": skipped,
+            "next": (
+                "fulfill each task: read its prompt (dojo task show <id> --prompt), "
+                "produce the JSON it asks for, then submit it (dojo task submit <id>)"
+            ) if tasks else None,
         }
 
     def _evaluate_campaign_phase_advancement(self, campaign: Campaign) -> None:
@@ -1275,358 +973,8 @@ class DojoAPI:
             campaign.updated_at = datetime.now(timezone.utc).isoformat()
             self.store.campaigns.save(campaign)
 
-    def _consolidate_single_campaign(self, campaign_id: str) -> dict[str, Any]:
-        campaign = self.store.campaigns.get(campaign_id)
-        if not campaign:
-            raise ValueError(f"Campaign {campaign_id} not found")
 
-        self.log.info(f"Consolidating campaign '{campaign_id}' ('{campaign.name}')")
-        if campaign.active_phase_index > 0:
-            self._evaluate_campaign_phase_advancement(campaign)
 
-        topic_path = campaign.topic_path
-
-        # 1. Query unreflected attempts (Short-term working context)
-        all_attempts = self.store.attempts.list(campaign_id)
-        unreflected_attempts = [a for a in all_attempts if not a.reflected]
-
-        # 2. Query active user feedback insights
-        feedback_insights = self.store.insights.list(campaign_id, filters={"status": "active"})
-        user_feedback_insights = [i for i in feedback_insights if i.key.startswith("feedback.user.")]
-
-        has_unmapped_source = any(not link.get("topics") for link in campaign.sources_config)
-
-        if not unreflected_attempts and not user_feedback_insights and not has_unmapped_source:
-            self.log.info(f"Consolidation skipped for campaign '{campaign_id}': no new attempts, active feedback, or unmapped sources")
-            return {
-                "status": "skipped",
-                "campaign_id": campaign_id,
-                "diagnostics": ["No new attempts, active feedback, or unmapped sources since last consolidation"]
-            }
-
-        # 3. Two-Tiered Memory Model: unreflected + sliding window of last 15 attempts (reflected and unreflected)
-        sliding_window = all_attempts[-15:]
-        # Deduplicate attempts in payload: combine both sets uniquely preserving order
-        payload_attempts = []
-        seen_ids = set()
-        for a in unreflected_attempts + sliding_window:
-            if a.id not in seen_ids:
-                payload_attempts.append(a)
-                seen_ids.add(a.id)
-
-        formatted_attempts = []
-        for a in payload_attempts:
-            formatted_attempts.append({
-                "exercise_id": a.exercise_id,
-                "prompt": a.prompt,
-                "user_answer": a.user_answer,
-                "score": a.score,
-                "skip_reason": a.skip_reason,
-                "feedback": a.feedback,
-                "created_at": a.created_at,
-            })
-
-        # Get active insights
-        active_insights = self.store.insights.list(campaign_id, filters={"status": "active"})
-        insight_descriptions = []
-        for h in active_insights:
-            desc = h.description
-            # Attach source context
-            if h.sources:
-                desc += f" (Evidence links: {', '.join(h.sources)})"
-            insight_descriptions.append(desc)
-
-        latest_baseline_plan = []
-        for entry in reversed(campaign.pedagogical_journal):
-            if entry.get("action") in ("CREATE", "PIVOT"):
-                latest_baseline_plan = entry.get("plan_snapshot") or []
-                break
-
-        # Token Optimization: Clean resolved journal entries
-        prompt_journal = []
-        for entry in campaign.pedagogical_journal:
-            cleaned = entry.copy()
-            if cleaned.get("status") != "active":
-                cleaned.pop("plan_snapshot", None)
-                cleaned.pop("performance_snapshot", None)
-            prompt_journal.append(cleaned)
-
-        # Token Optimization: Prune completed phases from current plan
-        active_idx = campaign.active_phase_index
-        prompt_current_plan = []
-        for idx, phase in enumerate(campaign.attack_plan):
-            if idx < active_idx:
-                prompt_current_plan.append({
-                    "phase": idx,
-                    "status": "completed",
-                    "topics": phase.topics,
-                })
-            else:
-                prompt_current_plan.append(phase.model_dump())
-
-        # Collect linked sources information
-        linked_sources = []
-        for link in campaign.sources_config:
-            sid = link["source_id"]
-            src_rec = self.store.sources.get(sid)
-            if src_rec:
-                headings = generate.parse_markdown_headings(src_rec.content)
-                outline = [f"{'#' * h['level']} {h['title']}" for h in headings]
-                linked_sources.append({
-                    "source_id": sid,
-                    "title": src_rec.title,
-                    "purpose": link.get("purpose", ""),
-                    "content_preview": src_rec.content[:1500],
-                    "outline": outline[:100],
-                })
-
-        # Load consolidation prompts
-        custom_consolidate_instructions = self.store.configs.get("prompt.profile_consolidate_instructions")
-        from .schemas import get_schema_instruction, ProfileConsolidateResponse
-        schema_instruction = get_schema_instruction("profile.consolidate")
-
-        if custom_consolidate_instructions:
-            instructions = custom_consolidate_instructions + schema_instruction
-        else:
-            instructions = load_prompt("legacy_profile_consolidate.md", {"schema_instructions": schema_instruction})
-
-        request = {
-            "task": "profile.consolidate",
-            "version": 1,
-            "instructions": instructions,
-            "attempts": formatted_attempts,
-            "campaign": {
-                "id": campaign.id,
-                "name": campaign.name,
-                "mission": campaign.mission,
-                "syllabus_markdown": campaign.syllabus_markdown,
-                "active_phase_index": active_idx,
-                "current_attack_plan": prompt_current_plan,
-                "latest_baseline_plan": latest_baseline_plan,
-                "pedagogical_journal": prompt_journal,
-                "strategy_profile": campaign.strategy_profile,
-                "linked_sources": linked_sources,
-            },
-            "active_hypotheses": insight_descriptions,
-        }
-
-        result = connectors.invoke_command_connector(self.store, request)
-        diagnostics = []
-        saved_insights = []
-
-        if result.status == "ok":
-            raw_data = result.parsed_stdout
-            if isinstance(raw_data, str):
-                try:
-                    raw_data = json.loads(raw_data)
-                except Exception as exc:
-                    diagnostics.append(f"Failed to parse raw output as JSON: {exc}")
-
-            if isinstance(raw_data, dict):
-                try:
-                    ProfileConsolidateResponse.model_validate(raw_data)
-                except Exception as exc:
-                    diagnostics.append(f"Response validation warning: {exc}")
-            else:
-                raw_data = {}
-
-            # Update Campaign parameters
-            refined_mission = raw_data.get("refined_mission")
-            if refined_mission:
-                campaign.mission = refined_mission
-
-            calibrated_strategy = raw_data.get("calibrated_strategy")
-            if calibrated_strategy:
-                campaign.strategy_profile = calibrated_strategy
-
-            revised_attack_plan = raw_data.get("revised_attack_plan")
-            if revised_attack_plan:
-                campaign.attack_plan = [AttackPlanPhase.model_validate(p) for p in revised_attack_plan]
-
-            syllabus_markdown = raw_data.get("syllabus_markdown")
-            if syllabus_markdown:
-                campaign.syllabus_markdown = syllabus_markdown
-
-            source_topic_mappings = raw_data.get("source_topic_mappings") or {}
-            updated_sources_config = []
-            for link in campaign.sources_config:
-                sid = link.get("source_id")
-                if sid in source_topic_mappings:
-                    link["topics"] = source_topic_mappings[sid]
-                updated_sources_config.append(link)
-            campaign.sources_config = updated_sources_config
-
-            new_journal_entry = raw_data.get("journal_entry")
-            if new_journal_entry:
-                # Fetch performance snapshot
-                try:
-                    curr_plan = revised_attack_plan or [p.model_dump() for p in campaign.attack_plan]
-                    phase_def = curr_plan[campaign.active_phase_index]
-                    phase_topics = phase_def.get("topics", [])
-                except Exception:
-                    phase_topics = []
-
-                phase_attempts = []
-                for a in all_attempts:
-                    if a.skip_reason and a.skip_reason != "forgot":
-                        continue
-                    ex = self.store.exercises.get(campaign.id, a.exercise_id)
-                    if ex:
-                        for t in phase_topics:
-                            if ex.topic_path == t or ex.topic_path.startswith(t + "."):
-                                phase_attempts.append(a)
-                                break
-
-                attempts_count = len(phase_attempts)
-                average_score = sum(a.score for a in phase_attempts) / attempts_count if attempts_count > 0 else 0.0
-
-                perf_snapshot = {
-                    "attempts": attempts_count,
-                    "accuracy": average_score,
-                    "average_latency_seconds": sum(a.latency_seconds for a in phase_attempts) / attempts_count if attempts_count > 0 else 0.0
-                }
-
-                current_insights = self.store.insights.list(campaign.id, filters={"status": "active"})
-                insights_snapshot = [{"key": i.key, "description": i.description} for i in current_insights]
-
-                entry_to_save = {
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "active_phase_index": campaign.active_phase_index,
-                    "action": new_journal_entry.get("action", "CALIBRATE_STRATEGY"),
-                    "trigger": new_journal_entry.get("trigger", "Profile consolidation"),
-                    "hypothesis": new_journal_entry.get("hypothesis", ""),
-                    "status": new_journal_entry.get("status", "resolved"),
-                    "performance_snapshot": perf_snapshot,
-                    "plan_snapshot": revised_attack_plan or [p.model_dump() for p in campaign.attack_plan],
-                    "syllabus_snapshot": campaign.syllabus_markdown,
-                    "hypotheses_snapshot": insights_snapshot
-                }
-                campaign.pedagogical_journal.append(entry_to_save)
-
-            # Process returned insights / hypotheses
-            insights_to_save = raw_data.get("hypotheses") or []
-            consolidated_keys = {ins.get("key") for ins in insights_to_save if ins.get("key")}
-
-            # Resolve active insights no longer reported
-            for existing_ins in active_insights:
-                if existing_ins.key not in consolidated_keys:
-                    existing_ins.status = "resolved"
-                    existing_ins.updated_at = datetime.now(timezone.utc).isoformat()
-                    self.store.insights.save(campaign_id, existing_ins)
-
-            # Merge & Append new evidence paths to existing active insights
-            for idx, ins_data in enumerate(insights_to_save):
-                if not isinstance(ins_data, dict):
-                    continue
-                key = ins_data.get("key")
-                description = ins_data.get("description")
-                if not key or not description:
-                    continue
-
-                # Find matched insight by key (filename)
-                existing_ins = None
-                for ins in active_insights:
-                    if ins.key == key:
-                        existing_ins = ins
-                        break
-
-                new_source_paths = []
-                for a in unreflected_attempts:
-                    matching_path = None
-                    prefix = f"campaigns/camp_{campaign_id}/attempts"
-                    for rel_path, file_info in self.store.index["files"].items():
-                        if file_info.get("type") == "attempt" and rel_path.startswith(prefix):
-                            if file_info.get("data", {}).get("id") == a.id:
-                                matching_path = rel_path
-                                break
-                    if matching_path:
-                        new_source_paths.append(matching_path)
-                    else:
-                        new_source_paths.append(f"campaigns/camp_{campaign_id}/attempts/att_{a.id}.md")
-
-                if existing_ins:
-                    # Append new source attempt links uniquely
-                    merged_sources = list(set(existing_ins.sources + new_source_paths))
-                    existing_ins.sources = merged_sources
-                    existing_ins.description = description
-                    existing_ins.updated_at = datetime.now(timezone.utc).isoformat()
-                    self.store.insights.save(campaign_id, existing_ins)
-                    saved_insights.append(existing_ins)
-                else:
-                    insight_id = f"ins_{uuid.uuid4().hex[:8]}"
-                    new_ins = Insight(
-                        id=insight_id,
-                        key=key,
-                        sources=new_source_paths,
-                        description=description,
-                        status="active"
-                    )
-                    self.store.insights.save(campaign_id, new_ins)
-                    saved_insights.append(new_ins)
-
-            # Mark processed attempts as reflected
-            for a in unreflected_attempts:
-                a.reflected = True
-                self.store.attempts.save(campaign_id, a)
-
-            self.store.campaigns.save(campaign)
-        else:
-            diagnostics.append(result.error or "connector execution failed")
-
-        run_path = self.record_generation_run(
-            task="profile.consolidate",
-            request=request,
-            raw_output=result.raw_stdout,
-            status=result.status,
-            diagnostics={"diagnostics": diagnostics, "stderr": result.stderr_tail},
-        )
-
-        # Link insight to run
-        if run_path and saved_insights:
-            for ins in saved_insights:
-                ins.generation_run = run_path
-                self.store.insights.save(campaign_id, ins)
-
-        if result.status != "ok":
-            raise ValueError(f"Profile consolidation failed: {result.error or 'connector execution failed'}")
-
-        return {
-            "status": result.status,
-            "insights": [i.model_dump() for i in saved_insights],
-            "diagnostics": diagnostics,
-        }
-
-    def record_generation_run(
-        self,
-        task: str,
-        request: dict[str, Any],
-        raw_output: str,
-        status: str,
-        diagnostics: dict[str, Any],
-    ) -> str:
-        """Saves a developer LLM trace file under runs/YYYY-MM-DD/HHMMSS_task.json and returns rel path."""
-        now = datetime.now(timezone.utc)
-        date_str = now.strftime("%Y-%m-%d")
-        time_str = now.strftime("%H%M%S")
-        task_slug = task.replace(".", "_")
-        rel_path = f"runs/{date_str}/{time_str}_{task_slug}.json"
-
-        run_payload = {
-            "task": task,
-            "status": status,
-            "created_at": now.isoformat(),
-            "request": request,
-            "diagnostics": diagnostics,
-            "raw_output": raw_output,
-        }
-
-        # Save run trace (which does not lock/require commit logs)
-        self.store.write_text(rel_path, json.dumps(run_payload, indent=2))
-        return rel_path
-
-    # ==========================================
-    # Config Values Operations
-    # ==========================================
     def save_config(self, key: str, value: str) -> dict[str, Any]:
         self.store.configs.set(key, value)
         return {"key": key, "value": value}
@@ -1798,12 +1146,3 @@ class DojoAPI:
             Path(out).write_text(syllabus, encoding="utf-8")
             return {"format": "markdown", "path": str(out), "syllabus": syllabus}
 
-    def get_generation_run(self, run_id: str) -> dict[str, Any] | None:
-        """Reads trace payload from rel path string run_id."""
-        filepath = self.store.dojo_dir / run_id
-        if not filepath.exists():
-            return None
-        try:
-            return json.loads(filepath.read_text(encoding="utf-8"))
-        except Exception:
-            return None

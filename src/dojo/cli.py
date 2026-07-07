@@ -13,13 +13,11 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 
-from . import connectors
 from .api import DojoAPI
 from .store import DojoStore, slugify
 from .schemas import AttackPlanPhase, CriteriaEntry, Campaign, Candidate
 
 console = Console()
-VALID_NAME = re.compile(r"^[A-Za-z][A-Za-z0-9_-]{0,63}$")
 
 
 def _use_json(args: argparse.Namespace) -> bool:
@@ -37,87 +35,6 @@ def _db_path(args: argparse.Namespace) -> Path | None:
 def _print_json(value: Any) -> None:
     print(json.dumps(value, sort_keys=True))
 
-
-def _validate_name(name: str) -> None:
-    if not VALID_NAME.fullmatch(name):
-        raise SystemExit("invalid AI connector name: use 1-64 letters, numbers, hyphen, or underscore, starting with a letter")
-
-
-def _render(connector: dict[str, Any], *, next_action: str | None = None) -> dict[str, Any]:
-    rendered = dict(connector)
-    if next_action:
-        rendered["next"] = next_action
-    return rendered
-
-
-def cmd_connect_ai_command(args: argparse.Namespace) -> int:
-    _validate_name(args.name)
-    if args.command and args.command[0] == "--":
-        args.command = args.command[1:]
-    elif args.command:
-        raw = list(args.command)
-        external: list[str] = []
-        idx = 0
-        while idx < len(raw):
-            token = raw[idx]
-            if token == "--":
-                external = raw[idx + 1 :]
-                break
-            if token == "--default":
-                args.default = True
-                idx += 1
-                continue
-            if token == "--replace":
-                args.replace = True
-                idx += 1
-                continue
-            if token in {"--input", "--output", "--timeout"}:
-                if idx + 1 >= len(raw):
-                    raise SystemExit(f"{token} requires a value")
-                value = raw[idx + 1]
-                if token == "--input":
-                    args.input = value
-                elif token == "--output":
-                    args.output = value
-                else:
-                    args.timeout = int(value)
-                idx += 2
-                continue
-            external = raw[idx:]
-            break
-        args.command = external
-    if not args.command:
-        raise SystemExit("command connector requires argv after --")
-
-    store = DojoStore(_db_path(args))
-    
-    # Check if connector exists
-    existing = store.configs.get_connector(args.name)
-    if existing and not getattr(args, "replace", False):
-        raise SystemExit(f"AI connector '{args.name}' already exists. Use --replace to overwrite.")
-
-    connector_data = {
-        "kind": "command",
-        "name": args.name,
-        "argv": args.command,
-        "input_mode": args.input,
-        "output_mode": args.output,
-        "timeout_seconds": args.timeout,
-        "is_default": getattr(args, "default", False),
-    }
-
-    if getattr(args, "default", False):
-        # Set config key default_connector to this connector
-        store.configs.set("default_connector", args.name)
-        # Mark all other connectors as not default
-        for c in store.configs.list_connectors():
-            if c.get("name") != args.name and c.get("is_default"):
-                c["is_default"] = False
-                store.configs.save_connector(c["name"], c)
-
-    store.configs.save_connector(args.name, connector_data)
-    _print_json(_render(connector_data, next_action=f"dojo connect ai test {args.name}"))
-    return 0
 
 
 def cmd_add(args: argparse.Namespace) -> int:
@@ -433,199 +350,10 @@ def cmd_queue(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_connect_ai_list(args: argparse.Namespace) -> int:
-    store = DojoStore(_db_path(args))
-    _print_json(store.configs.list_connectors())
-    return 0
 
 
-def cmd_connect_ai_show(args: argparse.Namespace) -> int:
-    store = DojoStore(_db_path(args))
-    connector = store.configs.get_connector(args.name)
-    if connector is None:
-        raise SystemExit(f"unknown AI connector: {args.name}")
-    _print_json(_render(connector, next_action=f"dojo connect ai test {connector['name']}"))
-    return 0
 
 
-def cmd_connect_ai_use(args: argparse.Namespace) -> int:
-    store = DojoStore(_db_path(args))
-    connector = store.configs.get_connector(args.name)
-    if connector is None:
-        raise SystemExit(f"unknown AI connector: {args.name}")
-
-    store.configs.set("default_connector", args.name)
-    # Mark as default and save
-    connector["is_default"] = True
-    store.configs.save_connector(args.name, connector)
-
-    # Disable default on others
-    for c in store.configs.list_connectors():
-        if c.get("name") != args.name and c.get("is_default"):
-            c["is_default"] = False
-            store.configs.save_connector(c["name"], c)
-
-    _print_json(_render(connector, next_action=f"dojo connect ai test {connector['name']}"))
-    return 0
-
-
-def cmd_connect_ai_remove(args: argparse.Namespace) -> int:
-    store = DojoStore(_db_path(args))
-    connector = store.configs.get_connector(args.name)
-    if connector is None:
-        raise SystemExit(f"unknown AI connector: {args.name}")
-
-    is_default = (store.configs.get("default_connector") == args.name) or connector.get("is_default", False)
-    if is_default and not getattr(args, "force", False):
-        raise SystemExit("cannot remove default connector. Set another connector as default first, or run with --force")
-
-    store.configs.delete_connector(args.name)
-    _print_json({"removed": args.name, "was_default": is_default})
-    return 0
-
-
-def cmd_connect_ai_test(args: argparse.Namespace) -> int:
-    from datetime import datetime, timezone
-    store = DojoStore(_db_path(args))
-    connector_name = args.name
-    if not connector_name:
-        default_conn = connectors._default_connector(store)
-        if not default_conn:
-            raise SystemExit("no default AI connector configured")
-        connector_name = default_conn["name"]
-
-    connector = store.configs.get_connector(connector_name)
-    if connector is None:
-        raise SystemExit(f"unknown AI connector: {connector_name}")
-
-    request = {
-        "task": "smoke.test",
-        "version": 1,
-        "prompt": "Hello! Reply with OK if you receive this."
-    }
-
-    result = connectors.invoke_command_connector(store, request, connector_name=connector_name)
-
-    # Update connector test outcome
-    connector["test_status"] = result.status
-    connector["test_summary"] = f"Success (duration: {result.duration_seconds:.2f}s)" if result.status == "ok" else f"Failed: {result.error or 'unknown error'}"
-    store.configs.save_connector(connector_name, connector)
-
-    output_data = {
-        "connector_name": connector_name,
-        "status": result.status,
-        "duration_seconds": result.duration_seconds,
-        "parse_status": result.parse_status,
-        "exit_code": result.exit_code,
-        "stdout": result.raw_stdout,
-        "stderr": result.raw_stderr,
-        "error": result.error,
-        "timestamp": datetime.now(timezone.utc).isoformat()
-    }
-
-    if _use_json(args):
-        _print_json(output_data)
-    else:
-        if result.status == "ok":
-            status_str = f"[bold green]SUCCESS[/bold green] (duration: {result.duration_seconds:.2f}s)"
-            details = (
-                f"[bold cyan]Connector Name:[/bold cyan] {connector_name}\n"
-                f"[bold cyan]Status:[/bold cyan] {status_str}\n"
-                f"[bold cyan]Exit Code:[/bold cyan] {result.exit_code}\n"
-                f"[bold cyan]Timestamp:[/bold cyan] {output_data['timestamp']}\n\n"
-                f"[bold cyan]Stdout Excerpt:[/bold cyan]\n"
-                f"{result.raw_stdout[:500] + '...' if len(result.raw_stdout) > 500 else result.raw_stdout}"
-            )
-            console.print(Panel(details, title="[bold green]AI Connector Test: OK[/bold green]", expand=False))
-        else:
-            status_str = f"[bold red]FAILED[/bold red] (duration: {result.duration_seconds:.2f}s)"
-            details = (
-                f"[bold cyan]Connector Name:[/bold cyan] {connector_name}\n"
-                f"[bold cyan]Status:[/bold cyan] {status_str}\n"
-                f"[bold cyan]Error:[/bold cyan] {result.error}\n"
-                f"[bold cyan]Exit Code:[/bold cyan] {result.exit_code}\n\n"
-                f"[bold cyan]Stderr (tail):[/bold cyan]\n"
-                f"{result.stderr_tail}"
-            )
-            console.print(Panel(details, title="[bold red]AI Connector Test: FAILED[/bold red]", expand=False))
-
-    return 0 if result.status == "ok" else 1
-
-
-def cmd_connect_ai_request(args: argparse.Namespace) -> int:
-    store = DojoStore(_db_path(args))
-
-    if args.task_name == "exercise.generate":
-        request = {
-            "task": "exercise.generate",
-            "version": 1,
-            "instructions": "Mock instructions for dry run exercise generate",
-            "source": {
-                "id": "src_dryrun",
-                "title": "Dry Run Source",
-                "refs": [{
-                    "source_id": "src_dryrun",
-                    "span": {
-                        "start_line": 1,
-                        "end_line": 10,
-                        "anchor_text": "mock"
-                    }
-                }],
-                "content": "mock content"
-            },
-            "topic_hint": "dryrun.topic",
-            "max_candidates": 2,
-            "expected_artifacts": ["candidates"]
-        }
-    else:
-        request = {
-            "task": args.task_name,
-            "version": 1,
-            "instructions": f"Mock instructions for {args.task_name}",
-            "payload": {"mock": True}
-        }
-
-    if args.dry_run:
-        prompt = connectors.render_task_request_prompt(request)
-        if _use_json(args):
-            _print_json({
-                "task_request": request,
-                "rendered_prompt": prompt
-            })
-        else:
-            req_panel = Panel(
-                json.dumps(request, indent=2, sort_keys=True),
-                title="[bold green]TaskRequest JSON[/bold green]",
-                expand=False
-            )
-            prompt_panel = Panel(
-                prompt,
-                title="[bold green]Rendered Prompt[/bold green]",
-                expand=False
-            )
-            console.print(req_panel)
-            console.print(prompt_panel)
-        return 0
-
-    default_conn = connectors._default_connector(store)
-    if not default_conn:
-        raise SystemExit("no default AI connector configured to run requests")
-    connector_name = default_conn["name"]
-
-    result = connectors.invoke_command_connector(store, request, connector_name=connector_name)
-
-    if _use_json(args):
-        _print_json(result.to_dict())
-    else:
-        if result.status == "ok":
-            console.print(f"[bold green]Connector invocation succeeded![/bold green] (duration: {result.duration_seconds:.2f}s)")
-            console.print(Panel(result.raw_stdout, title="Stdout", expand=False))
-        else:
-            console.print(f"[bold red]Connector invocation failed:[/bold red] {result.error}")
-            if result.stderr_tail:
-                console.print(Panel(result.stderr_tail, title="Stderr (tail)", expand=False))
-
-    return 0 if result.status == "ok" else 1
 
 
 def cmd_start(args: argparse.Namespace) -> int:
@@ -638,6 +366,22 @@ def cmd_start(args: argparse.Namespace) -> int:
 
     is_new = res["is_new"]
     ps = res["session"]
+
+    if ps is None:
+        # No due exercises, but generation tasks were emitted (I4 honest floor).
+        if _use_json(args):
+            _print_json({
+                "ok": True,
+                "type": "tasks_pending",
+                "tasks": res.get("tasks", []),
+                "next": res.get("next"),
+            })
+        else:
+            console.print("[yellow]No exercises are due yet.[/yellow]")
+            for t in res.get("tasks", []):
+                console.print(f"  Pending task [cyan]{t['id']}[/cyan] — {t['submit_with']}")
+            console.print("  Fulfill the task(s), then run [bold]dojo start[/bold] again.")
+        return 0
 
     if not is_new:
         if _use_json(args):
@@ -820,7 +564,6 @@ def cmd_install(args: argparse.Namespace) -> int:
 
     agent = args.agent
     dest = getattr(args, "dest", None)
-    argv = None
 
     if not agent and not dest:
         if _use_json(args) or getattr(args, "no_input", False) or not sys.stdout.isatty():
@@ -902,56 +645,13 @@ def cmd_install(args: argparse.Namespace) -> int:
         raise SystemExit(f"error: failed to install dojo skill to {target_path}: {exc}")
 
     store = DojoStore(_db_path(args))
-    executable = shutil.which(agent)
-    if not executable:
-        if agent == "hermes":
-            fallback = Path.home() / ".local" / "bin" / "hermes"
-            if fallback.exists():
-                executable = str(fallback.resolve())
-        elif agent == "openclaw":
-            fallback = Path.home() / ".local" / "bin" / "openclaw"
-            if fallback.exists():
-                executable = str(fallback.resolve())
 
-    if not executable:
-        executable = agent
-
-    if getattr(args, "argv", None):
-        argv = shlex.split(args.argv)
-    else:
-        if not _use_json(args) and not getattr(args, "no_input", False) and sys.stdout.isatty():
-            if agent not in ("hermes", "openclaw"):
-                try:
-                    cmd_input = input(f"Enter AI connector invocation command [default: {executable}]: ").strip()
-                    if cmd_input:
-                        argv = shlex.split(cmd_input)
-                except (KeyboardInterrupt, EOFError):
-                    pass
-
-        if not argv:
-            if agent == "hermes":
-                wrapper_path = target_path / "hermes_wrapper.sh"
-                try:
-                    wrapper_content = f"#!/bin/bash\nPROMPT=$(cat)\n{executable} chat -Q -q \"$PROMPT\"\n"
-                    wrapper_path.write_text(wrapper_content, encoding="utf-8")
-                    wrapper_path.chmod(0o755)
-                    argv = [str(wrapper_path.resolve())]
-                except Exception:
-                    argv = [executable, "chat", "-Q"]
-            elif agent == "openclaw":
-                argv = [executable, "chat", "--stdin"]
-            else:
-                argv = [executable]
-
-    connector_data = {
-        "kind": "command",
-        "name": agent,
-        "argv": argv,
-        "is_default": True,
-    }
-    
-    store.configs.save_connector(agent, connector_data)
-    store.configs.set("default_connector", agent)
+    # Harness agents need nothing beyond the skill: they fulfill tasks
+    # themselves (ADR 010). An optional one-string fulfiller command enables
+    # headless use (dojo task run) — no wrapper scripts, ever (Q1).
+    fulfiller = getattr(args, "argv", None)
+    if fulfiller:
+        store.configs.set("fulfiller.command", fulfiller)
 
     output = {
         "ok": True,
@@ -959,12 +659,10 @@ def cmd_install(args: argparse.Namespace) -> int:
         "data": {
             "agent": agent,
             "path": str(target_path.resolve()),
-            "connector": {
-                "name": agent,
-                "argv": argv,
-                "is_default": True
-            }
-        }
+            "fulfiller_command": fulfiller,
+        },
+        "next": "the agent can now drive dojo via the skill; tasks it sees in envelopes "
+                "are fulfilled inline and submitted with `dojo task submit <id>`",
     }
 
     if _use_json(args):
@@ -972,8 +670,8 @@ def cmd_install(args: argparse.Namespace) -> int:
     else:
         console.print(f"[bold green]Successfully installed dojo skill for {agent}![/bold green]")
         console.print(f"  Destination: [cyan]{target_path}[/cyan]")
-        console.print(f"  AI Connector: Automatically registered [cyan]{agent}[/cyan] as the default connector.")
-        console.print(f"               Command: [italic]{' '.join(argv)}[/italic]")
+        if fulfiller:
+            console.print(f"  Headless fulfiller: [italic]{fulfiller}[/italic] (drives `dojo task run`)")
 
     return 0
 
@@ -1119,46 +817,6 @@ def cmd_admin_consolidate(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_admin_debug_run(args: argparse.Namespace) -> int:
-    api = DojoAPI(_db_path(args))
-    res = api.get_generation_run(args.run_id)
-    if res is None:
-        raise SystemExit(f"error: generation run {args.run_id} not found")
-
-    if _use_json(args):
-        _print_json({
-            "ok": True,
-            "type": "generation_run",
-            "data": res
-        })
-    else:
-        console.print(f"\n[bold green]Generation Run Debugger - Run ID: {res['id']}[/bold green]")
-        console.print(f"  [bold]Task:[/bold] [cyan]{res.get('task')}[/cyan]")
-        console.print(f"  [bold]Status:[/bold] {'[green]ok[/green]' if res.get('status') == 'ok' else '[red]failed[/red]'}")
-        console.print(f"  [bold]Created At:[/bold] [cyan]{res.get('created_at')}[/cyan]\n")
-
-        # 1. Request Panel
-        req_str = json.dumps(res.get("request") or {}, indent=2)
-        console.print(Panel(req_str, title="[bold]Request JSON (Input payload)[/bold]", expand=False))
-
-        # 2. Raw Output Panel
-        console.print(Panel(res.get("raw_output") or "(empty)", title="[bold]Raw AI Output (Stdout)[/bold]", expand=False))
-
-        # 3. Diagnostics & Stderr Panel
-        diag = res.get("diagnostics") or {}
-        diag_str = ""
-        if diag.get("diagnostics"):
-            diag_str += f"[bold red]Diagnostics:[/bold red] {json.dumps(diag['diagnostics'], indent=2)}\n\n"
-        if diag.get("stderr"):
-            diag_str += f"[bold yellow]Stderr Tail:[/bold yellow]\n{diag['stderr']}"
-
-        if diag_str:
-            console.print(Panel(diag_str, title="[bold red]Execution Errors & Stderr[/bold red]", expand=False))
-        else:
-            console.print("[green]No execution diagnostics or stderr reported.[/green]")
-
-    return 0
-
 
 def cmd_feedback(args: argparse.Namespace) -> int:
     api = DojoAPI(_db_path(args))
@@ -1212,7 +870,92 @@ def cmd_config_show(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_campaign_plan(args: argparse.Namespace) -> int:
+    """Emits a campaign.plan task (ADR 010). The fulfilled task carries the
+    proposal (mission/topics/phases/refinement questions); materialize it with:
+    dojo campaign create --from-task <task-id>."""
+    from .store import DojoStore
+    from .tasks import flows
+
+    store = DojoStore(_db_path(args))
+    existing = sorted({
+        ex.topic_path
+        for camp in store.campaigns.list()
+        for ex in store.exercises.list(camp.id)
+    } | {
+        camp.topic_path for camp in store.campaigns.list() if camp.topic_path
+    })
+    notes = []
+    if getattr(args, "level", None):
+        notes.append(f"level: {args.level}")
+    if getattr(args, "context", None):
+        notes.append(args.context)
+    task = flows.request_plan(
+        store,
+        goal=args.goal,
+        context_notes="; ".join(notes),
+        existing_topics="\n".join(existing),
+    )
+    _print_json({
+        "ok": True,
+        "task": flows.task_ref(task),
+        "next": (
+            f"fulfill the task (dojo task show {task.id} --prompt → produce the JSON → "
+            f"dojo task submit {task.id}); review the proposal and its refinement_questions "
+            f"with the learner, then: dojo campaign create --from-task {task.id} "
+            f"[--name <override>]"
+        ),
+    })
+    return 0
+
+
+def _materialize_campaign_from_task(args: argparse.Namespace) -> int:
+    """Deterministic creation from a fulfilled campaign.plan task (I2:
+    review-before-trust — the human said yes before this runs)."""
+    from .store import DojoStore
+
+    api = DojoAPI(_db_path(args))
+    task = api.store.tasks.get(args.from_task)
+    if task is None or task.kind != "campaign.plan":
+        raise SystemExit(f"error: {args.from_task} is not a campaign.plan task")
+    if task.status != "fulfilled":
+        raise SystemExit(f"error: task {args.from_task} is {task.status}, not fulfilled")
+    proposal = (task.context or {}).get("_applied")
+    if not proposal:
+        raise SystemExit(f"error: task {args.from_task} carries no applied proposal")
+
+    topic_paths = [t["path"] for t in proposal["topics"]]
+    root = topic_paths[0].split(".")[0] if topic_paths else "general"
+    name = args.name or task.context.get("goal") or root
+
+    res = api.create_campaign(
+        name=name,
+        topic_path=root,
+        mission=proposal["mission"],
+    )
+    campaign = api.store.campaigns.get(res["id"])
+    campaign.attack_plan = [AttackPlanPhase.model_validate(p) for p in proposal["phases"]]
+    # Topic kinds (recall vs skill) ride along for the M3 scheduler.
+    campaign.topics = proposal["topics"]
+    lines = [f"# {name}", "", proposal["mission"], ""]
+    for t in proposal["topics"]:
+        lines.append(f"- `{t['path']}` ({t['kind']}): {t.get('summary', '')}")
+    campaign.syllabus_markdown = "\n".join(lines)
+    api.store.campaigns.save(campaign)
+
+    _print_json({
+        "ok": True,
+        "type": "campaign_created",
+        "data": api.store.campaigns.get(res["id"]).model_dump(),
+        "refinement_questions": proposal.get("refinement_questions", []),
+        "next": "run dojo start to begin practicing",
+    })
+    return 0
+
+
 def cmd_campaign_create(args: argparse.Namespace) -> int:
+    if getattr(args, "from_task", None):
+        return _materialize_campaign_from_task(args)
     api = DojoAPI(_db_path(args))
 
     if not _use_json(args):
@@ -1292,6 +1035,15 @@ def cmd_campaign_create(args: argparse.Namespace) -> int:
         if not _use_json(args):
             sess_res = api.start_practice_session(campaign_id=campaign_id)
             session = sess_res["session"]
+            if session is None:
+                console.print("\n[yellow]Diagnostic questions need an AI fulfiller.[/yellow]")
+                for t in sess_res.get("tasks", []):
+                    console.print(f"  Pending task [cyan]{t['id']}[/cyan] — {t['submit_with']}")
+                console.print(
+                    "  Fulfill the task(s) (or configure one: dojo config set fulfiller.command \"<cmd>\" "
+                    "then dojo task run), then run [bold]dojo campaign resume[/bold] via [bold]dojo start[/bold].\n"
+                )
+                return 0
             session_id = session["id"]
             exercise_ids = session["exercise_ids"]
 
@@ -1369,11 +1121,16 @@ def cmd_campaign_create(args: argparse.Namespace) -> int:
             console.print("To begin practicing, run: [bold cyan]dojo start[/bold cyan]\n")
 
         else:
-            # JSON mode
+            # JSON mode: start the session to trigger diagnostic task emission,
+            # then hand the agent everything it needs in one envelope.
+            sess_res = api.start_practice_session(campaign_id=campaign_id)
             _print_json({
                 "ok": True,
                 "type": "campaign_created",
-                "data": res
+                "data": res,
+                "session": sess_res.get("session"),
+                "tasks": sess_res.get("tasks", []),
+                "next": sess_res.get("next") or "run dojo ready to reveal the first prompt",
             })
 
     except (KeyboardInterrupt, Exception) as exc:
@@ -1763,10 +1520,6 @@ def build_parser() -> argparse.ArgumentParser:
     p_consolidate.add_argument("--campaign")
     p_consolidate.set_defaults(func=cmd_admin_consolidate)
 
-    p_debug_run = p_admin_sub.add_parser("debug-run")
-    p_debug_run.add_argument("run_id", help="Generation run ID file path to inspect")
-    p_debug_run.set_defaults(func=cmd_admin_debug_run)
-
     p_config = sub.add_parser("config")
     p_config_sub = p_config.add_subparsers(dest="config_command", required=True)
     p_config_set = p_config_sub.add_parser("set")
@@ -1776,51 +1529,18 @@ def build_parser() -> argparse.ArgumentParser:
     p_config_show = p_config_sub.add_parser("show")
     p_config_show.set_defaults(func=cmd_config_show)
 
-    connect = sub.add_parser("connect")
-    connect_sub = connect.add_subparsers(dest="connect_command", required=True)
-    ai = connect_sub.add_parser("ai")
-    ai_sub = ai.add_subparsers(dest="ai_command", required=True)
-
-    p_command = ai_sub.add_parser("command")
-    p_command.add_argument("name")
-    p_command.add_argument("--default", action="store_true")
-    p_command.add_argument("--input", default="stdin-prompt", choices=["stdin-prompt", "stdin-json", "request-json-file"])
-    p_command.add_argument("--output", default="stdout-json-or-text", choices=["stdout-json-or-text"])
-    p_command.add_argument("--timeout", type=int, default=120)
-    p_command.add_argument("--replace", action="store_true")
-    p_command.add_argument("command", nargs=argparse.REMAINDER)
-    p_command.set_defaults(func=cmd_connect_ai_command)
-
-    p_list = ai_sub.add_parser("list")
-    p_list.set_defaults(func=cmd_connect_ai_list)
-    p_show = ai_sub.add_parser("show")
-    p_show.add_argument("name")
-    p_show.set_defaults(func=cmd_connect_ai_show)
-    p_use = ai_sub.add_parser("use")
-    p_use.add_argument("name")
-    p_use.set_defaults(func=cmd_connect_ai_use)
-    p_default = ai_sub.add_parser("default", help="deprecated alias for use")
-    p_default.add_argument("name")
-    p_default.set_defaults(func=cmd_connect_ai_use)
-    p_remove = ai_sub.add_parser("remove")
-    p_remove.add_argument("name")
-    p_remove.add_argument("--force", action="store_true")
-    p_remove.set_defaults(func=cmd_connect_ai_remove)
-
-    p_test = ai_sub.add_parser("test")
-    p_test.add_argument("name", nargs="?")
-    p_test.set_defaults(func=cmd_connect_ai_test)
-
-    p_request = ai_sub.add_parser("request")
-    p_request.add_argument("task_name")
-    p_request.add_argument("--dry-run", action="store_true")
-    p_request.set_defaults(func=cmd_connect_ai_request)
-
     p_campaign = sub.add_parser("campaign")
     p_camp_sub = p_campaign.add_subparsers(dest="campaign_command", required=True)
 
+    p_camp_plan = p_camp_sub.add_parser("plan")
+    p_camp_plan.add_argument("goal", help="The user's high-level learning goal or target skill")
+    p_camp_plan.add_argument("--level", "-l", choices=["beginner", "intermediate", "advanced"])
+    p_camp_plan.add_argument("--context", "-c", help="Constraints, deadlines, exclusions, preferences")
+    p_camp_plan.set_defaults(func=cmd_campaign_plan)
+
     p_camp_create = p_camp_sub.add_parser("create")
-    p_camp_create.add_argument("goal", help="The user's high-level learning goal or target skill")
+    p_camp_create.add_argument("goal", nargs="?", help="The user's high-level learning goal or target skill")
+    p_camp_create.add_argument("--from-task", dest="from_task", help="Materialize a fulfilled campaign.plan task")
     p_camp_create.add_argument("--level", "-l", default="intermediate", choices=["beginner", "intermediate", "advanced"], help="Initial comfort level")
     p_camp_create.add_argument("--name", "-n", help="Optional override for the campaign name")
     p_camp_create.add_argument("--exclude", "-e", help="Optional skills or areas to defer/exclude")
