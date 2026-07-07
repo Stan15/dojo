@@ -52,14 +52,14 @@ def render_task_request_prompt(request: dict[str, Any]) -> str:
 
 def _default_connector(store: DojoStore) -> dict[str, Any] | None:
     # 1. Check config default_connector
-    default_name = store.get_config_value("default_connector")
+    default_name = store.configs.get_value("default_connector")
     if default_name:
-        conn = store.get_connector(default_name)
+        conn = store.configs.get_connector(default_name)
         if conn:
             return conn
 
     # 2. Check for is_default: true
-    conns = store.list_connectors()
+    conns = store.configs.list_connectors()
     for conn in conns:
         if conn.get("is_default"):
             return conn
@@ -72,7 +72,7 @@ def _default_connector(store: DojoStore) -> dict[str, Any] | None:
 
 def _resolve_connector(store: DojoStore, connector_name: str | None) -> dict[str, Any] | None:
     if connector_name:
-        return store.get_connector(connector_name)
+        return store.configs.get_connector(connector_name)
     return _default_connector(store)
 
 

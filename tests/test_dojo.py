@@ -197,7 +197,7 @@ def test_pydantic_exclude_defaults_frontmatter(tmp_path: Path):
         kind="text",
         content="Test content lines here."
     )
-    store.save_source(source)
+    store.sources.save(source)
     
     source_file = tmp_path / "sources" / "src_test.md"
     assert source_file.exists()
@@ -208,7 +208,7 @@ def test_pydantic_exclude_defaults_frontmatter(tmp_path: Path):
     assert "path:" not in content
     
     # Reload and check values
-    reloaded = store.get_source("src_test")
+    reloaded = store.sources.get("src_test")
     assert reloaded is not None
     assert reloaded.title == "Test Source"
     assert reloaded.mission is None
@@ -228,7 +228,7 @@ def test_store_atomic_write_and_locking(tmp_path: Path):
         name="Test Campaign",
         mission="Succeed"
     )
-    store.save_campaign(campaign)
+    store.campaigns.save(campaign)
     
     campaign_file = tmp_path / "campaigns" / "camp_test" / "campaign.md"
     assert campaign_file.exists()
@@ -246,7 +246,7 @@ def test_store_incremental_index_sync(tmp_path: Path):
         kind="text",
         content="Hello source text"
     )
-    store.save_source(source)
+    store.sources.save(source)
     
     # Check index cache created
     index_file = tmp_path / ".index.json"
@@ -262,7 +262,7 @@ def test_store_incremental_index_sync(tmp_path: Path):
     
     # Reload store
     store2 = DojoStore(tmp_path)
-    assert store2.get_source("src_1").title == "Source One"
+    assert store2.sources.get("src_1").title == "Source One"
 
 
 # ==========================================
@@ -288,7 +288,7 @@ def test_api_onboarding_practice_loop(mock_invoke: MagicMock, tmp_path: Path):
     campaign_id = campaign_meta["id"]
     
     # Initial strategy and plan override for diagnostic onboarding
-    campaign = api.store.get_campaign(campaign_id)
+    campaign = api.store.campaigns.get(campaign_id)
     assert campaign is not None
     campaign.strategy_profile = {"mode": "diagnostic", "difficulty": "intermediate", "scaffolding": "medium"}
     campaign.attack_plan = [
@@ -298,7 +298,7 @@ def test_api_onboarding_practice_loop(mock_invoke: MagicMock, tmp_path: Path):
             criteria=CriteriaEntry(min_attempts=2, min_accuracy=0.0)
         )
     ]
-    api.store.save_campaign(campaign)
+    api.store.campaigns.save(campaign)
     
     # Start onboarding practice session
     sess_res = api.start_practice_session(campaign_id=campaign_id)
@@ -329,7 +329,7 @@ def test_api_onboarding_practice_loop(mock_invoke: MagicMock, tmp_path: Path):
     assert "preference.scaffolding_oral" in [h["key"] for h in consolidate_res["insights"]]
     
     # Syllabus check
-    reloaded_camp = api.store.get_campaign(campaign_id)
+    reloaded_camp = api.store.campaigns.get(campaign_id)
     assert "Phase 1: Oral A" in reloaded_camp.syllabus_markdown
     assert reloaded_camp.active_phase_index == 0 # starts at 0, revised plan phases are 1 and 2
 
@@ -352,7 +352,7 @@ def test_api_insight_merging(mock_invoke: MagicMock, tmp_path: Path):
         description="Prefers high scaffolding",
         sources=["campaigns/camp_math-calc/attempts/att_1.md"]
     )
-    api.store.save_insight(campaign_id, insight1)
+    api.store.insights.save(campaign_id, insight1)
     
     # 2. Mock profile consolidate returning the same insight key
     MOCK_MERGE_RESPONSE = {
@@ -398,13 +398,13 @@ def test_api_insight_merging(mock_invoke: MagicMock, tmp_path: Path):
         latency_seconds=12.5,
         reflected=False
     )
-    api.store.save_attempt(campaign_id, attempt)
+    api.store.attempts.save(campaign_id, attempt)
     
     # Consolidate
     api.consolidate_learner_profile(campaign_id=campaign_id)
     
     # Reload and check merged insights
-    insights = api.store.list_insights(campaign_id)
+    insights = api.store.insights.list(campaign_id)
     print("\nDEBUG INSIGHTS:", [ins.model_dump() for ins in insights])
     assert len(insights) == 1
     ins = insights[0]
@@ -437,10 +437,10 @@ def test_cli_e2e_workflow(mock_invoke: MagicMock, tmp_path: Path):
     run_cli(tmp_path, "connect", "ai", "command", "mockagent", "--default", "--", "echo", "mock")
     
     store = DojoStore(tmp_path)
-    connector = store.get_connector("mockagent")
+    connector = store.configs.get_connector("mockagent")
     assert connector is not None
     assert connector["argv"] == ["echo", "mock"]
-    assert store.get_config("default_connector") == "mockagent"
+    assert store.configs.get("default_connector") == "mockagent"
 
     # Test connect list, show, test
     res = run_cli(tmp_path, "connect", "ai", "list")
@@ -455,7 +455,7 @@ def test_cli_e2e_workflow(mock_invoke: MagicMock, tmp_path: Path):
     
     # Test add source
     run_cli(tmp_path, "add", "--text", "Sample study guidelines context.", "--title", "SyllabusDoc")
-    sources = store.list_sources()
+    sources = store.sources.list()
     assert len(sources) == 1
     assert sources[0].title == "SyllabusDoc"
 
@@ -473,7 +473,7 @@ def test_cli_e2e_workflow(mock_invoke: MagicMock, tmp_path: Path):
         run_cli(tmp_path, "campaign", "create", "Learn Spanish Grammar", "--level", "intermediate")
         
     # Check that campaign was created
-    campaigns = store.list_campaigns()
+    campaigns = store.campaigns.list()
     assert len(campaigns) == 1
     assert campaigns[0].name == "Grounded French Campaign"  # overridden by mock diagnostic response
     

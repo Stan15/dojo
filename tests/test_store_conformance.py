@@ -143,46 +143,46 @@ def make_insight() -> Insight:
 class TestRoundTrip:
     def test_source(self, store: DojoStore):
         src = make_source()
-        store.save_source(src)
-        assert store.get_source(src.id).model_dump() == src.model_dump()
+        store.sources.save(src)
+        assert store.sources.get(src.id).model_dump() == src.model_dump()
 
     def test_campaign_with_plan_and_journal(self, store: DojoStore):
         camp = make_campaign()
-        store.save_campaign(camp)
-        got = store.get_campaign(camp.id)
+        store.campaigns.save(camp)
+        got = store.campaigns.get(camp.id)
         assert got.model_dump() == camp.model_dump()
 
     def test_exercise(self, store: DojoStore):
-        store.save_campaign(make_campaign())
+        store.campaigns.save(make_campaign())
         ex = make_exercise()
-        store.save_exercise(CAMP_ID, ex)
-        assert store.get_exercise(CAMP_ID, ex.id).model_dump() == ex.model_dump()
+        store.exercises.save(CAMP_ID, ex)
+        assert store.exercises.get(CAMP_ID, ex.id).model_dump() == ex.model_dump()
 
     def test_candidate(self, store: DojoStore):
-        store.save_campaign(make_campaign())
+        store.campaigns.save(make_campaign())
         cand = make_candidate()
-        store.save_candidate(CAMP_ID, cand)
-        assert store.get_candidate(CAMP_ID, cand.id).model_dump() == cand.model_dump()
+        store.candidates.save(CAMP_ID, cand)
+        assert store.candidates.get(CAMP_ID, cand.id).model_dump() == cand.model_dump()
 
     def test_attempt(self, store: DojoStore):
-        store.save_campaign(make_campaign())
+        store.campaigns.save(make_campaign())
         att = make_attempt()
-        store.save_attempt(CAMP_ID, att)
-        assert store.get_attempt(CAMP_ID, att.id).model_dump() == att.model_dump()
+        store.attempts.save(CAMP_ID, att)
+        assert store.attempts.get(CAMP_ID, att.id).model_dump() == att.model_dump()
 
     def test_insight(self, store: DojoStore):
-        store.save_campaign(make_campaign())
+        store.campaigns.save(make_campaign())
         ins = make_insight()
-        store.save_insight(CAMP_ID, ins)
-        assert store.get_insight(CAMP_ID, ins.id).model_dump() == ins.model_dump()
+        store.insights.save(CAMP_ID, ins)
+        assert store.insights.get(CAMP_ID, ins.id).model_dump() == ins.model_dump()
 
     def test_update_in_place_keeps_single_record(self, store: DojoStore):
-        store.save_campaign(make_campaign())
+        store.campaigns.save(make_campaign())
         ex = make_exercise()
-        store.save_exercise(CAMP_ID, ex)
+        store.exercises.save(CAMP_ID, ex)
         ex.difficulty = "advanced"
-        store.save_exercise(CAMP_ID, ex)
-        exercises = store.list_exercises(CAMP_ID)
+        store.exercises.save(CAMP_ID, ex)
+        exercises = store.exercises.list(CAMP_ID)
         assert len(exercises) == 1
         assert exercises[0].difficulty == "advanced"
 
@@ -196,10 +196,10 @@ class TestIdReferences:
             )
 
     def test_attempt_refs_survive_round_trip(self, store: DojoStore):
-        store.save_campaign(make_campaign())
+        store.campaigns.save(make_campaign())
         att = make_attempt()
-        store.save_attempt(CAMP_ID, att)
-        got = store.get_attempt(CAMP_ID, att.id)
+        store.attempts.save(CAMP_ID, att)
+        got = store.attempts.get(CAMP_ID, att.id)
         assert got.exercise_id == "ex_a1b2"
         assert got.session_id == "sess_1234"
         assert got.campaign_id == CAMP_ID
@@ -211,18 +211,18 @@ class TestIdReferences:
 
 class TestFilters:
     def test_omitted_field_matches_its_default(self, store: DojoStore):
-        store.save_campaign(make_campaign())
-        store.save_exercise(CAMP_ID, make_exercise(archived=False))
-        active = store.list_exercises(CAMP_ID, filters={"archived": False})
+        store.campaigns.save(make_campaign())
+        store.exercises.save(CAMP_ID, make_exercise(archived=False))
+        active = store.exercises.list(CAMP_ID, filters={"archived": False})
         assert [e.id for e in active] == ["ex_a1b2"]
-        assert store.list_exercises(CAMP_ID, filters={"archived": True}) == []
+        assert store.exercises.list(CAMP_ID, filters={"archived": True}) == []
 
     def test_set_field_matches_exactly(self, store: DojoStore):
-        store.save_campaign(make_campaign())
+        store.campaigns.save(make_campaign())
         ex = make_exercise(archived=True)
-        store.save_exercise(CAMP_ID, ex)
-        assert store.list_exercises(CAMP_ID, filters={"archived": True})[0].id == ex.id
-        assert store.list_exercises(CAMP_ID, filters={"archived": False}) == []
+        store.exercises.save(CAMP_ID, ex)
+        assert store.exercises.list(CAMP_ID, filters={"archived": True})[0].id == ex.id
+        assert store.exercises.list(CAMP_ID, filters={"archived": False}) == []
 
 
 # ------------------------------------------------------------------
@@ -232,9 +232,9 @@ class TestFilters:
 class TestAudit:
     def test_writes_do_not_commit_and_audit_batches(self, store: DojoStore):
         baseline = _git_commit_count(store.dojo_dir)
-        store.save_campaign(make_campaign())
-        store.save_exercise(CAMP_ID, make_exercise())
-        store.save_candidate(CAMP_ID, make_candidate())
+        store.campaigns.save(make_campaign())
+        store.exercises.save(CAMP_ID, make_exercise())
+        store.candidates.save(CAMP_ID, make_candidate())
         assert _git_commit_count(store.dojo_dir) == baseline, (
             "entity writes must not auto-commit (ADR 011: one commit per command)"
         )
@@ -242,7 +242,7 @@ class TestAudit:
         assert _git_commit_count(store.dojo_dir) == baseline + 1
 
     def test_audit_with_clean_tree_is_a_noop(self, store: DojoStore):
-        store.save_campaign(make_campaign())
+        store.campaigns.save(make_campaign())
         store.audit("first")
         n = _git_commit_count(store.dojo_dir)
         store.audit("second — nothing changed")
@@ -264,9 +264,9 @@ class TestMarkdownBackendPhysics:
         return files[0]
 
     def test_unknown_frontmatter_survives_rewrite(self, md_store: DojoStore):
-        md_store.save_campaign(make_campaign())
+        md_store.campaigns.save(make_campaign())
         ex = make_exercise()
-        md_store.save_exercise(CAMP_ID, ex)
+        md_store.exercises.save(CAMP_ID, ex)
         path = self._exercise_file(md_store)
         content = path.read_text(encoding="utf-8")
         assert content.startswith("---")
@@ -275,22 +275,22 @@ class TestMarkdownBackendPhysics:
             encoding="utf-8",
         )
 
-        got = md_store.get_exercise(CAMP_ID, ex.id)
+        got = md_store.exercises.get(CAMP_ID, ex.id)
         got.difficulty = "advanced"
-        md_store.save_exercise(CAMP_ID, got)
+        md_store.exercises.save(CAMP_ID, got)
 
         final = self._exercise_file(md_store).read_text(encoding="utf-8")
         assert "my_note: keep me please" in final, "human-added frontmatter was destroyed"
         assert "difficulty: advanced" in final
 
     def test_lookup_survives_file_rename(self, md_store: DojoStore):
-        md_store.save_campaign(make_campaign())
+        md_store.campaigns.save(make_campaign())
         ex = make_exercise()
-        md_store.save_exercise(CAMP_ID, ex)
+        md_store.exercises.save(CAMP_ID, ex)
         path = self._exercise_file(md_store)
         path.rename(path.with_name("renamed-by-a-human.md"))
 
-        got = md_store.get_exercise(CAMP_ID, ex.id)
+        got = md_store.exercises.get(CAMP_ID, ex.id)
         assert got is not None and got.id == ex.id, "identity must be the id field, not the filename"
 
     def test_cli_command_creates_exactly_one_recovery_point(self, tmp_path: Path):
@@ -308,10 +308,10 @@ class TestMarkdownBackendPhysics:
 
     def test_source_lookup_survives_file_rename(self, md_store: DojoStore):
         src = make_source()
-        md_store.save_source(src)
+        md_store.sources.save(src)
         src_file = md_store.dojo_dir / "sources" / f"{src.id}.md"
         assert src_file.exists()
         src_file.rename(src_file.with_name("my-renamed-notes.md"))
 
-        got = md_store.get_source(src.id)
+        got = md_store.sources.get(src.id)
         assert got is not None and got.id == src.id

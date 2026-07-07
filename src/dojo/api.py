@@ -58,7 +58,7 @@ class DojoAPI:
             path=path,
             mission=mission,
         )
-        self.store.save_source(source)
+        self.store.sources.save(source)
 
         candidates_count = 0
         diagnostics = []
@@ -97,7 +97,7 @@ class DojoAPI:
                 if val["candidates"]:
                     # Create a temporary dummy campaign ID or try to resolve matching active campaigns
                     campaign_id = "default"
-                    active_camps = self.store.list_campaigns()
+                    active_camps = self.store.campaigns.list()
                     if active_camps:
                         campaign_id = active_camps[0].id
 
@@ -112,7 +112,7 @@ class DojoAPI:
                             answer=cand_data.get("answer"),
                             rubric=cand_data.get("rubric"),
                         )
-                        self.store.save_candidate(campaign_id, candidate)
+                        self.store.candidates.save(campaign_id, candidate)
                         candidates_count += 1
                     if not val["ok"]:
                         diagnostics = val["diagnostics"]
@@ -132,11 +132,11 @@ class DojoAPI:
             if run_path and candidates_count > 0:
                 # Update candidates with their generation run path
                 campaign_id = active_camps[0].id if active_camps else "default"
-                candidates = self.store.list_candidates(campaign_id)
+                candidates = self.store.candidates.list(campaign_id)
                 for cand in candidates:
                     if not cand.generation_run:
                         cand.generation_run = run_path
-                        self.store.save_candidate(campaign_id, cand)
+                        self.store.candidates.save(campaign_id, cand)
 
             self.log.info(f"Candidate generation completed: source='{source_id}', candidates={candidates_count}, run_path={run_path}, errors={bool(diagnostics)}")
 
@@ -155,24 +155,24 @@ class DojoAPI:
         return output
 
     def list_sources(self) -> list[dict[str, Any]]:
-        return [s.model_dump() for s in self.store.list_sources()]
+        return [s.model_dump() for s in self.store.sources.list()]
 
     def get_source(self, source_id: str) -> dict[str, Any] | None:
-        src = self.store.get_source(source_id)
+        src = self.store.sources.get(source_id)
         return src.model_dump() if src else None
 
     def get_source_topics(self, source_id: str) -> list[dict[str, Any]]:
         # In Markdown-native JIT, candidates belong to campaigns. We scan active campaign candidates.
         topics = {}
-        for camp in self.store.list_campaigns():
-            for cand in self.store.list_candidates(camp.id):
+        for camp in self.store.campaigns.list():
+            for cand in self.store.candidates.list(camp.id):
                 # Check if candidate is associated with this source
                 # Sources references are parsed in candidate prompt/frontmatter
                 # For simplicity, if source_id matches
                 pass
         # Fallback to scanning all candidates across campaigns
-        for camp in self.store.list_campaigns():
-            for cand in self.store.list_candidates(camp.id):
+        for camp in self.store.campaigns.list():
+            for cand in self.store.candidates.list(camp.id):
                 # Parse topic hierarchy
                 path = cand.topic_path
                 topics[path] = topics.get(path, 0) + 1
@@ -181,8 +181,8 @@ class DojoAPI:
     def get_source_candidates(self, source_id: str, topic_path: str | None = None) -> list[dict[str, Any]]:
         # Collect candidates across active campaigns matching the source_id and topic_path
         cands = []
-        for camp in self.store.list_campaigns():
-            for cand in self.store.list_candidates(camp.id):
+        for camp in self.store.campaigns.list():
+            for cand in self.store.candidates.list(camp.id):
                 if topic_path and cand.topic_path != topic_path:
                     continue
                 cands.append(cand.model_dump())
@@ -192,8 +192,8 @@ class DojoAPI:
     # Candidates & Exercises Operations
     # ==========================================
     def get_candidate(self, candidate_id: str) -> dict[str, Any] | None:
-        for camp in self.store.list_campaigns():
-            cand = self.store.get_candidate(camp.id, candidate_id)
+        for camp in self.store.campaigns.list():
+            cand = self.store.candidates.get(camp.id, candidate_id)
             if cand:
                 return cand.model_dump()
         return None
@@ -209,11 +209,11 @@ class DojoAPI:
     ) -> None:
         # Default to the first campaign
         campaign_id = "default"
-        camps = self.store.list_campaigns()
+        camps = self.store.campaigns.list()
         if camps:
             campaign_id = camps[0].id
 
-        cand = self.store.get_candidate(campaign_id, candidate_id)
+        cand = self.store.candidates.get(campaign_id, candidate_id)
         if not cand:
             cand = Candidate(
                 id=candidate_id,
@@ -230,19 +230,19 @@ class DojoAPI:
             cand.rubric = rubric
             cand.difficulty = difficulty
 
-        self.store.save_candidate(campaign_id, cand)
+        self.store.candidates.save(campaign_id, cand)
 
     def remove_candidate(self, candidate_id: str) -> dict[str, Any]:
-        for camp in self.store.list_campaigns():
-            cand = self.store.get_candidate(camp.id, candidate_id)
+        for camp in self.store.campaigns.list():
+            cand = self.store.candidates.get(camp.id, candidate_id)
             if cand:
-                self.store.delete_candidate(camp.id, candidate_id)
+                self.store.candidates.delete(camp.id, candidate_id)
                 return cand.model_dump()
         raise ValueError(f"Candidate {candidate_id} not found")
 
     def _enforce_queue_limit(self, campaign_id: str, limit: int = 30):
         """Archives excess reviews above limit based on oldest attempt/creation timestamp."""
-        exercises = self.store.list_exercises(campaign_id)
+        exercises = self.store.exercises.list(campaign_id)
         if len(exercises) <= limit:
             return
 
@@ -253,12 +253,12 @@ class DojoAPI:
             ex = exercises[i]
             ex.archived = True
             ex.quality = "archived"
-            self.store.save_exercise(campaign_id, ex)
+            self.store.exercises.save(campaign_id, ex)
             self.log.info(f"Queue limit enforced: archived exercise '{ex.id}' in campaign '{campaign_id}'")
 
     def promote_candidate(self, candidate_id: str) -> dict[str, Any]:
-        for camp in self.store.list_campaigns():
-            cand = self.store.get_candidate(camp.id, candidate_id)
+        for camp in self.store.campaigns.list():
+            cand = self.store.candidates.get(camp.id, candidate_id)
             if cand:
                 # Promote to Exercise
                 exercise = Exercise(
@@ -272,8 +272,8 @@ class DojoAPI:
                     rubric=cand.rubric,
                     created_at=cand.created_at,
                 )
-                self.store.save_exercise(camp.id, exercise)
-                self.store.delete_candidate(camp.id, candidate_id)
+                self.store.exercises.save(camp.id, exercise)
+                self.store.candidates.delete(camp.id, candidate_id)
                 self._enforce_queue_limit(camp.id)
                 return exercise.model_dump()
         raise ValueError(f"Candidate {candidate_id} not found")
@@ -282,8 +282,8 @@ class DojoAPI:
         self, source_id: str, topic_path: str, limit: int | None = None
     ) -> dict[str, Any]:
         promoted = []
-        for camp in self.store.list_campaigns():
-            candidates = self.store.list_candidates(camp.id)
+        for camp in self.store.campaigns.list():
+            candidates = self.store.candidates.list(camp.id)
             count = 0
             for cand in candidates:
                 if cand.topic_path == topic_path:
@@ -299,8 +299,8 @@ class DojoAPI:
                         rubric=cand.rubric,
                         created_at=cand.created_at,
                     )
-                    self.store.save_exercise(camp.id, ex)
-                    self.store.delete_candidate(camp.id, cand.id)
+                    self.store.exercises.save(camp.id, ex)
+                    self.store.candidates.delete(camp.id, cand.id)
                     promoted.append(ex.model_dump())
                     count += 1
                     if limit is not None and count >= limit:
@@ -325,14 +325,14 @@ class DojoAPI:
         # 1. Resolve matching campaign
         resolved_campaign = None
         if campaign_id:
-            resolved_campaign = self.store.get_campaign(campaign_id)
+            resolved_campaign = self.store.campaigns.get(campaign_id)
         elif topic:
-            for c in self.store.list_campaigns():
+            for c in self.store.campaigns.list():
                 if c.topic_path == topic or (c.topic_path and topic.startswith(c.topic_path + ".")):
                     resolved_campaign = c
                     break
         if not resolved_campaign:
-            camps = self.store.list_campaigns()
+            camps = self.store.campaigns.list()
             if camps:
                 resolved_campaign = camps[0]
 
@@ -341,12 +341,12 @@ class DojoAPI:
             try:
                 self.consolidate_learner_profile(campaign_id=resolved_campaign.id)
                 # reload campaign details
-                resolved_campaign = self.store.get_campaign(resolved_campaign.id)
+                resolved_campaign = self.store.campaigns.get(resolved_campaign.id)
             except Exception as e:
                 self.log.error(f"Error during consolidation: {e}")
 
         # 3. Handle active session lookup
-        active_sess = self.store.get_active_session()
+        active_sess = self.store.sessions.get_active()
         if active_sess and not reset:
             return {
                 "is_new": False,
@@ -355,8 +355,8 @@ class DojoAPI:
 
         if active_sess and reset:
             active_sess.status = "completed"
-            self.store.save_archived_session(active_sess)
-            self.store.delete_active_session()
+            self.store.sessions.save_archived(active_sess)
+            self.store.sessions.delete_active()
 
         # 4. Collect active topics & focus
         active_topics = []
@@ -380,11 +380,11 @@ class DojoAPI:
         # 5. Check due count / retrieve exercises
         all_ex = []
         if resolved_campaign:
-            all_ex = self.store.list_exercises(resolved_campaign.id)
+            all_ex = self.store.exercises.list(resolved_campaign.id)
         else:
             # Fallback scan all campaigns
-            for c in self.store.list_campaigns():
-                all_ex.extend(self.store.list_exercises(c.id))
+            for c in self.store.campaigns.list():
+                all_ex.extend(self.store.exercises.list(c.id))
 
         # Filter out archived / bad quality
         active_ex = [
@@ -409,10 +409,10 @@ class DojoAPI:
         # Filter by unattempted (excluding non-forgot ones)
         attempts = []
         if resolved_campaign:
-            attempts = self.store.list_attempts(resolved_campaign.id)
+            attempts = self.store.attempts.list(resolved_campaign.id)
         else:
-            for c in self.store.list_campaigns():
-                attempts.extend(self.store.list_attempts(c.id))
+            for c in self.store.campaigns.list():
+                attempts.extend(self.store.attempts.list(c.id))
 
         non_forgot_attempted_ids = {
             a.exercise_id for a in attempts if not a.skip_reason or a.skip_reason != "forgot"
@@ -477,7 +477,7 @@ class DojoAPI:
                             criteria={"min_attempts": len(diagnostic_questions), "min_accuracy": 0.0}
                         )
                     ]
-                    self.store.save_campaign(resolved_campaign)
+                    self.store.campaigns.save(resolved_campaign)
 
                     target_topic = f"{base_topic}.diagnostic"
                     active_topics = [f"{base_topic}.diagnostic"]
@@ -491,7 +491,7 @@ class DojoAPI:
                             difficulty="intermediate",
                             quality="diagnostic",
                         )
-                        self.store.save_candidate(resolved_campaign.id, candidate)
+                        self.store.candidates.save(resolved_campaign.id, candidate)
                         # Auto-promote diagnostic questions
                         self.promote_candidate(cand_id)
                 else:
@@ -532,7 +532,7 @@ class DojoAPI:
                 source_title = resolved_campaign.name
 
                 if active_source_id:
-                    full_source = self.store.get_source(active_source_id)
+                    full_source = self.store.sources.get(active_source_id)
                     if full_source:
                         source_title = full_source.title
                         source_content, start_line, end_line = generate.resolve_source_context(
@@ -551,13 +551,13 @@ class DojoAPI:
                         }]
 
                 # Collect active insights matching topic
-                active_insights = self.store.list_insights(resolved_campaign.id, filters={"status": "active"})
+                active_insights = self.store.insights.list(resolved_campaign.id, filters={"status": "active"})
                 insight_descs = []
                 for ins in active_insights:
                     if target_topic and (ins.topic_path == target_topic or (ins.topic_path and target_topic.startswith(ins.topic_path + "."))):
                         insight_descs.append(ins.description)
 
-                custom_instructions = self.store.get_config("prompt.exercise_generate_instructions")
+                custom_instructions = self.store.configs.get("prompt.exercise_generate_instructions")
                 existing_topics = self.get_all_topic_paths()
 
                 req = generate.ExerciseGenerateRequest(
@@ -592,7 +592,7 @@ class DojoAPI:
                                 answer=cand_data.get("answer"),
                                 rubric=cand_data.get("rubric"),
                             )
-                            self.store.save_candidate(resolved_campaign.id, candidate)
+                            self.store.candidates.save(resolved_campaign.id, candidate)
                             self.promote_candidate(cand_id)
                         if not val["ok"]:
                             diagnostics = val.get("diagnostics") or []
@@ -611,7 +611,7 @@ class DojoAPI:
 
             # Re-query due list
             if resolved_campaign:
-                all_ex = self.store.list_exercises(resolved_campaign.id)
+                all_ex = self.store.exercises.list(resolved_campaign.id)
             due_exercises = [
                 ex for ex in all_ex
                 if ex.quality not in ("archived", "too_easy", "too_hard", "bad_quality")
@@ -638,7 +638,7 @@ class DojoAPI:
             exercise_ids=exercise_ids,
             current_index=0,
         )
-        self.store.save_active_session(ps)
+        self.store.sessions.save_active(ps)
 
         return {
             "is_new": True,
@@ -646,17 +646,17 @@ class DojoAPI:
         }
 
     def get_active_practice_session(self) -> dict[str, Any] | None:
-        ps = self.store.get_active_session()
+        ps = self.store.sessions.get_active()
         return ps.model_dump() if ps else None
 
     def reveal_prompt(self, session_id: str | None = None) -> dict[str, Any]:
-        active = self.store.get_active_session()
+        active = self.store.sessions.get_active()
         target_session = active
         if session_id:
             if active and active.id == session_id:
                 target_session = active
             else:
-                target_session = self.store.get_archived_session(session_id)
+                target_session = self.store.sessions.get_archived(session_id)
 
         if not target_session:
             raise ValueError("no active practice session; start one first")
@@ -669,17 +669,17 @@ class DojoAPI:
         if idx >= len(exercise_ids):
             target_session.status = "completed"
             if target_session.id == active.id:
-                self.store.save_archived_session(target_session)
-                self.store.delete_active_session()
+                self.store.sessions.save_archived(target_session)
+                self.store.sessions.delete_active()
             else:
-                self.store.save_archived_session(target_session)
+                self.store.sessions.save_archived(target_session)
             raise ValueError(f"practice session {target_session.id} is completed")
 
         exercise_id = exercise_ids[idx]
         # Scan campaigns to find where exercise exists
         ex = None
-        for camp in self.store.list_campaigns():
-            ex = self.store.get_exercise(camp.id, exercise_id)
+        for camp in self.store.campaigns.list():
+            ex = self.store.exercises.get(camp.id, exercise_id)
             if ex:
                 break
 
@@ -689,9 +689,9 @@ class DojoAPI:
         started_at = datetime.now(timezone.utc).isoformat()
         target_session.current_attempt_started_at = started_at
         if active and target_session.id == active.id:
-            self.store.save_active_session(target_session)
+            self.store.sessions.save_active(target_session)
         else:
-            self.store.save_archived_session(target_session)
+            self.store.sessions.save_archived(target_session)
 
         return {
             "session_id": target_session.id,
@@ -706,13 +706,13 @@ class DojoAPI:
 
     def submit_answer(self, user_answer: str, session_id: str | None = None) -> dict[str, Any]:
         self.log.info(f"Submitting answer (session_id={session_id}, user_answer_len={len(user_answer)})")
-        active = self.store.get_active_session()
+        active = self.store.sessions.get_active()
         target_session = active
         if session_id:
             if active and active.id == session_id:
                 target_session = active
             else:
-                target_session = self.store.get_archived_session(session_id)
+                target_session = self.store.sessions.get_archived(session_id)
 
         if not target_session:
             raise ValueError("no active practice session; start one first")
@@ -725,17 +725,17 @@ class DojoAPI:
         if idx >= len(exercise_ids):
             target_session.status = "completed"
             if active and target_session.id == active.id:
-                self.store.save_archived_session(target_session)
-                self.store.delete_active_session()
+                self.store.sessions.save_archived(target_session)
+                self.store.sessions.delete_active()
             else:
-                self.store.save_archived_session(target_session)
+                self.store.sessions.save_archived(target_session)
             raise ValueError(f"practice session {target_session.id} is completed")
 
         exercise_id = exercise_ids[idx]
         ex = None
         campaign_id = None
-        for camp in self.store.list_campaigns():
-            ex = self.store.get_exercise(camp.id, exercise_id)
+        for camp in self.store.campaigns.list():
+            ex = self.store.exercises.get(camp.id, exercise_id)
             if ex:
                 campaign_id = camp.id
                 break
@@ -772,7 +772,7 @@ class DojoAPI:
             user_answer=user_ans,
             prompt=ex.prompt,
         )
-        self.store.save_attempt(campaign_id, attempt)
+        self.store.attempts.save(campaign_id, attempt)
 
         next_index = idx + 1
         is_completed = next_index >= len(exercise_ids)
@@ -782,12 +782,12 @@ class DojoAPI:
 
         if active and target_session.id == active.id:
             if is_completed:
-                self.store.save_archived_session(target_session)
-                self.store.delete_active_session()
+                self.store.sessions.save_archived(target_session)
+                self.store.sessions.delete_active()
             else:
-                self.store.save_active_session(target_session)
+                self.store.sessions.save_active(target_session)
         else:
-            self.store.save_archived_session(target_session)
+            self.store.sessions.save_archived(target_session)
 
         self.log.info(f"Answer submitted successfully: session_id={target_session.id}, exercise_id={exercise_id}, score={score}, latency={latency:.2f}s, status={target_session.status}")
 
@@ -809,8 +809,8 @@ class DojoAPI:
     # ==========================================
     def get_progress(self) -> dict[str, Any]:
         attempts = []
-        for camp in self.store.list_campaigns():
-            attempts.extend(self.store.list_attempts(camp.id))
+        for camp in self.store.campaigns.list():
+            attempts.extend(self.store.attempts.list(camp.id))
 
         if not attempts:
             return {
@@ -835,8 +835,8 @@ class DojoAPI:
 
     def get_due_count(self, topic: str | None = None) -> int:
         all_ex = []
-        for c in self.store.list_campaigns():
-            all_ex.extend(self.store.list_exercises(c.id))
+        for c in self.store.campaigns.list():
+            all_ex.extend(self.store.exercises.list(c.id))
 
         active_ex = [
             ex for ex in all_ex
@@ -852,8 +852,8 @@ class DojoAPI:
             filtered = active_ex
 
         attempts = []
-        for c in self.store.list_campaigns():
-            attempts.extend(self.store.list_attempts(c.id))
+        for c in self.store.campaigns.list():
+            attempts.extend(self.store.attempts.list(c.id))
 
         non_forgot_attempted_ids = {
             a.exercise_id for a in attempts if not a.skip_reason or a.skip_reason != "forgot"
@@ -868,14 +868,14 @@ class DojoAPI:
     def get_learner_hypotheses(self, status: str = "active") -> list[dict[str, Any]]:
         # Map to insights
         insights = []
-        for camp in self.store.list_campaigns():
-            insights.extend(self.store.list_insights(camp.id, filters={"status": status}))
+        for camp in self.store.campaigns.list():
+            insights.extend(self.store.insights.list(camp.id, filters={"status": status}))
         return [ins.model_dump() for ins in insights]
 
     def save_learner_hypothesis(self, key: str, description: str, status: str = "active") -> dict[str, Any]:
         # Scoped to first campaign or default
         campaign_id = "default"
-        camps = self.store.list_campaigns()
+        camps = self.store.campaigns.list()
         if camps:
             campaign_id = camps[0].id
 
@@ -886,18 +886,18 @@ class DojoAPI:
             description=description,
             status=status,
         )
-        self.store.save_insight(campaign_id, insight)
+        self.store.insights.save(campaign_id, insight)
         return insight.model_dump()
 
     def skip_active_exercise(self, reason: str, feedback: str | None = None, session_id: str | None = None) -> dict[str, Any]:
         self.log.info(f"Skipping active exercise (session_id={session_id}, reason={reason})")
-        active = self.store.get_active_session()
+        active = self.store.sessions.get_active()
         target_session = active
         if session_id:
             if active and active.id == session_id:
                 target_session = active
             else:
-                target_session = self.store.get_archived_session(session_id)
+                target_session = self.store.sessions.get_archived(session_id)
 
         if not target_session:
             raise ValueError("no active practice session; start one first")
@@ -910,17 +910,17 @@ class DojoAPI:
         if idx >= len(exercise_ids):
             target_session.status = "completed"
             if active and target_session.id == active.id:
-                self.store.save_archived_session(target_session)
-                self.store.delete_active_session()
+                self.store.sessions.save_archived(target_session)
+                self.store.sessions.delete_active()
             else:
-                self.store.save_archived_session(target_session)
+                self.store.sessions.save_archived(target_session)
             raise ValueError(f"practice session {target_session.id} is completed")
 
         exercise_id = exercise_ids[idx]
         ex = None
         campaign_id = None
-        for camp in self.store.list_campaigns():
-            ex = self.store.get_exercise(camp.id, exercise_id)
+        for camp in self.store.campaigns.list():
+            ex = self.store.exercises.get(camp.id, exercise_id)
             if ex:
                 campaign_id = camp.id
                 break
@@ -951,7 +951,7 @@ class DojoAPI:
             feedback=feedback,
             prompt=ex.prompt,
         )
-        self.store.save_attempt(campaign_id, attempt)
+        self.store.attempts.save(campaign_id, attempt)
 
         # Update exercise quality based on skip reason
         if reason == "too_easy":
@@ -960,7 +960,7 @@ class DojoAPI:
             ex.quality = "too_hard"
         elif reason == "bad_quality":
             ex.quality = "bad_quality"
-        self.store.save_exercise(campaign_id, ex)
+        self.store.exercises.save(campaign_id, ex)
 
         next_index = idx + 1
         is_completed = next_index >= len(exercise_ids)
@@ -970,12 +970,12 @@ class DojoAPI:
 
         if active and target_session.id == active.id:
             if is_completed:
-                self.store.save_archived_session(target_session)
-                self.store.delete_active_session()
+                self.store.sessions.save_archived(target_session)
+                self.store.sessions.delete_active()
             else:
-                self.store.save_active_session(target_session)
+                self.store.sessions.save_active(target_session)
         else:
-            self.store.save_archived_session(target_session)
+            self.store.sessions.save_archived(target_session)
 
         return {
             "session_id": target_session.id,
@@ -991,8 +991,8 @@ class DojoAPI:
     def correct_last_attempt(self, score: float, feedback: str | None = None) -> dict[str, Any]:
         # Resolve latest attempt across all campaigns
         all_attempts = []
-        for camp in self.store.list_campaigns():
-            all_attempts.extend(self.store.list_attempts(camp.id))
+        for camp in self.store.campaigns.list():
+            all_attempts.extend(self.store.attempts.list(camp.id))
 
         if not all_attempts:
             raise ValueError("no recent attempts found to correct")
@@ -1006,7 +1006,7 @@ class DojoAPI:
         latest_att.score = score
         if feedback is not None:
             latest_att.feedback = feedback
-        self.store.save_attempt(campaign_id, latest_att)
+        self.store.attempts.save(campaign_id, latest_att)
 
         return latest_att.model_dump()
 
@@ -1015,13 +1015,13 @@ class DojoAPI:
         # Resolve target campaign
         resolved_id = campaign_id
         if not resolved_id:
-            camps = self.store.list_campaigns()
+            camps = self.store.campaigns.list()
             if camps:
                 resolved_id = camps[0].id
             else:
                 resolved_id = "default"
 
-        camp = self.store.get_campaign(resolved_id)
+        camp = self.store.campaigns.get(resolved_id)
         topic_path = camp.topic_path if camp else None
 
         insight_id = f"ins_feedback_{uuid.uuid4().hex[:8]}"
@@ -1033,7 +1033,7 @@ class DojoAPI:
             status="active",
             topic_path=topic_path,
         )
-        self.store.save_insight(resolved_id, insight)
+        self.store.insights.save(resolved_id, insight)
         return insight.model_dump()
 
     # ==========================================
@@ -1045,7 +1045,7 @@ class DojoAPI:
 
     def consolidate_learner_profile(self, campaign_id: str | None = None) -> dict[str, Any]:
         if campaign_id is None:
-            campaigns = self.store.list_campaigns()
+            campaigns = self.store.campaigns.list()
             if not campaigns:
                 return self._consolidate_global_fallback()
             results = []
@@ -1068,15 +1068,15 @@ class DojoAPI:
     def _consolidate_global_fallback(self) -> dict[str, Any]:
         # Collect recent attempts across all campaigns
         attempts = []
-        for camp in self.store.list_campaigns():
-            attempts.extend(self.store.list_attempts(camp.id))
+        for camp in self.store.campaigns.list():
+            attempts.extend(self.store.attempts.list(camp.id))
 
         attempts = sorted(attempts, key=lambda x: x.created_at, reverse=True)[:20]
 
         # Scan active insights
         active_insights = []
-        for camp in self.store.list_campaigns():
-            active_insights.extend(self.store.list_insights(camp.id, filters={"status": "active"}))
+        for camp in self.store.campaigns.list():
+            active_insights.extend(self.store.insights.list(camp.id, filters={"status": "active"}))
 
         formatted_attempts = []
         for a in attempts:
@@ -1090,7 +1090,7 @@ class DojoAPI:
                 "created_at": a.created_at,
             })
 
-        custom_consolidate_instructions = self.store.get_config("prompt.profile_consolidate_instructions")
+        custom_consolidate_instructions = self.store.configs.get("prompt.profile_consolidate_instructions")
         default_instructions = (
             "Analyze the learner's recent practice attempts, skip reasons, and feedback. "
             "Pay close attention to user responses to diagnostic/pedagogical questions (indicated by free-form answers targeting learning style/goals) to extract goals, preferences, prior knowledge, or misconceptions. "
@@ -1130,7 +1130,7 @@ class DojoAPI:
 
             # Resolve active insights no longer reported
             campaign_id = "default"
-            camps = self.store.list_campaigns()
+            camps = self.store.campaigns.list()
             if camps:
                 campaign_id = camps[0].id
 
@@ -1139,7 +1139,7 @@ class DojoAPI:
                     existing_ins.status = "resolved"
                     existing_ins.updated_at = datetime.now(timezone.utc).isoformat()
                     # Resolve physically in store
-                    self.store.save_insight(campaign_id, existing_ins)
+                    self.store.insights.save(campaign_id, existing_ins)
 
             for idx, ins_data in enumerate(insights_to_save):
                 if not isinstance(ins_data, dict):
@@ -1162,7 +1162,7 @@ class DojoAPI:
                     # Deduplication / Merge: append sources and update description
                     existing_ins.description = description
                     existing_ins.updated_at = datetime.now(timezone.utc).isoformat()
-                    self.store.save_insight(campaign_id, existing_ins)
+                    self.store.insights.save(campaign_id, existing_ins)
                     saved_insights.append(existing_ins)
                 else:
                     insight_id = f"ins_{uuid.uuid4().hex[:8]}"
@@ -1172,13 +1172,13 @@ class DojoAPI:
                         description=description,
                         status="active"
                     )
-                    self.store.save_insight(campaign_id, new_ins)
+                    self.store.insights.save(campaign_id, new_ins)
                     saved_insights.append(new_ins)
 
             # Mark processed attempts as reflected
             for a in attempts:
                 a.reflected = True
-                self.store.save_attempt(campaign_id, a)
+                self.store.attempts.save(campaign_id, a)
 
         else:
             diagnostics.append(result.error or "connector execution failed")
@@ -1221,13 +1221,13 @@ class DojoAPI:
                 advanced = True
                 continue
 
-            attempts = self.store.list_attempts(campaign.id)
+            attempts = self.store.attempts.list(campaign.id)
             phase_attempts = []
             for a in attempts:
                 if a.skip_reason and a.skip_reason != "forgot":
                     continue
                 # Load corresponding exercise
-                ex = self.store.get_exercise(campaign.id, a.exercise_id)
+                ex = self.store.exercises.get(campaign.id, a.exercise_id)
                 if ex:
                     for t in phase_topics:
                         if ex.topic_path == t or ex.topic_path.startswith(t + "."):
@@ -1254,7 +1254,7 @@ class DojoAPI:
                 "average_latency_seconds": sum(a.latency_seconds for a in phase_attempts) / attempts_count if attempts_count > 0 else 0.0
             }
 
-            active_insights = self.store.list_insights(campaign.id, filters={"status": "active"})
+            active_insights = self.store.insights.list(campaign.id, filters={"status": "active"})
             insights_snapshot = [{"key": i.key, "description": i.description} for i in active_insights]
 
             journal_entry = {
@@ -1273,10 +1273,10 @@ class DojoAPI:
 
         if advanced:
             campaign.updated_at = datetime.now(timezone.utc).isoformat()
-            self.store.save_campaign(campaign)
+            self.store.campaigns.save(campaign)
 
     def _consolidate_single_campaign(self, campaign_id: str) -> dict[str, Any]:
-        campaign = self.store.get_campaign(campaign_id)
+        campaign = self.store.campaigns.get(campaign_id)
         if not campaign:
             raise ValueError(f"Campaign {campaign_id} not found")
 
@@ -1287,11 +1287,11 @@ class DojoAPI:
         topic_path = campaign.topic_path
 
         # 1. Query unreflected attempts (Short-term working context)
-        all_attempts = self.store.list_attempts(campaign_id)
+        all_attempts = self.store.attempts.list(campaign_id)
         unreflected_attempts = [a for a in all_attempts if not a.reflected]
 
         # 2. Query active user feedback insights
-        feedback_insights = self.store.list_insights(campaign_id, filters={"status": "active"})
+        feedback_insights = self.store.insights.list(campaign_id, filters={"status": "active"})
         user_feedback_insights = [i for i in feedback_insights if i.key.startswith("feedback.user.")]
 
         has_unmapped_source = any(not link.get("topics") for link in campaign.sources_config)
@@ -1327,7 +1327,7 @@ class DojoAPI:
             })
 
         # Get active insights
-        active_insights = self.store.list_insights(campaign_id, filters={"status": "active"})
+        active_insights = self.store.insights.list(campaign_id, filters={"status": "active"})
         insight_descriptions = []
         for h in active_insights:
             desc = h.description
@@ -1368,7 +1368,7 @@ class DojoAPI:
         linked_sources = []
         for link in campaign.sources_config:
             sid = link["source_id"]
-            src_rec = self.store.get_source(sid)
+            src_rec = self.store.sources.get(sid)
             if src_rec:
                 headings = generate.parse_markdown_headings(src_rec.content)
                 outline = [f"{'#' * h['level']} {h['title']}" for h in headings]
@@ -1381,7 +1381,7 @@ class DojoAPI:
                 })
 
         # Load consolidation prompts
-        custom_consolidate_instructions = self.store.get_config("prompt.profile_consolidate_instructions")
+        custom_consolidate_instructions = self.store.configs.get("prompt.profile_consolidate_instructions")
         from .schemas import get_schema_instruction, ProfileConsolidateResponse
         schema_instruction = get_schema_instruction("profile.consolidate")
 
@@ -1470,7 +1470,7 @@ class DojoAPI:
                 for a in all_attempts:
                     if a.skip_reason and a.skip_reason != "forgot":
                         continue
-                    ex = self.store.get_exercise(campaign.id, a.exercise_id)
+                    ex = self.store.exercises.get(campaign.id, a.exercise_id)
                     if ex:
                         for t in phase_topics:
                             if ex.topic_path == t or ex.topic_path.startswith(t + "."):
@@ -1486,7 +1486,7 @@ class DojoAPI:
                     "average_latency_seconds": sum(a.latency_seconds for a in phase_attempts) / attempts_count if attempts_count > 0 else 0.0
                 }
 
-                current_insights = self.store.list_insights(campaign.id, filters={"status": "active"})
+                current_insights = self.store.insights.list(campaign.id, filters={"status": "active"})
                 insights_snapshot = [{"key": i.key, "description": i.description} for i in current_insights]
 
                 entry_to_save = {
@@ -1512,7 +1512,7 @@ class DojoAPI:
                 if existing_ins.key not in consolidated_keys:
                     existing_ins.status = "resolved"
                     existing_ins.updated_at = datetime.now(timezone.utc).isoformat()
-                    self.store.save_insight(campaign_id, existing_ins)
+                    self.store.insights.save(campaign_id, existing_ins)
 
             # Merge & Append new evidence paths to existing active insights
             for idx, ins_data in enumerate(insights_to_save):
@@ -1550,7 +1550,7 @@ class DojoAPI:
                     existing_ins.sources = merged_sources
                     existing_ins.description = description
                     existing_ins.updated_at = datetime.now(timezone.utc).isoformat()
-                    self.store.save_insight(campaign_id, existing_ins)
+                    self.store.insights.save(campaign_id, existing_ins)
                     saved_insights.append(existing_ins)
                 else:
                     insight_id = f"ins_{uuid.uuid4().hex[:8]}"
@@ -1561,15 +1561,15 @@ class DojoAPI:
                         description=description,
                         status="active"
                     )
-                    self.store.save_insight(campaign_id, new_ins)
+                    self.store.insights.save(campaign_id, new_ins)
                     saved_insights.append(new_ins)
 
             # Mark processed attempts as reflected
             for a in unreflected_attempts:
                 a.reflected = True
-                self.store.save_attempt(campaign_id, a)
+                self.store.attempts.save(campaign_id, a)
 
-            self.store.save_campaign(campaign)
+            self.store.campaigns.save(campaign)
         else:
             diagnostics.append(result.error or "connector execution failed")
 
@@ -1585,7 +1585,7 @@ class DojoAPI:
         if run_path and saved_insights:
             for ins in saved_insights:
                 ins.generation_run = run_path
-                self.store.save_insight(campaign_id, ins)
+                self.store.insights.save(campaign_id, ins)
 
         if result.status != "ok":
             raise ValueError(f"Profile consolidation failed: {result.error or 'connector execution failed'}")
@@ -1628,14 +1628,14 @@ class DojoAPI:
     # Config Values Operations
     # ==========================================
     def save_config(self, key: str, value: str) -> dict[str, Any]:
-        self.store.set_config(key, value)
+        self.store.configs.set(key, value)
         return {"key": key, "value": value}
 
     def get_config(self, key: str) -> str | None:
-        return self.store.get_config(key)
+        return self.store.configs.get(key)
 
     def list_configs(self) -> dict[str, str]:
-        config = self.store._read_config()
+        config = self.store.configs._read_config()
         return {str(k): str(v) for k, v in config.items()}
 
     # ==========================================
@@ -1643,10 +1643,10 @@ class DojoAPI:
     # ==========================================
     def get_all_topic_paths(self) -> list[str]:
         topics = set()
-        for camp in self.store.list_campaigns():
+        for camp in self.store.campaigns.list():
             if camp.topic_path:
                 topics.add(camp.topic_path)
-            for ex in self.store.list_exercises(camp.id):
+            for ex in self.store.exercises.list(camp.id):
                 topics.add(ex.topic_path)
         return sorted(list(topics))
 
@@ -1724,13 +1724,13 @@ class DojoAPI:
             }],
             syllabus_markdown=syllabus_markdown or f"# {name}\n\nInitialized study program for {topic_path}.",
         )
-        self.store.save_campaign(campaign)
+        self.store.campaigns.save(campaign)
         return campaign.model_dump()
 
     def attach_source_to_campaign(
         self, campaign_id: str, source_id: str, purpose: str = "Reference materials"
     ) -> dict[str, Any]:
-        campaign = self.store.get_campaign(campaign_id)
+        campaign = self.store.campaigns.get(campaign_id)
         if not campaign:
             raise ValueError(f"Campaign {campaign_id} not found")
 
@@ -1745,18 +1745,18 @@ class DojoAPI:
         if not linked:
             campaign.sources_config.append({"source_id": source_id, "purpose": purpose, "topics": []})
 
-        self.store.save_campaign(campaign)
+        self.store.campaigns.save(campaign)
         return campaign.model_dump()
 
     def get_campaign_history(self, campaign_id: str | None = None) -> dict[str, Any]:
         # Return history of pedagogical changes
         campaigns = []
         if campaign_id:
-            c = self.store.get_campaign(campaign_id)
+            c = self.store.campaigns.get(campaign_id)
             if c:
                 campaigns.append(c)
         else:
-            campaigns = self.store.list_campaigns()
+            campaigns = self.store.campaigns.list()
 
         history = []
         for c in campaigns:
@@ -1777,7 +1777,7 @@ class DojoAPI:
     def export_campaign_syllabus(
         self, campaign_id: str, format: str = "pdf", output_path: str | Path | None = None
     ) -> dict[str, Any]:
-        campaign = self.store.get_campaign(campaign_id)
+        campaign = self.store.campaigns.get(campaign_id)
         if not campaign:
             raise ValueError(f"Campaign {campaign_id} not found")
 

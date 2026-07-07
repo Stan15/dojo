@@ -92,7 +92,7 @@ def cmd_connect_ai_command(args: argparse.Namespace) -> int:
     store = DojoStore(_db_path(args))
     
     # Check if connector exists
-    existing = store.get_connector(args.name)
+    existing = store.configs.get_connector(args.name)
     if existing and not getattr(args, "replace", False):
         raise SystemExit(f"AI connector '{args.name}' already exists. Use --replace to overwrite.")
 
@@ -108,14 +108,14 @@ def cmd_connect_ai_command(args: argparse.Namespace) -> int:
 
     if getattr(args, "default", False):
         # Set config key default_connector to this connector
-        store.set_config("default_connector", args.name)
+        store.configs.set("default_connector", args.name)
         # Mark all other connectors as not default
-        for c in store.list_connectors():
+        for c in store.configs.list_connectors():
             if c.get("name") != args.name and c.get("is_default"):
                 c["is_default"] = False
-                store.save_connector(c["name"], c)
+                store.configs.save_connector(c["name"], c)
 
-    store.save_connector(args.name, connector_data)
+    store.configs.save_connector(args.name, connector_data)
     _print_json(_render(connector_data, next_action=f"dojo connect ai test {args.name}"))
     return 0
 
@@ -435,13 +435,13 @@ def cmd_queue(args: argparse.Namespace) -> int:
 
 def cmd_connect_ai_list(args: argparse.Namespace) -> int:
     store = DojoStore(_db_path(args))
-    _print_json(store.list_connectors())
+    _print_json(store.configs.list_connectors())
     return 0
 
 
 def cmd_connect_ai_show(args: argparse.Namespace) -> int:
     store = DojoStore(_db_path(args))
-    connector = store.get_connector(args.name)
+    connector = store.configs.get_connector(args.name)
     if connector is None:
         raise SystemExit(f"unknown AI connector: {args.name}")
     _print_json(_render(connector, next_action=f"dojo connect ai test {connector['name']}"))
@@ -450,20 +450,20 @@ def cmd_connect_ai_show(args: argparse.Namespace) -> int:
 
 def cmd_connect_ai_use(args: argparse.Namespace) -> int:
     store = DojoStore(_db_path(args))
-    connector = store.get_connector(args.name)
+    connector = store.configs.get_connector(args.name)
     if connector is None:
         raise SystemExit(f"unknown AI connector: {args.name}")
 
-    store.set_config("default_connector", args.name)
+    store.configs.set("default_connector", args.name)
     # Mark as default and save
     connector["is_default"] = True
-    store.save_connector(args.name, connector)
+    store.configs.save_connector(args.name, connector)
 
     # Disable default on others
-    for c in store.list_connectors():
+    for c in store.configs.list_connectors():
         if c.get("name") != args.name and c.get("is_default"):
             c["is_default"] = False
-            store.save_connector(c["name"], c)
+            store.configs.save_connector(c["name"], c)
 
     _print_json(_render(connector, next_action=f"dojo connect ai test {connector['name']}"))
     return 0
@@ -471,15 +471,15 @@ def cmd_connect_ai_use(args: argparse.Namespace) -> int:
 
 def cmd_connect_ai_remove(args: argparse.Namespace) -> int:
     store = DojoStore(_db_path(args))
-    connector = store.get_connector(args.name)
+    connector = store.configs.get_connector(args.name)
     if connector is None:
         raise SystemExit(f"unknown AI connector: {args.name}")
 
-    is_default = (store.get_config("default_connector") == args.name) or connector.get("is_default", False)
+    is_default = (store.configs.get("default_connector") == args.name) or connector.get("is_default", False)
     if is_default and not getattr(args, "force", False):
         raise SystemExit("cannot remove default connector. Set another connector as default first, or run with --force")
 
-    store.delete_connector(args.name)
+    store.configs.delete_connector(args.name)
     _print_json({"removed": args.name, "was_default": is_default})
     return 0
 
@@ -494,7 +494,7 @@ def cmd_connect_ai_test(args: argparse.Namespace) -> int:
             raise SystemExit("no default AI connector configured")
         connector_name = default_conn["name"]
 
-    connector = store.get_connector(connector_name)
+    connector = store.configs.get_connector(connector_name)
     if connector is None:
         raise SystemExit(f"unknown AI connector: {connector_name}")
 
@@ -509,7 +509,7 @@ def cmd_connect_ai_test(args: argparse.Namespace) -> int:
     # Update connector test outcome
     connector["test_status"] = result.status
     connector["test_summary"] = f"Success (duration: {result.duration_seconds:.2f}s)" if result.status == "ok" else f"Failed: {result.error or 'unknown error'}"
-    store.save_connector(connector_name, connector)
+    store.configs.save_connector(connector_name, connector)
 
     output_data = {
         "connector_name": connector_name,
@@ -801,7 +801,7 @@ def _is_owned_by_dojo(target_path: Path) -> bool:
 
 def cmd_install(args: argparse.Namespace) -> int:
     store = DojoStore(_db_path(args))
-    results = store.run_doctor()
+    results = store.doctor.run()
     all_errors = [err for errs in results.values() for err in errs]
     if all_errors and not getattr(args, "force", False):
         if _use_json(args):
@@ -950,8 +950,8 @@ def cmd_install(args: argparse.Namespace) -> int:
         "is_default": True,
     }
     
-    store.save_connector(agent, connector_data)
-    store.set_config("default_connector", agent)
+    store.configs.save_connector(agent, connector_data)
+    store.configs.set("default_connector", agent)
 
     output = {
         "ok": True,
@@ -980,7 +980,7 @@ def cmd_install(args: argparse.Namespace) -> int:
 
 def cmd_doctor(args: argparse.Namespace) -> int:
     store = DojoStore(_db_path(args))
-    results = store.run_doctor()
+    results = store.doctor.run()
     
     # Flatten all errors to see if there are any failures
     all_errors = [err for errs in results.values() for err in errs]
@@ -1268,7 +1268,7 @@ def cmd_campaign_create(args: argparse.Namespace) -> int:
         campaign_id = res["id"]
 
         # 4. Overwrite to set default diagnostic configuration
-        campaign = api.store.get_campaign(campaign_id)
+        campaign = api.store.campaigns.get(campaign_id)
         if campaign:
             campaign.strategy_profile = {
                 "mode": "diagnostic",
@@ -1283,7 +1283,7 @@ def cmd_campaign_create(args: argparse.Namespace) -> int:
                     focus="Onboarding/Diagnostic calibration phase"
                 )
             ]
-            api.store.save_campaign(campaign)
+            api.store.campaigns.save(campaign)
 
         # 5. Start practice session (onboarding questions JIT trigger)
         session_id = None
@@ -1296,7 +1296,7 @@ def cmd_campaign_create(args: argparse.Namespace) -> int:
             exercise_ids = session["exercise_ids"]
 
             # Fetch campaign details after JIT update
-            updated_campaign = api.store.get_campaign(campaign_id)
+            updated_campaign = api.store.campaigns.get(campaign_id)
             campaign_name = updated_campaign.name if updated_campaign else args.goal
             campaign_topic = updated_campaign.topic_path if updated_campaign else temp_slug
 
@@ -1332,7 +1332,7 @@ def cmd_campaign_create(args: argparse.Namespace) -> int:
             api.consolidate_learner_profile(campaign_id=campaign_id)
 
             # Fetch finalized details
-            camp_data = api.store.get_campaign(campaign_id)
+            camp_data = api.store.campaigns.get(campaign_id)
 
             if camp_data:
                 if camp_data.syllabus_markdown:
@@ -1390,7 +1390,7 @@ def cmd_campaign_create(args: argparse.Namespace) -> int:
             if campaign_dir.exists():
                 shutil.rmtree(campaign_dir)
             if session_id:
-                api.store.delete_active_session()
+                api.store.sessions.delete_active()
         except Exception as cleanup_exc:
             api.log.error(f"Failed to clean up files during campaign creation cancel: {cleanup_exc}")
 
@@ -1427,7 +1427,7 @@ def cmd_campaign_link(args: argparse.Namespace) -> int:
             })
         else:
             console.print("[bold green]Source topics mapped successfully.[/bold green]")
-            camp = api.store.get_campaign(args.campaign_id)
+            camp = api.store.campaigns.get(args.campaign_id)
 
             if camp and camp.sources_config:
                 table = Table(title="Linked Campaign Sources")
@@ -1499,7 +1499,7 @@ def cmd_campaign_export(args: argparse.Namespace) -> int:
     output_path = args.output
     if not output_path:
         try:
-            camp = api.store.get_campaign(campaign_id)
+            camp = api.store.campaigns.get(campaign_id)
             if not camp:
                 raise ValueError(f"Campaign '{campaign_id}' not found")
             name_slug = "".join(c for c in camp.name.lower() if c.isalnum() or c == " ").strip().replace(" ", "_")[:30]
