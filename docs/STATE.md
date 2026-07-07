@@ -31,12 +31,22 @@ until they say "continue".
 
 ## Done this session
 
-- Adopted `agentic-dev-method`; created this scaffolding (CLAUDE_START, STATE,
-  INSIGHTS, OPEN-PROBLEMS, QUESTIONS); established the test gate.
-- Wrote the authoritative v1 design: `docs/design/blueprint.md`.
-- Recorded the three governing design decisions as ADR 010 (harness-first task
-  fulfillment), ADR 011 (store protocol & markdown contract), ADR 012 (deterministic
-  pedagogy core).
+- Adopted `agentic-dev-method` (incl. updated §0 philosophy); created scaffolding
+  (CLAUDE.md → CLAUDE_START, STATE, INSIGHTS, OPEN-PROBLEMS, QUESTIONS); test gate set.
+- Wrote the authoritative v1 design: `docs/design/blueprint.md` — invariants I1–I10,
+  correctness arguments for the three compounding zones (scheduler, store
+  round-trip, task boundary), milestones M0–M6 with named tests and delegation.
+- ADRs 010–013: harness-first task fulfillment (inverts the connector model);
+  store protocol with markdown contract; deterministic pedagogy core (Tier-1
+  allocation ≠ memory, state on stable nodes); frictionless capture with validated
+  routing.
+- `docs/design/prompts.md`: all five task prompts crafted for unknown-caliber
+  models, with payload byte budgets and the floor-not-ceiling neutrality principle
+  (fulfiller profiles scale budgets; bounded note fields as strong-model
+  side-channel).
+- Product-owner requirements folded in this session: quick capture ("I just
+  learned X"), two-tier scheduling, token hyper-awareness, model-strength
+  neutrality.
 
 ## NEXT ACTIONS (in order)
 
