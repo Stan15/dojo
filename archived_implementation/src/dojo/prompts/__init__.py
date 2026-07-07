@@ -39,6 +39,7 @@ def load_prompt(filename: str, placeholders: dict[str, str]) -> str:
     """
     template_text = None
     
+    # 1. Resolve relative path (supporting PyInstaller _MEIPASS when frozen)
     if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
         base_path = Path(sys._MEIPASS) / "dojo" / "prompts"
     else:
@@ -56,13 +57,16 @@ def load_prompt(filename: str, placeholders: dict[str, str]) -> str:
         if template_text is None:
             raise FileNotFoundError(f"Prompt template {filename} not found and no fallback exists.")
 
+    # 2. Extract and verify placeholders in template
     found_placeholders = re.findall(r"\{\{\s*(\w+)\s*\}\}", template_text)
     
+    # 3. Perform string replacement
     result_text = template_text
     for key, val in placeholders.items():
         placeholder_pat = re.compile(r"\{\{\s*" + re.escape(key) + r"\s*\}\}")
         result_text = placeholder_pat.sub(val, result_text)
         
+    # Verify that all found placeholders were replaced
     remaining_placeholders = re.findall(r"\{\{\s*(\w+)\s*\}\}", result_text)
     if remaining_placeholders:
         warnings.warn(

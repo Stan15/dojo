@@ -16,8 +16,12 @@ As Dojo expands to support multiple active campaigns interleaved within a single
 ### 1. Campaign-Scoped Calibration
 All personalization state, goals, and scaffolding parameters are stored campaign-locally. Dojo does not maintain a global, cross-campaign LLM learner profile.
 
-### 2. Consolidator-Led Strategy
-The consolidator (`dojo admin consolidate`) owns pedagogical planning. It analyzes attempts and feedback, refines the Campaign's `mission`, updates its `strategy_profile` (mode, difficulty, scaffolding), and writes transient hypotheses. The JIT generator is a pure executor, following the Campaign's strategy profile.
+### 2. Consolidator-Led Strategy (Reflection)
+The consolidator (now renamed to "Reflection", CLI: `dojo reflect`) owns pedagogical planning. It analyzes attempts and feedback, refines the Campaign's `mission`, updates its `strategy_profile` (mode, difficulty, scaffolding), and writes transient insights. The JIT generator is a pure executor, following the Campaign's strategy profile.
+
+To prevent slow-developing mistake patterns (e.g., repeating a specific error once every three sessions) from being discarded as isolated slips, the reflection engine implements a **two-tiered memory model**:
+*   **Short-term working context**: The LLM is fed all *unreflected* attempts along with a *sliding window of recent history* (e.g., the last 15–20 attempts, regardless of whether they have already been consolidated). This allows cross-session pattern recognition of slow-occurring trends.
+*   **Long-term active state**: The list of persistent, active `Insights` is fed into every reflection run. The LLM can confirm, refine, resolve, or append new evidence to these persistent insights rather than creating duplicates.
 
 ### 3. "Raw-to-Refined" Feedback via `LearnerHypothesis`
 Natural-language user feedback logged via `dojo feedback "<comment>"` is saved in the `LearnerHypothesis` table with key `feedback.user.<uuid>`, the campaign's `topic_path`, and `status="active"`. 

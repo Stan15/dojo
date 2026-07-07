@@ -11,10 +11,9 @@ import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Callable
-from contextlib import contextmanager
 
-from .store import DojoStore
-from .logger import get_logger
+from . import db
+from . import logger
 
 try:
     import termios
@@ -50,30 +49,19 @@ def render_task_request_prompt(request: dict[str, Any]) -> str:
     return f"Task: {task}\n\nRequest JSON:\n{json.dumps(request, indent=2, sort_keys=True)}\n"
 
 
-def _default_connector(store: DojoStore) -> dict[str, Any] | None:
-    # 1. Check config default_connector
-    default_name = store.get_config_value("default_connector")
-    if default_name:
-        conn = store.get_connector(default_name)
-        if conn:
-            return conn
-
-    # 2. Check for is_default: true
-    conns = store.list_connectors()
-    for conn in conns:
-        if conn.get("is_default"):
-            return conn
-
-    # 3. Use the first one
-    if conns:
-        return conns[0]
+def _default_connector(conn) -> dict[str, Any] | None:
+    for connector in db.list_ai_connectors(conn):
+        if connector.get("is_default"):
+            return connector
     return None
 
 
-def _resolve_connector(store: DojoStore, connector_name: str | None) -> dict[str, Any] | None:
-    if connector_name:
-        return store.get_connector(connector_name)
-    return _default_connector(store)
+def _resolve_connector(db_path: str | Path | None, connector_name: str | None) -> dict[str, Any] | None:
+    db.init_db(db_path)
+    with db.connect(db_path) as conn:
+        if connector_name:
+            return db.get_ai_connector(conn, connector_name)
+        return _default_connector(conn)
 
 
 def _failure(*, request: dict[str, Any], error: str, connector: dict[str, Any] | None = None, duration_seconds: float = 0.0) -> CommandConnectorResult:
@@ -111,11 +99,14 @@ def _parse_stdout(stdout: str) -> tuple[str, Any | None, str | None]:
     if not stripped:
         return "empty", None, "stdout was empty"
 
+    # Try direct JSON parsing first
     try:
         return "json", json.loads(stripped), None
     except json.JSONDecodeError:
         pass
 
+    # Try finding JSON within markdown code blocks or text
+    import re
     pattern = re.compile(r"```(?:json)?\s*(\{.*?\})\s*```", re.DOTALL)
     match = pattern.search(stripped)
     if match:
@@ -124,6 +115,7 @@ def _parse_stdout(stdout: str) -> tuple[str, Any | None, str | None]:
         except json.JSONDecodeError:
             pass
 
+    # Fallback: find the first '{' and last '}'
     first_brace = stripped.find("{")
     last_brace = stripped.rfind("}")
     if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
@@ -144,6 +136,9 @@ def _text(value: str | bytes | None) -> str:
     return value
 
 
+# Log parsing/tailing helpers deleted
+
+
 class ProgressManager:
     def __init__(self, tty_enabled: bool, stream_enabled: bool, task_name: str):
         self.tty_enabled = tty_enabled
@@ -154,6 +149,7 @@ class ProgressManager:
         self.status = None
         self.old_termios = None
 
+        # Claude-style semi-humoric, context-aware phrases without ellipses
         if "campaign" in task_name:
             self.phrases = [
                 "Consulting the silicon oracle",
@@ -171,7 +167,7 @@ class ProgressManager:
                 "Generating cognitive friction",
                 "Polishing the feedback loop",
             ]
-        elif "consolidate" in task_name or "profile" in task_name or "reflect" in task_name:
+        elif "consolidate" in task_name or "profile" in task_name:
             self.phrases = [
                 "Calculating retention decay curves",
                 "Hunting down your memory weak spots",
@@ -215,6 +211,7 @@ class ProgressManager:
     def start_cycling(self) -> None:
         self.cycle_stop_event.clear()
 
+        # Hide cursor and disable terminal echo / line buffering during LLM execution
         if self.tty_enabled:
             sys.stderr.write("\x1b[?25l")
             sys.stderr.flush()
@@ -235,6 +232,7 @@ class ProgressManager:
             phrase = self.phrases[0]
             dots = 0
             while not self.cycle_stop_event.is_set():
+                # Every 8 iterations (4 seconds), change phrase
                 if dots > 0 and dots % 8 == 0:
                     if len(self.phrases) > 1:
                         choices = [p for p in self.phrases if p != last_phrase]
@@ -253,6 +251,7 @@ class ProgressManager:
                 self.update(display_text)
                 dots += 1
 
+                # Sleep in 100ms chunks to respond quickly to stop event
                 for _ in range(5):
                     time.sleep(0.1)
                     if self.cycle_stop_event.is_set():
@@ -272,6 +271,7 @@ class ProgressManager:
                 pass
             self.cycle_thread = None
 
+        # Show cursor and restore terminal settings
         if self.tty_enabled:
             sys.stderr.write("\x1b[?25h")
             sys.stderr.flush()
@@ -292,24 +292,13 @@ class ProgressManager:
             sys.stderr.flush()
 
 
-def invoke_command_connector(
-    store_or_dir: str | Path | DojoStore | None,
-    request: dict[str, Any],
-    *,
-    connector_name: str | None = None
-) -> CommandConnectorResult:
-    # Resolve DojoStore instance
-    if isinstance(store_or_dir, DojoStore):
-        store = store_or_dir
-    else:
-        store = DojoStore(store_or_dir)
-
-    log = get_logger(store.dojo_dir, "connectors")
+def invoke_command_connector(db_path: str | Path | None, request: dict[str, Any], *, connector_name: str | None = None) -> CommandConnectorResult:
+    log = logger.get_logger(db_path, "connectors")
     task = request.get("task", "unknown")
-    connector = _resolve_connector(store, connector_name)
+    connector = _resolve_connector(db_path, connector_name)
     if connector is None:
         name = f"AI connector {connector_name!r}" if connector_name else "no default AI connector"
-        err_msg = f"No {name} configured"
+        err_msg = f"{name} configured"
         log.warning(f"Failed to resolve connector for task '{task}': {err_msg}")
         return _failure(request=request, error=err_msg)
 

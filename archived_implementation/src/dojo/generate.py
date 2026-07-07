@@ -1,12 +1,8 @@
 from __future__ import annotations
 
 import json
-import re
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple
-
-from .prompts import load_prompt
-from .schemas import get_schema_instruction, ExerciseGenerateResponse
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -26,6 +22,7 @@ class ExerciseGenerateRequest:
     phase_focus: str | None = None
 
     def to_task_request(self) -> dict[str, Any]:
+        from .schemas import get_schema_instruction
         schema_instruction = get_schema_instruction("exercise.generate")
 
         if self.instructions:
@@ -48,6 +45,7 @@ class ExerciseGenerateRequest:
                 elif difficulty == "advanced":
                     instructions += "\nTarget complex, high-level combined applications or edge cases."
         else:
+            from .prompts import load_prompt
             active_topics_context = f"The active phase targets multiple topics: {', '.join(self.active_topics)}." if self.active_topics else ""
             phase_focus_context = f"Pedagogical Focus: {self.phase_focus}" if self.phase_focus else ""
             learner_profile_context = (
@@ -138,8 +136,10 @@ def _normalize_candidate(item: dict[str, Any], default_topic: str | None = None)
     if source_refs is None:
         source_refs = []
     
+    # Format and append any extra structural keys to the prompt to prevent data loss
     extra_prompt_text = []
 
+    # 1. Check for checklists or tasks (lists of strings/dicts or dicts)
     for key in ("learner_tasks", "tasks", "checklist", "questions", "options"):
         val = item.get(key)
         if val:
@@ -147,6 +147,7 @@ def _normalize_candidate(item: dict[str, Any], default_topic: str | None = None)
                 extra_prompt_text.append(f"\n\n### {key.replace('_', ' ').title()}:")
                 for subval in val:
                     if isinstance(subval, dict):
+                        # e.g. {"task": "...", "description": "..."} or {"question": "..."}
                         lines = []
                         for k, v in subval.items():
                             lines.append(f"**{k.title()}**: {v}")
@@ -160,6 +161,7 @@ def _normalize_candidate(item: dict[str, Any], default_topic: str | None = None)
             elif isinstance(val, str):
                 extra_prompt_text.append(f"\n\n### {key.replace('_', ' ').title()}:\n{val}")
 
+    # 2. Check for scaffolding
     for key in ("scaffolding_details", "scaffolding"):
         val = item.get(key)
         if val:
@@ -249,10 +251,13 @@ def validate_exercise_generate_output(raw: str | list[Any] | dict[str, Any], def
 
     diagnostics: list[str] = []
 
+    # Try Pydantic validation if it's a dict and appears to use the new schema structure
     if isinstance(data, dict) and ("exercise_draft" in data or "thinking" in data):
+        from .schemas import ExerciseGenerateResponse
         try:
             ExerciseGenerateResponse.model_validate(data)
         except Exception as exc:
+            # We treat validation errors as warnings so we fallback gracefully
             diagnostics.append(f"Response validation warning: {exc}")
 
     parent_topic = default_topic
@@ -292,10 +297,12 @@ def validate_exercise_generate_output(raw: str | list[Any] | dict[str, Any], def
         if error:
             diagnostics.append(f"candidate {idx}: {error}")
         else:
-            candidates.append(normalized)
+            candidates.append(normalized)  # type: ignore[arg-type]
 
     return {"ok": bool(candidates) and not diagnostics, "candidates": candidates, "diagnostics": diagnostics}
 
+
+import re
 
 def parse_markdown_headings(content: str) -> list[dict[str, Any]]:
     lines = content.splitlines()
@@ -354,6 +361,7 @@ def score_heading(heading_path: list[str], target_topic: str) -> float:
                     score += 0.5 * weight
                     break
 
+    # Leaf component bonus
     leaf_part = topic_parts[-1]
     leaf_title = heading_path[-1].lower()
     leaf_words = set(re.findall(r'\w+', leaf_title))

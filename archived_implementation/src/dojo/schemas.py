@@ -1,26 +1,18 @@
-from __future__ import annotations
-
+from typing import Any, Optional, List, Dict
 import json
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
-
-
-# ==========================================
-# LLM Response Schemas (JIT Gen / Consolidation)
-# ==========================================
 
 class CandidateDraft(BaseModel):
     prompt: str = Field(
-        description="The complete question, checklist, sub-tasks, options, and context. Must be fully self-contained in Markdown."
+        description="The complete question, checklist, sub-tasks, options, and context. Must be fully self-contained in Markdown. Do NOT use custom keys like 'learner_tasks' or 'tasks' for prompt content."
     )
     answer: Optional[str] = Field(
         default=None,
-        description="The expected answer key, solution code, or reference answers (optional)."
+        description="The expected answer key, solution code, or reference answers (optional/null if diagnostic/reflection)."
     )
     rubric: Optional[str] = Field(
         default=None,
-        description="Grading rubric or evaluation criteria to score the response (optional)."
+        description="Grading rubric or evaluation criteria to score the response (optional/null)."
     )
     topic_path: str = Field(
         description="The specific topic path from the active topics (e.g. language.french.tef.nclc7.expression_orale.part_a)."
@@ -29,10 +21,9 @@ class CandidateDraft(BaseModel):
         description="Difficulty level calibrated to the user ('beginner', 'intermediate', 'advanced')."
     )
 
-
 class TopicSpan(BaseModel):
     existing_topic: str = Field(
-        description="The parent topic namespace (e.g. language.french.tef.nclc7)."
+        description="The parent topic namespace namespace (e.g. language.french.tef.nclc7)."
     )
     active_topics_covered: List[str] = Field(
         description="The specific subtopics from the active topics list covered by the drafted exercises."
@@ -45,7 +36,6 @@ class TopicSpan(BaseModel):
         description="Any generation details, assumptions, or warnings."
     )
 
-
 class ExerciseDraft(BaseModel):
     set_title: str = Field(
         description="Title describing this JIT practice set."
@@ -57,7 +47,6 @@ class ExerciseDraft(BaseModel):
         description="List of drafted practice candidates."
     )
 
-
 class ExerciseGenerateResponse(BaseModel):
     thinking: str = Field(
         description="Your internal scratchpad, analysis, and reasoning about the target topic, strategy, and constraints before drafting candidates."
@@ -68,7 +57,6 @@ class ExerciseGenerateResponse(BaseModel):
     exercise_draft: ExerciseDraft = Field(
         description="The exercise drafts containing candidate practice questions."
     )
-
 
 class HypothesisEntry(BaseModel):
     key: str = Field(
@@ -82,7 +70,6 @@ class HypothesisEntry(BaseModel):
         description="Optional topic scope associated with this pattern."
     )
 
-
 class CalibratedStrategy(BaseModel):
     mode: str = Field(
         description="Strategy mode ('practice' or 'diagnostic')."
@@ -94,7 +81,6 @@ class CalibratedStrategy(BaseModel):
         description="Level of scaffolding/hints to provide ('high', 'medium', or 'low')."
     )
 
-
 class CriteriaEntry(BaseModel):
     min_attempts: int = Field(
         description="Minimum attempts required to complete this phase."
@@ -102,7 +88,6 @@ class CriteriaEntry(BaseModel):
     min_accuracy: float = Field(
         description="Minimum accuracy required to complete this phase (between 0.0 and 1.0)."
     )
-
 
 class AttackPlanPhase(BaseModel):
     phase: int = Field(
@@ -119,7 +104,6 @@ class AttackPlanPhase(BaseModel):
         description="Target focus instructions for JIT exercise generation (e.g. combining topics, emphasis)."
     )
 
-
 class JournalEntryPayload(BaseModel):
     action: str = Field(
         description="The consolidation action ('CREATE', 'INSERT_REMEDIATION', 'SKIP_PHASES', 'RE_ORDER', 'CALIBRATE_STRATEGY', 'PIVOT')."
@@ -133,7 +117,6 @@ class JournalEntryPayload(BaseModel):
     hypothesis: str = Field(
         description="Pedagogical rationale/hypothesis behind the action."
     )
-
 
 class ProfileConsolidateResponse(BaseModel):
     thinking: str = Field(
@@ -166,7 +149,6 @@ class ProfileConsolidateResponse(BaseModel):
         description="Journal entry explaining the changes made."
     )
 
-
 def get_schema_instruction(task_name: str) -> str:
     if task_name == "exercise.generate":
         schema_json = json.dumps(ExerciseGenerateResponse.model_json_schema(), indent=2)
@@ -188,106 +170,3 @@ def get_schema_instruction(task_name: str) -> str:
         )
     else:
         raise ValueError(f"Unknown task name: {task_name}")
-
-
-# ==========================================
-# File System Entity Schemas (with defaults/omissions)
-# ==========================================
-
-class Source(BaseModel):
-    id: str
-    title: str
-    kind: str
-    path: Optional[str] = None
-    mission: Optional[str] = None
-    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    # Omitted from frontmatter, maps to the Markdown file body
-    content: str = ""
-
-
-class Campaign(BaseModel):
-    id: str
-    name: str
-    source_id: Optional[str] = None
-    topic_path: Optional[str] = None
-    mission: str
-    active_phase_index: int = 0
-    strategy_profile: Dict[str, Any] = Field(default_factory=dict)
-    sources_config: List[Dict[str, Any]] = Field(default_factory=list)
-    status: str = "active"
-    attack_plan: List[AttackPlanPhase] = Field(default_factory=list)
-    pedagogical_journal: List[Dict[str, Any]] = Field(default_factory=list)
-    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    # Omitted from frontmatter, maps to the Markdown file body
-    syllabus_markdown: str = ""
-
-
-class Exercise(BaseModel):
-    id: str
-    topic_path: str
-    difficulty: str
-    generation_run: Optional[str] = None
-    candidate_id: Optional[str] = None
-    archived: bool = False
-    quality: str = "reviewed"
-    answer: Optional[str] = None
-    rubric: Optional[str] = None
-    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    # Omitted from frontmatter, maps to the Markdown file body
-    prompt: str
-
-
-class Candidate(BaseModel):
-    id: str
-    topic_path: str
-    difficulty: str
-    generation_run: Optional[str] = None
-    archived: bool = False
-    quality: str = "reviewed"
-    answer: Optional[str] = None
-    rubric: Optional[str] = None
-    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    # Omitted from frontmatter, maps to the Markdown file body
-    prompt: str
-
-
-class Attempt(BaseModel):
-    id: str
-    session: str  # Root-relative path
-    exercise: str  # Root-relative path
-    score: float
-    latency_seconds: float
-    skip_reason: Optional[str] = None
-    feedback: Optional[str] = None
-    reflected: bool = False
-    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    prompt: str = ""  # The prompt at the time of attempt
-    # Omitted from frontmatter, maps to the Markdown file body
-    user_answer: str = ""
-
-
-class Insight(BaseModel):
-    id: str
-    key: str
-    sources: List[str] = Field(default_factory=list)
-    generation_run: Optional[str] = None
-    status: str = "active"
-    topic_path: Optional[str] = None
-    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    # Omitted from frontmatter, maps to the Markdown file body
-    description: str
-
-
-class PracticeSession(BaseModel):
-    id: str
-    status: str = "active"
-    exercise_ids: List[str] = Field(default_factory=list)
-    current_index: int = 0
-    current_attempt_started_at: Optional[str] = None
-    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())

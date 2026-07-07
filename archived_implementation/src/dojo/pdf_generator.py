@@ -40,6 +40,7 @@ def write_styled_text(pdf: SyllabusPDF, text: str, line_height: float = 5.0) -> 
 
 
 def render_markdown_to_pdf(markdown_text: str, output_path: str | Path) -> None:
+    # Replace common non-latin-1 characters with safe equivalents
     replacements = {
         "\u2014": " - ",   # em-dash
         "\u2013": "-",     # en-dash
@@ -53,6 +54,7 @@ def render_markdown_to_pdf(markdown_text: str, output_path: str | Path) -> None:
     for old, new in replacements.items():
         markdown_text = markdown_text.replace(old, new)
 
+    # Coerce to pure latin-1 characters, replacing any others with '?'
     markdown_text = markdown_text.encode("latin-1", "replace").decode("latin-1")
 
     pdf = SyllabusPDF()
@@ -68,6 +70,7 @@ def render_markdown_to_pdf(markdown_text: str, output_path: str | Path) -> None:
             pdf.ln(4)
             continue
 
+        # H1 Header
         h1_match = re.match(r'^#\s+(.+)$', stripped)
         if h1_match:
             pdf.ln(4)
@@ -77,6 +80,7 @@ def render_markdown_to_pdf(markdown_text: str, output_path: str | Path) -> None:
             pdf.ln(2)
             continue
 
+        # H2 Header
         h2_match = re.match(r'^##\s+(.+)$', stripped)
         if h2_match:
             pdf.ln(3)
@@ -86,6 +90,7 @@ def render_markdown_to_pdf(markdown_text: str, output_path: str | Path) -> None:
             pdf.ln(1)
             continue
 
+        # H3 Header
         h3_match = re.match(r'^###\s+(.+)$', stripped)
         if h3_match:
             pdf.ln(2)
@@ -95,6 +100,7 @@ def render_markdown_to_pdf(markdown_text: str, output_path: str | Path) -> None:
             pdf.ln(1)
             continue
 
+        # Bullet list items
         bullet_match = re.match(r'^[-*]\s+(.+)$', stripped)
         if bullet_match:
             pdf.set_font("Helvetica", "", 9.5)
@@ -105,6 +111,7 @@ def render_markdown_to_pdf(markdown_text: str, output_path: str | Path) -> None:
             pdf.ln(5)
             continue
 
+        # Regular paragraph text
         pdf.set_font("Helvetica", "", 9.5)
         pdf.set_text_color(40, 40, 40)
         write_styled_text(pdf, stripped, line_height=5.0)

@@ -5,18 +5,16 @@ import json
 import re
 import sys
 import uuid
-import shlex
-import shutil
 from pathlib import Path
 from typing import Any
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 
+from . import db
+from . import generate
 from . import connectors
 from .api import DojoAPI
-from .store import DojoStore, slugify
-from .schemas import AttackPlanPhase, CriteriaEntry, Campaign, Candidate
 
 console = Console()
 VALID_NAME = re.compile(r"^[A-Za-z][A-Za-z0-9_-]{0,63}$")
@@ -88,35 +86,22 @@ def cmd_connect_ai_command(args: argparse.Namespace) -> int:
         args.command = external
     if not args.command:
         raise SystemExit("command connector requires argv after --")
-
-    store = DojoStore(_db_path(args))
-    
-    # Check if connector exists
-    existing = store.get_connector(args.name)
-    if existing and not getattr(args, "replace", False):
-        raise SystemExit(f"AI connector '{args.name}' already exists. Use --replace to overwrite.")
-
-    connector_data = {
-        "kind": "command",
-        "name": args.name,
-        "argv": args.command,
-        "input_mode": args.input,
-        "output_mode": args.output,
-        "timeout_seconds": args.timeout,
-        "is_default": getattr(args, "default", False),
-    }
-
-    if getattr(args, "default", False):
-        # Set config key default_connector to this connector
-        store.set_config("default_connector", args.name)
-        # Mark all other connectors as not default
-        for c in store.list_connectors():
-            if c.get("name") != args.name and c.get("is_default"):
-                c["is_default"] = False
-                store.save_connector(c["name"], c)
-
-    store.save_connector(args.name, connector_data)
-    _print_json(_render(connector_data, next_action=f"dojo connect ai test {args.name}"))
+    db.init_db(_db_path(args))
+    with db.connect(_db_path(args)) as conn:
+        try:
+            connector = db.save_ai_connector(
+                conn,
+                name=args.name,
+                argv=args.command,
+                input_mode=args.input,
+                output_mode=args.output,
+                timeout_seconds=args.timeout,
+                is_default=args.default,
+                replace=args.replace,
+            )
+        except ValueError as exc:
+            raise SystemExit(str(exc)) from exc
+    _print_json(_render(connector, next_action=f"dojo connect ai test {connector['name']}"))
     return 0
 
 
@@ -137,7 +122,7 @@ def cmd_add(args: argparse.Namespace) -> int:
             file_path = Path(args.path)
             if not file_path.exists():
                 raise SystemExit(f"file not found: {args.path}")
-            content = file_path.read_text(encoding="utf-8")
+            content = file_path.read_text()
             title = args.title or file_path.name
             path_str = args.locator or str(file_path.resolve())
     else:
@@ -189,7 +174,7 @@ def cmd_source_list(args: argparse.Namespace) -> int:
                 s["id"],
                 s["title"],
                 s["kind"],
-                str(s.get("candidates_count", 0)),
+                str(s["candidates_count"]),
                 s["created_at"].split("T")[0],
             )
         console.print(table)
@@ -198,7 +183,11 @@ def cmd_source_list(args: argparse.Namespace) -> int:
 
 def cmd_source_show(args: argparse.Namespace) -> int:
     api = DojoAPI(_db_path(args))
-    source = api.get_source(args.name)
+    source = api.get_source(
+        args.name,
+        start_line=getattr(args, "start_line", None),
+        end_line=getattr(args, "end_line", None)
+    )
     if source is None:
         raise SystemExit(f"unknown source: {args.name}")
     if _use_json(args):
@@ -206,10 +195,7 @@ def cmd_source_show(args: argparse.Namespace) -> int:
     else:
         is_sliced = getattr(args, "start_line", None) is not None or getattr(args, "end_line", None) is not None
         if is_sliced:
-            lines = source['content'].splitlines()
-            start = (args.start_line - 1) if args.start_line is not None else 0
-            end = args.end_line if args.end_line is not None else len(lines)
-            content_display = "\n".join(lines[start:end])
+            content_display = source['content']
             excerpt_label = f"Content Span (lines {getattr(args, 'start_line', None) or 1} to {getattr(args, 'end_line', None) or 'end'}):"
         else:
             content_display = source['content'][:300] + '...' if len(source['content']) > 300 else source['content']
@@ -220,7 +206,7 @@ def cmd_source_show(args: argparse.Namespace) -> int:
             f"[bold cyan]Kind:[/bold cyan] {source['kind']}\n"
             f"[bold cyan]Path/Locator:[/bold cyan] {source['path'] or 'N/A'}\n"
             f"[bold cyan]Mission:[/bold cyan] {source['mission'] or 'None'}\n"
-            f"[bold cyan]Candidates Left:[/bold cyan] {source.get('candidates_count', 0)}\n"
+            f"[bold cyan]Candidates Left:[/bold cyan] {source['candidates_count']}\n"
             f"[bold cyan]Created At:[/bold cyan] {source['created_at']}\n\n"
             f"[bold cyan]{excerpt_label}[/bold cyan]\n"
             f"{content_display}"
@@ -248,8 +234,7 @@ def cmd_source_topics(args: argparse.Namespace) -> int:
         table.add_column("Topic Path", style="cyan")
         table.add_column("Candidates Count", style="green")
         for t in output_data:
-            count_val = t.get("count") or t.get("candidates_count", 0)
-            table.add_row(t["topic_path"], str(count_val))
+            table.add_row(t["topic_path"], str(t["candidates_count"]))
         console.print(table)
     return 0
 
@@ -276,9 +261,7 @@ def cmd_source_candidates(args: argparse.Namespace) -> int:
         table.add_column("Diff", style="yellow")
 
         for c in output_data:
-            ans_str = c.get("answer") or ""
-            if not ans_str and c.get("rubric"):
-                ans_str = json.dumps(c["rubric"])
+            ans_str = c["answer"] if c["answer"] else json.dumps(c["rubric"])
             ans_short = ans_str[:40] + "..." if len(ans_str) > 40 else ans_str
             prompt_short = c["prompt"][:40] + "..." if len(c["prompt"]) > 40 else c["prompt"]
             table.add_row(
@@ -286,7 +269,7 @@ def cmd_source_candidates(args: argparse.Namespace) -> int:
                 c["topic_path"],
                 prompt_short,
                 ans_short,
-                c.get("difficulty") or "N/A",
+                c["difficulty"] or "N/A",
             )
         console.print(table)
     return 0
@@ -321,8 +304,8 @@ def cmd_source_review(args: argparse.Namespace) -> int:
             f"[bold cyan]Candidate ID:[/bold cyan] {c['id']}\n"
             f"[bold cyan]Topic Path:[/bold cyan] {c['topic_path']}\n"
             f"[bold cyan]Prompt:[/bold cyan] {c['prompt']}\n"
-            f"[bold cyan]Answer:[/bold cyan] {c.get('answer') or 'N/A'}\n"
-            f"[bold cyan]Rubric:[/bold cyan] {c.get('rubric') or 'None'}"
+            f"[bold cyan]Answer:[/bold cyan] {c['answer'] or 'N/A'}\n"
+            f"[bold cyan]Rubric:[/bold cyan] {json.dumps(c['rubric']) if c['rubric'] else 'None'}"
         )
         console.print(Panel(card_text, title=f"Review Candidate {idx + 1}/{len(candidates)}", expand=False))
 
@@ -345,21 +328,21 @@ def cmd_source_review(args: argparse.Namespace) -> int:
             content_template = (
                 f"Topic Path: {c['topic_path']}\n"
                 f"Prompt: {c['prompt']}\n"
-                f"Answer: {c.get('answer') or ''}\n"
+                f"Answer: {c['answer'] or ''}\n"
             )
 
-            with tempfile.NamedTemporaryFile(suffix=".txt", delete=False, mode="w+", encoding="utf-8") as tf:
+            with tempfile.NamedTemporaryFile(suffix=".txt", delete=False, mode="w+") as tf:
                 tf.write(content_template)
                 temp_name = tf.name
 
             try:
                 subprocess.run([editor, temp_name], check=True)
-                updated = Path(temp_name).read_text(encoding="utf-8")
+                updated = Path(temp_name).read_text()
 
                 lines = updated.splitlines()
                 new_topic = c["topic_path"]
                 new_prompt = c["prompt"]
-                new_answer = c.get("answer")
+                new_answer = c["answer"]
 
                 for line in lines:
                     if line.startswith("Topic Path:"):
@@ -370,12 +353,15 @@ def cmd_source_review(args: argparse.Namespace) -> int:
                         new_answer = line.split("Answer:", 1)[-1].strip()
 
                 api.save_candidate(
-                    candidate_id=c["id"],
+                    id=c["id"],
+                    source_id=c["source_id"],
                     prompt=new_prompt,
-                    topic_path=new_topic,
                     answer=new_answer,
-                    rubric=c.get("rubric"),
-                    difficulty=c.get("difficulty") or "intermediate",
+                    rubric=c["rubric"],
+                    topic_path=new_topic,
+                    source_refs=c["source_refs"],
+                    difficulty=c["difficulty"],
+                    generation_run_id=c["generation_run_id"],
                 )
                 console.print("[green]Candidate updated. Displaying card again:[/green]")
             except Exception as exc:
@@ -404,11 +390,7 @@ def cmd_queue(args: argparse.Namespace) -> int:
             raise SystemExit(str(exc))
     elif args.source or (args.item and args.item.startswith("src_")):
         source_id = args.source or args.item
-        try:
-            res = api.promote_source_topic(source_id, topic_path=args.topic, limit=args.limit)
-            promoted_exercises = res.get("exercises") or []
-        except ValueError as exc:
-            raise SystemExit(str(exc))
+        promoted_exercises = api.promote_source_topic(source_id, topic_path=args.topic, limit=args.limit)
     else:
         raise SystemExit("must provide either candidate ID or --source ID to queue exercises")
 
@@ -434,14 +416,16 @@ def cmd_queue(args: argparse.Namespace) -> int:
 
 
 def cmd_connect_ai_list(args: argparse.Namespace) -> int:
-    store = DojoStore(_db_path(args))
-    _print_json(store.list_connectors())
+    db.init_db(_db_path(args))
+    with db.connect(_db_path(args)) as conn:
+        _print_json(db.list_ai_connectors(conn))
     return 0
 
 
 def cmd_connect_ai_show(args: argparse.Namespace) -> int:
-    store = DojoStore(_db_path(args))
-    connector = store.get_connector(args.name)
+    db.init_db(_db_path(args))
+    with db.connect(_db_path(args)) as conn:
+        connector = db.get_ai_connector(conn, args.name)
     if connector is None:
         raise SystemExit(f"unknown AI connector: {args.name}")
     _print_json(_render(connector, next_action=f"dojo connect ai test {connector['name']}"))
@@ -449,134 +433,116 @@ def cmd_connect_ai_show(args: argparse.Namespace) -> int:
 
 
 def cmd_connect_ai_use(args: argparse.Namespace) -> int:
-    store = DojoStore(_db_path(args))
-    connector = store.get_connector(args.name)
-    if connector is None:
-        raise SystemExit(f"unknown AI connector: {args.name}")
-
-    store.set_config("default_connector", args.name)
-    # Mark as default and save
-    connector["is_default"] = True
-    store.save_connector(args.name, connector)
-
-    # Disable default on others
-    for c in store.list_connectors():
-        if c.get("name") != args.name and c.get("is_default"):
-            c["is_default"] = False
-            store.save_connector(c["name"], c)
-
+    db.init_db(_db_path(args))
+    with db.connect(_db_path(args)) as conn:
+        try:
+            connector = db.set_default_ai_connector(conn, args.name)
+        except ValueError as exc:
+            raise SystemExit(str(exc)) from exc
     _print_json(_render(connector, next_action=f"dojo connect ai test {connector['name']}"))
     return 0
 
 
 def cmd_connect_ai_remove(args: argparse.Namespace) -> int:
-    store = DojoStore(_db_path(args))
-    connector = store.get_connector(args.name)
-    if connector is None:
-        raise SystemExit(f"unknown AI connector: {args.name}")
-
-    is_default = (store.get_config("default_connector") == args.name) or connector.get("is_default", False)
-    if is_default and not getattr(args, "force", False):
-        raise SystemExit("cannot remove default connector. Set another connector as default first, or run with --force")
-
-    store.delete_connector(args.name)
-    _print_json({"removed": args.name, "was_default": is_default})
+    db.init_db(_db_path(args))
+    with db.connect(_db_path(args)) as conn:
+        try:
+            removed = db.remove_ai_connector(conn, args.name, force=args.force)
+        except ValueError as exc:
+            raise SystemExit(str(exc)) from exc
+    _print_json({"removed": removed["name"], "was_default": removed["is_default"]})
     return 0
 
 
 def cmd_connect_ai_test(args: argparse.Namespace) -> int:
     from datetime import datetime, timezone
-    store = DojoStore(_db_path(args))
-    connector_name = args.name
-    if not connector_name:
-        default_conn = connectors._default_connector(store)
-        if not default_conn:
-            raise SystemExit("no default AI connector configured")
-        connector_name = default_conn["name"]
+    db.init_db(_db_path(args))
+    with db.connect(_db_path(args)) as session:
+        connector_name = args.name
+        if not connector_name:
+            default_conn = connectors._default_connector(session)
+            if not default_conn:
+                raise SystemExit("no default AI connector configured")
+            connector_name = default_conn["name"]
 
-    connector = store.get_connector(connector_name)
-    if connector is None:
-        raise SystemExit(f"unknown AI connector: {connector_name}")
+        connector = db.get_ai_connector(session, connector_name)
+        if connector is None:
+            raise SystemExit(f"unknown AI connector: {connector_name}")
 
-    request = {
-        "task": "smoke.test",
-        "version": 1,
-        "prompt": "Hello! Reply with OK if you receive this."
-    }
+        request = {
+            "task": "smoke.test",
+            "version": 1,
+            "prompt": "Hello! Reply with OK if you receive this."
+        }
 
-    result = connectors.invoke_command_connector(store, request, connector_name=connector_name)
+        result = connectors.invoke_command_connector(_db_path(args), request, connector_name=connector_name)
 
-    # Update connector test outcome
-    connector["test_status"] = result.status
-    connector["test_summary"] = f"Success (duration: {result.duration_seconds:.2f}s)" if result.status == "ok" else f"Failed: {result.error or 'unknown error'}"
-    store.save_connector(connector_name, connector)
-
-    output_data = {
-        "connector_name": connector_name,
-        "status": result.status,
-        "duration_seconds": result.duration_seconds,
-        "parse_status": result.parse_status,
-        "exit_code": result.exit_code,
-        "stdout": result.raw_stdout,
-        "stderr": result.raw_stderr,
-        "error": result.error,
-        "timestamp": datetime.now(timezone.utc).isoformat()
-    }
-
-    if _use_json(args):
-        _print_json(output_data)
-    else:
         if result.status == "ok":
-            status_str = f"[bold green]SUCCESS[/bold green] (duration: {result.duration_seconds:.2f}s)"
-            details = (
-                f"[bold cyan]Connector Name:[/bold cyan] {connector_name}\n"
-                f"[bold cyan]Status:[/bold cyan] {status_str}\n"
-                f"[bold cyan]Exit Code:[/bold cyan] {result.exit_code}\n"
-                f"[bold cyan]Timestamp:[/bold cyan] {output_data['timestamp']}\n\n"
-                f"[bold cyan]Stdout Excerpt:[/bold cyan]\n"
-                f"{result.raw_stdout[:500] + '...' if len(result.raw_stdout) > 500 else result.raw_stdout}"
-            )
-            console.print(Panel(details, title="[bold green]AI Connector Test: OK[/bold green]", expand=False))
+            summary = f"Success (duration: {result.duration_seconds:.2f}s)"
         else:
-            status_str = f"[bold red]FAILED[/bold red] (duration: {result.duration_seconds:.2f}s)"
-            details = (
-                f"[bold cyan]Connector Name:[/bold cyan] {connector_name}\n"
-                f"[bold cyan]Status:[/bold cyan] {status_str}\n"
-                f"[bold cyan]Error:[/bold cyan] {result.error}\n"
-                f"[bold cyan]Exit Code:[/bold cyan] {result.exit_code}\n\n"
-                f"[bold cyan]Stderr (tail):[/bold cyan]\n"
-                f"{result.stderr_tail}"
-            )
-            console.print(Panel(details, title="[bold red]AI Connector Test: FAILED[/bold red]", expand=False))
+            summary = f"Failed: {result.error or 'unknown error'}"
 
-    return 0 if result.status == "ok" else 1
+        db.update_connector_test_result(session, connector_name, result.status, summary)
+
+        output_data = {
+            "connector_name": connector_name,
+            "status": result.status,
+            "duration_seconds": result.duration_seconds,
+            "parse_status": result.parse_status,
+            "exit_code": result.exit_code,
+            "stdout": result.raw_stdout,
+            "stderr": result.raw_stderr,
+            "error": result.error,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+
+        if _use_json(args):
+            _print_json(output_data)
+        else:
+            if result.status == "ok":
+                status_str = f"[bold green]SUCCESS[/bold green] (duration: {result.duration_seconds:.2f}s)"
+                details = (
+                    f"[bold cyan]Connector Name:[/bold cyan] {connector_name}\n"
+                    f"[bold cyan]Status:[/bold cyan] {status_str}\n"
+                    f"[bold cyan]Exit Code:[/bold cyan] {result.exit_code}\n"
+                    f"[bold cyan]Timestamp:[/bold cyan] {output_data['timestamp']}\n\n"
+                    f"[bold cyan]Stdout Excerpt:[/bold cyan]\n"
+                    f"{result.raw_stdout[:500] + '...' if len(result.raw_stdout) > 500 else result.raw_stdout}"
+                )
+                console.print(Panel(details, title="[bold green]AI Connector Test: OK[/bold green]", expand=False))
+            else:
+                status_str = f"[bold red]FAILED[/bold red] (duration: {result.duration_seconds:.2f}s)"
+                details = (
+                    f"[bold cyan]Connector Name:[/bold cyan] {connector_name}\n"
+                    f"[bold cyan]Status:[/bold cyan] {status_str}\n"
+                    f"[bold cyan]Error:[/bold cyan] {result.error}\n"
+                    f"[bold cyan]Exit Code:[/bold cyan] {result.exit_code}\n\n"
+                    f"[bold cyan]Stderr (tail):[/bold cyan]\n"
+                    f"{result.stderr_tail}"
+                )
+                console.print(Panel(details, title="[bold red]AI Connector Test: FAILED[/bold red]", expand=False))
+
+        return 0 if result.status == "ok" else 1
 
 
 def cmd_connect_ai_request(args: argparse.Namespace) -> int:
-    store = DojoStore(_db_path(args))
+    db.init_db(_db_path(args))
 
     if args.task_name == "exercise.generate":
-        request = {
-            "task": "exercise.generate",
-            "version": 1,
-            "instructions": "Mock instructions for dry run exercise generate",
-            "source": {
-                "id": "src_dryrun",
-                "title": "Dry Run Source",
-                "refs": [{
-                    "source_id": "src_dryrun",
-                    "span": {
-                        "start_line": 1,
-                        "end_line": 10,
-                        "anchor_text": "mock"
-                    }
-                }],
-                "content": "mock content"
-            },
-            "topic_hint": "dryrun.topic",
-            "max_candidates": 2,
-            "expected_artifacts": ["candidates"]
-        }
+        request = generate.ExerciseGenerateRequest(
+            source_id="src_dryrun",
+            source_title="Dry Run Source",
+            source_refs=[{
+                "source_id": "src_dryrun",
+                "span": {
+                    "start_line": 1,
+                    "end_line": 10,
+                    "anchor_text": "mock"
+                }
+            }],
+            topic="dryrun.topic",
+            mission="Mock mission instructions for dry run",
+        ).to_task_request()
     else:
         request = {
             "task": args.task_name,
@@ -607,12 +573,13 @@ def cmd_connect_ai_request(args: argparse.Namespace) -> int:
             console.print(prompt_panel)
         return 0
 
-    default_conn = connectors._default_connector(store)
-    if not default_conn:
-        raise SystemExit("no default AI connector configured to run requests")
-    connector_name = default_conn["name"]
+    with db.connect(_db_path(args)) as session:
+        default_conn = connectors._default_connector(session)
+        if not default_conn:
+            raise SystemExit("no default AI connector configured to run requests")
+        connector_name = default_conn["name"]
 
-    result = connectors.invoke_command_connector(store, request, connector_name=connector_name)
+    result = connectors.invoke_command_connector(_db_path(args), request, connector_name=connector_name)
 
     if _use_json(args):
         _print_json(result.to_dict())
@@ -669,6 +636,7 @@ def cmd_ready(args: argparse.Namespace) -> int:
     try:
         output_data = api.reveal_prompt(args.session)
     except ValueError as exc:
+        # Map to original message if active is None
         msg = str(exc)
         if "no active practice session" in msg:
             msg = "no active practice session; start one with 'dojo start'"
@@ -768,7 +736,7 @@ def cmd_progress(args: argparse.Namespace) -> int:
             prompt_short = a["prompt"][:40] + "..." if len(a["prompt"]) > 40 else a["prompt"]
             table.add_row(
                 a["created_at"].split("T")[0],
-                a["exercise"].split("/")[-1].replace(".md", "") if "/" in a["exercise"] else a["exercise"],
+                a["exercise_id"],
                 prompt_short,
                 f"{a['score'] * 100:.0f}%",
                 f"{a['latency_seconds']:.1f}s",
@@ -778,10 +746,11 @@ def cmd_progress(args: argparse.Namespace) -> int:
 
 
 def _is_owned_by_dojo(target_path: Path) -> bool:
+    # Check SKILL.md Frontmatter signature
     skill_md = target_path / "SKILL.md"
     if skill_md.exists() and skill_md.is_file():
         try:
-            content = skill_md.read_text(encoding="utf-8")
+            content = skill_md.read_text()
             if content.startswith("---"):
                 end_idx = content.find("---", 3)
                 if end_idx != -1:
@@ -800,23 +769,8 @@ def _is_owned_by_dojo(target_path: Path) -> bool:
 
 
 def cmd_install(args: argparse.Namespace) -> int:
-    store = DojoStore(_db_path(args))
-    results = store.run_doctor()
-    all_errors = [err for errs in results.values() for err in errs]
-    if all_errors and not getattr(args, "force", False):
-        if _use_json(args):
-            _print_json({
-                "ok": False,
-                "error": "Dojo repository validation failed",
-                "errors": all_errors
-            })
-            raise SystemExit(1)
-        else:
-            console.print("[bold red]✗ Dojo Doctor found issues in your repository:[/bold red]")
-            for err in all_errors:
-                console.print(f"  [red]✗[/red] {err}")
-            console.print("[yellow]To bypass this check, run install with --force.[/yellow]")
-            raise SystemExit(1)
+    import shutil
+    import shlex
 
     agent = args.agent
     dest = getattr(args, "dest", None)
@@ -879,6 +833,7 @@ def cmd_install(args: argparse.Namespace) -> int:
     if not repo_skills_dojo.exists():
         raise SystemExit(f"error: skills/dojo directory not found at {repo_skills_dojo}")
 
+    # Check ownership safety before overwriting
     force = getattr(args, "force", False)
     if target_path.exists() and not force:
         if not _is_owned_by_dojo(target_path):
@@ -901,57 +856,62 @@ def cmd_install(args: argparse.Namespace) -> int:
     except Exception as exc:
         raise SystemExit(f"error: failed to install dojo skill to {target_path}: {exc}")
 
-    store = DojoStore(_db_path(args))
-    executable = shutil.which(agent)
-    if not executable:
-        if agent == "hermes":
-            fallback = Path.home() / ".local" / "bin" / "hermes"
-            if fallback.exists():
-                executable = str(fallback.resolve())
-        elif agent == "openclaw":
-            fallback = Path.home() / ".local" / "bin" / "openclaw"
-            if fallback.exists():
-                executable = str(fallback.resolve())
-
-    if not executable:
-        executable = agent
-
-    if getattr(args, "argv", None):
-        argv = shlex.split(args.argv)
-    else:
-        if not _use_json(args) and not getattr(args, "no_input", False) and sys.stdout.isatty():
-            if agent not in ("hermes", "openclaw"):
-                try:
-                    cmd_input = input(f"Enter AI connector invocation command [default: {executable}]: ").strip()
-                    if cmd_input:
-                        argv = shlex.split(cmd_input)
-                except (KeyboardInterrupt, EOFError):
-                    pass
-
-        if not argv:
+    # Auto-configure the default AI connector in the SQLite database!
+    db.init_db(_db_path(args))
+    with db.connect(_db_path(args)) as session:
+        executable = shutil.which(agent)
+        if not executable:
+            # Fallback path checks
             if agent == "hermes":
-                wrapper_path = target_path / "hermes_wrapper.sh"
-                try:
-                    wrapper_content = f"#!/bin/bash\nPROMPT=$(cat)\n{executable} chat -Q -q \"$PROMPT\"\n"
-                    wrapper_path.write_text(wrapper_content, encoding="utf-8")
-                    wrapper_path.chmod(0o755)
-                    argv = [str(wrapper_path.resolve())]
-                except Exception:
-                    argv = [executable, "chat", "-Q"]
+                fallback = Path.home() / ".local" / "bin" / "hermes"
+                if fallback.exists():
+                    executable = str(fallback.resolve())
             elif agent == "openclaw":
-                argv = [executable, "chat", "--stdin"]
-            else:
-                argv = [executable]
+                fallback = Path.home() / ".local" / "bin" / "openclaw"
+                if fallback.exists():
+                    executable = str(fallback.resolve())
 
-    connector_data = {
-        "kind": "command",
-        "name": agent,
-        "argv": argv,
-        "is_default": True,
-    }
-    
-    store.save_connector(agent, connector_data)
-    store.set_config("default_connector", agent)
+        # If still not resolved, default to agent name
+        if not executable:
+            executable = agent
+
+        if getattr(args, "argv", None):
+            argv = shlex.split(args.argv)
+        else:
+            if not _use_json(args) and not getattr(args, "no_input", False) and sys.stdout.isatty():
+                if agent not in ("hermes", "openclaw"):
+                    try:
+                        cmd_input = input(f"Enter AI connector invocation command [default: {executable}]: ").strip()
+                        if cmd_input:
+                            argv = shlex.split(cmd_input)
+                    except (KeyboardInterrupt, EOFError):
+                        pass
+
+            if not argv:
+                if agent == "hermes":
+                    wrapper_path = target_path / "hermes_wrapper.sh"
+                    try:
+                        wrapper_content = f"#!/bin/bash\nPROMPT=$(cat)\n{executable} chat -Q -q \"$PROMPT\"\n"
+                        wrapper_path.write_text(wrapper_content)
+                        wrapper_path.chmod(0o755)
+                        argv = [str(wrapper_path.resolve())]
+                    except Exception:
+                        argv = [executable, "chat", "-Q"]
+                elif agent == "openclaw":
+                    argv = [executable, "chat", "--stdin"]
+                else:
+                    argv = [executable]
+
+        try:
+            db.save_ai_connector(
+                session,
+                name=agent,
+                argv=argv,
+                is_default=True,
+                replace=True,
+            )
+        except Exception as exc:
+            raise SystemExit(f"error: failed to auto-configure AI connector for {agent}: {exc}")
 
     output = {
         "ok": True,
@@ -978,42 +938,6 @@ def cmd_install(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_doctor(args: argparse.Namespace) -> int:
-    store = DojoStore(_db_path(args))
-    results = store.run_doctor()
-    
-    # Flatten all errors to see if there are any failures
-    all_errors = [err for errs in results.values() for err in errs]
-        
-    if _use_json(args):
-        _print_json({
-            "ok": len(all_errors) == 0,
-            "results": results,
-            "errors": all_errors
-        })
-    else:
-        console.print("[bold cyan]Dojo Doctor Diagnostics[/bold cyan]")
-        console.print("=======================")
-        for category, errors in results.items():
-            if not errors:
-                console.print(f"[green]✓[/green] [bold]{category}[/bold]")
-            else:
-                console.print(f"[red]✗[/red] [bold]{category}[/bold]")
-                for err in errors:
-                    console.print(f"    - [red]{err}[/red]")
-        console.print("")
-        
-        if all_errors:
-            console.print(f"[bold red]✗ Dojo Doctor found {len(all_errors)} issues in your repository.[/bold red]")
-        else:
-            if not store.dojo_dir.exists():
-                console.print("[bold green]✓ Dojo Doctor: Repository directory does not exist yet (will be initialized on first run). Folder is clear![/bold green]")
-            else:
-                console.print("[bold green]✓ Dojo Doctor: Repository directory is completely compliant and clean![/bold green]")
-                
-    return 1 if all_errors else 0
-
-
 def cmd_due(args: argparse.Namespace) -> int:
     api = DojoAPI(_db_path(args))
     count = api.get_due_count(topic=args.topic)
@@ -1036,9 +960,9 @@ def cmd_skip(args: argparse.Namespace) -> int:
     else:
         feedback_text = (
             f"[bold cyan]Skipped Exercise:[/bold cyan] {res['exercise_id']}\n"
-            f"[bold cyan]Reason:[/bold cyan] {res.get('skip_reason') or args.reason}\n"
+            f"[bold cyan]Reason:[/bold cyan] {res['skip_reason']}\n"
         )
-        if res.get('feedback'):
+        if res['feedback']:
             feedback_text += f"[bold cyan]Feedback:[/bold cyan] {res['feedback']}\n"
         feedback_text += "\n"
         if res["is_session_completed"]:
@@ -1052,7 +976,7 @@ def cmd_skip(args: argparse.Namespace) -> int:
 def cmd_correct(args: argparse.Namespace) -> int:
     api = DojoAPI(_db_path(args))
     try:
-        res = api.correct_last_attempt(score=args.score, feedback=args.feedback)
+        res = api.correct_last_attempt(score=args.score, feedback=args.feedback, session_id=args.session)
     except ValueError as exc:
         raise SystemExit(str(exc))
 
@@ -1061,10 +985,10 @@ def cmd_correct(args: argparse.Namespace) -> int:
     else:
         feedback_text = (
             f"[bold cyan]Corrected Attempt ID:[/bold cyan] {res['id']}\n"
-            f"[bold cyan]Exercise ID:[/bold cyan] {res.get('exercise', 'N/A')}\n"
+            f"[bold cyan]Exercise ID:[/bold cyan] {res['exercise_id']}\n"
             f"[bold cyan]New Score:[/bold cyan] [bold green]{res['score']}[/bold green] (Override)\n"
         )
-        if res.get('feedback'):
+        if res['feedback']:
             feedback_text += f"[bold cyan]Feedback/Note:[/bold cyan] {res['feedback']}\n"
         console.print(Panel(feedback_text, title="Attempt Corrected", expand=False))
     return 0
@@ -1095,7 +1019,7 @@ def cmd_admin_consolidate(args: argparse.Namespace) -> int:
                         table.add_column("Description", style="green")
                         table.add_column("Status", style="magenta")
                         for h in campaign_res["hypotheses"]:
-                            table.add_row(h["key"], h["description"], h.get("status", "active"))
+                            table.add_row(h["key"], h["description"], h["status"])
                         console.print(table)
                     else:
                          console.print("No active learner hypotheses/misconceptions identified.")
@@ -1112,7 +1036,7 @@ def cmd_admin_consolidate(args: argparse.Namespace) -> int:
                     table.add_column("Description", style="green")
                     table.add_column("Status", style="magenta")
                     for h in res["hypotheses"]:
-                        table.add_row(h["key"], h["description"], h.get("status", "active"))
+                        table.add_row(h["key"], h["description"], h["status"])
                     console.print(table)
                 else:
                     console.print(f"No active learner hypotheses/misconceptions identified for Campaign {campaign_id}.")
@@ -1133,19 +1057,19 @@ def cmd_admin_debug_run(args: argparse.Namespace) -> int:
         })
     else:
         console.print(f"\n[bold green]Generation Run Debugger - Run ID: {res['id']}[/bold green]")
-        console.print(f"  [bold]Task:[/bold] [cyan]{res.get('task')}[/cyan]")
-        console.print(f"  [bold]Status:[/bold] {'[green]ok[/green]' if res.get('status') == 'ok' else '[red]failed[/red]'}")
-        console.print(f"  [bold]Created At:[/bold] [cyan]{res.get('created_at')}[/cyan]\n")
+        console.print(f"  [bold]Task:[/bold] [cyan]{res['task']}[/cyan]")
+        console.print(f"  [bold]Status:[/bold] {'[green]ok[/green]' if res['status'] == 'ok' else '[red]failed[/red]'}")
+        console.print(f"  [bold]Created At:[/bold] [cyan]{res['created_at']}[/cyan]\n")
 
         # 1. Request Panel
-        req_str = json.dumps(res.get("request") or {}, indent=2)
+        req_str = json.dumps(res["request"], indent=2)
         console.print(Panel(req_str, title="[bold]Request JSON (Input payload)[/bold]", expand=False))
 
         # 2. Raw Output Panel
-        console.print(Panel(res.get("raw_output") or "(empty)", title="[bold]Raw AI Output (Stdout)[/bold]", expand=False))
+        console.print(Panel(res["raw_output"] or "(empty)", title="[bold]Raw AI Output (Stdout)[/bold]", expand=False))
 
         # 3. Diagnostics & Stderr Panel
-        diag = res.get("diagnostics") or {}
+        diag = res["diagnostics"]
         diag_str = ""
         if diag.get("diagnostics"):
             diag_str += f"[bold red]Diagnostics:[/bold red] {json.dumps(diag['diagnostics'], indent=2)}\n\n"
@@ -1164,8 +1088,9 @@ def cmd_feedback(args: argparse.Namespace) -> int:
     api = DojoAPI(_db_path(args))
     try:
         res = api.add_learner_feedback(
-            comment=args.comment,
+            content=args.comment,
             campaign_id=args.campaign,
+            attempt_id=args.attempt,
         )
     except ValueError as exc:
         raise SystemExit(str(exc))
@@ -1177,9 +1102,11 @@ def cmd_feedback(args: argparse.Namespace) -> int:
             f"[bold green]Learner feedback saved successfully![/bold green]\n"
             f"[bold cyan]ID:[/bold cyan] {res['id']}\n"
             f"[bold cyan]Key:[/bold cyan] {res['key']}\n"
-            f"[bold cyan]Topic Path:[/bold cyan] {res.get('topic_path') or 'None'}\n"
-            f"[bold cyan]Content:[/bold cyan] {res['description']}\n"
+            f"[bold cyan]Topic Path:[/bold cyan] {res['topic_path'] or 'None'}\n"
         )
+        if res.get('attempt_id'):
+            feedback_text += f"[bold cyan]Attempt ID:[/bold cyan] {res['attempt_id']}\n"
+        feedback_text += f"[bold cyan]Content:[/bold cyan] {res['description']}\n"
         console.print(Panel(feedback_text, title="Feedback Logged", expand=False))
     return 0
 
@@ -1215,13 +1142,28 @@ def cmd_config_show(args: argparse.Namespace) -> int:
 def cmd_campaign_create(args: argparse.Namespace) -> int:
     api = DojoAPI(_db_path(args))
 
+    # 1. Print campaign initialization. Call api.create_campaign(...)
     if not _use_json(args):
         console.print("[bold green]Initializing learning campaign...[/bold green]")
 
-    source_id = None
     try:
-        # 1. Ingest source if provided
-        if getattr(args, "source", None):
+        res = api.create_campaign(
+            goal=args.goal,
+            level=args.level,
+            name=args.name,
+            exclusions=args.exclude,
+            feedback=args.feedback,
+        )
+    except Exception as exc:
+        raise SystemExit(f"error: campaign creation failed: {exc}")
+
+    campaign_id = res["campaign_id"]
+    session_id = None
+    exercise_ids = []
+
+    try:
+        # 2. If a source file/URL was passed, ingest it and call api.attach_source_to_campaign(...)
+        if hasattr(args, "source") and args.source:
             if not _use_json(args):
                 console.print(f"[bold green]Ingesting and attaching source: [cyan]{args.source}[/cyan]...[/bold green]")
             path = args.source
@@ -1235,7 +1177,7 @@ def cmd_campaign_create(args: argparse.Namespace) -> int:
                 file_path = Path(path)
                 if file_path.exists():
                     kind = "file"
-                    content = file_path.read_text(encoding="utf-8")
+                    content = file_path.read_text()
                     title = file_path.name
                     path_str = str(file_path.resolve())
                 else:
@@ -1251,44 +1193,9 @@ def cmd_campaign_create(args: argparse.Namespace) -> int:
                 path=path_str,
                 mission=f"Grounded material for campaign: {args.goal}"
             )
-            source_id = source_res["source_id"]
+            api.attach_source_to_campaign(campaign_id, source_res["source_id"])
 
-        # 2. Derive topic path
-        temp_slug = "".join(c for c in args.goal.lower() if c.isalnum() or c == " ").strip().replace(" ", ".")[:25]
-        if not temp_slug:
-            temp_slug = f"topic_{uuid.uuid4().hex[:8]}"
-
-        # 3. Create campaign
-        res = api.create_campaign(
-            name=args.name or f"Learning Campaign: {args.goal}",
-            topic_path=temp_slug,
-            mission=args.goal,
-            source_id=source_id
-        )
-        campaign_id = res["id"]
-
-        # 4. Overwrite to set default diagnostic configuration
-        campaign = api.store.get_campaign(campaign_id)
-        if campaign:
-            campaign.strategy_profile = {
-                "mode": "diagnostic",
-                "difficulty": args.level,
-                "scaffolding": "high" if args.level == "beginner" else ("medium" if args.level == "intermediate" else "low")
-            }
-            campaign.attack_plan = [
-                AttackPlanPhase(
-                    phase=0,
-                    topics=[f"{temp_slug}.diagnostic"],
-                    criteria=CriteriaEntry(min_attempts=2, min_accuracy=0.0),
-                    focus="Onboarding/Diagnostic calibration phase"
-                )
-            ]
-            api.store.save_campaign(campaign)
-
-        # 5. Start practice session (onboarding questions JIT trigger)
-        session_id = None
-        exercise_ids = []
-
+        # 3. Trigger diagnostic generation via api.start_practice_session(...)
         if not _use_json(args):
             sess_res = api.start_practice_session(campaign_id=campaign_id)
             session = sess_res["session"]
@@ -1296,11 +1203,12 @@ def cmd_campaign_create(args: argparse.Namespace) -> int:
             exercise_ids = session["exercise_ids"]
 
             # Fetch campaign details after JIT update
-            updated_campaign = api.store.get_campaign(campaign_id)
-            campaign_name = updated_campaign.name if updated_campaign else args.goal
-            campaign_topic = updated_campaign.topic_path if updated_campaign else temp_slug
+            with db.connect(api.db_path) as db_sess:
+                campaign = db_sess.get(db.Campaign, campaign_id)
+                campaign_name = campaign.name
+                campaign_topic = campaign.topic_path
 
-            # 6. Render detected topic and title
+            # 4. Render detected topic and title in a beautiful Panel
             header_text = (
                 f"[bold green]Campaign Name:[/bold green] [yellow]{campaign_name}[/yellow]\n"
                 f"[bold green]Campaign ID:[/bold green] [cyan]{campaign_id}[/cyan]\n"
@@ -1308,7 +1216,7 @@ def cmd_campaign_create(args: argparse.Namespace) -> int:
             )
             console.print(Panel(header_text, title="🚀 [bold green]Campaign Onboarding Diagnostic[/bold green]", expand=False, border_style="green"))
 
-            # 7. Styled interactive questions loop
+            # 5. Present onboarding questions using a styled interactive loop, collecting answers via api.submit_answer(...)
             console.print("\n[bold yellow]To calibrate your study plan, please answer the following diagnostic questions:[/bold yellow]")
             for idx in range(len(exercise_ids)):
                 prompt_info = api.reveal_prompt(session_id=session_id)
@@ -1328,48 +1236,50 @@ def cmd_campaign_create(args: argparse.Namespace) -> int:
 
                 api.submit_answer(user_answer=user_answer, session_id=session_id)
 
-            # 8. Trigger reflection/consolidation
-            api.consolidate_learner_profile(campaign_id=campaign_id)
+            # 6. Trigger consolidation via api.consolidate_learner_profile(...)
+            consolidate_res = api.consolidate_learner_profile(campaign_id=campaign_id)
 
-            # Fetch finalized details
-            camp_data = api.store.get_campaign(campaign_id)
+            # Fetch updated campaign details after consolidation
+            with db.connect(api.db_path) as db_sess:
+                campaign = db_sess.get(db.Campaign, campaign_id)
+                camp_data = db._campaign_from_model(campaign)
 
-            if camp_data:
-                if camp_data.syllabus_markdown:
-                    from rich.markdown import Markdown
-                    console.print()
-                    console.print(Panel(
-                        Markdown(camp_data.syllabus_markdown),
-                        title="📚 [bold green]Campaign Syllabus[/bold green]",
-                        border_style="green"
-                    ))
+            # 7. Render finalized syllabus and attack plan
+            if camp_data.get("syllabus_markdown"):
+                from rich.markdown import Markdown
+                console.print()
+                console.print(Panel(
+                    Markdown(camp_data["syllabus_markdown"]),
+                    title="📚 [bold green]Campaign Syllabus[/bold green]",
+                    border_style="green"
+                ))
 
-                if camp_data.attack_plan:
-                    from rich.tree import Tree
-                    tree = Tree("[bold cyan]Curriculum Attack Plan Timeline[/bold cyan]")
-                    for p in camp_data.attack_plan:
-                        phase_idx = p.phase
-                        topics_str = ", ".join(p.topics or [])
-                        crit = p.criteria
-                        criteria_str = f"min_attempts={crit.min_attempts}, min_accuracy={crit.min_accuracy}"
+            if camp_data.get("attack_plan"):
+                from rich.tree import Tree
+                tree = Tree("[bold cyan]Curriculum Attack Plan Timeline[/bold cyan]")
+                for p in camp_data["attack_plan"]:
+                    phase_idx = p["phase"]
+                    topics_str = ", ".join(p.get("topics") or [])
+                    crit = p.get("criteria") or {}
+                    criteria_str = f"min_attempts={crit.get('min_attempts', 0)}, min_accuracy={crit.get('min_accuracy', 0.0)}"
 
-                        if phase_idx == camp_data.active_phase_index:
-                            phase_node = tree.add(f"[bold yellow]▶ Phase {phase_idx} (Active)[/bold yellow]")
-                            phase_node.add(f"[bold yellow]Topics:[/bold yellow] [yellow]{topics_str}[/yellow]")
-                            phase_node.add(f"[bold yellow]Target Criteria:[/bold yellow] [dim]{criteria_str}[/dim]")
-                        else:
-                            status_style = "dim" if phase_idx < camp_data.active_phase_index else "cyan"
-                            phase_node = tree.add(f"[{status_style}]Phase {phase_idx}[/{status_style}]")
-                            phase_node.add(f"[bold {status_style}]Topics:[/bold {status_style}] {topics_str}")
-                            phase_node.add(f"[bold {status_style}]Target Criteria:[/bold {status_style}] [dim]{criteria_str}[/dim]")
-                    console.print()
-                    console.print(tree)
+                    if phase_idx == camp_data["active_phase_index"]:
+                        phase_node = tree.add(f"[bold yellow]▶ Phase {phase_idx} (Active)[/bold yellow]")
+                        phase_node.add(f"[bold yellow]Topics:[/bold yellow] [yellow]{topics_str}[/yellow]")
+                        phase_node.add(f"[bold yellow]Target Criteria:[/bold yellow] [dim]{criteria_str}[/dim]")
+                    else:
+                        status_style = "dim" if phase_idx < camp_data["active_phase_index"] else "cyan"
+                        phase_node = tree.add(f"[{status_style}]Phase {phase_idx}[/{status_style}]")
+                        phase_node.add(f"[bold {status_style}]Topics:[/bold {status_style}] {topics_str}")
+                        phase_node.add(f"[bold {status_style}]Target Criteria:[/bold {status_style}] [dim]{criteria_str}[/dim]")
+                console.print()
+                console.print(tree)
 
             console.print("\n[bold green]Campaign setup and diagnostic calibration complete![/bold green]")
             console.print("To begin practicing, run: [bold cyan]dojo start[/bold cyan]\n")
 
         else:
-            # JSON mode
+            # In JSON mode, we just return the campaign creation metadata directly
             _print_json({
                 "ok": True,
                 "type": "campaign_created",
@@ -1380,19 +1290,29 @@ def cmd_campaign_create(args: argparse.Namespace) -> int:
         if not _use_json(args):
             console.print()
             if isinstance(exc, KeyboardInterrupt):
-                console.print("[bold red]Campaign creation cancelled. Cleaning up filesystem...[/bold red]")
+                console.print("[bold red]Campaign creation cancelled. Cleaning up database...[/bold red]")
             else:
-                console.print(f"[bold red]Campaign creation failed ({exc}). Cleaning up...[/bold red]")
+                console.print(f"[bold red]Campaign creation failed ({exc}). Cleaning up database...[/bold red]")
 
-        # Cleanup created files
         try:
-            campaign_dir = api.store.dojo_dir / "campaigns" / f"camp_{temp_slug}"
-            if campaign_dir.exists():
-                shutil.rmtree(campaign_dir)
-            if session_id:
-                api.store.delete_active_session()
+            from sqlmodel import text
+            with db.connect(api.db_path) as db_sess:
+                # Delete attempts associated with this campaign or session
+                db_sess.execute(text("DELETE FROM attempts WHERE campaign_id = :cid"), {"cid": campaign_id})
+                if session_id:
+                    db_sess.execute(text("DELETE FROM attempts WHERE session_id = :sid"), {"sid": session_id})
+                    db_sess.execute(text("DELETE FROM practice_sessions WHERE id = :sid"), {"sid": session_id})
+
+                # Delete JIT diagnostic exercises
+                if exercise_ids:
+                    for ex_id in exercise_ids:
+                        db_sess.execute(text("DELETE FROM exercises WHERE id = :eid"), {"eid": ex_id})
+
+                # Delete the campaign
+                db_sess.execute(text("DELETE FROM campaigns WHERE id = :cid"), {"cid": campaign_id})
+                db_sess.commit()
         except Exception as cleanup_exc:
-            api.log.error(f"Failed to clean up files during campaign creation cancel: {cleanup_exc}")
+            api.log.error(f"Failed to clean up campaign '{campaign_id}': {cleanup_exc}")
 
         if isinstance(exc, KeyboardInterrupt):
             raise SystemExit(1)
@@ -1427,14 +1347,16 @@ def cmd_campaign_link(args: argparse.Namespace) -> int:
             })
         else:
             console.print("[bold green]Source topics mapped successfully.[/bold green]")
-            camp = api.store.get_campaign(args.campaign_id)
+            with db.connect(api.db_path) as session:
+                camp = session.get(db.Campaign, args.campaign_id)
+                camp_data = db._campaign_from_model(camp)
 
-            if camp and camp.sources_config:
+            if camp_data.get("sources_config"):
                 table = Table(title="Linked Campaign Sources")
                 table.add_column("Source ID", style="cyan")
                 table.add_column("Purpose", style="green")
                 table.add_column("Mapped Topics", style="magenta")
-                for link in camp.sources_config:
+                for link in camp_data["sources_config"]:
                     table.add_row(
                         link["source_id"],
                         link.get("purpose", ""),
@@ -1460,24 +1382,35 @@ def cmd_campaign_history(args: argparse.Namespace) -> int:
             "data": res
         })
     else:
-        campaign_name = "Global History"
-        campaign_id_disp = args.campaign or "All"
-        
-        console.print(f"\n[bold green]Pedagogical Journal for Campaign: {campaign_name}[/bold green]")
-        console.print(f"  Campaign ID: [cyan]{campaign_id_disp}[/cyan]\n")
+        console.print(f"\n[bold green]Pedagogical Journal for Campaign: {res['name']}[/bold green]")
+        console.print(f"  Campaign ID: [cyan]{res['campaign_id']}[/cyan]")
+        console.print(f"  Active Phase Index: [cyan]{res['active_phase_index']}[/cyan]\n")
 
-        if not res["history"]:
+        if not res["journal"]:
             console.print("No journal entries logged yet.")
             return 0
 
-        for i, entry in enumerate(res["history"], 1):
-            timestamp_short = entry["timestamp"].split("T")[0] if entry.get("timestamp") else "N/A"
+        for i, entry in enumerate(res["journal"], 1):
+            timestamp_short = entry["timestamp"].split("T")[0]
             console.print(
-                f"[bold cyan][{i}] {timestamp_short} - Action: {entry.get('action')}[/bold cyan] "
-                f"(Campaign: {entry.get('campaign_id')}, Status: {entry.get('status', 'resolved')})"
+                f"[bold cyan][{i}] {timestamp_short} - Action: {entry['action']}[/bold cyan] "
+                f"(Phase: {entry['active_phase_index']}, Status: {entry.get('status', 'resolved')})"
             )
-            console.print(f"    [bold]Trigger:[/bold] {entry.get('trigger')}")
-            console.print(f"    [bold]Hypothesis:[/bold] {entry.get('hypothesis')}")
+            console.print(f"    [bold]Trigger:[/bold] {entry['trigger']}")
+            console.print(f"    [bold]Hypothesis:[/bold] {entry['hypothesis']}")
+
+            perf = entry.get("performance_snapshot")
+            if perf:
+                console.print(f"    [bold]Performance at time:[/bold] attempts={perf.get('attempts', 0)}, accuracy={perf.get('accuracy', 0.0)*100:.1f}%, latency={perf.get('average_latency_seconds', 0.0):.1f}s")
+
+            if getattr(args, "show_snapshots", False):
+                from rich.markup import escape
+                console.print(f"    [bold]Plan Snapshot:[/bold]")
+                plan = entry.get("plan_snapshot") or []
+                for p in plan:
+                    topics_str = ", ".join(p.get("topics") or [])
+                    criteria_str = ", ".join(f"{k}={v}" for k, v in p.get("criteria", {}).items())
+                    console.print(f"      - Phase {p.get('phase', '?')}: topics=\\[{escape(topics_str)}], criteria=\\[{escape(criteria_str)}]")
             console.print()
     return 0
 
@@ -1489,24 +1422,22 @@ def cmd_campaign_export(args: argparse.Namespace) -> int:
     if campaign_id == "latest":
         try:
             history = api.get_campaign_history(None)
-            if history["history"]:
-                campaign_id = history["history"][0]["campaign_id"]
-            else:
-                raise ValueError("no campaigns exist to export")
+            campaign_id = history["campaign_id"]
         except Exception as exc:
             raise SystemExit(f"error: failed to resolve latest campaign: {exc}")
 
     output_path = args.output
     if not output_path:
         try:
-            camp = api.store.get_campaign(campaign_id)
-            if not camp:
-                raise ValueError(f"Campaign '{campaign_id}' not found")
-            name_slug = "".join(c for c in camp.name.lower() if c.isalnum() or c == " ").strip().replace(" ", "_")[:30]
-            if not name_slug:
-                name_slug = campaign_id
-            ext = "pdf" if args.format == "pdf" else "md"
-            output_path = f"{name_slug}_syllabus.{ext}"
+            with db.connect(api.db_path) as session:
+                camp = session.get(db.Campaign, campaign_id)
+                if not camp:
+                    raise ValueError(f"Campaign '{campaign_id}' not found")
+                name_slug = "".join(c for c in camp.name.lower() if c.isalnum() or c == " ").strip().replace(" ", "_")[:30]
+                if not name_slug:
+                    name_slug = campaign_id
+                ext = "pdf" if args.format == "pdf" else "md"
+                output_path = f"{name_slug}_syllabus.{ext}"
         except Exception as exc:
             raise SystemExit(f"error: failed to get campaign details: {exc}")
 
@@ -1514,7 +1445,7 @@ def cmd_campaign_export(args: argparse.Namespace) -> int:
         res = api.export_campaign_syllabus(
             campaign_id=campaign_id,
             output_path=output_path,
-            format=args.format
+            format_type=args.format
         )
     except Exception as exc:
         raise SystemExit(f"error: failed to export campaign: {exc}")
@@ -1527,15 +1458,16 @@ def cmd_campaign_export(args: argparse.Namespace) -> int:
         })
     else:
         console.print(f"[bold green]Syllabus successfully exported![/bold green]")
-        console.print(f"  Campaign: [cyan]{campaign_id}[/cyan]")
+        console.print(f"  Campaign: [cyan]{res['name']}[/cyan]")
         console.print(f"  Format: [cyan]{res['format'].upper()}[/cyan]")
-        console.print(f"  Output Path: [cyan]{res['path']}[/cyan]")
+        console.print(f"  Output Path: [cyan]{res['output_path']}[/cyan]")
     return 0
 
 
 def build_parser() -> argparse.ArgumentParser:
+
     parser = argparse.ArgumentParser(prog="dojo")
-    parser.add_argument("--db", help="Dojo root directory (backward compatible option name)")
+    parser.add_argument("--db", help="SQLite database path")
     parser.add_argument("--json", action="store_true", help="output structured JSON instead of human-friendly text")
     parser.add_argument("--no-input", action="store_true", help="disable all interactive prompts")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -1604,9 +1536,6 @@ def build_parser() -> argparse.ArgumentParser:
     p_progress = sub.add_parser("progress")
     p_progress.set_defaults(func=cmd_progress)
 
-    p_doctor = sub.add_parser("doctor")
-    p_doctor.set_defaults(func=cmd_doctor)
-
     p_install = sub.add_parser("install")
     p_install.add_argument("agent", nargs="?")
     p_install.add_argument("--dest", "-d", help="Custom destination directory to install the Dojo skill into")
@@ -1626,12 +1555,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_correct = sub.add_parser("correct")
     p_correct.add_argument("--feedback")
+    p_correct.add_argument("--session")
     p_correct.add_argument("--score", type=float, default=1.0)
     p_correct.set_defaults(func=cmd_correct)
 
     p_feedback = sub.add_parser("feedback")
     p_feedback.add_argument("comment")
     p_feedback.add_argument("--campaign")
+    p_feedback.add_argument("--attempt")
     p_feedback.set_defaults(func=cmd_feedback)
 
     p_admin = sub.add_parser("admin")
@@ -1641,7 +1572,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_consolidate.set_defaults(func=cmd_admin_consolidate)
 
     p_debug_run = p_admin_sub.add_parser("debug-run")
-    p_debug_run.add_argument("run_id", help="Generation run ID file path to inspect")
+    p_debug_run.add_argument("run_id", type=int, help="Generation run ID to inspect")
     p_debug_run.set_defaults(func=cmd_admin_debug_run)
 
     p_config = sub.add_parser("config")
