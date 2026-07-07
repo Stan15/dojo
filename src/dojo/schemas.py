@@ -262,6 +262,7 @@ class GradeResult(BaseModel):
 class InsightUpdate(BaseModel):
     op: Literal["create", "update", "resolve"]
     id: Optional[str] = None  # required for update/resolve; checked below
+    key: Optional[str] = None  # required for create: stable dotted label
     text: Optional[str] = None  # required for create/update
     evidence: List[str] = Field(default_factory=list)
     reason: str = Field(min_length=1)
@@ -269,12 +270,21 @@ class InsightUpdate(BaseModel):
     _cap_text = field_validator("text")(_cap_words("text", _limits.REFLECT_INSIGHT_WORDS))
     _cap_reason = field_validator("reason")(_cap_words("reason", _limits.REFLECT_REASON_WORDS))
 
+    @field_validator("key")
+    @classmethod
+    def _key_shape(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and not re.fullmatch(r"[a-z0-9_]+(\.[a-z0-9_]+)*", v):
+            raise ValueError("key must be a dotted lowercase label, e.g. conditional.aux_choice")
+        return v
+
     @model_validator(mode="after")
     def _op_requirements(self):
         if self.op in ("update", "resolve") and not self.id:
             raise ValueError(f"op={self.op} requires the existing insight id")
         if self.op in ("create", "update") and not self.text:
             raise ValueError(f"op={self.op} requires text")
+        if self.op == "create" and not self.key:
+            raise ValueError("op=create requires a key (dotted lowercase label)")
         if self.op == "create" and not self.evidence:
             raise ValueError("op=create requires evidence attempt ids")
         return self

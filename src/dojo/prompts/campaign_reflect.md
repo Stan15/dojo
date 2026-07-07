@@ -33,11 +33,12 @@ RULES
 OUTPUT — return only this JSON:
 {
   "insight_updates": [
-    {"op": "create|update|resolve", "id": null, "text": "...", "evidence": ["att_id"], "reason": "..."}
+    {"op": "create|update|resolve", "id": null, "key": "dotted.lowercase.label",
+     "text": "...", "evidence": ["att_id"], "reason": "..."}
   ],
   "strategy": null,
   "plan_revision": null,
   "journal": "..."
 }
-Check: nulls wherever nothing changed; ≤ 2 creates; every create/update cites
-attempt ids that exist in ATTEMPTS.
+Check: nulls wherever nothing changed; ≤ 2 creates; creates carry a key; every
+create/update cites attempt ids that exist in ATTEMPTS.
