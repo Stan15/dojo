@@ -1728,7 +1728,27 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
-    return args.func(args)
+    rc = args.func(args)
+    if rc == 0:
+        _audit_command_boundary(args, argv)
+    return rc
+
+
+def _audit_command_boundary(args: argparse.Namespace, argv: list[str] | None) -> None:
+    """One recovery point per successful CLI command (ADR 011).
+
+    Entity writes never auto-commit; this is the only place command-level
+    batching happens. A no-op when the command changed nothing. Failures are
+    non-fatal here — the doctor surfaces unhealthy audit state instead.
+    """
+    try:
+        from .store import DojoStore
+
+        words = argv if argv is not None else sys.argv[1:]
+        summary = " ".join(str(w) for w in words[:6])
+        DojoStore(_db_path(args)).audit(f"dojo {summary}")
+    except Exception:
+        pass
 
 
 if __name__ == "__main__":

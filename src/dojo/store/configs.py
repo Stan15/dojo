@@ -18,7 +18,6 @@ class ConfigRepository(BaseRepository):
     def _write_config(self, config: dict[str, Any]):
         with self.engine.write_lock():
             self.engine.write_text("config.yaml", yaml.safe_dump(config, sort_keys=False, allow_unicode=True))
-            self.engine.commit_git("Updated system configuration")
 
     def get_value(self, key: str, default: Any = None) -> Any:
         return self._read_config().get(key, default)
@@ -71,10 +70,8 @@ class ConfigRepository(BaseRepository):
         filepath = f"connectors/{name}.yaml"
         with self.engine.write_lock():
             self.engine.write_text(filepath, yaml.safe_dump(data, sort_keys=False, allow_unicode=True))
-            self.engine.commit_git(f"Saved AI Connector: {name}")
 
     def delete_connector(self, name: str):
         filepath = f"connectors/{name}.yaml"
         with self.engine.write_lock():
             self.engine.delete_file(filepath)
-            self.engine.commit_git(f"Deleted AI Connector: {name}")

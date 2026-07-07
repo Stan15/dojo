@@ -391,8 +391,9 @@ def test_api_insight_merging(mock_invoke: MagicMock, tmp_path: Path):
     # Create fake unreflected attempt so consolidate executes
     attempt = Attempt(
         id="att_new_1",
-        session="active_session.json",
-        exercise="campaigns/camp_math-calc/exercises/ex_1.md",
+        session_id="sess_fake",
+        exercise_id="ex_1",
+        campaign_id=campaign_id,
         score=1.0,
         latency_seconds=12.5,
         reflected=False

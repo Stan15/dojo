@@ -18,13 +18,11 @@ class SessionRepository(BaseRepository):
         rel_path = "active_session.json"
         with self.engine.write_lock():
             self.engine.write_text(rel_path, session.model_dump_json(indent=2))
-            self.engine.commit_git(f"Saved Active Session: {session.id}")
 
     def delete_active(self):
         rel_path = "active_session.json"
         with self.engine.write_lock():
             self.engine.delete_file(rel_path)
-            self.engine.commit_git("Deleted Active Session file")
 
     def get_archived(self, id: str) -> Optional[PracticeSession]:
         rel_path = f"archive/sessions/sess_{id}.json"
@@ -41,4 +39,3 @@ class SessionRepository(BaseRepository):
         rel_path = f"archive/sessions/sess_{session.id}.json"
         with self.engine.write_lock():
             self.engine.write_text(rel_path, session.model_dump_json(indent=2))
-            self.engine.commit_git(f"Archived Session: {session.id}")

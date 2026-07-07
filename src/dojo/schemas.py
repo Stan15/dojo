@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
+from typing import Any, ClassVar, Dict, List, Optional
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 # ==========================================
@@ -194,7 +194,34 @@ def get_schema_instruction(task_name: str) -> str:
 # File System Entity Schemas (with defaults/omissions)
 # ==========================================
 
-class Source(BaseModel):
+class StoredEntity(BaseModel):
+    """Base for entities persisted by the Store.
+
+    `extra="allow"`: unknown frontmatter keys a human adds to their files are
+    part of the storage contract (ADR 011) — they must survive read-modify-write,
+    so entity models carry them through instead of dropping them.
+
+    `_body_field` names the one long-text field serialized as the markdown body.
+    Bodies are normalized (leading/trailing whitespace stripped) at construction:
+    an editor adding a POSIX final newline must never register as a change.
+    """
+
+    model_config = ConfigDict(extra="allow")
+    _body_field: ClassVar[Optional[str]] = None
+
+    @model_validator(mode="after")
+    def _normalize_body(self):
+        bf = type(self)._body_field
+        if bf:
+            val = getattr(self, bf, None)
+            if isinstance(val, str) and val != val.strip():
+                setattr(self, bf, val.strip())
+        return self
+
+
+class Source(StoredEntity):
+    _body_field: ClassVar[Optional[str]] = "content"
+
     id: str
     title: str
     kind: str
@@ -206,7 +233,9 @@ class Source(BaseModel):
     content: str = ""
 
 
-class Campaign(BaseModel):
+class Campaign(StoredEntity):
+    _body_field: ClassVar[Optional[str]] = "syllabus_markdown"
+
     id: str
     name: str
     source_id: Optional[str] = None
@@ -224,7 +253,9 @@ class Campaign(BaseModel):
     syllabus_markdown: str = ""
 
 
-class Exercise(BaseModel):
+class Exercise(StoredEntity):
+    _body_field: ClassVar[Optional[str]] = "prompt"
+
     id: str
     topic_path: str
     difficulty: str
@@ -240,7 +271,9 @@ class Exercise(BaseModel):
     prompt: str
 
 
-class Candidate(BaseModel):
+class Candidate(StoredEntity):
+    _body_field: ClassVar[Optional[str]] = "prompt"
+
     id: str
     topic_path: str
     difficulty: str
@@ -255,10 +288,13 @@ class Candidate(BaseModel):
     prompt: str
 
 
-class Attempt(BaseModel):
+class Attempt(StoredEntity):
+    _body_field: ClassVar[Optional[str]] = "user_answer"
+
     id: str
-    session: str  # Root-relative path
-    exercise: str  # Root-relative path
+    session_id: str
+    exercise_id: str
+    campaign_id: str
     score: float
     latency_seconds: float
     skip_reason: Optional[str] = None
@@ -270,7 +306,9 @@ class Attempt(BaseModel):
     user_answer: str = ""
 
 
-class Insight(BaseModel):
+class Insight(StoredEntity):
+    _body_field: ClassVar[Optional[str]] = "description"
+
     id: str
     key: str
     sources: List[str] = Field(default_factory=list)
@@ -283,7 +321,7 @@ class Insight(BaseModel):
     description: str
 
 
-class PracticeSession(BaseModel):
+class PracticeSession(StoredEntity):
     id: str
     status: str = "active"
     exercise_ids: List[str] = Field(default_factory=list)

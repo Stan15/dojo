@@ -415,7 +415,7 @@ class DojoAPI:
                 attempts.extend(self.store.list_attempts(c.id))
 
         non_forgot_attempted_ids = {
-            a.exercise for a in attempts if not a.skip_reason or a.skip_reason != "forgot"
+            a.exercise_id for a in attempts if not a.skip_reason or a.skip_reason != "forgot"
         }
 
         # Resolve paths to stem names
@@ -761,15 +761,12 @@ class DojoAPI:
             score = 1.0
 
         attempt_id = f"att_{uuid.uuid4().hex[:8]}"
-        # exercise reference in attempt will be root-relative path
-        ex_rel_path = f"campaigns/camp_{campaign_id}/exercises/{exercise_id}.md"
-        # session reference
-        sess_ref = "active_session.json" if active and target_session.id == active.id else f"archive/sessions/sess_{target_session.id}.json"
 
         attempt = Attempt(
             id=attempt_id,
-            session=sess_ref,
-            exercise=ex_rel_path,
+            session_id=target_session.id,
+            exercise_id=exercise_id,
+            campaign_id=campaign_id,
             score=score,
             latency_seconds=latency,
             user_answer=user_ans,
@@ -859,7 +856,7 @@ class DojoAPI:
             attempts.extend(self.store.list_attempts(c.id))
 
         non_forgot_attempted_ids = {
-            a.exercise for a in attempts if not a.skip_reason or a.skip_reason != "forgot"
+            a.exercise_id for a in attempts if not a.skip_reason or a.skip_reason != "forgot"
         }
 
         due_exercises = [
@@ -941,14 +938,13 @@ class DojoAPI:
                 latency = 0.0
 
         attempt_id = f"att_{uuid.uuid4().hex[:8]}"
-        ex_rel_path = f"campaigns/camp_{campaign_id}/exercises/{exercise_id}.md"
-        sess_ref = "active_session.json" if active and target_session.id == active.id else f"archive/sessions/sess_{target_session.id}.json"
 
         # If user skips, score matches the difficulty calibration signal: e.g. 0.0 score, marked as skipped
         attempt = Attempt(
             id=attempt_id,
-            session=sess_ref,
-            exercise=ex_rel_path,
+            session_id=target_session.id,
+            exercise_id=exercise_id,
+            campaign_id=campaign_id,
             score=0.0,
             latency_seconds=latency,
             skip_reason=reason,
@@ -1005,10 +1001,7 @@ class DojoAPI:
         all_attempts = sorted(all_attempts, key=lambda x: x.created_at, reverse=True)
         latest_att = all_attempts[0]
 
-        # Extract campaign ID from the relative exercise path in the attempt
-        # Rel path: campaigns/camp_{campaign_id}/exercises/{filename}.md
-        parts = Path(latest_att.exercise).parts
-        campaign_id = parts[1][5:] # strip 'camp_'
+        campaign_id = latest_att.campaign_id
 
         latest_att.score = score
         if feedback is not None:
@@ -1088,7 +1081,7 @@ class DojoAPI:
         formatted_attempts = []
         for a in attempts:
             formatted_attempts.append({
-                "exercise_id": Path(a.exercise).stem,
+                "exercise_id": a.exercise_id,
                 "prompt": a.prompt,
                 "user_answer": a.user_answer,
                 "score": a.score,
@@ -1234,7 +1227,7 @@ class DojoAPI:
                 if a.skip_reason and a.skip_reason != "forgot":
                     continue
                 # Load corresponding exercise
-                ex = self.store.get_exercise(campaign.id, Path(a.exercise).stem)
+                ex = self.store.get_exercise(campaign.id, a.exercise_id)
                 if ex:
                     for t in phase_topics:
                         if ex.topic_path == t or ex.topic_path.startswith(t + "."):
@@ -1324,7 +1317,7 @@ class DojoAPI:
         formatted_attempts = []
         for a in payload_attempts:
             formatted_attempts.append({
-                "exercise_id": Path(a.exercise).stem,
+                "exercise_id": a.exercise_id,
                 "prompt": a.prompt,
                 "user_answer": a.user_answer,
                 "score": a.score,
@@ -1477,7 +1470,7 @@ class DojoAPI:
                 for a in all_attempts:
                     if a.skip_reason and a.skip_reason != "forgot":
                         continue
-                    ex = self.store.get_exercise(campaign.id, Path(a.exercise).stem)
+                    ex = self.store.get_exercise(campaign.id, a.exercise_id)
                     if ex:
                         for t in phase_topics:
                             if ex.topic_path == t or ex.topic_path.startswith(t + "."):

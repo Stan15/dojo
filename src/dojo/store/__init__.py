@@ -33,6 +33,10 @@ class DojoStore:
     def index(self):
         return self.engine.index
 
+    def audit(self, message: str):
+        """One recovery point per command boundary (ADR 011); no-op when clean."""
+        self.engine.audit(message)
+
     # Low-level delegation (in case callers access it directly)
     def sync_index(self):
         self.engine.sync_index()

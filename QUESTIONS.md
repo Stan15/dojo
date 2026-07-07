@@ -20,7 +20,7 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
    validated `dojo task submit` path the harness uses — one contract, so it can
    never behave differently from the harness path. Cost of keeping: ~500 lines +
    tests. My default: keep it, because (a) is genuinely useful for a daily-ritual
-   product.
+   product. sure, we can keep it, but if there is a way we can do things in such a way that there is a unified interface, that is always nice. but if there is real need for them to have a stratified interface, then sure. also, keep in mind, we want the tool to be dead simple for our users to setup and use. i wonder what is in the contents of that model-wrapper.sh. i wonder if the fact that we have to have th users write an sh file already means it's complex? if it doesn't boil down to just a single string command thing, like perhaps "hermes -Q" in teh config file? if there's a real need, tell me to inform my decision on how best to handle it. think deeply about this. also keep in mind that hermes (or in general, ai agent) cron jobs are a use case too (idk if htis affects anything or it's completely tangential) 
 
 ## Answered (2026-07-07)
 

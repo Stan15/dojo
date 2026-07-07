@@ -192,6 +192,16 @@ class StorageEngine:
         """Adds all changes and commits them."""
         commit_git(self.dojo_dir, message)
 
+    def audit(self, message: str):
+        """Creates one recovery point covering everything since the last one.
+
+        Entity writes never auto-commit (ADR 011): callers mark command
+        boundaries explicitly — the CLI after each command, API users whenever
+        they want a recovery point. No-op when nothing changed.
+        """
+        with self.write_lock():
+            commit_git(self.dojo_dir, message)
+
     @contextmanager
     def write_lock(self):
         """Acquires lock for execution block."""

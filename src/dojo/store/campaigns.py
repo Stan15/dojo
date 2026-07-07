@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 import yaml
 from .base import BaseRepository
-from .engine import commit_git, slugify, parse_markdown, serialize_markdown, _match_filter
+from .engine import slugify, parse_markdown, serialize_markdown, _match_filter
 from ..schemas import Campaign, Exercise, Candidate, Attempt, Insight, AttackPlanPhase
 
 class CampaignRepository(BaseRepository):
@@ -12,7 +12,7 @@ class CampaignRepository(BaseRepository):
     # ==========================================
     def list(self) -> List[Campaign]:
         recs = self.engine.query_index("campaign")
-        recs = sorted(recs, key=lambda x: x.get("created_at", ""), reverse=True)
+        recs = sorted(recs, key=lambda x: x["data"].get("created_at", ""), reverse=True)
         campaigns = []
         for r in recs:
             # recs maps to paths campaigns/camp_{id}/campaign.md. Let's parse campaign_id from path.
@@ -80,7 +80,6 @@ class CampaignRepository(BaseRepository):
             self.engine.write_text(changelog_md_rel, changelog_content)
 
             self.engine.sync_index()
-            commit_git(self.engine.dojo_dir, f"Saved Campaign: {campaign.name}")
 
     def archive(self, id: str):
         src_dir = self.engine.dojo_dir / "campaigns" / f"camp_{id}"
@@ -93,7 +92,6 @@ class CampaignRepository(BaseRepository):
                     shutil.rmtree(dest_dir)
                 src_dir.rename(dest_dir)
                 self.engine.sync_index()
-                commit_git(self.engine.dojo_dir, f"Archived Campaign: {id}")
 
     # ==========================================
     # Exercises
@@ -113,6 +111,7 @@ class CampaignRepository(BaseRepository):
 
     def get_exercise(self, campaign_id: str, id: str) -> Optional[Exercise]:
         prefix_path = f"campaigns/camp_{campaign_id}/exercises"
+        self.engine.sync_index()
         matching_path: Optional[str] = None
         for rel_path, file_info in self.engine.index["files"].items():
             if file_info.get("type") == "exercise" and rel_path.startswith(prefix_path):
@@ -130,6 +129,7 @@ class CampaignRepository(BaseRepository):
 
     def save_exercise(self, campaign_id: str, exercise: Exercise):
         prefix_path = f"campaigns/camp_{campaign_id}/exercises"
+        self.engine.sync_index()
         matching_path: Optional[str] = None
         for rel_path, file_info in self.engine.index["files"].items():
             if file_info.get("type") == "exercise" and rel_path.startswith(prefix_path):
@@ -147,10 +147,10 @@ class CampaignRepository(BaseRepository):
         with self.engine.write_lock():
             self.engine.write_markdown_file(matching_path, exercise, "prompt")
             self.engine.sync_index()
-            commit_git(self.engine.dojo_dir, f"Saved Exercise: {exercise.id}")
 
     def delete_exercise(self, campaign_id: str, id: str):
         prefix_path = f"campaigns/camp_{campaign_id}/exercises"
+        self.engine.sync_index()
         matching_path: Optional[str] = None
         for rel_path, file_info in self.engine.index["files"].items():
             if file_info.get("type") == "exercise" and rel_path.startswith(prefix_path):
@@ -162,7 +162,6 @@ class CampaignRepository(BaseRepository):
             with self.engine.write_lock():
                 self.engine.delete_file(matching_path)
                 self.engine.sync_index()
-                commit_git(self.engine.dojo_dir, f"Deleted Exercise: {id}")
 
     # ==========================================
     # Candidates
@@ -181,6 +180,7 @@ class CampaignRepository(BaseRepository):
 
     def get_candidate(self, campaign_id: str, id: str) -> Optional[Candidate]:
         prefix_path = f"campaigns/camp_{campaign_id}/candidates"
+        self.engine.sync_index()
         matching_path: Optional[str] = None
         for rel_path, file_info in self.engine.index["files"].items():
             if file_info.get("type") == "candidate" and rel_path.startswith(prefix_path):
@@ -198,6 +198,7 @@ class CampaignRepository(BaseRepository):
 
     def save_candidate(self, campaign_id: str, candidate: Candidate):
         prefix_path = f"campaigns/camp_{campaign_id}/candidates"
+        self.engine.sync_index()
         matching_path: Optional[str] = None
         for rel_path, file_info in self.engine.index["files"].items():
             if file_info.get("type") == "candidate" and rel_path.startswith(prefix_path):
@@ -215,10 +216,10 @@ class CampaignRepository(BaseRepository):
         with self.engine.write_lock():
             self.engine.write_markdown_file(matching_path, candidate, "prompt")
             self.engine.sync_index()
-            commit_git(self.engine.dojo_dir, f"Saved Candidate: {candidate.id}")
 
     def delete_candidate(self, campaign_id: str, id: str):
         prefix_path = f"campaigns/camp_{campaign_id}/candidates"
+        self.engine.sync_index()
         matching_path: Optional[str] = None
         for rel_path, file_info in self.engine.index["files"].items():
             if file_info.get("type") == "candidate" and rel_path.startswith(prefix_path):
@@ -230,7 +231,6 @@ class CampaignRepository(BaseRepository):
             with self.engine.write_lock():
                 self.engine.delete_file(matching_path)
                 self.engine.sync_index()
-                commit_git(self.engine.dojo_dir, f"Deleted Candidate: {id}")
 
     # ==========================================
     # Attempts
@@ -249,6 +249,7 @@ class CampaignRepository(BaseRepository):
 
     def get_attempt(self, campaign_id: str, id: str) -> Optional[Attempt]:
         prefix_path = f"campaigns/camp_{campaign_id}/attempts"
+        self.engine.sync_index()
         matching_path: Optional[str] = None
         for rel_path, file_info in self.engine.index["files"].items():
             if file_info.get("type") == "attempt" and rel_path.startswith(prefix_path):
@@ -266,6 +267,7 @@ class CampaignRepository(BaseRepository):
 
     def save_attempt(self, campaign_id: str, attempt: Attempt):
         prefix_path = f"campaigns/camp_{campaign_id}/attempts"
+        self.engine.sync_index()
         matching_path: Optional[str] = None
         for rel_path, file_info in self.engine.index["files"].items():
             if file_info.get("type") == "attempt" and rel_path.startswith(prefix_path):
@@ -275,17 +277,16 @@ class CampaignRepository(BaseRepository):
 
         if not matching_path:
             timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-            ex_name = Path(attempt.exercise).stem
-            filename = f"att_{timestamp}_{ex_name}.md"
+            filename = f"att_{timestamp}_{attempt.exercise_id}.md"
             matching_path = f"{prefix_path}/{filename}"
 
         with self.engine.write_lock():
             self.engine.write_markdown_file(matching_path, attempt, "user_answer")
             self.engine.sync_index()
-            commit_git(self.engine.dojo_dir, f"Saved Attempt: {attempt.id}")
 
     def delete_attempt(self, campaign_id: str, id: str):
         prefix_path = f"campaigns/camp_{campaign_id}/attempts"
+        self.engine.sync_index()
         matching_path: Optional[str] = None
         for rel_path, file_info in self.engine.index["files"].items():
             if file_info.get("type") == "attempt" and rel_path.startswith(prefix_path):
@@ -297,7 +298,6 @@ class CampaignRepository(BaseRepository):
             with self.engine.write_lock():
                 self.engine.delete_file(matching_path)
                 self.engine.sync_index()
-                commit_git(self.engine.dojo_dir, f"Deleted Attempt: {id}")
 
     # ==========================================
     # Insights
@@ -317,6 +317,7 @@ class CampaignRepository(BaseRepository):
 
     def get_insight(self, campaign_id: str, id: str) -> Optional[Insight]:
         prefix_path = f"campaigns/camp_{campaign_id}/insights"
+        self.engine.sync_index()
         matching_path: Optional[str] = None
         for rel_path, file_info in self.engine.index["files"].items():
             if file_info.get("type") == "insight" and rel_path.startswith(prefix_path):
@@ -334,6 +335,7 @@ class CampaignRepository(BaseRepository):
 
     def save_insight(self, campaign_id: str, insight: Insight):
         prefix_path = f"campaigns/camp_{campaign_id}/insights"
+        self.engine.sync_index()
         matching_path: Optional[str] = None
         for rel_path, file_info in self.engine.index["files"].items():
             if file_info.get("type") == "insight" and rel_path.startswith(prefix_path):
@@ -348,10 +350,10 @@ class CampaignRepository(BaseRepository):
         with self.engine.write_lock():
             self.engine.write_markdown_file(matching_path, insight, "description")
             self.engine.sync_index()
-            commit_git(self.engine.dojo_dir, f"Saved Insight: {insight.id}")
 
     def delete_insight(self, campaign_id: str, id: str):
         prefix_path = f"campaigns/camp_{campaign_id}/insights"
+        self.engine.sync_index()
         matching_path: Optional[str] = None
         for rel_path, file_info in self.engine.index["files"].items():
             if file_info.get("type") == "insight" and rel_path.startswith(prefix_path):
@@ -363,4 +365,3 @@ class CampaignRepository(BaseRepository):
             with self.engine.write_lock():
                 self.engine.delete_file(matching_path)
                 self.engine.sync_index()
-                commit_git(self.engine.dojo_dir, f"Deleted Insight: {id}")

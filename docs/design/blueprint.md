@@ -149,8 +149,10 @@ its good bones — frontmatter + body, mtime index, atomic writes, file lock):
 
 Format rules (public contract, kept in this doc):
 frontmatter = schema fields with defaults omitted; body = the entity's one
-designated long-text field; IDs stable and content-independent; filenames are
-presentation, IDs are identity (rename-safe). Git versioning batches **one commit
+designated long-text field, **normalized** (leading/trailing whitespace stripped
+at entity construction, so an editor adding a POSIX final newline never registers
+as a change); IDs stable and content-independent; filenames are presentation,
+IDs are identity (rename-safe). Git versioning batches **one commit
 per CLI command**, not per entity write (fixes current per-save noise), and commit
 failures surface in `dojo doctor` rather than being swallowed.
 

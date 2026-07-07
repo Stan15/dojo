@@ -33,6 +33,14 @@ Non-obvious learnings. Newest at the bottom. Never delete; strike through only i
   them. What's needed across campaigns is fair, urgency-weighted rotation with atrophy
   pressure and deadline awareness: a deterministic priority score, fully explainable.
 
+- **The path-leak was already a latent bug, not just a smell (2026-07-07, M1 dig).**
+  `Attempt.session` stores `"active_session.json"` — a reference that silently goes
+  stale the moment the session archives to `archive/sessions/…` — and
+  `Attempt.exercise` is built as `exercises/{id}.md` (api.py submit path) while
+  `save_exercise` actually writes `{date}_{counter}_{slug}.md`, so attempt refs can
+  point at files that never existed. Consumers recover IDs via `Path(ref).stem`,
+  compounding the confusion. Validates ADR 011's ID-based refs as a bug fix.
+
 - **Repo drift found during survey (2026-07-07):** `pydantic` is imported throughout
   but absent from `pyproject.toml` dependencies; two ADRs share number 003; README
   says v1.0.0 while pyproject says 0.1.0; `docs/api-specification.md` still documents
