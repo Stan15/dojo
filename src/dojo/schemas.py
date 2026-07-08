@@ -465,6 +465,8 @@ class Task(StoredEntity):
 
 class PracticeSession(StoredEntity):
     id: str
+    packet_reasons: Dict[str, str] = Field(default_factory=dict)  # exercise_id → why chosen (I9)
+    campaign_reasons: Dict[str, str] = Field(default_factory=dict)  # Tier-1 ranking explained
     status: str = "active"
     exercise_ids: List[str] = Field(default_factory=list)
     current_index: int = 0

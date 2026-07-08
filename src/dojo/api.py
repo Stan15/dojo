@@ -49,6 +49,85 @@ class DojoAPI:
             score=score, latency_seconds=latency_seconds, skip_reason=skip_reason,
         )
 
+    def daily(self, size: int | None = None, reset: bool = False) -> dict[str, Any]:
+        """The product's face: one bounded, interleaved, explained packet
+        (blueprint §7). Never blocks on AI (I4): missing skill stock becomes
+        emitted tasks + honest counts, and recall practice always works."""
+        from . import packet as packet_mod
+        from .tasks import flows
+
+        active = self.store.sessions.get_active()
+        if active and active.status == "active" and not reset:
+            return {
+                "is_new": False,
+                "session": active.model_dump(),
+                "why": active.packet_reasons,
+                "next": "resume: dojo ready reveals the next prompt (dojo daily --reset to rebuild)",
+            }
+
+        now = datetime.now(timezone.utc)
+        pkt = packet_mod.build_packet(self.store, now, size=size)
+
+        tasks = []
+        for need in pkt.needs_generation:
+            campaign = self.store.campaigns.get(need["campaign_id"])
+            if campaign is None:
+                continue
+            task = flows.request_generation(
+                self.store, campaign,
+                topic_path=need["topic_path"], n_items=2,  # novel skill items, small batch
+            )
+            tasks.append(flows.task_ref(task))
+
+        if not pkt.items:
+            return {
+                "is_new": False,
+                "session": None,
+                "tasks": tasks,
+                "skipped": pkt.skipped,
+                "campaign_reasons": pkt.campaign_reasons,
+                "next": (
+                    "nothing is due right now"
+                    + ("; fulfill the generation task(s) then re-run dojo daily" if tasks else
+                       " — enjoy the day off, the schedule is honest")
+                ),
+            }
+
+        session = PracticeSession(
+            id=f"sess_{uuid.uuid4().hex[:8]}",
+            exercise_ids=[item.exercise_id for item in pkt.items],
+            packet_reasons={i.exercise_id: i.reason for i in pkt.items},
+            campaign_reasons=pkt.campaign_reasons,
+        )
+        self.store.sessions.save_active(session)
+        self.log.info(f"Daily packet built: {len(pkt.items)} items, {len(tasks)} tasks emitted")
+
+        return {
+            "is_new": True,
+            "session": session.model_dump(),
+            "items": [
+                {"exercise_id": i.exercise_id, "campaign_id": i.campaign_id, "reason": i.reason}
+                for i in pkt.items
+            ],
+            "skipped": pkt.skipped,
+            "tasks": tasks,
+            "next": "dojo ready reveals the first prompt",
+        }
+
+    def why(self) -> dict[str, Any]:
+        """Replays the scheduling decisions behind the current packet (I9)."""
+        session = self.store.sessions.get_active()
+        if session is None:
+            return {"session": None, "note": "no active session — run dojo daily first"}
+        return {
+            "session": session.id,
+            "items": [
+                {"exercise_id": ex_id, "reason": session.packet_reasons.get(ex_id, "(built before reasons were recorded)")}
+                for ex_id in session.exercise_ids
+            ],
+            "campaigns": session.campaign_reasons,
+        }
+
     # ==========================================
     # Sources Operations
     # ==========================================

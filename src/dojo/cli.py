@@ -1491,6 +1491,88 @@ def cmd_benchmark(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_daily(args: argparse.Namespace) -> int:
+    api = DojoAPI(_db_path(args))
+    res = api.daily(size=args.size, reset=args.reset)
+    if _use_json(args):
+        _print_json({"ok": True, **res})
+        return 0
+    session = res.get("session")
+    if session is None:
+        console.print("[yellow]Nothing is due right now.[/yellow]")
+        for t in res.get("tasks", []):
+            console.print(f"  Pending task [cyan]{t['id']}[/cyan] — {t['submit_with']}")
+        console.print(f"  {res.get('next')}")
+        return 0
+    if not res.get("is_new"):
+        console.print(f"[bold yellow]Resuming today's session[/bold yellow] [cyan]{session['id']}[/cyan] "
+                      f"({session['current_index']}/{len(session['exercise_ids'])} done)")
+        return 0
+    console.print(f"[bold green]Today's packet[/bold green] — {len(session['exercise_ids'])} items")
+    for item in res.get("items", []):
+        console.print(f"  [cyan]{item['exercise_id']}[/cyan]  [dim]{item['reason']}[/dim]")
+    for key, count in (res.get("skipped") or {}).items():
+        console.print(f"  [dim]{count} due item(s) held back ({key.replace('_', ' ')})[/dim]")
+    for t in res.get("tasks", []):
+        console.print(f"  Pending task [cyan]{t['id']}[/cyan] — {t['submit_with']}")
+    console.print("  Run [bold]dojo ready[/bold] to reveal the first prompt.")
+    return 0
+
+
+def cmd_why(args: argparse.Namespace) -> int:
+    api = DojoAPI(_db_path(args))
+    res = api.why()
+    if _use_json(args):
+        _print_json(res)
+        return 0
+    if res.get("session") is None:
+        console.print(f"[yellow]{res['note']}[/yellow]")
+        return 0
+    console.print(f"[bold]Why this packet[/bold] (session [cyan]{res['session']}[/cyan])")
+    for item in res["items"]:
+        console.print(f"  [cyan]{item['exercise_id']}[/cyan]  {item['reason']}")
+    if res.get("campaigns"):
+        console.print("[bold]Campaign ranking[/bold]")
+        for cid, reason in res["campaigns"].items():
+            console.print(f"  [cyan]{cid}[/cyan]  {reason}")
+    return 0
+
+
+def cmd_campaign_boost(args: argparse.Namespace) -> int:
+    """Cross-campaign surfacing: 'I want THIS CAMPAIGN to come up more/less'."""
+    api = DojoAPI(_db_path(args))
+    campaign = api.store.campaigns.get(args.campaign_id)
+    if campaign is None:
+        raise SystemExit(f"error: campaign {args.campaign_id} not found")
+    campaign.strategy_profile["priority_weight"] = args.factor
+    api.store.campaigns.save(campaign)
+    _print_json({
+        "ok": True, "campaign_id": campaign.id, "priority_weight": args.factor,
+        "effect": f"this campaign now surfaces with x{args.factor:g} priority in daily packets",
+    })
+    return 0
+
+
+def cmd_topic_boost(args: argparse.Namespace) -> int:
+    """Intra-campaign emphasis: 'I want exercises about THIS TOPIC more often'."""
+    api = DojoAPI(_db_path(args))
+    campaign = api.store.campaigns.get(args.campaign_id)
+    if campaign is None:
+        raise SystemExit(f"error: campaign {args.campaign_id} not found")
+    entry = next((t for t in campaign.topics if t.get("path") == args.topic_path), None)
+    if entry is None:
+        entry = {"path": args.topic_path, "kind": args.kind or "recall", "summary": ""}
+        campaign.topics.append(entry)
+    entry["emphasis"] = args.factor
+    api.store.campaigns.save(campaign)
+    _print_json({
+        "ok": True, "campaign_id": campaign.id, "topic_path": args.topic_path,
+        "emphasis": args.factor,
+        "effect": f"items on this topic come due x{args.factor:g} faster and win packet ties",
+    })
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="dojo")
     parser.add_argument("--db", help="Dojo root directory (backward compatible option name)")
@@ -1644,8 +1726,28 @@ def build_parser() -> argparse.ArgumentParser:
     p_config_show = p_config_sub.add_parser("show")
     p_config_show.set_defaults(func=cmd_config_show)
 
+    p_daily = sub.add_parser("daily", help="build today's bounded, explained practice packet")
+    p_daily.add_argument("--size", type=int, help="override daily.packet_size (hard cap 8)")
+    p_daily.add_argument("--reset", action="store_true", help="discard the active session and rebuild")
+    p_daily.set_defaults(func=cmd_daily)
+
+    p_why = sub.add_parser("why", help="explain every scheduling choice behind the current packet")
+    p_why.set_defaults(func=cmd_why)
+
     p_campaign = sub.add_parser("campaign")
     p_camp_sub = p_campaign.add_subparsers(dest="campaign_command", required=True)
+
+    p_camp_boost = p_camp_sub.add_parser("boost", help="surface this CAMPAIGN more (or less) in daily packets")
+    p_camp_boost.add_argument("campaign_id")
+    p_camp_boost.add_argument("factor", type=float, help="1.0 = neutral, 2.0 = twice the priority, 0.5 = half")
+    p_camp_boost.set_defaults(func=cmd_campaign_boost)
+
+    p_topic_boost = p_camp_sub.add_parser("topic-boost", help="practice this TOPIC more often within its campaign")
+    p_topic_boost.add_argument("campaign_id")
+    p_topic_boost.add_argument("topic_path")
+    p_topic_boost.add_argument("factor", type=float, help="2.0 = due twice as fast")
+    p_topic_boost.add_argument("--kind", choices=["recall", "skill"], help="lane when creating a new topic entry")
+    p_topic_boost.set_defaults(func=cmd_topic_boost)
 
     p_camp_plan = p_camp_sub.add_parser("plan")
     p_camp_plan.add_argument("goal", help="The user's high-level learning goal or target skill")
