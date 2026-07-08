@@ -102,7 +102,7 @@ def fulfill_step(store: DojoStore, compiled, fulfiller: str, timeout: int):
     raw = run_command(fulfiller, task.prompt, timeout)
     outcome = service.submit(store, task.id, raw)
     try:
-        extracted = json.dumps(service.extract_json(raw), indent=1)
+        extracted = json.dumps(service.extract_json(raw), indent=1, ensure_ascii=False)
     except ValueError:
         extracted = raw[-2000:]
     counts = {
@@ -188,9 +188,9 @@ def calibration_gate(
     """Judge must rank the planted good reference strictly above the bad one,
     blind. Returns None when calibrated, else the reason."""
     good = judge_output(judge_cmd, scenario_context,
-                        json.dumps(references["good"], indent=1), criteria, timeout)
+                        json.dumps(references["good"], indent=1, ensure_ascii=False), criteria, timeout)
     bad = judge_output(judge_cmd, scenario_context,
-                       json.dumps(references["bad"], indent=1), criteria, timeout)
+                       json.dumps(references["bad"], indent=1, ensure_ascii=False), criteria, timeout)
     if good["score"] <= bad["score"]:
         return (
             f"judge failed calibration: good={good['score']:.2f} ≤ bad={bad['score']:.2f}"
@@ -224,7 +224,7 @@ def execute_quality_scenario(scenario: dict, tmp_path: Path, driver: str, timeou
             outcome = submit_canned(store, compiled, step["respond_with"])
             if not outcome.ok:
                 raise RuntimeError(f"scripted step rejected: {outcome.errors}")
-            final_output = json.dumps(step["respond_with"], indent=1)
+            final_output = json.dumps(step["respond_with"], indent=1, ensure_ascii=False)
         else:
             outcome, extracted, counts = fulfill_step(store, compiled, driver, timeout)
             if not outcome.ok:

@@ -128,3 +128,16 @@ class TestCorpusIntegrity:
         assert outcome.ok, (
             f"the GOOD reference was rejected by the production submit path: {outcome.errors}"
         )
+
+
+def test_judged_output_renders_human_readable_unicode():
+    """The judge quotes what it READS; ensure_ascii escaping made honest French
+    quotes fail the verbatim check and silently sank accent-heavy scenarios
+    (insight_targeting calibration failed three runs straight)."""
+    import json as _json
+    from dojo.evals.runner import _norm
+
+    reference = {"prompt": "Traduisez : Elle serait venue à la fête."}
+    rendered = _json.dumps(reference, indent=1, ensure_ascii=False)
+    assert "à la fête" in rendered, "judged output must contain readable unicode"
+    assert _norm("elle serait venue à la fête") in _norm(rendered)

@@ -14,6 +14,7 @@ from rich.table import Table
 from rich.panel import Panel
 
 from .api import DojoAPI
+from .logger import DEFAULT_DOJO_DIR
 from .store import DojoStore, slugify
 from .schemas import AttackPlanPhase, CriteriaEntry, Campaign, Candidate
 
@@ -1403,6 +1404,71 @@ def _score_style(score: float) -> str:
     return "green" if score >= 0.8 else ("yellow" if score >= 0.5 else "red")
 
 
+def cmd_uninstall(args: argparse.Namespace) -> int:
+    """Removes what install created: the skill from an agent's directory, and
+    (--self) the dojo program itself. Learning data (~/.local/share/dojo) is
+    NEVER touched — it is the user's learning life; removing it is a manual,
+    deliberate act."""
+    import shutil as _shutil
+
+    removed = []
+
+    if getattr(args, "self_uninstall", False):
+        exe = Path(sys.executable).resolve()
+        home = Path.home()
+        if getattr(sys, "frozen", False):
+            method = ("binary", f"rm {Path(sys.argv[0]).resolve()}")
+        elif "pipx" in str(exe):
+            method = ("pipx", "pipx uninstall dojo")
+        elif str(exe).startswith(str(home / ".dojo" / "venv")):
+            method = ("venv", f"rm -rf {home / '.dojo'} {home / '.local/bin/dojo'}")
+        else:
+            method = ("pip", f"{exe} -m pip uninstall dojo")
+        _print_json({
+            "ok": True,
+            "install_method": method[0],
+            "run_this": method[1],
+            "learning_data": str(DEFAULT_DOJO_DIR),
+            "note": "your learning data is untouched; delete it manually only if you "
+                    "are sure — it is your entire practice history",
+        })
+        return 0
+
+    agent = getattr(args, "agent", None)
+    dest = getattr(args, "dest", None)
+    home = Path.home()
+    if dest:
+        target_path = Path(dest)
+    elif agent == "hermes":
+        target_path = home / ".hermes" / "skills" / "dojo"
+    elif agent == "openclaw":
+        target_path = home / ".openclaw" / "skills" / "dojo"
+    elif agent:
+        target_path = home / f".{agent}" / "skills" / "dojo"
+    else:
+        raise SystemExit("specify an agent name, --dest <path>, or --self")
+
+    if not target_path.exists():
+        _print_json({"ok": True, "removed": [], "note": f"nothing installed at {target_path}"})
+        return 0
+    if not _is_owned_by_dojo(target_path):
+        _print_json({
+            "ok": False,
+            "error": f"{target_path} exists but is not a dojo-owned skill "
+                     "(no dojo owner marker in SKILL.md) — refusing to delete it",
+        })
+        return 1
+    _shutil.rmtree(target_path)
+    removed.append(str(target_path))
+    _print_json({
+        "ok": True,
+        "removed": removed,
+        "learning_data": str(DEFAULT_DOJO_DIR),
+        "note": "skill removed; learning data untouched (dojo uninstall --self for the program itself)",
+    })
+    return 0
+
+
 def cmd_benchmark(args: argparse.Namespace) -> int:
     """Benchmarks the user's model(s) on dojo's shipped pedagogy corpus and
     shows, by category, where that (driver, judge) pair is strong or weak —
@@ -1605,6 +1671,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--json", action="store_true", help="output structured JSON instead of human-friendly text")
     parser.add_argument("--no-input", action="store_true", help="disable all interactive prompts")
     sub = parser.add_subparsers(dest="command", required=True)
+
+    p_uninstall = sub.add_parser("uninstall", help="remove the skill from an agent (or --self for the program); learning data is never touched")
+    p_uninstall.add_argument("agent", nargs="?", help="agent name whose skill install to remove")
+    p_uninstall.add_argument("--dest", help="explicit skill directory to remove")
+    p_uninstall.add_argument("--self", dest="self_uninstall", action="store_true",
+                             help="show how to remove the dojo program itself (pipx/venv/binary aware)")
+    p_uninstall.set_defaults(func=cmd_uninstall)
 
     p_bench = sub.add_parser(
         "benchmark",
