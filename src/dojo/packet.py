@@ -136,24 +136,82 @@ def _compose_for_campaign(
     return picks[:slots]
 
 
-def _skill_topics_needing_stock(store, campaign: Campaign, due: list[Exercise], now: datetime) -> list[dict[str, Any]]:
-    """Skill topics whose memory is due but which have no unspent novel item in
-    stock (ADR 012: skill items are disposable; due topic + empty stock =
-    generation request)."""
-    stocked = {ex.topic_path for ex in due if ex.kind == "skill"}
-    needs = []
-    for topic in campaign.topics or []:
-        if topic.get("kind") != "skill":
-            continue
-        if not _emphasized_due(topic.get("sr"), float(topic.get("emphasis", 1.0)), now):
-            continue
-        if topic["path"] in stocked:
-            continue
-        needs.append({
+def active_phase_topics(campaign: Campaign) -> Optional[set[str]]:
+    """Topic paths of the active plan phase (list-position index, matching
+    _evaluate_campaign_phase_advancement), or None when there is no plan — no
+    plan means no gate."""
+    plan = campaign.attack_plan or []
+    if not plan:
+        return None
+    idx = min(max(campaign.active_phase_index, 0), len(plan) - 1)
+    return set(plan[idx].topics)
+
+
+def _in_phase(topic_path: str, phase: Optional[set[str]]) -> bool:
+    if phase is None:
+        return True
+    return any(topic_path == t or topic_path.startswith(t + ".") for t in phase)
+
+
+def _stock_requests(store, campaign: Campaign, due: list[Exercise], now: datetime) -> list[dict[str, Any]]:
+    """What AI work would feed this campaign — PHASE-GATED (a fresh plan's
+    later phases must not all demand generation on day one; E2E finding
+    2026-07-08):
+
+    - a campaign with no evidence at all calibrates first: ONE diagnostic
+      request (pedagogy-foundation: unknown level means calibration, never
+      hard generated content);
+    - skill topics whose topic-memory is due with no novel item in stock
+      (ADR 012 novelty);
+    - active-phase topics with zero exercises at all (cold frontier).
+    """
+    phase = active_phase_topics(campaign)
+
+    if not store.attempts.list(campaign.id) and not store.exercises.list(campaign.id):
+        first_topic = (
+            sorted(phase)[0] if phase
+            else (campaign.topic_path or (campaign.topics or [{}])[0].get("path", "general"))
+        )
+        return [{
             "campaign_id": campaign.id,
-            "topic_path": topic["path"],
-            "reason": "skill due for fresh practice, no novel exercise in stock",
-        })
+            "topic_path": first_topic,
+            "diagnostic": True,
+            "reason": "new campaign, no evidence yet: calibrate before generating practice",
+        }]
+
+    all_active = [
+        ex for ex in store.exercises.list(campaign.id)
+        if ex.quality not in EXCLUDED_QUALITIES
+    ]
+    stocked_skill = {ex.topic_path for ex in due if ex.kind == "skill"}
+    stocked_any = {ex.topic_path for ex in all_active}
+
+    needs, seen = [], set()
+    for topic in campaign.topics or []:
+        path = topic.get("path")
+        if not path or path in seen or not _in_phase(path, phase):
+            continue
+        if (
+            topic.get("kind") == "skill"
+            and _emphasized_due(topic.get("sr"), float(topic.get("emphasis", 1.0)), now)
+            and path not in stocked_skill
+        ):
+            needs.append({
+                "campaign_id": campaign.id, "topic_path": path, "diagnostic": False,
+                "reason": "skill due for fresh practice, no novel exercise in stock",
+            })
+            seen.add(path)
+        elif path not in stocked_any and (
+            topic.get("kind") != "skill" or not topic.get("sr")
+        ):
+            # cold frontier: never-practiced topic with nothing to practice.
+            # A skill topic with memory state but out of stock waits until its
+            # topic-memory is due — pre-stocking would waste generation.
+            needs.append({
+                "campaign_id": campaign.id, "topic_path": path, "diagnostic": False,
+                "reason": "active-phase topic with no exercises yet",
+            })
+            seen.add(path)
     return needs
 
 
@@ -177,7 +235,7 @@ def build_packet(
         score, reason, due = campaign_priority(store, campaign, now)
         ranked.append((score, campaign.id, reason, campaign, due))
         packet.needs_generation.extend(
-            _skill_topics_needing_stock(store, campaign, due, now)
+            _stock_requests(store, campaign, due, now)
         )
     ranked.sort(key=lambda t: (-t[0], t[1]))
 

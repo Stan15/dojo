@@ -68,16 +68,24 @@ class DojoAPI:
         now = datetime.now(timezone.utc)
         pkt = packet_mod.build_packet(self.store, now, size=size)
 
+        # Token frugality: at most 2 AI tasks per daily run; the rest wait for
+        # the next daily and are counted honestly (E2E finding 2026-07-08:
+        # a fresh plan emitted 5 generation tasks at once).
+        MAX_DAILY_TASKS = 2
         tasks = []
-        for need in pkt.needs_generation:
+        for need in pkt.needs_generation[:MAX_DAILY_TASKS]:
             campaign = self.store.campaigns.get(need["campaign_id"])
             if campaign is None:
                 continue
             task = flows.request_generation(
                 self.store, campaign,
-                topic_path=need["topic_path"], n_items=2,  # novel skill items, small batch
+                topic_path=need["topic_path"], n_items=2,
+                diagnostic=bool(need.get("diagnostic")),
             )
             tasks.append(flows.task_ref(task))
+        deferred = len(pkt.needs_generation) - min(len(pkt.needs_generation), MAX_DAILY_TASKS)
+        if deferred:
+            pkt.skipped["generation_deferred"] = deferred
 
         if not pkt.items:
             return {

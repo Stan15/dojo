@@ -132,3 +132,61 @@ class TestBoostCommands:
         api.daily(reset=True)
         why = api.why()
         assert any("boosted" in r for r in why["campaigns"].values())
+
+
+class TestColdStartAndPhaseGating:
+    """E2E finding 2026-07-08: a fresh plan emitted 5 generation tasks at once.
+    Now: evidence-free campaigns calibrate first (ONE diagnostic task), stock
+    requests are gated to the active phase, and daily emits at most 2 AI tasks
+    per run with the rest counted honestly."""
+
+    def _planned_campaign(self, api: DojoAPI) -> str:
+        from dojo.schemas import AttackPlanPhase, CriteriaEntry
+        cid = api.create_campaign(name="Git Arch", topic_path="git",
+                                  mission="Do code archaeology confidently.")["id"]
+        camp = api.store.campaigns.get(cid)
+        camp.topics = [
+            {"path": "git.objects", "kind": "recall", "summary": ""},
+            {"path": "git.log_queries", "kind": "skill", "summary": ""},
+            {"path": "git.blame", "kind": "skill", "summary": ""},
+            {"path": "git.bisect", "kind": "skill", "summary": ""},
+            {"path": "git.merges", "kind": "skill", "summary": ""},
+        ]
+        camp.attack_plan = [
+            AttackPlanPhase(phase=1, topics=["git.objects"],
+                            criteria=CriteriaEntry(min_attempts=5, min_accuracy=0.0),
+                            focus="calibration"),
+            AttackPlanPhase(phase=2, topics=["git.log_queries", "git.blame"],
+                            criteria=CriteriaEntry(min_attempts=10, min_accuracy=0.7)),
+        ]
+        camp.active_phase_index = 0
+        api.store.campaigns.save(camp)
+        return cid
+
+    def test_cold_campaign_gets_one_diagnostic_task(self, tmp_path: Path):
+        api = DojoAPI(tmp_path)
+        self._planned_campaign(api)
+        res = api.daily()
+        assert res["session"] is None
+        assert len(res["tasks"]) == 1, "calibrate first — never a wall of generation tasks"
+        task = api.store.tasks.get(res["tasks"][0]["id"])
+        assert task.kind == "exercise.diagnostic"
+        assert task.context["topic_path"] == "git.objects", "phase 1's topic, not the whole tree"
+
+    def test_warm_campaign_stock_requests_are_phase_gated_and_capped(self, tmp_path: Path):
+        from dojo.schemas import Attempt
+        api = DojoAPI(tmp_path)
+        cid = self._planned_campaign(api)
+        camp = api.store.campaigns.get(cid)
+        camp.active_phase_index = 1  # phase 2 active: log_queries + blame only
+        api.store.campaigns.save(camp)
+        api.store.attempts.save(cid, Attempt(
+            id="att_1", session_id="s1", exercise_id="ex_old", campaign_id=cid,
+            score=1.0, latency_seconds=10.0, user_answer="x",
+        ))
+        res = api.daily()
+        emitted = [api.store.tasks.get(t["id"]).context["topic_path"] for t in res["tasks"]]
+        assert set(emitted) <= {"git.log_queries", "git.blame"}, (
+            f"later-phase topics (bisect/merges) must not request stock yet: {emitted}"
+        )
+        assert len(res["tasks"]) <= 2, "token frugality: at most 2 AI tasks per daily"

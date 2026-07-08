@@ -182,6 +182,11 @@ class TestBoosts:
     def test_emphasized_skill_topic_requests_generation_sooner(self, tmp_path: Path):
         store = make_store(tmp_path)
         camp = add_campaign(store, "c")
+        # warm campaign: calibration-first only applies to evidence-free ones
+        store.attempts.save("c", Attempt(
+            id="att_w", session_id="s1", exercise_id="ex_gone", campaign_id="c",
+            score=1.0, latency_seconds=10.0, user_answer="x",
+        ))
         sr = scheduling.record_outcome(
             scheduling.new_state(NOW - timedelta(days=6)), score=1.0,
             latency_seconds=5.0, now=NOW - timedelta(days=6),
