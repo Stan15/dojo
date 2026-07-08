@@ -71,6 +71,11 @@ dojo config set fulfiller.command "codex exec"   # or "ollama run llama3", …
 dojo task run                                     # drain pending AI work
 ```
 
+**Your data travels.** `dojo export <folder>` writes your entire store as a
+fresh markdown tree — read entity-by-entity through the storage layer, blind to
+the backend, so the same command stays your escape hatch when other storage
+backends exist. The export is itself a working dojo store.
+
 **Leaving?** `dojo uninstall <agent>` removes the skill (only if dojo owns it),
 `dojo uninstall --self` tells you exactly how to remove the program for your
 install method — and your learning data in `~/.local/share/dojo/` is never

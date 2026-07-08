@@ -40,3 +40,4 @@ dist/
 .cache/
 scratch/
 
+dojo-benchmark-*.json

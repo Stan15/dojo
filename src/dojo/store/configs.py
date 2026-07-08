@@ -19,6 +19,9 @@ class ConfigRepository(BaseRepository):
         with self.engine.write_lock():
             self.engine.write_text("config.yaml", yaml.safe_dump(config, sort_keys=False, allow_unicode=True))
 
+    def all(self) -> dict[str, Any]:
+        return dict(self._read_config())
+
     def get_value(self, key: str, default: Any = None) -> Any:
         return self._read_config().get(key, default)
 

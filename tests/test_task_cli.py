@@ -135,3 +135,43 @@ class TestBenchmarkCli:
         assert scores["generate_grounded_french.yaml".removesuffix(".yaml")] == 1.0
         assert scores["grade_partial_credit"] == 0.0, "wrong-shape output must fail honestly"
         assert out_file.exists()
+
+
+class TestBenchmarkQualityPipeline:
+    """CI lock on the FULL quality tier of run_benchmark with scripted models —
+    no LLM, pure plumbing. A signature mismatch between run_benchmark and
+    execute_quality_scenario shipped to a real user because nothing drove this
+    path in CI; the only failure mode allowed here is the judge's own
+    calibration refusal, and the report must degrade honestly (I10)."""
+
+    def test_quality_tier_degrades_honestly_with_uncalibrated_judge(self, tmp_path: Path):
+        import tempfile
+
+        from dojo.evals.runner import load_corpus, run_benchmark
+
+        driver = tmp_path / "driver.py"
+        driver.write_text("import sys\nsys.stdin.read()\nprint('{}')\n", encoding="utf-8")
+        judge = tmp_path / "judge.py"
+        judge.write_text(
+            "import sys, json, re\n"
+            "prompt = sys.stdin.read()\n"
+            "ids = re.findall(r'^(c\\d+):', prompt.split('## RUBRIC')[-1], re.M)\n"
+            "print(json.dumps({'verdicts': [{'id': i, 'verdict': 'fail', 'why': 'scripted'} for i in ids]}))\n",
+            encoding="utf-8",
+        )
+        with tempfile.TemporaryDirectory() as workdir:
+            report = run_benchmark(
+                driver=f"python {driver}", judge=f"python {judge}",
+                workdir=Path(workdir), tiers=("quality",),
+            )
+
+        n_quality = len(load_corpus("quality"))
+        assert report["total_scenarios"] == n_quality
+        assert report["errors"] == n_quality, "all-fail judge cannot rank good>bad → every scenario errors"
+        assert report["overall"] is None and report["scored_scenarios"] == 0
+        for cat in report["categories"].values():
+            assert cat["mean"] is None and cat["errors"] > 0
+            for sc in cat["scenarios"]:
+                assert "calibration" in (sc["error"] or ""), (
+                    f"only calibration refusal is an acceptable failure here, got: {sc['error']}"
+                )

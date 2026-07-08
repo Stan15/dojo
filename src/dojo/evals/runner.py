@@ -157,6 +157,13 @@ def judge_output(
     data = service.extract_json(raw)
     got = {v.get("id"): v for v in data.get("verdicts", []) if isinstance(v, dict)}
 
+    # Honest quotes may differ from the JSON-rendered output only by escape
+    # sequences (\n in string values) — accept both surfaces.
+    haystacks = (
+        _norm(output_text),
+        _norm(output_text.replace("\\n", " ").replace("\\t", " ").replace('\\"', '"')),
+    )
+
     total_weight, earned, discarded, verdicts = 0.0, 0.0, [], {}
     for c in criteria:
         weight = float(c.get("weight", 1.0))
@@ -168,7 +175,8 @@ def judge_output(
             continue
         if v["verdict"] == "pass":
             evidence = v.get("evidence") or ""
-            if not evidence or _evidence_core(evidence) not in _norm(output_text):
+            core = _evidence_core(evidence)
+            if not evidence or not any(core in h for h in haystacks):
                 discarded.append(c["id"])
                 verdicts[c["id"]] = "discarded-unproven-pass"
                 continue
@@ -212,9 +220,13 @@ class ScenarioResult:
     error: Optional[str] = None  # infrastructure/judge failure, not model quality
 
 
-def execute_quality_scenario(scenario: dict, tmp_path: Path, driver: str, timeout: int) -> str:
+def execute_quality_scenario(
+    scenario: dict, tmp_path: Path, driver: str, timeout: int,
+    byte_log: Optional[list] = None,
+) -> str:
     """Runs steps; returns the final step's extracted output (the thing on
     trial). Scripted steps isolate the judged step from upstream variance."""
+    byte_log = byte_log if byte_log is not None else []
     store = seed_store(tmp_path, scenario["seed"])
     campaign_id = scenario["seed"]["campaign"]["id"]
     final_output = None
@@ -325,7 +337,14 @@ def summarize(
             "detail": r.detail, "error": r.error,
         })
     for name, cat in categories.items():
-        cat["mean"] = sum(cat["scores"]) / len(cat["scores"])
+        # Only scenarios that actually produced a verdict count toward the mean
+        # (I10): an infrastructure/judge failure is an error to report, not a
+        # zero to average in — and never a scenario to silently drop.
+        valid = [
+            s["score"] for s in cat["scenarios"] if s["error"] is None
+        ]
+        cat["mean"] = (sum(valid) / len(valid)) if valid else None
+        cat["errors"] = sum(1 for s in cat["scenarios"] if s["error"])
         cat["blurb"] = CATEGORY_BLURBS.get(name, "")
         del cat["scores"]
     scored = [r for r in results if r.error is None]
@@ -346,8 +365,12 @@ def summarize(
         "driver": driver,
         "judge": judge,
         "pair": f"{slug_for(driver)}__{slug_for(judge)}",
-        "categories": dict(sorted(categories.items(), key=lambda kv: -kv[1]["mean"])),
-        "overall": (sum(r.score for r in scored) / len(scored)) if scored else 0.0,
+        "categories": dict(sorted(
+            categories.items(),
+            key=lambda kv: -(kv[1]["mean"] if kv[1]["mean"] is not None else -1.0),
+        )),
+        "overall": (sum(r.score for r in scored) / len(scored)) if scored else None,
+        "scored_scenarios": len(scored),
         "errors": sum(1 for r in results if r.error),
         "total_scenarios": len(results),
     }

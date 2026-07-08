@@ -1404,6 +1404,20 @@ def _score_style(score: float) -> str:
     return "green" if score >= 0.8 else ("yellow" if score >= 0.5 else "red")
 
 
+def cmd_export(args: argparse.Namespace) -> int:
+    from .export import export_store
+    from .store import DojoStore
+
+    store = DojoStore(_db_path(args))
+    try:
+        summary = export_store(store, args.destination)
+    except ValueError as exc:
+        _print_json({"ok": False, "error": str(exc)})
+        return 1
+    _print_json({"ok": True, **summary})
+    return 0
+
+
 def cmd_uninstall(args: argparse.Namespace) -> int:
     """Removes what install created: the skill from an agent's directory, and
     (--self) the dojo program itself. Learning data (~/.local/share/dojo) is
@@ -1510,13 +1524,20 @@ def cmd_benchmark(args: argparse.Namespace) -> int:
 
     console.print()
     overall = report["overall"]
-    console.print(
-        f"  [bold]Overall[/bold]  [{_score_style(overall)}]{_score_bar(overall)} "
-        f"{overall:.2f}[/{_score_style(overall)}]  "
-        f"[dim]({report['total_scenarios']} scenarios"
-        + (f", {report['errors']} could not be scored" if report["errors"] else "")
-        + ")[/dim]\n"
-    )
+    if report["errors"]:
+        console.print(
+            f"  [bold red]⚠ {report['errors']} of {report['total_scenarios']} scenarios "
+            f"could not be scored[/bold red] — scores below cover only the "
+            f"{report['scored_scenarios']} that ran cleanly (--detail shows the errors)\n"
+        )
+    if overall is None:
+        console.print("  [bold red]No scenario produced a scoreable result.[/bold red]\n")
+    else:
+        console.print(
+            f"  [bold]Overall[/bold]  [{_score_style(overall)}]{_score_bar(overall)} "
+            f"{overall:.2f}[/{_score_style(overall)}]  "
+            f"[dim]({report['scored_scenarios']} of {report['total_scenarios']} scenarios scored)[/dim]\n"
+        )
 
     if report.get("token_footprint"):
         tf = report["token_footprint"]
@@ -1531,11 +1552,14 @@ def cmd_benchmark(args: argparse.Namespace) -> int:
     table.add_column("Score", justify="left")
     table.add_column("What it measures", style="dim")
     for name, cat in report["categories"].items():
-        style = _score_style(cat["mean"])
-        table.add_row(name, f"[{style}]{_score_bar(cat['mean'])} {cat['mean']:.2f}[/{style}]", cat["blurb"])
+        if cat["mean"] is None:
+            table.add_row(name, f"[red]no result ({cat['errors']} error(s))[/red]", cat["blurb"])
+        else:
+            style = _score_style(cat["mean"])
+            table.add_row(name, f"[{style}]{_score_bar(cat['mean'])} {cat['mean']:.2f}[/{style}]", cat["blurb"])
     console.print(table)
 
-    cats = list(report["categories"].items())
+    cats = [(n, c) for n, c in report["categories"].items() if c["mean"] is not None]
     if len(cats) >= 2:
         best, worst = cats[0], cats[-1]
         console.print(
@@ -1671,6 +1695,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--json", action="store_true", help="output structured JSON instead of human-friendly text")
     parser.add_argument("--no-input", action="store_true", help="disable all interactive prompts")
     sub = parser.add_subparsers(dest="command", required=True)
+
+    p_export = sub.add_parser("export", help="write your entire store as a fresh markdown store at a destination (backend-blind)")
+    p_export.add_argument("destination", help="empty or nonexistent directory to export into")
+    p_export.set_defaults(func=cmd_export)
 
     p_uninstall = sub.add_parser("uninstall", help="remove the skill from an agent (or --self for the program); learning data is never touched")
     p_uninstall.add_argument("agent", nargs="?", help="agent name whose skill install to remove")
