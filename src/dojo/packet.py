@@ -26,7 +26,10 @@ HARD_MAX_PACKET_SIZE = 8
 W_DUE = 1.0
 W_ATROPHY = 0.6
 
-EXCLUDED_QUALITIES = {"archived", "too_easy", "too_hard", "bad_quality", "spent", "diagnostic"}
+# Retired items never appear anywhere; diagnostics are additionally excluded
+# from the MEMORY mix (they lead packets via _due_diagnostics instead).
+RETIRED_QUALITIES = {"archived", "too_easy", "too_hard", "bad_quality", "spent"}
+EXCLUDED_QUALITIES = RETIRED_QUALITIES | {"diagnostic"}
 
 
 @dataclass
@@ -72,6 +75,15 @@ def _emphasized_due(sr, emphasis: float, now: datetime) -> bool:
     return effective <= now
 
 
+def _due_diagnostics(store, campaign: Campaign) -> list[Exercise]:
+    """Unanswered calibration questions — they lead the packet (you cannot
+    calibrate practice you never serve; E2E finding 2026-07-08)."""
+    return sorted(
+        (ex for ex in store.exercises.list(campaign.id) if ex.quality == "diagnostic"),
+        key=lambda e: e.id,
+    )
+
+
 def _due_exercises(store, campaign: Campaign, now: datetime) -> list[Exercise]:
     emphasis = _topic_emphasis(campaign)
     due = []
@@ -88,7 +100,7 @@ def campaign_priority(
 ) -> tuple[float, str, list[Exercise]]:
     """Tier-1 score: campaigns don't forget, learners under-attend them —
     urgency-weighted fairness, not memory math (ADR 012)."""
-    due = _due_exercises(store, campaign, now)
+    due = _due_diagnostics(store, campaign) + _due_exercises(store, campaign, now)
     days = _days_since_touch(campaign.id, store, now)
     due_pressure = min(len(due) / 5.0, 1.0)
     atrophy = min(days / 7.0, 1.0)
@@ -111,13 +123,18 @@ def _compose_for_campaign(
     maintenance win, one never-practiced frontier item when available."""
     if not due or slots <= 0:
         return []
+    picks_first = [
+        (e, "calibration question — your answer sets the baseline")
+        for e in due if e.quality == "diagnostic"
+    ][:slots]
+    due = [e for e in due if e.quality != "diagnostic"]
     fresh = [e for e in due if e.sr is None]
     seen = [e for e in due if e.sr is not None]
     by_weakness = sorted(
         seen, key=lambda e: (scheduling.retrievability(e.sr, now), e.id)
     )
 
-    picks: list[tuple[Exercise, str]] = []
+    picks: list[tuple[Exercise, str]] = list(picks_first)
     if by_weakness:
         weakest = by_weakness.pop(0)
         r = scheduling.retrievability(weakest.sr, now)

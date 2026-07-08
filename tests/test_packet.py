@@ -85,10 +85,10 @@ class TestProperties:
         assert [(i.campaign_id, i.exercise_id) for i in first.items] == \
                [(i.campaign_id, i.exercise_id) for i in second.items]
 
-        # excluded qualities never leak in
+        # retired items never leak in; diagnostics may lead (calibration)
         for item in first.items:
             ex = store.exercises.get(item.campaign_id, item.exercise_id)
-            assert ex.quality not in packet.EXCLUDED_QUALITIES
+            assert ex.quality not in packet.RETIRED_QUALITIES
 
         # I9: every choice carries a reason
         assert all(item.reason for item in first.items)

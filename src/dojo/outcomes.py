@@ -26,8 +26,16 @@ def land_score(
     skip_reason: Optional[str] = None,
 ) -> None:
     ex = store.exercises.get(campaign_id, exercise_id)
-    if ex is None or ex.quality == "diagnostic":
-        return  # diagnostics gather information; they are not memories to maintain
+    if ex is None:
+        return
+    if ex.quality == "diagnostic":
+        # Diagnostics gather information, not memories: no SR state, and an
+        # answered one retires so it never repeats (packet serves only
+        # quality=="diagnostic", which now means "not yet answered").
+        ex.quality = "spent"
+        ex.updated_at = datetime.now(timezone.utc).isoformat()
+        store.exercises.save(campaign_id, ex)
+        return
 
     if ex.kind == "skill":
         campaign = store.campaigns.get(campaign_id)

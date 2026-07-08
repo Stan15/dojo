@@ -161,6 +161,7 @@ class TestColdStartAndPhaseGating:
         ]
         camp.active_phase_index = 0
         api.store.campaigns.save(camp)
+        self._cid = cid
         return cid
 
     def test_cold_campaign_gets_one_diagnostic_task(self, tmp_path: Path):
@@ -172,6 +173,42 @@ class TestColdStartAndPhaseGating:
         task = api.store.tasks.get(res["tasks"][0]["id"])
         assert task.kind == "exercise.diagnostic"
         assert task.context["topic_path"] == "git.objects", "phase 1's topic, not the whole tree"
+
+    def test_fulfilled_diagnostics_are_served_then_retire(self, tmp_path: Path):
+        """The dead loop the live E2E caught: daily requested calibration
+        questions, then refused to serve them (diagnostic was in the packet's
+        excluded set). Now they LEAD the packet, and answering retires them."""
+        import json as _json
+        from dojo.tasks import service
+        api = DojoAPI(tmp_path)
+        self._planned_campaign(api)
+        task_ref = api.daily()["tasks"][0]
+        outcome = service.submit(api.store, task_ref["id"], _json.dumps({
+            "items": [
+                {"prompt": "What do you picture a commit pointing to?",
+                 "answer": None, "rubric": None, "skill": "diagnostic"},
+                {"prompt": "Plumbing commands: used any?",
+                 "answer": None, "rubric": None, "skill": "diagnostic"},
+            ],
+            "note": None, "intervention": None,
+        }))
+        assert outcome.ok, outcome.errors
+
+        res = api.daily(reset=True)
+        assert res["session"] is not None, "calibration questions must be served"
+        assert len(res["session"]["exercise_ids"]) == 2
+        assert all("calibration" in i["reason"] for i in res["items"])
+
+        session_id = res["session"]["id"]
+        for answer in ("a snapshot, I think", "porcelain only"):
+            api.reveal_prompt(session_id=session_id)
+            ans = api.submit_answer(user_answer=answer, session_id=session_id)
+            assert ans["grader"] == "auto" and ans["score"] == 1.0
+
+        for ex_id in res["session"]["exercise_ids"]:
+            ex = api.store.exercises.get(self._cid, ex_id)
+            assert ex.quality == "spent" and ex.sr is None, "answered diagnostics retire, no SR"
+        assert api.daily(reset=True)["session"] is None, "nothing repeats"
 
     def test_warm_campaign_stock_requests_are_phase_gated_and_capped(self, tmp_path: Path):
         from dojo.schemas import Attempt
