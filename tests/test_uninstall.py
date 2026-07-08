@@ -26,7 +26,7 @@ def run(capsys, *argv: str) -> tuple[int, dict]:
 def test_uninstall_removes_dojo_owned_skill(tmp_path: Path, capsys):
     skill_dir = tmp_path / "skills" / "dojo"
     skill_dir.mkdir(parents=True)
-    real_skill = Path(__file__).parent.parent / "skills" / "dojo" / "SKILL.md"
+    real_skill = Path(__file__).parent.parent / "src" / "dojo" / "skills" / "SKILL.md"
     (skill_dir / "SKILL.md").write_text(real_skill.read_text(encoding="utf-8"), encoding="utf-8")
 
     rc, data = run(capsys, "--db", str(tmp_path / "store"), "uninstall", "--dest", str(skill_dir))
@@ -59,3 +59,44 @@ def test_self_uninstall_reports_method_without_deleting_anything(tmp_path: Path,
     assert data["install_method"] in ("pipx", "venv", "binary", "pip")
     assert "uninstall" in data["run_this"] or "rm" in data["run_this"]
     assert "learning data" in data["note"]
+
+
+class TestInstallMethodDetection:
+    """Pure-function pins for --self (owner-reported: resolving the venv
+    symlink misdetected a venv install as bare pip on macOS/Homebrew)."""
+
+    HOME = Path("/Users/someone")
+
+    def _detect(self, **kw):
+        from dojo.cli import _detect_install_method
+        defaults = dict(
+            executable=Path("/usr/bin/python3"), prefix=Path("/usr"),
+            frozen=False, home=self.HOME, argv0=Path("dojo"),
+        )
+        defaults.update(kw)
+        return _detect_install_method(**defaults)
+
+    def test_install_sh_venv_detected_by_prefix_not_resolved_symlink(self):
+        method, cmd = self._detect(
+            prefix=self.HOME / ".dojo" / "venv",
+            # what sys.executable RESOLVES to on macOS — must not matter
+            executable=Path("/opt/homebrew/Cellar/python@3.13/3.13.11/Frameworks/"
+                            "Python.framework/Versions/3.13/bin/python3.13"),
+        )
+        assert method == "venv"
+        assert str(self.HOME / ".dojo") in cmd and ".local/bin/dojo" in cmd
+
+    def test_pipx_detected(self):
+        method, cmd = self._detect(
+            prefix=self.HOME / ".local" / "pipx" / "venvs" / "dojo",
+            executable=self.HOME / ".local" / "pipx" / "venvs" / "dojo" / "bin" / "python",
+        )
+        assert method == "pipx" and cmd == "pipx uninstall dojo"
+
+    def test_frozen_binary_detected(self):
+        method, cmd = self._detect(frozen=True, argv0=Path("/usr/local/bin/dojo"))
+        assert method == "binary" and cmd == "rm /usr/local/bin/dojo"
+
+    def test_bare_pip_fallback_uses_unresolved_executable(self):
+        method, cmd = self._detect(executable=Path("/opt/python/bin/python3"))
+        assert method == "pip" and cmd.startswith("/opt/python/bin/python3 -m pip uninstall")

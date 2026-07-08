@@ -19,7 +19,7 @@ import pytest
 from dojo.evals.runner import compile_step, load_corpus, seed_store
 
 BASELINE = Path(__file__).parent.parent / "evals" / "baselines" / "token-footprint.json"
-SKILL = Path(__file__).parent.parent / "skills" / "dojo" / "SKILL.md"
+SKILL = Path(__file__).parent.parent / "src" / "dojo" / "skills" / "SKILL.md"
 TOLERANCE = 0.05  # ±5%: whitespace-level churn passes; a new section does not
 
 

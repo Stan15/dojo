@@ -175,3 +175,28 @@ class TestBenchmarkQualityPipeline:
                 assert "calibration" in (sc["error"] or ""), (
                     f"only calibration refusal is an acceptable failure here, got: {sc['error']}"
                 )
+
+
+    def test_benchmark_never_touches_the_user_store(self, dojo_dir: Path, tmp_path: Path, capsys):
+        """Owner concern: benchmarks must run entirely in throwaway stores.
+        The user's --db store must be byte-identical afterwards."""
+        import hashlib
+
+        def store_hash() -> str:
+            h = hashlib.sha256()
+            for p in sorted(dojo_dir.rglob("*")):
+                if p.is_file() and ".git" not in p.parts:
+                    h.update(str(p.relative_to(dojo_dir)).encode())
+                    h.update(p.read_bytes())
+            return h.hexdigest()
+
+        emit_task(dojo_dir)  # give the store real content worth protecting
+        before = store_hash()
+
+        script = tmp_path / "scripted_model.py"
+        script.write_text("import sys\nsys.stdin.read()\nprint('{}')\n", encoding="utf-8")
+        run(capsys, "--db", str(dojo_dir), "--json", "benchmark",
+            "--driver", f"python {script}", "--tier", "compliance",
+            "--output", str(tmp_path / "r.json"))
+
+        assert store_hash() == before, "benchmark leaked writes into the user's store"

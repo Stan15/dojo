@@ -615,13 +615,15 @@ def cmd_install(args: argparse.Namespace) -> int:
         else:
             target_path = home / f".{agent}" / "skills" / "dojo"
 
+    # The skill ships as package data — installs must never depend on a repo
+    # checkout (owner-reported: `dojo install codex` failed from a venv install).
     if hasattr(sys, "_MEIPASS"):
-        repo_skills_dojo = Path(getattr(sys, "_MEIPASS")) / "skills" / "dojo"
+        repo_skills_dojo = Path(getattr(sys, "_MEIPASS")) / "dojo" / "skills"
     else:
-        repo_skills_dojo = Path(__file__).resolve().parent.parent.parent / "skills" / "dojo"
+        repo_skills_dojo = Path(__file__).resolve().parent / "skills"
 
-    if not repo_skills_dojo.exists():
-        raise SystemExit(f"error: skills/dojo directory not found at {repo_skills_dojo}")
+    if not (repo_skills_dojo / "SKILL.md").exists():
+        raise SystemExit(f"error: packaged skill not found at {repo_skills_dojo} (broken install?)")
 
     force = getattr(args, "force", False)
     if target_path.exists() and not force:
@@ -641,7 +643,10 @@ def cmd_install(args: argparse.Namespace) -> int:
                 target_path.unlink()
 
         target_path.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(repo_skills_dojo, target_path)
+        shutil.copytree(
+            repo_skills_dojo, target_path,
+            ignore=shutil.ignore_patterns("__init__.py", "__pycache__", "*.pyc"),
+        )
     except Exception as exc:
         raise SystemExit(f"error: failed to install dojo skill to {target_path}: {exc}")
 
@@ -1404,6 +1409,22 @@ def _score_style(score: float) -> str:
     return "green" if score >= 0.8 else ("yellow" if score >= 0.5 else "red")
 
 
+def _detect_install_method(
+    *, executable: Path, prefix: Path, frozen: bool, home: Path, argv0: Path
+) -> tuple[str, str]:
+    """How was this dojo installed? sys.prefix is the reliable venv signal —
+    sys.executable must stay UNRESOLVED, because resolving a venv's python
+    symlink jumps to the base interpreter (e.g. Homebrew's framework python)
+    and misreports a venv install as bare pip (owner-reported bug)."""
+    if frozen:
+        return ("binary", f"rm {argv0}")
+    if "pipx" in str(prefix) or "pipx" in str(executable):
+        return ("pipx", "pipx uninstall dojo")
+    if str(prefix).startswith(str(home / ".dojo")):
+        return ("venv", f"rm -rf {home / '.dojo'} {home / '.local/bin/dojo'}")
+    return ("pip", f"{executable} -m pip uninstall dojo")
+
+
 def cmd_export(args: argparse.Namespace) -> int:
     from .export import export_store
     from .store import DojoStore
@@ -1428,16 +1449,13 @@ def cmd_uninstall(args: argparse.Namespace) -> int:
     removed = []
 
     if getattr(args, "self_uninstall", False):
-        exe = Path(sys.executable).resolve()
-        home = Path.home()
-        if getattr(sys, "frozen", False):
-            method = ("binary", f"rm {Path(sys.argv[0]).resolve()}")
-        elif "pipx" in str(exe):
-            method = ("pipx", "pipx uninstall dojo")
-        elif str(exe).startswith(str(home / ".dojo" / "venv")):
-            method = ("venv", f"rm -rf {home / '.dojo'} {home / '.local/bin/dojo'}")
-        else:
-            method = ("pip", f"{exe} -m pip uninstall dojo")
+        method = _detect_install_method(
+            executable=Path(sys.executable),
+            prefix=Path(sys.prefix),
+            frozen=bool(getattr(sys, "frozen", False)),
+            home=Path.home(),
+            argv0=Path(sys.argv[0]),
+        )
         _print_json({
             "ok": True,
             "install_method": method[0],
