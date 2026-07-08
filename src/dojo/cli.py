@@ -1759,6 +1759,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_inbox_dismiss.add_argument("capture_id")
     p_inbox_dismiss.set_defaults(func=cmd_inbox)
 
+    p_reflect = sub.add_parser("reflect", help="distill recent evidence into insights and strategy (emits a reflection task)")
+    p_reflect.add_argument("--campaign")
+    p_reflect.set_defaults(func=cmd_admin_consolidate)
+
     p_daily = sub.add_parser("daily", help="build today's bounded, explained practice packet")
     p_daily.add_argument("--size", type=int, help="override daily.packet_size (hard cap 8)")
     p_daily.add_argument("--reset", action="store_true", help="discard the active session and rebuild")
