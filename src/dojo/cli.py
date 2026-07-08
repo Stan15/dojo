@@ -1452,6 +1452,14 @@ def cmd_benchmark(args: argparse.Namespace) -> int:
         + ")[/dim]\n"
     )
 
+    if report.get("token_footprint"):
+        tf = report["token_footprint"]
+        console.print(
+            f"  [bold]Context economy[/bold]  ~{tf['approx_prompt_tokens']} tokens per task in, "
+            f"~{tf['approx_response_tokens']} out  "
+            f"[dim](measured over {tf['driver_calls_measured']} driver calls)[/dim]\n"
+        )
+
     table = Table(show_header=True, header_style="bold", box=None, pad_edge=False)
     table.add_column("Category")
     table.add_column("Score", justify="left")

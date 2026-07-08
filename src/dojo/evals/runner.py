@@ -97,7 +97,7 @@ def run_command(command: str, prompt: str, timeout: int) -> str:
 
 def fulfill_step(store: DojoStore, compiled, fulfiller: str, timeout: int):
     """emit → fulfiller → submit: exactly the production path.
-    Returns (outcome, extracted_json_text)."""
+    Returns (outcome, extracted_json_text, byte_counts)."""
     task = service.emit(store, compiled)
     raw = run_command(fulfiller, task.prompt, timeout)
     outcome = service.submit(store, task.id, raw)
@@ -105,7 +105,11 @@ def fulfill_step(store: DojoStore, compiled, fulfiller: str, timeout: int):
         extracted = json.dumps(service.extract_json(raw), indent=1)
     except ValueError:
         extracted = raw[-2000:]
-    return outcome, extracted
+    counts = {
+        "prompt_bytes": task.payload_bytes,
+        "response_bytes": len(extracted.encode("utf-8")),
+    }
+    return outcome, extracted, counts
 
 
 def submit_canned(store: DojoStore, compiled, payload: dict):
@@ -222,10 +226,11 @@ def execute_quality_scenario(scenario: dict, tmp_path: Path, driver: str, timeou
                 raise RuntimeError(f"scripted step rejected: {outcome.errors}")
             final_output = json.dumps(step["respond_with"], indent=1)
         else:
-            outcome, extracted = fulfill_step(store, compiled, driver, timeout)
+            outcome, extracted, counts = fulfill_step(store, compiled, driver, timeout)
             if not outcome.ok:
                 raise ComplianceFailure(outcome.errors)
             final_output = extracted
+            byte_log.append(counts)
     assert final_output is not None
     return final_output
 
@@ -249,6 +254,7 @@ def run_benchmark(
     Returns a report dict; rendering is the caller's job."""
     judge = judge or driver
     results: list[ScenarioResult] = []
+    byte_counts: list[dict[str, int]] = []
 
     if "compliance" in tiers:
         for sc in load_corpus("compliance"):
@@ -256,7 +262,8 @@ def run_benchmark(
             try:
                 store = seed_store(workdir / f"c_{sc['name']}", sc["seed"])
                 compiled = compile_step(store, sc["seed"]["campaign"]["id"], sc["compile"])
-                outcome, _ = fulfill_step(store, compiled, driver, timeout)
+                outcome, _, counts = fulfill_step(store, compiled, driver, timeout)
+                byte_counts.append(counts)
                 results.append(ScenarioResult(
                     name=sc["name"], category=sc["category"], tier="compliance",
                     score=1.0 if outcome.ok else 0.0,
@@ -281,7 +288,9 @@ def run_benchmark(
                         score=0.0, error=problem,
                     ))
                     continue
-                output_text = execute_quality_scenario(sc, workdir / f"q_{sc['name']}", driver, timeout)
+                output_text = execute_quality_scenario(
+                    sc, workdir / f"q_{sc['name']}", driver, timeout, byte_log=byte_counts,
+                )
                 judged = judge_output(judge, context, output_text, criteria, timeout)
                 results.append(ScenarioResult(
                     name=sc["name"], category=sc["category"], tier="quality",
@@ -300,10 +309,13 @@ def run_benchmark(
                     score=0.0, error=str(e)[:200],
                 ))
 
-    return summarize(driver, judge, results)
+    return summarize(driver, judge, results, byte_counts)
 
 
-def summarize(driver: str, judge: str, results: list[ScenarioResult]) -> dict[str, Any]:
+def summarize(
+    driver: str, judge: str, results: list[ScenarioResult],
+    byte_counts: Optional[list[dict[str, int]]] = None,
+) -> dict[str, Any]:
     categories: dict[str, dict[str, Any]] = {}
     for r in results:
         cat = categories.setdefault(r.category, {"scores": [], "scenarios": []})
@@ -317,7 +329,20 @@ def summarize(driver: str, judge: str, results: list[ScenarioResult]) -> dict[st
         cat["blurb"] = CATEGORY_BLURBS.get(name, "")
         del cat["scores"]
     scored = [r for r in results if r.error is None]
+    footprint = None
+    if byte_counts:
+        n = len(byte_counts)
+        mean_in = sum(c["prompt_bytes"] for c in byte_counts) / n
+        mean_out = sum(c["response_bytes"] for c in byte_counts) / n
+        footprint = {
+            "driver_calls_measured": n,
+            "mean_prompt_bytes": round(mean_in),
+            "mean_response_bytes": round(mean_out),
+            "approx_prompt_tokens": round(mean_in / 4),
+            "approx_response_tokens": round(mean_out / 4),
+        }
     return {
+        "token_footprint": footprint,
         "driver": driver,
         "judge": judge,
         "pair": f"{slug_for(driver)}__{slug_for(judge)}",

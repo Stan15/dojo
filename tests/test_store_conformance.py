@@ -326,7 +326,8 @@ class TestMarkdownBackendPhysics:
         dojo_dir = tmp_path / "dojo"
         assert main(["--db", str(dojo_dir), "config", "set", "daily.packet_size", "5"]) == 0
         after_first = _git_commit_count(dojo_dir)
-        assert after_first == 1, "one successful mutating command → exactly one commit"
+        # birth commit (store initialized) + exactly one for the command
+        assert after_first == 2, "one successful mutating command → exactly one commit beyond birth"
 
         assert main(["--db", str(dojo_dir), "config", "set", "daily.packet_size", "8"]) == 0
         assert _git_commit_count(dojo_dir) == after_first + 1
