@@ -1491,6 +1491,24 @@ def cmd_benchmark(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_capture(args: argparse.Namespace) -> int:
+    api = DojoAPI(_db_path(args))
+    res = api.capture(args.text, why=args.why)
+    _print_json({"ok": True, **res})
+    return 0
+
+
+def cmd_inbox(args: argparse.Namespace) -> int:
+    api = DojoAPI(_db_path(args))
+    if args.inbox_command == "confirm":
+        _print_json({"ok": True, **api.inbox_confirm(args.capture_id)})
+    elif args.inbox_command == "dismiss":
+        _print_json({"ok": True, **api.inbox_dismiss(args.capture_id)})
+    else:
+        _print_json({"ok": True, **api.inbox()})
+    return 0
+
+
 def cmd_daily(args: argparse.Namespace) -> int:
     api = DojoAPI(_db_path(args))
     res = api.daily(size=args.size, reset=args.reset)
@@ -1725,6 +1743,21 @@ def build_parser() -> argparse.ArgumentParser:
     p_config_set.set_defaults(func=cmd_config_set)
     p_config_show = p_config_sub.add_parser("show")
     p_config_show.set_defaults(func=cmd_config_show)
+
+    p_capture = sub.add_parser("capture", help="save something you just learned — one utterance, filed later")
+    p_capture.add_argument("text", help="the thing to remember")
+    p_capture.add_argument("--why", help="optional: why this matters to you")
+    p_capture.set_defaults(func=cmd_capture)
+
+    p_inbox = sub.add_parser("inbox", help="captures awaiting a home; confirm or dismiss proposed routes")
+    p_inbox_sub = p_inbox.add_subparsers(dest="inbox_command")
+    p_inbox.set_defaults(func=cmd_inbox)
+    p_inbox_confirm = p_inbox_sub.add_parser("confirm")
+    p_inbox_confirm.add_argument("capture_id")
+    p_inbox_confirm.set_defaults(func=cmd_inbox)
+    p_inbox_dismiss = p_inbox_sub.add_parser("dismiss")
+    p_inbox_dismiss.add_argument("capture_id")
+    p_inbox_dismiss.set_defaults(func=cmd_inbox)
 
     p_daily = sub.add_parser("daily", help="build today's bounded, explained practice packet")
     p_daily.add_argument("--size", type=int, help="override daily.packet_size (hard cap 8)")

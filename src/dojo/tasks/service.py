@@ -35,6 +35,7 @@ from ..schemas import (
     PlanResult,
     ReflectResult,
     RESULT_SCHEMAS,
+    RouteResult,
     Task,
 )
 from .compiler import CompiledTask
@@ -386,10 +387,68 @@ def apply_plan(store, task: Task, result: PlanResult) -> dict[str, Any]:
     }
 
 
+def apply_route(store, task: Task, result: RouteResult) -> dict[str, Any]:
+    """Validates a route against the real registry (ADR 013: weak models cannot
+    file into places that don't exist), stores it as a PROPOSAL awaiting
+    confirmation (Q6 default), and auto-files only when capture.autofile is on
+    and confidence is high."""
+    from ..filing import file_capture, known_topic_paths
+
+    capture = store.captures.get(task.context["capture_id"])
+    if capture is None:
+        raise ApplyRejection(f"capture {task.context['capture_id']!r} not found")
+
+    if result.action in ("attach", "new_topic"):
+        campaign = store.campaigns.get(result.campaign)
+        if campaign is None:
+            raise ApplyRejection(
+                f"campaign {result.campaign!r} is not in the registry — copy names exactly"
+            )
+        known = known_topic_paths(store, campaign)
+        if result.action == "attach" and result.topic_path not in known:
+            raise ApplyRejection(
+                f"topic {result.topic_path!r} does not exist in {result.campaign!r} — "
+                "attach only to listed topics, or use new_topic"
+            )
+        if result.action == "new_topic":
+            parent = ".".join(result.topic_path.split(".")[:-1])
+            if parent and parent not in known and not any(
+                p.startswith(parent) for p in known
+            ):
+                raise ApplyRejection(
+                    f"new_topic parent {parent!r} does not exist in {result.campaign!r} — "
+                    "hang the new leaf off a listed path"
+                )
+
+    proposal = result.model_dump()
+    capture.proposal = {**proposal, "task_id": task.id}
+    capture.status = "unrouted" if result.action == "stay_inbox" else "proposed"
+    capture.updated_at = datetime.now(timezone.utc).isoformat()
+    store.captures.save(capture)
+
+    autofile = str(store.configs.get_value("capture.autofile", "false")).lower() == "true"
+    if (
+        autofile and result.confidence == "high"
+        and result.action in ("attach", "new_topic")
+    ):
+        filed = file_capture(store, capture, proposal)
+        return {"routed": proposal, "filed": filed}
+
+    return {
+        "routed": proposal,
+        "filed": None,
+        "next": (
+            "the route awaits the learner's confirmation: dojo inbox confirm "
+            f"{capture.id} (or dismiss / re-route)"
+        ) if capture.status == "proposed" else "capture stays in the inbox",
+    }
+
+
 APPLIERS: dict[str, Callable[..., dict[str, Any]]] = {
     "exercise.generate": apply_generate,
     "exercise.diagnostic": apply_generate,
     "attempt.grade": apply_grade,
     "campaign.reflect": apply_reflect,
     "campaign.plan": apply_plan,
+    "capture.route": apply_route,
 }

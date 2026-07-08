@@ -102,6 +102,9 @@ class DojoAPI:
         self.store.sessions.save_active(session)
         self.log.info(f"Daily packet built: {len(pkt.items)} items, {len(tasks)} tasks emitted")
 
+        waiting = sum(
+            1 for c in self.store.captures.list() if c.status in ("unrouted", "proposed")
+        )
         return {
             "is_new": True,
             "session": session.model_dump(),
@@ -111,7 +114,9 @@ class DojoAPI:
             ],
             "skipped": pkt.skipped,
             "tasks": tasks,
-            "next": "dojo ready reveals the first prompt",
+            "inbox_waiting": waiting,
+            "next": "dojo ready reveals the first prompt"
+                    + (f" ({waiting} capture(s) awaiting a home: dojo inbox)" if waiting else ""),
         }
 
     def why(self) -> dict[str, Any]:
@@ -127,6 +132,66 @@ class DojoAPI:
             ],
             "campaigns": session.campaign_reasons,
         }
+
+    # ==========================================
+    # Capture & Inbox (ADR 013)
+    # ==========================================
+    def capture(self, text: str, why: str | None = None) -> dict[str, Any]:
+        """One utterance, durably saved BEFORE any AI runs; routing is a task."""
+        from .schemas import Capture
+        from .tasks import compiler, flows
+        from .tasks import service as task_service
+
+        cap = Capture(id=f"cap_{uuid.uuid4().hex[:8]}", text=text.strip(), why=why)
+        self.store.captures.save(cap)
+
+        compiled = compiler.compile_route(
+            self.store, capture_id=cap.id, capture_text=cap.text, learner_note=why or "",
+        )
+        task = task_service.emit(self.store, compiled)
+        self.log.info(f"Captured {cap.id}; route task {task.id} emitted")
+        return {
+            "capture_id": cap.id,
+            "tasks": [flows.task_ref(task)],
+            "next": "fulfill the route task; the proposal then awaits confirmation "
+                    "(dojo inbox confirm <capture-id>) unless capture.autofile is on",
+        }
+
+    def inbox(self) -> dict[str, Any]:
+        captures = [c for c in self.store.captures.list() if c.status in ("unrouted", "proposed")]
+        return {
+            "captures": [
+                {
+                    "id": c.id,
+                    "status": c.status,
+                    "text": c.text.splitlines()[0][:80] if c.text else "",
+                    "proposal": c.proposal,
+                }
+                for c in captures
+            ],
+            "next": "confirm/dismiss proposals: dojo inbox confirm|dismiss <capture-id>",
+        }
+
+    def inbox_confirm(self, capture_id: str) -> dict[str, Any]:
+        from .filing import file_capture
+
+        cap = self.store.captures.get(capture_id)
+        if cap is None:
+            raise ValueError(f"capture {capture_id} not found")
+        if not cap.proposal:
+            raise ValueError(f"capture {capture_id} has no route proposal yet — fulfill its route task first")
+        filed = file_capture(self.store, cap, cap.proposal)
+        self.log.info(f"Capture {capture_id} filed into {filed['campaign_id']}")
+        return {**filed, "next": "the note is now a source; exercises can ground on it"}
+
+    def inbox_dismiss(self, capture_id: str) -> dict[str, Any]:
+        cap = self.store.captures.get(capture_id)
+        if cap is None:
+            raise ValueError(f"capture {capture_id} not found")
+        cap.status = "dismissed"
+        cap.updated_at = datetime.now(timezone.utc).isoformat()
+        self.store.captures.save(cap)
+        return {"capture_id": capture_id, "status": "dismissed"}
 
     # ==========================================
     # Sources Operations

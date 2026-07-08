@@ -296,7 +296,10 @@ def compile_route(store, *, capture_id: str, capture_text: str, learner_note: st
     registry_lines = []
     for camp in campaigns:
         registry_lines.append(f"campaign \"{camp.id}\": {camp.mission.splitlines()[0]}")
-        topic_paths = sorted({e.topic_path for e in store.exercises.list(camp.id)})
+        topic_paths = sorted(
+            {e.topic_path for e in store.exercises.list(camp.id)}
+            | {t["path"] for t in (camp.topics or []) if t.get("path")}
+        )
         for tp in topic_paths[:20]:
             registry_lines.append(f"  {tp}")
     text = capture_text if not learner_note else f"{capture_text}\n(learner note: {learner_note})"
