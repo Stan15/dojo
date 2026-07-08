@@ -16,10 +16,11 @@ from typing import Any, Optional
 
 from fsrs import Card, Rating, Scheduler
 
-# One scheduler, default FSRS-6 parameters. Per-learner parameter fitting is
-# backlog (ADR 014): fsrs[optimizer] can fit these from review logs later
-# without changing this boundary.
-_scheduler = Scheduler()
+# One scheduler, default FSRS-6 parameters, fuzzing OFF: py-fsrs fuzzes
+# intervals via global random by default, which would break I8 (same state,
+# same clock → same schedule) and every golden/property test above it.
+# Per-learner parameter fitting stays backlog (ADR 014).
+_scheduler = Scheduler(enable_fuzzing=False)
 
 # A perfect answer produced this fast signals fluency beyond mere correctness
 # (pedagogy-foundation: fluency vs storage strength) — it earns Easy.

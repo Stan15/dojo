@@ -16,7 +16,7 @@ from .sessions import SessionRepository
 from .configs import ConfigRepository
 from .doctor import DoctorService
 
-from ..schemas import Attempt, Candidate, Exercise, Insight, Source, Task
+from ..schemas import Attempt, Candidate, Capture, Exercise, Insight, Source, Task
 
 
 class DojoStore:
@@ -34,6 +34,9 @@ class DojoStore:
         )
         self.tasks = RootScopedRepository(
             self.engine, entity_type="task", schema_cls=Task, subdir="tasks",
+        )
+        self.captures = RootScopedRepository(
+            self.engine, entity_type="capture", schema_cls=Capture, subdir="inbox",
         )
         self.campaigns = CampaignRepository(self.engine)
         self.sessions = SessionRepository(self.engine)

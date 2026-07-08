@@ -64,6 +64,20 @@ class TestMemoryModel:
         sr = scheduling.record_outcome(sr, score=0.0, now=now)
         assert scheduling.due_at(sr) - now < timedelta(days=1), "a lapse re-queues quickly"
 
+    def test_fuzzing_is_disabled_at_the_boundary(self):
+        """py-fsrs fuzzes intervals by default via GLOBAL random — nondeterminism
+        that broke a packet test as a flake. I8 requires it off, forever."""
+        import random
+        outs = []
+        for salt in range(3):
+            random.seed(salt)  # global seed must be irrelevant
+            sr = scheduling.new_state(NOW)
+            for d in (0, 1, 3):
+                sr = scheduling.record_outcome(sr, score=1.0, latency_seconds=30.0,
+                                               now=NOW + timedelta(days=d))
+            outs.append(sr["due"])
+        assert len(set(outs)) == 1, "schedule depends on global random state (fuzzing on?)"
+
     def test_deterministic_under_injected_clock(self):
         a = scheduling.record_outcome(scheduling.new_state(NOW), score=0.7, now=NOW)
         b = scheduling.record_outcome(scheduling.new_state(NOW), score=0.7, now=NOW)

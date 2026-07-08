@@ -436,6 +436,24 @@ class Insight(StoredEntity):
     description: str
 
 
+class Capture(StoredEntity):
+    """A micro-source in the inbox (ADR 013): durable the instant it's spoken,
+    filed later. status: unrouted → proposed (route awaiting confirmation, Q6)
+    → filed | dismissed."""
+
+    _body_field: ClassVar[Optional[str]] = "text"
+
+    id: str
+    status: str = "unrouted"
+    why: Optional[str] = None  # the learner's own "because…" at capture time
+    proposal: Optional[Dict[str, Any]] = None  # validated RouteResult + task id
+    source_id: Optional[str] = None  # set when filed
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    # Omitted from frontmatter, maps to the Markdown file body
+    text: str = ""
+
+
 class Task(StoredEntity):
     """A pending unit of AI judgment (ADR 010) — the only seam between the
     deterministic core and whatever model fulfills it.

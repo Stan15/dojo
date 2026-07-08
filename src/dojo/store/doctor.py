@@ -15,6 +15,7 @@ from ..schemas import (
     PracticeSession,
     AttackPlanPhase,
     Task,
+    Capture,
 )
 
 class DoctorService(BaseRepository):
@@ -28,6 +29,7 @@ class DoctorService(BaseRepository):
             "Campaigns structure": [],
             "Archived campaigns and sessions": [],
             "Task queue": [],
+            "Capture inbox": [],
             "Version control audit": [],
         }
         if not self.engine.dojo_dir.exists():
@@ -36,7 +38,7 @@ class DoctorService(BaseRepository):
         results["Version control audit"].extend(self._check_audit_health())
 
         # 1. Check root directory layout
-        allowed_root_dirs = {"campaigns", "sources", "tasks", "archive", ".git"}
+        allowed_root_dirs = {"campaigns", "sources", "tasks", "inbox", "archive", ".git"}
         allowed_root_files = {".index.json", "dojo.lock", "config.yaml", ".gitignore", "dojo.log", "active_session.json"}
 
         for p in self.engine.dojo_dir.iterdir():
@@ -75,6 +77,18 @@ class DoctorService(BaseRepository):
                         self.engine.read_markdown_file(f"tasks/{p.name}", Task, "prompt")
                     except Exception as e:
                         results["Task queue"].append(f"Invalid task file '{p.name}': {e}")
+
+        # 2c. Check inbox
+        inbox_dir = self.engine.dojo_dir / "inbox"
+        if inbox_dir.exists():
+            for p in inbox_dir.iterdir():
+                if p.is_dir() or not p.name.endswith(".md"):
+                    results["Capture inbox"].append(f"Unexpected item in inbox/: {p.name}")
+                else:
+                    try:
+                        self.engine.read_markdown_file(f"inbox/{p.name}", Capture, "text")
+                    except Exception as e:
+                        results["Capture inbox"].append(f"Invalid capture file '{p.name}': {e}")
 
         # 3. Check campaigns
         campaigns_dir = self.engine.dojo_dir / "campaigns"
