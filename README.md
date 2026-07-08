@@ -107,9 +107,34 @@ dojo task show tsk_1a2b3c4d --prompt   # the exact prompt, nothing else
 dojo task submit tsk_1a2b3c4d          # result JSON on stdin; validated, applied
 ```
 
-Prompt quality is guarded by a benchmark suite: byte-pinned golden payloads in
-CI, plus real-model compliance evals with ratcheted per-model baselines
-(`DOJO_EVAL_FULFILLER="codex exec" pytest -m eval`).
+## Benchmark your model
+
+How well does *your* model run dojo's pedagogy? One command answers with a
+category-by-category profile — personalization, calibration, planning,
+grading integrity, knowing-when-to-ask, domain breadth:
+
+```bash
+dojo benchmark --fulfiller "codex exec"            # judge defaults to the driver
+dojo benchmark -f "ollama run llama3" -j "codex exec" --detail
+```
+
+```text
+Overall  ████████░░ 0.84   (16 scenarios)
+
+Category             Score            What it measures
+grading-integrity    ██████████ 1.00  grades content, immune to confident nonsense
+personalization      █████████░ 0.92  uses the learner's profile, errors, and preferences
+meta-learning        ██████░░░░ 0.55  knows when to ask instead of generate
+...
+Weakest:   meta-learning (0.55) — knows when to ask instead of generate
+```
+
+Scores come from hand-crafted scenarios with planted good/bad references that
+calibrate the judge before it's trusted, evidence-anchored verdicts, and the
+same validators production uses — headline first, `--detail` when you want
+per-criterion verdicts. Dev-side, the same corpus runs as ratcheted regression
+evals (`DOJO_EVAL_FULFILLER="codex exec" pytest -m eval`) so prompt tweaks
+can't silently regress.
 
 ## Status & roadmap
 
