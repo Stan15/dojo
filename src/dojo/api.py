@@ -133,6 +133,74 @@ class DojoAPI:
             "campaigns": session.campaign_reasons,
         }
 
+    def stats(self, now: datetime | None = None) -> dict[str, Any]:
+        """Observability surface (blueprint §11): retention/atrophy per campaign
+        and token spend per task kind — computed, never guessed, and estimates
+        are tagged as estimates (I10)."""
+        from . import packet as packet_mod
+
+        now = now or datetime.now(timezone.utc)
+        campaigns_out = []
+        for camp in self.store.campaigns.list():
+            exercises = [
+                ex for ex in self.store.exercises.list(camp.id)
+                if ex.quality not in packet_mod.EXCLUDED_QUALITIES
+            ]
+            tracked = [ex for ex in exercises if ex.kind == "recall" and ex.sr]
+            retention = (
+                sum(scheduling.retrievability(ex.sr, now) for ex in tracked) / len(tracked)
+                if tracked else None
+            )
+            due = sum(1 for ex in exercises if scheduling.is_due(ex.sr, now))
+            attempts = self.store.attempts.list(camp.id)
+            answered = [a for a in attempts[-20:] if not a.skip_reason]
+            accuracy = (
+                sum(a.score for a in answered) / len(answered) if answered else None
+            )
+            last_touch = max((a.created_at for a in attempts), default=None)
+            days_idle = (
+                (now - datetime.fromisoformat(last_touch)).total_seconds() / 86400
+                if last_touch else None
+            )
+            campaigns_out.append({
+                "campaign_id": camp.id,
+                "name": camp.name,
+                "estimated_retention": None if retention is None else round(retention, 3),
+                "retention_note": "mean recall odds over tracked fact memories (estimate)",
+                "tracked_memories": len(tracked),
+                "due_now": due,
+                "active_exercises": len(exercises),
+                "recent_accuracy": None if accuracy is None else round(accuracy, 3),
+                "days_since_practice": None if days_idle is None else round(days_idle, 1),
+                "active_insights": len(
+                    self.store.insights.list(camp.id, filters={"status": "active"})
+                ),
+            })
+
+        by_kind: dict[str, dict[str, Any]] = {}
+        for task in self.store.tasks.list():
+            k = by_kind.setdefault(task.kind, {
+                "tasks": 0, "fulfilled": 0, "failed": 0, "pending": 0,
+                "prompt_bytes": 0, "response_bytes": 0,
+            })
+            k["tasks"] += 1
+            k[task.status] = k.get(task.status, 0) + 1
+            k["prompt_bytes"] += task.payload_bytes
+            k["response_bytes"] += task.response_bytes
+        for k in by_kind.values():
+            k["approx_prompt_tokens"] = round(k.pop("prompt_bytes") / 4)
+            k["approx_response_tokens"] = round(k.pop("response_bytes") / 4)
+
+        waiting = sum(
+            1 for c in self.store.captures.list() if c.status in ("unrouted", "proposed")
+        )
+        return {
+            "campaigns": campaigns_out,
+            "task_spend": dict(sorted(by_kind.items())),
+            "inbox_waiting": waiting,
+            "note": "retention figures are model estimates; scores and counts are records",
+        }
+
     # ==========================================
     # Capture & Inbox (ADR 013)
     # ==========================================

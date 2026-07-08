@@ -1589,6 +1589,36 @@ def cmd_benchmark(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_stats(args: argparse.Namespace) -> int:
+    api = DojoAPI(_db_path(args))
+    res = api.stats()
+    if _use_json(args):
+        _print_json({"ok": True, **res})
+        return 0
+    table = Table(show_header=True, header_style="bold", box=None, pad_edge=False)
+    for col in ("Campaign", "Retention*", "Due", "Accuracy (20)", "Idle", "Insights"):
+        table.add_column(col)
+    for c_ in res["campaigns"]:
+        ret = "—" if c_["estimated_retention"] is None else f"{c_['estimated_retention']:.0%}"
+        acc = "—" if c_["recent_accuracy"] is None else f"{c_['recent_accuracy']:.0%}"
+        idle = "—" if c_["days_since_practice"] is None else f"{c_['days_since_practice']:.0f}d"
+        table.add_row(c_["name"], ret, f"{c_['due_now']}/{c_['active_exercises']}", acc, idle,
+                      str(c_["active_insights"]))
+    console.print(table)
+    console.print("  [dim]*estimated mean recall odds over tracked fact memories[/dim]")
+    if res["task_spend"]:
+        console.print("\n[bold]AI task spend[/bold] [dim](~4 bytes ≈ 1 token)[/dim]")
+        for kind, k in res["task_spend"].items():
+            console.print(
+                f"  {kind}: {k['tasks']} task(s), ~{k['approx_prompt_tokens']} tokens in / "
+                f"~{k['approx_response_tokens']} out"
+                + (f", [red]{k['failed']} failed[/red]" if k.get("failed") else "")
+            )
+    if res["inbox_waiting"]:
+        console.print(f"\n  [yellow]{res['inbox_waiting']} capture(s) awaiting a home — dojo inbox[/yellow]")
+    return 0
+
+
 def cmd_capture(args: argparse.Namespace) -> int:
     api = DojoAPI(_db_path(args))
     res = api.capture(args.text, why=args.why)
@@ -1853,6 +1883,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_config_set.set_defaults(func=cmd_config_set)
     p_config_show = p_config_sub.add_parser("show")
     p_config_show.set_defaults(func=cmd_config_show)
+
+    p_stats = sub.add_parser("stats", help="retention, atrophy, and AI token spend — computed, estimates tagged")
+    p_stats.set_defaults(func=cmd_stats)
 
     p_capture = sub.add_parser("capture", help="save something you just learned — one utterance, filed later")
     p_capture.add_argument("text", help="the thing to remember")
