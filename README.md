@@ -74,13 +74,27 @@ dojo task run                                     # drain pending AI work
 ## The daily loop
 
 ```bash
-dojo start                 # begins/resumes a short session (replenishes itself)
+dojo daily                 # today's packet: small, interleaved, every pick explained
+dojo why                   # "weakest memory here (~38% recall odds) · French: 6 due…"
+dojo start                 # begins/resumes a session (replenishes itself)
 dojo ready                 # reveal the next prompt, timer starts
 dojo answer "il serait allé"
 dojo skip --reason too_easy --feedback "know this cold"   # calibration signal
 dojo progress              # accuracy, latency, recent history
 dojo reflect               # distill recent evidence into insights & strategy
 ```
+
+Want something to show up more? Two honest knobs, not an algorithm guessing:
+
+```bash
+dojo campaign boost french 2.0            # this CAMPAIGN surfaces more in packets
+dojo campaign topic-boost french french.oral 3.0   # this TOPIC comes due 3x faster
+```
+
+Under the hood: FSRS-6 spaced repetition (the algorithm behind Anki, via
+py-fsrs) for facts; skills schedule on their topic and always get *novel*
+exercises so you learn the skill, not the question. The scheduler is pure,
+deterministic code — no model ever decides what you practice.
 
 Ingesting material and reviewing what the AI drafted:
 
@@ -140,9 +154,9 @@ can't silently regress.
 
 Dojo is **v0.1 — a working core, moving fast**. What you read above exists and
 is tested (98 tests, plus live model evals). On the bench next, per the
-[blueprint](docs/design/blueprint.md): FSRS-6 spaced-repetition scheduling
-(py-fsrs), a `dojo daily` packet across campaigns, one-utterance capture with
-an inbox, and judged pedagogical-quality benchmarks.
+[blueprint](docs/design/blueprint.md): one-utterance capture with an inbox
+(`dojo capture "TIL…"`), a leaner agent skill, and a wider pedagogical
+benchmark corpus.
 
 ## Going deeper
 

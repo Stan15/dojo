@@ -4,9 +4,9 @@ _Last updated: 2026-07-07 (session 3)_
 
 ## Phase
 
-**Implementation.** M0 ✅ M1 ✅ **M2 ✅ (task contract — the architecture's heart).**
-Next: Tier-3 judged evals + wide pedagogical corpus (owner priority), then M3
-(pedagogy engine: py-fsrs scheduling, `dojo daily`, packet builder).
+**Implementation.** M0 ✅ M1 ✅ M2 ✅ (task contract) · Tier-3 evals + `dojo
+benchmark` ✅ · **M3 ✅ (pedagogy engine)**. Next: corpus wave 3 (owner priority:
+serious + varied), then M4 capture/inbox.
 
 ## What M2 delivered (all committed, 94 tests green + 4 eval-marked)
 
@@ -55,16 +55,39 @@ Next: Tier-3 judged evals + wide pedagogical corpus (owner priority), then M3
   baselines (evals/baselines/) when it lands; investigate any scenario < 1.0
   compliance or with judge-calibration failures.
 
+## M3 delivered (167 tests green; commits 1df00c1…5b7cad0)
+
+- `dojo/scheduling.py`: py-fsrs behind the boundary (band→Rating per ADR 014,
+  injected clock, YAML-safe sr dicts, retrievability).
+- `dojo/outcomes.py`: ONE lane-aware landing — recall→item FSRS, skill→topic
+  FSRS + item retires 'spent' — called from answers, AI grades, corrections
+  (OP #13: additional-review semantics), calibration skips. Diagnostics never
+  become memories.
+- `dojo/packet.py`: pure seeded builder — Tier-1 (due+atrophy × priority_weight),
+  interleaving, weakest/maintenance/frontier mix, skill-stock generation
+  requests, honest overflow counts; property tests pin I3/I8.
+- Owner's priority knobs (2026-07-07 ask): `dojo campaign boost <id> <f>` =
+  cross-campaign surfacing; `dojo campaign topic-boost <id> <path> <f>` =
+  intra-campaign emphasis (due-cycle ÷ factor); both visible in `dojo why`.
+  Conversational disambiguation guidance goes into SKILL.md at M5.
+- `dojo daily` / `dojo why`; offline floor (I4) proven end-to-end.
+- Second codex quality baseline: mean 0.646 (from 0.52 after prompt fixes).
+
 ## NEXT ACTIONS (in order)
 
-1. Commit real codex baselines from the background eval run (see above).
-2. M3 — pedagogy engine (blueprint §10): `fsrs` dep + `src/dojo/scheduling/`
-   wrapper (band→Rating per ADR 014); per-item SR on recall exercises + topic
-   SR in topics.yaml; score-landing hook (submit_answer/apply_grade/correct →
-   scheduling.record_outcome); Tier-1 allocator; pure packet builder (I3/I8
-   property tests); `dojo daily` + `dojo why`; offline-floor test (I4).
-3. M4 — capture/inbox/route + `dojo capture`; M5 — skill/envelope polish
-   (SKILL.md ≤60 lines, `dojo stats`); M6 — real-harness E2E + ship.
+1. **Corpus wave 3** (owner: "serious corpus… varied"): ~15 new scenarios —
+   domains: music, chess, writing, law, code, poetry-verbatim, numeric-tolerance
+   math; signals: too_hard response, overconfident-fast-wrong, atrophy re-entry,
+   extend-don't-duplicate planning, unrealistic-timeline honesty, terse-but-
+   correct + hedged-but-right grading, contradictory-source intervention,
+   text-medium honesty for motor/listening skills. PLUS a coverage meta-test
+   (≥N per category, ≥M domains) so corpus breadth is a ratcheted invariant.
+2. Eval artifacts: multiline evidence quotes discarded (preference_adherence
+   0.14 artifact); insight_targeting judge calibration failing twice — diagnose
+   (add verdict detail to gate message), fix, fresh baseline run.
+3. M4 — capture/inbox/route + `dojo capture`; M5 — SKILL.md ≤60 lines rewrite
+   (incl. boost disambiguation + intervention handling), `dojo stats`; M6 —
+   real-harness E2E + ship v1.
 
 ## Standing owner directives (beyond blueprint)
 
