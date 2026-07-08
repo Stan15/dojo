@@ -1,0 +1,58 @@
+# Reflection discipline under a clear one-directional signal: high accuracy
+# plus repeated too_easy skips. Strong output raises difficulty and refuses to
+# invent problems; weak output churns (spurious insights, plan rewrites).
+scenario_context: |
+  Docker-compose learner. Last six attempts: five scored 1.0 with fast
+  latencies, one was skipped with reason "too_easy" and feedback "I do this
+  daily at work". No error patterns exist. Reflection ran over this window.
+  Strong output: raise difficulty, change nothing else, honest journal. Weak
+  output: invents insights from nothing, rewrites the plan, or leaves
+  difficulty unchanged.
+seed:
+  campaign:
+    id: docker-oncall
+    name: Docker Compose
+    mission: Debug and operate docker-compose stacks confidently during on-call.
+    strategy_profile: {difficulty: beginner, scaffolding: medium}
+  attempts:
+    - {id: att_1, session_id: s1, exercise_id: ex_1, score: 1.0, latency_seconds: 8.0,  user_answer: "docker compose up -d"}
+    - {id: att_2, session_id: s1, exercise_id: ex_2, score: 1.0, latency_seconds: 6.5,  user_answer: "depends_on with healthcheck"}
+    - {id: att_3, session_id: s1, exercise_id: ex_3, score: 1.0, latency_seconds: 9.0,  user_answer: "named volume persists data"}
+    - {id: att_4, session_id: s2, exercise_id: ex_4, score: 1.0, latency_seconds: 7.2,  user_answer: "override file wins"}
+    - {id: att_5, session_id: s2, exercise_id: ex_5, score: 0.0, latency_seconds: 2.0,
+       skip_reason: too_easy, feedback: "I do this daily at work", user_answer: ""}
+    - {id: att_6, session_id: s2, exercise_id: ex_6, score: 1.0, latency_seconds: 5.8,  user_answer: "profiles gate optional services"}
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does the output raise difficulty (strategy with
+      difficulty intermediate or advanced)?"}
+  - {id: c2, weight: 3, question: "Does the output avoid creating any insight (there
+      is no recurring error pattern in the evidence — an empty insight_updates list,
+      or only non-create operations)?"}
+  - {id: c3, weight: 2, question: "Is plan_revision null (nothing in the evidence
+      justifies restructuring phases)?"}
+  - {id: c4, weight: 1, question: "Does the journal accurately name the reason
+      (high accuracy / too-easy signal) in one sentence?"}
+references:
+  good:
+    insight_updates: []
+    strategy: {difficulty: intermediate, scaffolding: medium,
+               reason: "5/6 perfect with fast latencies plus a too_easy skip"}
+    plan_revision: null
+    journal: "Raised difficulty to intermediate: consistent mastery signals."
+  bad:
+    insight_updates:
+      - {op: create, key: docker.volume_confusion,
+         text: "Learner seems confused about volumes and networking basics.",
+         evidence: [att_3], reason: "possible hidden gap"}
+      - {op: create, key: motivation.low_engagement,
+         text: "Skip suggests the learner is losing motivation.",
+         evidence: [att_5], reason: "skipped an exercise"}
+    strategy: null
+    plan_revision:
+      phases:
+        - {phase: 1, topics: [docker.basics.retraining],
+           criteria: {min_attempts: 15, min_accuracy: 0.9}, focus: "back to basics"}
+      reason: "restart fundamentals to be safe"
+    journal: "Added remedial phases and started tracking motivation and volume gaps."

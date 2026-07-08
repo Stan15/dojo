@@ -1,0 +1,61 @@
+# The learning loop must also let go: an old misconception has been beaten in
+# recent evidence. Strong reflection resolves it; weak reflection keeps stale
+# state alive (bloating every future prompt) or invents replacements.
+scenario_context: |
+  French learner. Insight ins_aux (avoir/être auxiliary confusion for motion
+  verbs) has been active for weeks. The last five attempts include four
+  motion-verb conditional productions, all correct (1.0) and fast — the
+  pattern is beaten. One unrelated attempt failed on vocabulary. Reflection
+  ran. Strong output: RESOLVE ins_aux citing the mastery; no new insight from
+  the single vocab miss (one miss is a slip); strategy may stay or step up.
+  Weak output: leaves ins_aux active, or spins one vocab miss into a pattern.
+seed:
+  campaign:
+    id: tef-french
+    name: French TEF
+    mission: Reach NCLC 7 oral French by October for the TEF exam.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  insights:
+    - id: ins_aux
+      key: conditional.aux_choice
+      description: Uses avoir instead of être for motion verbs in past conditional.
+      topic_path: french.grammar.conditional
+  attempts:
+    - {id: att_1, session_id: s4, exercise_id: ex_20, score: 1.0, latency_seconds: 12.0,
+       user_answer: "Elle serait venue plus tôt."}
+    - {id: att_2, session_id: s4, exercise_id: ex_21, score: 1.0, latency_seconds: 10.0,
+       user_answer: "Nous serions allés au marché."}
+    - {id: att_3, session_id: s5, exercise_id: ex_22, score: 1.0, latency_seconds: 9.0,
+       user_answer: "Ils seraient partis avant minuit."}
+    - {id: att_4, session_id: s5, exercise_id: ex_23, score: 0.0, latency_seconds: 30.0,
+       error_tag: vocab gap, user_answer: "Je ne connais pas le mot pour 'lease'."}
+    - {id: att_5, session_id: s5, exercise_id: ex_24, score: 1.0, latency_seconds: 11.0,
+       user_answer: "Tu serais resté si tu avais pu."}
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does the output RESOLVE insight ins_aux (op resolve
+      on that id), given four fast correct motion-verb productions?"}
+  - {id: c2, weight: 3, question: "Does the output refrain from creating an insight
+      out of the single vocabulary miss (one miss is a slip, not a pattern)?"}
+  - {id: c3, weight: 1, question: "Does the resolve reason cite the demonstrated
+      mastery (correct productions), not vague improvement?"}
+  - {id: c4, weight: 1, question: "Is the journal a faithful one-line record of what
+      changed (the resolution), without inventing other changes?"}
+references:
+  good:
+    insight_updates:
+      - {op: resolve, id: ins_aux,
+         reason: "four fast correct motion-verb conditionals in last two sessions"}
+    strategy: null
+    plan_revision: null
+    journal: "Resolved aux-choice insight: consistent correct production."
+  bad:
+    insight_updates:
+      - {op: create, key: vocab.rental_terminology,
+         text: "Learner has significant vocabulary gaps around housing and rentals.",
+         evidence: [att_4], reason: "failed a rental vocabulary item"}
+    strategy: {difficulty: beginner, scaffolding: high,
+               reason: "vocabulary failure shows gaps remain"}
+    plan_revision: null
+    journal: "Keeping auxiliary insight active to be safe; added vocabulary tracking."

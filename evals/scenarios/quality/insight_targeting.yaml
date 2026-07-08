@@ -1,0 +1,58 @@
+# Does generation USE the learner profile, or just generate nice exercises?
+# Seeds a documented misconception + two recent failures on it. Strong output
+# attacks the weakness; weak output is generically pleasant.
+scenario_context: |
+  The learner is preparing for the French TEF oral exam (intermediate).
+  Documented active misconception: uses *avoir* instead of *être* as the
+  auxiliary for motion verbs in the past conditional ("il aurait allé").
+  Their last two attempts failed on exactly this. Generation was asked for
+  3 intermediate exercises on french.grammar.conditional.
+seed:
+  campaign:
+    id: tef-french
+    name: French TEF
+    mission: Reach NCLC 7 oral French by October for the TEF exam.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  insights:
+    - id: ins_aux
+      key: conditional.aux_choice
+      description: Uses avoir instead of être for motion verbs in past conditional.
+      topic_path: french.grammar.conditional
+  attempts:
+    - {id: att_1, session_id: s1, exercise_id: ex_1, score: 0.3,
+       latency_seconds: 40.0, error_tag: aux choice, user_answer: Il aurait allé.}
+    - {id: att_2, session_id: s1, exercise_id: ex_2, score: 0.0,
+       latency_seconds: 55.0, error_tag: aux choice, user_answer: Elle aurait venue.}
+steps:
+  - compile: {fn: generate, topic_path: french.grammar.conditional, n_items: 3,
+              difficulty: intermediate}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does at least one exercise force the learner to
+      choose between avoir and être for a MOTION verb in past conditional (the
+      documented misconception)?"}
+  - {id: c2, weight: 2, question: "Are the three exercises distinct tasks (different
+      verbs, formats, or angles) rather than rephrasings of one exercise?"}
+  - {id: c3, weight: 1, question: "Does every exercise demand the learner produce or
+      transform language (no yes/no or multiple-choice-only items)?"}
+  - {id: c4, weight: 1, question: "Does every rubric state a concrete, checkable
+      criterion (not 'answer is correct')?"}
+references:
+  good:
+    items:
+      - {prompt: "Traduisez : She would have come to the party.", answer: "Elle serait venue à la fête.",
+         rubric: "- être as auxiliary for venir\n- past participle agrees (venue)", skill: produce}
+      - {prompt: "Corrigez si nécessaire : « Ils auraient partis avant minuit. »",
+         answer: "Ils seraient partis avant minuit.",
+         rubric: "- spots avoir→être for partir\n- keeps participle agreement", skill: apply}
+      - {prompt: "Complétez avec l'auxiliaire correct : « Nous ______ (aller) au marché s'il n'avait pas plu. »",
+         answer: "serions allés", rubric: "- être chosen for aller\n- conditional présent form", skill: produce}
+    note: null
+  bad:
+    items:
+      - {prompt: "Is 'il serait allé' correct French? Answer yes or no.", answer: "Yes",
+         rubric: "- answer is correct", skill: recall}
+      - {prompt: "Was the conditional tense invented before the subjunctive? Answer yes or no.",
+         answer: "No", rubric: "- answer is correct", skill: recall}
+      - {prompt: "Do you feel confident about French verbs? Reflect briefly.",
+         answer: "Any reflection is fine.", rubric: "- learner reflected", skill: explain}
+    note: null

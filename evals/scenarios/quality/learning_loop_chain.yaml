@@ -1,0 +1,71 @@
+# THE longitudinal test: reflection is scripted (deterministic), then real
+# generation runs — did the system visibly use what reflection just learned?
+# Isolates the judged step from upstream model variance by scripting the
+# reflect response.
+scenario_context: |
+  Spanish-conversation learner. A reflection pass just (1) recorded a NEW
+  insight: the learner confuses por/para under time pressure, evidenced twice;
+  and (2) lowered difficulty to beginner with high scaffolding because window
+  accuracy was 0.25. Immediately afterwards, generation was asked for 3
+  BEGINNER exercises on spanish.grammar.por_para. Strong output drills por/para
+  choices with heavy support; weak output ignores the fresh profile.
+seed:
+  campaign:
+    id: spanish-conv
+    name: Conversational Spanish
+    mission: Hold a relaxed 10-minute conversation with my in-laws by December.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  attempts:
+    - {id: att_1, session_id: s1, exercise_id: ex_1, score: 0.0,
+       latency_seconds: 30.0, error_tag: por para swap, user_answer: "Es para la mañana... por ti."}
+    - {id: att_2, session_id: s1, exercise_id: ex_2, score: 0.3,
+       latency_seconds: 45.0, error_tag: por para swap, user_answer: "Gracias para todo."}
+    - {id: att_3, session_id: s1, exercise_id: ex_3, score: 0.3,
+       latency_seconds: 60.0, user_answer: "Voy a... este... la tienda."}
+steps:
+  - compile: {fn: reflect, window_n: 15}
+    respond_with:
+      insight_updates:
+        - {op: create, key: grammar.por_para_pressure,
+           text: "Swaps por and para when answering under time pressure.",
+           evidence: [att_1, att_2], reason: "same swap in two timed attempts"}
+      strategy: {difficulty: beginner, scaffolding: high,
+                 reason: "window accuracy 0.25 across three attempts"}
+      plan_revision: null
+      journal: "Lowered to beginner/high-scaffold; tracking por/para swaps."
+  - compile: {fn: generate, topic_path: spanish.grammar.por_para, n_items: 3,
+              difficulty: beginner}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does at least one exercise make the learner choose
+      between por and para (the fresh insight's exact confusion)?"}
+  - {id: c2, weight: 2, question: "Is every exercise beginner-calibrated: one short
+      decision or production per item, no multi-part or open-ended composition?"}
+  - {id: c3, weight: 2, question: "Does at least one exercise provide visible
+      scaffolding (a hint, a pattern to follow, or a contrast pair) consistent with
+      scaffolding=high?"}
+  - {id: c4, weight: 1, question: "Do the exercises use everyday conversational
+      contexts fitting the learner's mission (family, small talk), not academic
+      abstractions?"}
+references:
+  good:
+    items:
+      - {prompt: "Choose por or para: « Gracias ___ la cena, suegra. » (Hint: gratitude
+          for a thing received → por.)", answer: "por",
+         rubric: "- picks por for gratitude", skill: apply}
+      - {prompt: "Your father-in-law asks why you're learning Spanish. Complete:
+          « Estudio español ___ hablar con la familia. » (Purpose → para + infinitive.)",
+         answer: "para", rubric: "- picks para for purpose", skill: apply}
+      - {prompt: "Fix one word: « Este regalo es por ti, ¡feliz cumpleaños! »",
+         answer: "Este regalo es para ti.", rubric: "- swaps por→para for recipient",
+         skill: produce}
+    note: null
+  bad:
+    items:
+      - {prompt: "Write a 300-word essay in Spanish analyzing the etymological history
+          of por and para from Latin pro and per ad.", answer: "Varies.",
+         rubric: "- essay is thorough", skill: produce}
+      - {prompt: "Conjugate the verb haber in all 14 tenses and moods.",
+         answer: "he, has, ha...", rubric: "- all forms correct", skill: recall}
+      - {prompt: "Is Spanish a Romance language? Answer yes or no.", answer: "Yes",
+         rubric: "- answer is correct", skill: recall}
+    note: null

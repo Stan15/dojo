@@ -1,0 +1,64 @@
+# Personalization beyond error-targeting: a documented format preference
+# ("hands-on completion over conceptual explanation") must shape what
+# generation produces without derailing the target topic.
+scenario_context: |
+  Docker-compose learner with a documented, stable preference: wants hands-on
+  completion tasks (write/fix real config) and dislikes explain-in-words
+  exercises — recorded after explicit feedback. Generation was asked for 3
+  intermediate exercises on docker.compose.healthchecks. Strong output: mostly
+  produce/apply items on real compose YAML testing healthchecks. Weak output:
+  essay-style "explain the concept" items ignoring the preference.
+seed:
+  campaign:
+    id: docker-oncall
+    name: Docker Compose
+    mission: Debug and operate docker-compose stacks confidently during on-call.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  insights:
+    - id: ins_pref
+      key: preference.hands_on_config
+      description: Wants hands-on config writing/fixing; dislikes explain-in-prose tasks.
+      topic_path: docker
+  attempts:
+    - {id: att_1, session_id: s1, exercise_id: ex_1, score: 1.0, latency_seconds: 30.0,
+       feedback: "more of these please - actual yaml to fix", user_answer: "fixed the depends_on"}
+steps:
+  - compile: {fn: generate, topic_path: docker.compose.healthchecks, n_items: 3,
+              difficulty: intermediate}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Are at least two of the three exercises hands-on
+      production tasks (write, complete, or fix actual compose configuration),
+      honoring the documented preference?"}
+  - {id: c2, weight: 2, question: "Does every exercise still target healthchecks
+      specifically (test, interval, retries, start_period, or depends_on
+      condition: service_healthy)?"}
+  - {id: c3, weight: 1, question: "Is any conceptual item (if present) anchored in a
+      concrete operational situation rather than 'explain in your own words'?"}
+  - {id: c4, weight: 1, question: "Do rubrics check concrete config properties (keys,
+      values, semantics), not vague correctness?"}
+references:
+  good:
+    items:
+      - {prompt: "This service marks healthy before Postgres accepts connections.
+          Fix the healthcheck:\n```yaml\ndb:\n  image: postgres:16\n  healthcheck:\n    test: [\"CMD\", \"true\"]\n```",
+         answer: "test: [\"CMD-SHELL\", \"pg_isready -U postgres\"] with interval/retries",
+         rubric: "- real readiness command\n- interval and retries set", skill: produce}
+      - {prompt: "Complete the api service so it starts only after db is HEALTHY
+          (not merely started):\n```yaml\napi:\n  depends_on:\n    db:\n```",
+         answer: "condition: service_healthy", rubric: "- uses condition: service_healthy",
+         skill: produce}
+      - {prompt: "Your app needs 40s to warm up and probes every 5s. Write the
+          healthcheck block that avoids false unhealthy states during warm-up.",
+         answer: "start_period: 40s with interval: 5s", rubric: "- start_period covers warm-up\n- interval 5s",
+         skill: apply}
+    note: null
+  bad:
+    items:
+      - {prompt: "Explain in your own words the philosophy behind container health
+          checking and why observability matters in modern DevOps culture.",
+         answer: "An essay.", rubric: "- shows understanding", skill: explain}
+      - {prompt: "Describe the history of the HEALTHCHECK instruction in Dockerfiles.",
+         answer: "Added in Docker 1.12...", rubric: "- historically accurate", skill: recall}
+      - {prompt: "Discuss the trade-offs between liveness and readiness in essay form.",
+         answer: "An essay.", rubric: "- balanced discussion", skill: explain}
+    note: null

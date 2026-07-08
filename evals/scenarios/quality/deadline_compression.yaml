@@ -1,0 +1,75 @@
+# Timeline awareness: a hard 2-week deadline must compress the plan to
+# high-yield essentials. Strong output is ruthless; weak output is a semester.
+scenario_context: |
+  A software engineer must pass a Kubernetes fundamentals certification in TWO
+  WEEKS (stated in the goal), studying ~45 minutes per day. Planning was asked
+  to produce a mission, topic tree, and phases. Strong output: few high-yield
+  topics, compressed phases, mission acknowledging the deadline trade-off.
+  Weak output: a comprehensive survey of the whole field.
+seed:
+  campaign:
+    id: placeholder
+    name: placeholder
+    mission: placeholder
+steps:
+  - compile: {fn: plan,
+              goal: "Pass the CKAD Kubernetes certification exam in 2 weeks — I can
+              study about 45 minutes a day",
+              context_notes: "level: intermediate engineer, comfortable with Docker"}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Is the topic tree compressed for the deadline —
+      10 or fewer topics, all plausibly exam-critical (no nice-to-haves like
+      'history of container orchestration')?"}
+  - {id: c2, weight: 2, question: "Does the mission or a phase focus explicitly
+      acknowledge the 2-week constraint or the trade-off it forces?"}
+  - {id: c3, weight: 2, question: "Are phase criteria light enough to complete in
+      two weeks at 45 min/day (no phase demanding more than ~15 attempts)?"}
+  - {id: c4, weight: 1, question: "Is phase 1 a short calibration/diagnostic rather
+      than heavy new content?"}
+  - {id: c5, weight: 1, question: "Are topics marked recall vs skill sensibly (e.g.
+      kubectl commands as skill/recall appropriately, not everything one kind)?"}
+references:
+  good:
+    mission: "Pass CKAD in 14 days: drill the exam's core kubectl workflows and
+      manifest patterns, deferring everything non-tested."
+    topics:
+      - {path: k8s.pods.lifecycle, kind: skill, summary: "create, inspect, debug pods"}
+      - {path: k8s.deployments.rollouts, kind: skill, summary: "deploy, scale, roll back"}
+      - {path: k8s.config.env_secrets, kind: skill, summary: "configmaps and secrets wiring"}
+      - {path: k8s.networking.services, kind: skill, summary: "expose and route services"}
+      - {path: k8s.kubectl.speed, kind: recall, summary: "high-frequency kubectl flags"}
+      - {path: k8s.jobs.cron, kind: skill, summary: "jobs and cronjobs"}
+    phases:
+      - {phase: 1, topics: [k8s.kubectl.speed], criteria: {min_attempts: 5, min_accuracy: 0.6},
+         focus: "calibration under time pressure"}
+      - {phase: 2, topics: [k8s.pods.lifecycle, k8s.deployments.rollouts],
+         criteria: {min_attempts: 10, min_accuracy: 0.7}, focus: "the exam's core loop"}
+      - {phase: 3, topics: [k8s.config.env_secrets, k8s.networking.services, k8s.jobs.cron],
+         criteria: {min_attempts: 12, min_accuracy: 0.7}, focus: "wiring patterns, timed"}
+    refinement_questions: ["Which exam version/date exactly?", "Any topics your daily work already covers?"]
+  bad:
+    mission: "Become a well-rounded Kubernetes expert with deep understanding of
+      container orchestration theory and ecosystem history."
+    topics:
+      - {path: k8s.history.borg, kind: recall, summary: "origins at Google"}
+      - {path: k8s.architecture.etcd_internals, kind: recall, summary: "raft consensus details"}
+      - {path: k8s.pods.lifecycle, kind: skill, summary: "pods"}
+      - {path: k8s.deployments.rollouts, kind: skill, summary: "deployments"}
+      - {path: k8s.networking.cni_plugins, kind: recall, summary: "compare 8 CNI plugins"}
+      - {path: k8s.service_mesh.istio, kind: skill, summary: "istio deep dive"}
+      - {path: k8s.operators.crd_authoring, kind: skill, summary: "write custom operators"}
+      - {path: k8s.multi_cluster.federation, kind: skill, summary: "federation patterns"}
+      - {path: k8s.security.psp_history, kind: recall, summary: "deprecated PSP evolution"}
+      - {path: k8s.config.env_secrets, kind: skill, summary: "config"}
+      - {path: k8s.networking.services, kind: skill, summary: "services"}
+      - {path: k8s.storage.csi_internals, kind: recall, summary: "CSI driver internals"}
+      - {path: k8s.scheduling.custom_schedulers, kind: skill, summary: "write a scheduler"}
+      - {path: k8s.observability.full_stack, kind: skill, summary: "prometheus + grafana + jaeger"}
+    phases:
+      - {phase: 1, topics: [k8s.history.borg, k8s.architecture.etcd_internals],
+         criteria: {min_attempts: 25, min_accuracy: 0.9}, focus: "solid theoretical foundations first"}
+      - {phase: 2, topics: [k8s.pods.lifecycle, k8s.deployments.rollouts],
+         criteria: {min_attempts: 30, min_accuracy: 0.9}, focus: "core objects"}
+      - {phase: 3, topics: [k8s.service_mesh.istio, k8s.operators.crd_authoring],
+         criteria: {min_attempts: 40, min_accuracy: 0.85}, focus: "advanced ecosystem"}
+    refinement_questions: []

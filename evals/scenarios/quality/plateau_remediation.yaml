@@ -1,0 +1,73 @@
+# A plateau is not a difficulty problem: flat mid scores over many attempts on
+# one topic while others are mastered points at a missing prerequisite. Strong
+# reflection names the pattern and adds support; weak reflection raises
+# difficulty (mastery elsewhere!) or shrugs.
+scenario_context: |
+  Statistics learner. Topic stats.hypothesis_testing: seven attempts across
+  three sessions, scores flat between 0.3 and 0.7 — never failing outright,
+  never mastering; several answers confuse the null hypothesis's role.
+  Meanwhile stats.descriptive was mastered weeks ago (three 1.0s, resolved
+  insight). Reflection ran. Strong output: creates ONE insight naming the
+  recurring null-hypothesis confusion, raises scaffolding (not difficulty),
+  and may add a prerequisite-focused phase. Weak output: raises difficulty,
+  invents unrelated insights, or resolves nothing.
+seed:
+  campaign:
+    id: stats-foundations
+    name: Statistics Foundations
+    mission: Read ML papers without skipping the statistics sections.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  insights:
+    - id: ins_desc
+      key: descriptive.mastered
+      description: Comfortable with mean/median/variance trade-offs.
+      status: resolved
+      topic_path: stats.descriptive
+  attempts:
+    - {id: att_1, session_id: s1, exercise_id: hyp_1, score: 0.3, latency_seconds: 90.0,
+       error_tag: null role, user_answer: "We accept the null when p is small."}
+    - {id: att_2, session_id: s1, exercise_id: hyp_2, score: 0.7, latency_seconds: 70.0,
+       user_answer: "Reject when p < alpha... because the data is unlikely?"}
+    - {id: att_3, session_id: s2, exercise_id: hyp_3, score: 0.3, latency_seconds: 95.0,
+       error_tag: null role, user_answer: "The null hypothesis is what we want to prove."}
+    - {id: att_4, session_id: s2, exercise_id: hyp_4, score: 0.7, latency_seconds: 60.0,
+       user_answer: "alpha is the error budget for false positives, I think."}
+    - {id: att_5, session_id: s2, exercise_id: hyp_5, score: 0.3, latency_seconds: 110.0,
+       error_tag: null role, user_answer: "A small p-value proves the alternative."}
+    - {id: att_6, session_id: s3, exercise_id: hyp_6, score: 0.7, latency_seconds: 75.0,
+       user_answer: "We assume the null and measure surprise."}
+    - {id: att_7, session_id: s3, exercise_id: hyp_7, score: 0.3, latency_seconds: 100.0,
+       error_tag: null role, user_answer: "Accepting the null means it is true."}
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does the output create exactly one insight naming
+      the recurring null-hypothesis confusion (its role/'accepting the null'), citing
+      multiple attempts as evidence?"}
+  - {id: c2, weight: 3, question: "Does the output raise scaffolding to high WITHOUT
+      raising difficulty (a plateau with conceptual confusion needs support, not
+      harder items)?"}
+  - {id: c3, weight: 1, question: "Is the plan either untouched (null — acceptable) or,
+      if revised, targeted at the conceptual gap (e.g. a prerequisite/foundations
+      phase) rather than adding volume?"}
+  - {id: c4, weight: 1, question: "Does the journal describe the plateau honestly
+      (flat scores / recurring confusion), not as general struggle or laziness?"}
+references:
+  good:
+    insight_updates:
+      - {op: create, key: hypothesis.null_role_confusion,
+         text: "Treats the null as the claim to prove and 'accepts' it on small p.",
+         evidence: [att_1, att_3, att_5, att_7], reason: "same confusion in four attempts"}
+    strategy: {difficulty: null, scaffolding: high,
+               reason: "flat 0.3-0.7 plateau with one recurring conceptual confusion"}
+    plan_revision: null
+    journal: "Plateau on hypothesis testing traced to null-role confusion; raised scaffolding."
+  bad:
+    insight_updates:
+      - {op: create, key: motivation.inconsistent_effort,
+         text: "Scores alternate, suggesting inconsistent effort between sessions.",
+         evidence: [att_2], reason: "scores go up and down"}
+    strategy: {difficulty: advanced, scaffolding: low,
+               reason: "learner mastered descriptive statistics, time to push harder"}
+    plan_revision: null
+    journal: "Pushing difficulty up since descriptive statistics went well."
