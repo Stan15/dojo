@@ -115,6 +115,48 @@ class TestGenerateHappyPath:
         assert len(store.candidates.list(CAMP_ID)) == 2
 
 
+class TestIntervention:
+    """The meta-learning escape hatch (prompt rule 9, I2 note): sharp questions
+    beat bad exercises, and they enter the loop as diagnostic items."""
+
+    PAYLOAD = json.dumps({
+        "items": [],
+        "note": None,
+        "intervention": {
+            "kind": "clarify_goal",
+            "questions": [
+                "Which situations make you notice this weakness most?",
+                "What would 'good enough' look like in three months?",
+            ],
+            "reason": "mission names no content, context, or standard",
+        },
+    })
+
+    def test_intervention_creates_diagnostic_exercises(self, store: DojoStore):
+        task_id = emit_generate(store, n_items=3)
+        outcome = service.submit(store, task_id, self.PAYLOAD)
+        assert outcome.ok, outcome.errors
+        assert outcome.applied["intervention"]["kind"] == "clarify_goal"
+        diagnostics = store.exercises.list(CAMP_ID, filters={"quality": "diagnostic"})
+        assert len(diagnostics) == 2
+        assert store.candidates.list(CAMP_ID) == [], "no practice items were faked"
+
+    def test_items_and_intervention_together_rejected(self, store: DojoStore):
+        task_id = emit_generate(store, n_items=2)
+        payload = json.loads(valid_generate_payload(2))
+        payload["intervention"] = json.loads(self.PAYLOAD)["intervention"]
+        outcome = service.submit(store, task_id, json.dumps(payload))
+        assert not outcome.ok and any("never both" in e for e in outcome.errors)
+
+    def test_diagnostic_task_may_not_intervene(self, store: DojoStore):
+        compiled = compiler.compile_diagnostic(
+            store, store.campaigns.get(CAMP_ID), topic_path="t", n_items=2,
+        )
+        task_id = service.emit(store, compiled).id
+        outcome = service.submit(store, task_id, self.PAYLOAD)
+        assert not outcome.ok and "cannot intervene" in outcome.errors[0]
+
+
 class TestGenerateRejections:
     def test_too_many_items_rejected(self, store: DojoStore):
         task_id = emit_generate(store, n_items=2)

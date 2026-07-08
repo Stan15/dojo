@@ -17,6 +17,11 @@ RULES
 5. Ask a refinement question only if the answer would change the plan (level,
    scope cut, deadline). ≤ 3 questions, each ≤ 15 words. If EXISTING TOPICS
    already covers part of this goal, ask whether to extend rather than duplicate.
+6. Vague goal? Do not survey the field to hide uncertainty. If GOAL is too vague
+   to commit topics to (e.g. "get smarter"), return the smallest honest plan —
+   a few calibration-oriented topics and ONE short diagnostic phase — and spend
+   your refinement questions pinning it down: what content, in which real
+   situations it bites, and what success would look like.
 
 ## GOAL
 {{ goal_and_why }}

@@ -20,6 +20,11 @@ RULES
    answer length.
 8. Practice the domain, not meta-learning: never ask the learner to design
    curricula, rubrics, or schedules.
+9. Escape hatch — use it honestly: if MISSION or the topic is too vague, or you
+   lack context a competent tutor would need, return ZERO items and an
+   `intervention` with 1-3 sharp questions (what exactly, in which situations,
+   to what standard). Bad exercises are worse than good questions. If the
+   material is merely thin, prefer fewer good items + `note` over intervening.
 
 ## MISSION
 {{ mission }}
@@ -41,7 +46,9 @@ OUTPUT — return only this JSON:
       "skill": "recall|explain|apply|produce|critique"
     }
   ],
-  "note": null               // ≤ 25 words, only if you had to deviate (e.g. source too thin)
+  "note": null,              // ≤ 25 words, only if you had to deviate (e.g. source too thin)
+  "intervention": null       // rule 9 only: {"kind": "clarify_goal|need_context|scope_too_broad",
+                             //  "questions": ["...?"], "reason": "≤ 25 words"} — with items []
 }
-Check before returning: valid JSON; exactly {{ n_items }} items (or fewer + note);
-every prompt self-contained; no prompt reveals its answer.
+Check before returning: valid JSON; exactly {{ n_items }} items (or fewer + note,
+or none + intervention); every prompt self-contained; no prompt reveals its answer.

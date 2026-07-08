@@ -16,6 +16,11 @@ GENERATE_ANSWER_WORDS = 80
 GENERATE_NOTE_WORDS = 25
 GENERATE_MAX_ITEMS = 8  # absolute list bound; exact count per task checked by the applier
 
+# --- meta-learning intervention (exercise.generate escape hatch) ---
+INTERVENTION_MAX_QUESTIONS = 3
+INTERVENTION_QUESTION_WORDS = 25
+INTERVENTION_REASON_WORDS = 25
+
 # --- grading (attempt.grade) ---
 GRADE_BANDS = (0.0, 0.3, 0.7, 1.0)
 GRADE_EVIDENCE_WORDS = 10

@@ -75,11 +75,44 @@ class GeneratedItem(BaseModel):
     )
 
 
+class Intervention(BaseModel):
+    """The generator's structured refusal (meta-learning escape hatch): when the
+    mission/topic is too vague or context is missing, sharp questions beat bad
+    exercises. Questions become diagnostic items in the normal loop."""
+
+    kind: Literal["clarify_goal", "need_context", "scope_too_broad"]
+    questions: List[str] = Field(min_length=1, max_length=_limits.INTERVENTION_MAX_QUESTIONS)
+    reason: str = Field(min_length=1)
+
+    _cap_reason = field_validator("reason")(
+        _cap_words("reason", _limits.INTERVENTION_REASON_WORDS)
+    )
+
+    @field_validator("questions")
+    @classmethod
+    def _cap_question_words(cls, v: List[str]) -> List[str]:
+        for q in v:
+            if _limits.word_count(q) > _limits.INTERVENTION_QUESTION_WORDS:
+                raise ValueError(
+                    f"intervention question exceeds {_limits.INTERVENTION_QUESTION_WORDS} words: {q!r}"
+                )
+        return v
+
+
 class GenerateResult(BaseModel):
-    items: List[GeneratedItem] = Field(min_length=1, max_length=_limits.GENERATE_MAX_ITEMS)
+    items: List[GeneratedItem] = Field(default_factory=list, max_length=_limits.GENERATE_MAX_ITEMS)
     note: Optional[str] = None
+    intervention: Optional[Intervention] = None
 
     _cap_note = field_validator("note")(_cap_words("note", _limits.GENERATE_NOTE_WORDS))
+
+    @model_validator(mode="after")
+    def _items_xor_intervention(self):
+        if self.intervention is not None and self.items:
+            raise ValueError("return exercises OR an intervention, never both")
+        if self.intervention is None and not self.items:
+            raise ValueError("no items and no intervention — return one or the other")
+        return self
 
 
 class GradeResult(BaseModel):

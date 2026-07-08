@@ -175,6 +175,35 @@ def apply_generate(store, task: Task, result: GenerateResult) -> dict[str, Any]:
     n_items = int(ctx["n_items"])
     diagnostic = ctx.get("mode") == "diagnostic"
 
+    if result.intervention is not None:
+        # Meta-learning escape hatch (prompt rule 9): the model judged that
+        # meaningful exercises can't be written yet. Its questions enter the
+        # normal loop as diagnostic items — answers feed reflection, which
+        # sharpens the mission/profile; nothing special-cased downstream.
+        if diagnostic:
+            raise ApplyRejection(
+                "diagnostic tasks cannot intervene — they ARE the clarifying questions"
+            )
+        from ..schemas import Exercise
+
+        ids = []
+        for i, question in enumerate(result.intervention.questions):
+            ex_id = f"ex_{task.id[4:]}_iv{i}"  # task-derived: re-apply overwrites
+            store.exercises.save(campaign_id, Exercise(
+                id=ex_id,
+                topic_path=ctx["topic_path"],
+                difficulty=ctx.get("difficulty", "intermediate"),
+                generation_run=task.id,
+                quality="diagnostic",
+                prompt=question,
+            ))
+            ids.append(ex_id)
+        return {
+            "intervention": result.intervention.model_dump(),
+            "exercises": ids,
+            "note": "generation declined pending answers to the questions above",
+        }
+
     reasons = []
     if len(result.items) > n_items:
         reasons.append(f"asked for exactly {n_items} items, got {len(result.items)}")
