@@ -50,7 +50,9 @@ def lock_directory(dojo_dir: Path):
 
 
 def init_git(dojo_dir: Path):
-    """Initializes git in the Dojo root directory if not present."""
+    """Initializes git in the Dojo root and commits the scaffolding immediately —
+    a store must never be born with uncommitted state, or read-only commands
+    (doctor) flag it forever while never being the ones to commit it."""
     git_dir = dojo_dir / ".git"
     if not git_dir.exists():
         try:
@@ -58,6 +60,7 @@ def init_git(dojo_dir: Path):
             gitignore = dojo_dir / ".gitignore"
             if not gitignore.exists():
                 gitignore.write_text("dojo.lock\n.index.json\ndojo.log\n*.tmp\n", encoding="utf-8")
+            commit_git(dojo_dir, "dojo store initialized")
         except Exception:
             pass
 
@@ -70,7 +73,13 @@ def commit_git(dojo_dir: Path, message: str):
         subprocess.run(["git", "add", "."], cwd=dojo_dir, check=True)
         status = subprocess.run(["git", "status", "--porcelain"], cwd=dojo_dir, capture_output=True, text=True)
         if status.stdout.strip():
-            subprocess.run(["git", "commit", "-q", "-m", message], cwd=dojo_dir, check=True)
+            # Identity fallback: recovery points must not depend on the
+            # machine having a configured git author.
+            subprocess.run(
+                ["git", "-c", "user.name=dojo", "-c", "user.email=dojo@localhost",
+                 "commit", "-q", "-m", message],
+                cwd=dojo_dir, check=True,
+            )
     except Exception:
         pass
 
