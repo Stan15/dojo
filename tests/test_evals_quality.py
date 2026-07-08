@@ -1,6 +1,6 @@
 """Tier-3 evals: judged pedagogical quality (ADR 016 §Tier 3).
 
-Run:  DOJO_EVAL_FULFILLER="codex exec ..." python -m pytest -m eval -q tests/test_evals_quality.py
+Run:  DOJO_EVAL_DRIVER="codex exec ..." python -m pytest -m eval -q tests/test_evals_quality.py
       (judge defaults to the driver; override with DOJO_EVAL_JUDGE="<cmd>")
 
 What makes this reliable rather than vibes:
@@ -42,7 +42,7 @@ pytestmark = pytest.mark.eval
 
 SCENARIOS = sorted((CORPUS_DIR / "quality").glob("*.yaml"))
 
-DRIVER = os.environ.get("DOJO_EVAL_FULFILLER", "").strip()
+DRIVER = os.environ.get("DOJO_EVAL_DRIVER", "").strip()
 JUDGE = os.environ.get("DOJO_EVAL_JUDGE", "").strip() or DRIVER
 TIMEOUT = int(os.environ.get("DOJO_EVAL_TIMEOUT", "300"))
 MARGIN = float(os.environ.get("DOJO_EVAL_MARGIN", "0.10"))
@@ -55,7 +55,7 @@ def pair_slug() -> str:
 @pytest.fixture(scope="session")
 def quality_card():
     if not DRIVER:
-        pytest.skip("DOJO_EVAL_FULFILLER not set — quality evals skipped (never silently passed)")
+        pytest.skip("DOJO_EVAL_DRIVER not set — quality evals skipped (never silently passed)")
     card = {
         "driver": DRIVER,
         "judge": JUDGE,

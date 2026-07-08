@@ -122,7 +122,7 @@ class TestBenchmarkCli:
         out_file = tmp_path / "report.json"
         rc, report = run(
             capsys, "--db", str(dojo_dir), "--json", "benchmark",
-            "--fulfiller", f"python {script}", "--tier", "compliance",
+            "--driver", f"python {script}", "--tier", "compliance",
             "--output", str(out_file),
         )
         assert rc == 0

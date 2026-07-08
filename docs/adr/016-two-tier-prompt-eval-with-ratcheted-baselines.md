@@ -40,7 +40,7 @@ Two tiers, both in `pytest`, split by what they need to run:
    Baselines are per-model — scores are only comparable within a model.
 
 4. **Fulfiller-agnostic by construction.** The eval runner takes any fulfiller
-   command string (`DOJO_EVAL_FULFILLER="<cmd>"`, same one-string contract as
+   command string (`DOJO_EVAL_DRIVER="<cmd>"`, same one-string contract as
    production: prompt on stdin → JSON on stdout → salvage-extract) and derives
    the baseline slug from it. Multiple fulfillers can each maintain their own
    committed baseline, and the system's model-neutrality principle (blueprint
@@ -108,3 +108,11 @@ to buy reliability:
 - Known limit, stated honestly: Tier 2 measures compliance and structure, not
   pedagogy. Semantic quality review stays human (reading `evals/reports/`), and
   an optional LLM-judge lane can be added later without changing the ratchet.
+
+
+## Amendment (2026-07-08): vocabulary
+
+The model under benchmark is the **driver** (`--driver`, `DOJO_EVAL_DRIVER`),
+paired with the **judge**. "Fulfiller" remains the production task-contract
+word (ADR 010: `fulfiller.command`, fulfillment adapters) — a benchmark tests
+a driver; production work is served by fulfillers.

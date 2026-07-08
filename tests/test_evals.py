@@ -1,7 +1,7 @@
 """Tier-2 prompt evals (ADR 016): real-model compliance against the scenario
 corpus, ratcheted per-model baselines.
 
-Run:  DOJO_EVAL_FULFILLER="codex exec" python -m pytest -m eval -q
+Run:  DOJO_EVAL_DRIVER="codex exec" python -m pytest -m eval -q
       (optional: DOJO_EVAL_SAMPLES=3 for stability)
 
 Fulfiller-agnostic by construction: any command taking the prompt on stdin and
@@ -36,7 +36,7 @@ pytestmark = pytest.mark.eval
 EVALS_DIR = Path(__file__).parent.parent / "evals"  # dev baselines/reports
 SCENARIOS = sorted((CORPUS_DIR / "compliance").glob("*.yaml"))
 
-FULFILLER = os.environ.get("DOJO_EVAL_FULFILLER", "").strip()
+FULFILLER = os.environ.get("DOJO_EVAL_DRIVER", "").strip()
 SAMPLES = int(os.environ.get("DOJO_EVAL_SAMPLES", "1"))
 TIMEOUT = int(os.environ.get("DOJO_EVAL_TIMEOUT", "300"))
 
@@ -75,7 +75,7 @@ def quality_score(scenario: dict, store: DojoStore, outcome) -> dict:
 @pytest.fixture(scope="session")
 def scorecard():
     if not FULFILLER:
-        pytest.skip("DOJO_EVAL_FULFILLER not set — evals skipped (never silently passed)")
+        pytest.skip("DOJO_EVAL_DRIVER not set — evals skipped (never silently passed)")
     card = {
         "command": FULFILLER,
         "date": datetime.now(timezone.utc).isoformat(),

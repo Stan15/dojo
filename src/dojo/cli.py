@@ -1492,7 +1492,7 @@ def cmd_benchmark(args: argparse.Namespace) -> int:
 
     from .evals.runner import run_benchmark
 
-    driver = args.fulfiller
+    driver = args.driver
     judge = args.judge or driver
     tiers = ("compliance",) if args.tier == "compliance" else (
         ("quality",) if args.tier == "quality" else ("compliance", "quality")
@@ -1712,12 +1712,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="benchmark a model pair on dojo's pedagogy corpus (compliance + judged quality)",
     )
     p_bench.add_argument(
-        "--fulfiller", "-f", required=True,
-        help='driver command, e.g. "codex exec" or "ollama run llama3" (prompt on stdin)',
+        "--driver", "-d", required=True,
+        help='the model under test, e.g. "codex exec" or "ollama run llama3" (prompt on stdin). '
+             'Distinct from fulfiller.command, which serves production tasks.',
     )
     p_bench.add_argument(
         "--judge", "-j",
-        help="evaluator command grading output quality (default: same as --fulfiller)",
+        help="evaluator command grading output quality (default: same as --driver)",
     )
     p_bench.add_argument("--tier", choices=["all", "compliance", "quality"], default="all")
     p_bench.add_argument("--detail", action="store_true", help="show per-scenario criterion verdicts")

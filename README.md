@@ -138,8 +138,8 @@ category-by-category profile — personalization, calibration, planning,
 grading integrity, knowing-when-to-ask, domain breadth:
 
 ```bash
-dojo benchmark --fulfiller "codex exec"            # judge defaults to the driver
-dojo benchmark -f "ollama run llama3" -j "codex exec" --detail
+dojo benchmark --driver "codex exec"               # judge defaults to the driver
+dojo benchmark -d "ollama run llama3" -j "codex exec" --detail
 ```
 
 ```text
@@ -157,7 +157,7 @@ Scores come from hand-crafted scenarios with planted good/bad references that
 calibrate the judge before it's trusted, evidence-anchored verdicts, and the
 same validators production uses — headline first, `--detail` when you want
 per-criterion verdicts. Dev-side, the same corpus runs as ratcheted regression
-evals (`DOJO_EVAL_FULFILLER="codex exec" pytest -m eval`) so prompt tweaks
+evals (`DOJO_EVAL_DRIVER="codex exec" pytest -m eval`) so prompt tweaks
 can't silently regress.
 
 ## Status & roadmap
