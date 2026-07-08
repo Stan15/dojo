@@ -7,9 +7,10 @@
 set -euo pipefail
 
 # Style helpers
-info() { echo -e "\033[1;32m=>\033[0m $*"; }
-warn() { echo -e "\033[1;33m=> WARNING:\033[0m $*"; }
-error() { echo -e "\033[1;31m=> ERROR:\033[0m $*"; exit 1; }
+# printf, not echo -e: macOS /bin/sh prints "-e" literally
+info() { printf '\033[1;32m=>\033[0m %s\n' "$*"; }
+warn() { printf '\033[1;33m=> WARNING:\033[0m %s\n' "$*"; }
+error() { printf '\033[1;31m=> ERROR:\033[0m %s\n' "$*"; exit 1; }
 
 # Dojo Doctor Safety Gate Helper
 check_dojo_doctor() {
