@@ -1,6 +1,6 @@
 # STATE
 
-_Last updated: 2026-07-07 (late session)_
+_Last updated: 2026-07-07 (session 3)_
 
 ## Phase
 
@@ -35,19 +35,36 @@ Next: Tier-3 judged evals + wide pedagogical corpus (owner priority), then M3
   generate.py, legacy templates/loader-fallbacks/schemas, connect-ai CLI,
   generation runs, wrapper-script generation. api.py 1810 → 1148 lines.
 
+## Since last update (all committed, 137 tests green + 17 eval-marked)
+
+- **Tier 3 DONE**: judge runner (binary rubrics, verbatim-evidence verdicts,
+  calibration gate vs planted references, (driver,judge)-pair baselines with
+  margin) + 12-scenario quality corpus across 6 categories (personalization,
+  calibration, planning, grading-integrity, meta-learning, domain-breadth),
+  including the owner's asks: vague-mission intervention, false-intervention
+  control, "improve my memory" plan elucidation, math scaffolding, pure recall.
+  Deterministic corpus-integrity tests keep it from rotting in CI.
+- **Intervention contract**: generator may return zero items + structured
+  intervention (clarify_goal/need_context/scope_too_broad, 1-3 questions);
+  applier turns questions into diagnostic exercises; plan prompt got the
+  vague-goal rule (9b3ec16).
+- **`dojo benchmark` shipped**: eval machinery lives in dojo.evals (corpus as
+  package data); category-grouped strength/weakness display, --detail opt-in,
+  JSON reports; README documents it (ebfd201, and display visually verified).
+- Real (codex,codex) full eval run in flight at session end — commit its
+  baselines (evals/baselines/) when it lands; investigate any scenario < 1.0
+  compliance or with judge-calibration failures.
+
 ## NEXT ACTIONS (in order)
 
-1. **Tier 3 evals + corpus** (todo): implement judge runner per ADR 016 §Tier 3;
-   craft the wide scenario corpus stretching pedagogy + personalization
-   (recurring-error targeting, skip-signal calibration, deadline compression,
-   plateau handling, mastery resolution, preference adherence; longitudinal
-   reflect→generate chains). Run real baseline with codex as driver AND judge.
-2. README viral-grade rewrite (owner ask) — keep truthful to current surface.
-3. M3 — pedagogy engine (blueprint §10): py-fsrs behind `scheduling` boundary,
-   topic-level skill SR, Tier-1 allocator, packet builder, `dojo daily`,
-   `dojo why`, offline-floor test.
-4. M4 — capture/inbox/route + `dojo capture`; M5 — skill/envelope polish (SKILL.md
-   ≤60 lines, `dojo stats`); M6 — real-harness E2E + ship.
+1. Commit real codex baselines from the background eval run (see above).
+2. M3 — pedagogy engine (blueprint §10): `fsrs` dep + `src/dojo/scheduling/`
+   wrapper (band→Rating per ADR 014); per-item SR on recall exercises + topic
+   SR in topics.yaml; score-landing hook (submit_answer/apply_grade/correct →
+   scheduling.record_outcome); Tier-1 allocator; pure packet builder (I3/I8
+   property tests); `dojo daily` + `dojo why`; offline-floor test (I4).
+3. M4 — capture/inbox/route + `dojo capture`; M5 — skill/envelope polish
+   (SKILL.md ≤60 lines, `dojo stats`); M6 — real-harness E2E + ship.
 
 ## Standing owner directives (beyond blueprint)
 
