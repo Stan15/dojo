@@ -52,14 +52,35 @@ def _days_since_touch(campaign_id: str, store, now: datetime) -> float:
     return max(0.0, (now - datetime.fromisoformat(last)).total_seconds() / 86400)
 
 
-def _due_exercises(store, campaign_id: str, now: datetime) -> list[Exercise]:
+def _topic_emphasis(campaign: Campaign) -> dict[str, float]:
+    """Learner-set intra-campaign boosts ("this topic more often"): emphasis > 1
+    accelerates a topic's due cycle and wins composition ties."""
+    return {
+        t["path"]: float(t.get("emphasis", 1.0))
+        for t in (campaign.topics or [])
+        if t.get("path")
+    }
+
+
+def _emphasized_due(sr, emphasis: float, now: datetime) -> bool:
+    """An emphasis of 2 makes an item due in half its scheduled interval."""
+    if emphasis <= 1.0 or not sr or not sr.get("last_review"):
+        return scheduling.is_due(sr, now)
+    last = datetime.fromisoformat(sr["last_review"])
+    scheduled = scheduling.due_at(sr)
+    effective = last + (scheduled - last) / emphasis
+    return effective <= now
+
+
+def _due_exercises(store, campaign: Campaign, now: datetime) -> list[Exercise]:
+    emphasis = _topic_emphasis(campaign)
     due = []
-    for ex in store.exercises.list(campaign_id):
+    for ex in store.exercises.list(campaign.id):
         if ex.quality in EXCLUDED_QUALITIES:
             continue
-        if scheduling.is_due(ex.sr, now):
+        if _emphasized_due(ex.sr, emphasis.get(ex.topic_path, 1.0), now):
             due.append(ex)
-    return sorted(due, key=lambda e: e.id)  # deterministic base order
+    return sorted(due, key=lambda e: (-emphasis.get(e.topic_path, 1.0), e.id))
 
 
 def campaign_priority(
@@ -67,15 +88,19 @@ def campaign_priority(
 ) -> tuple[float, str, list[Exercise]]:
     """Tier-1 score: campaigns don't forget, learners under-attend them —
     urgency-weighted fairness, not memory math (ADR 012)."""
-    due = _due_exercises(store, campaign.id, now)
+    due = _due_exercises(store, campaign, now)
     days = _days_since_touch(campaign.id, store, now)
     due_pressure = min(len(due) / 5.0, 1.0)
     atrophy = min(days / 7.0, 1.0)
     score = W_DUE * due_pressure + W_ATROPHY * atrophy
+    boost = float(campaign.strategy_profile.get("priority_weight", 1.0))
+    score *= boost
     reason = (
         f"{campaign.name}: {len(due)} due, untouched "
         f"{'today' if days < 1 else f'{days:.0f}d'}"
     )
+    if boost != 1.0:
+        reason += f", boosted ×{boost:g} by you"
     return score, reason, due
 
 
@@ -120,7 +145,7 @@ def _skill_topics_needing_stock(store, campaign: Campaign, due: list[Exercise], 
     for topic in campaign.topics or []:
         if topic.get("kind") != "skill":
             continue
-        if not scheduling.is_due(topic.get("sr"), now):
+        if not _emphasized_due(topic.get("sr"), float(topic.get("emphasis", 1.0)), now):
             continue
         if topic["path"] in stocked:
             continue
