@@ -27,53 +27,21 @@ from pathlib import Path
 import pytest
 import yaml
 
-from dojo.schemas import Attempt, Campaign, Exercise, Insight
+from dojo.evals.runner import CORPUS_DIR, compile_step, seed_store, slug_for
 from dojo.store import DojoStore
-from dojo.tasks import compiler, service
+from dojo.tasks import service
 
 pytestmark = pytest.mark.eval
 
-EVALS_DIR = Path(__file__).parent.parent / "evals"
-SCENARIOS = sorted((EVALS_DIR / "scenarios").glob("*.yaml"))
+EVALS_DIR = Path(__file__).parent.parent / "evals"  # dev baselines/reports
+SCENARIOS = sorted((CORPUS_DIR / "compliance").glob("*.yaml"))
 
 FULFILLER = os.environ.get("DOJO_EVAL_FULFILLER", "").strip()
 SAMPLES = int(os.environ.get("DOJO_EVAL_SAMPLES", "1"))
 TIMEOUT = int(os.environ.get("DOJO_EVAL_TIMEOUT", "300"))
 
 
-def slug_for(command: str) -> str:
-    return re.sub(r"[^a-z0-9]+", "-", command.lower()).strip("-")[:40]
 
-
-def seed_store(tmp_path: Path, seed: dict) -> DojoStore:
-    store = DojoStore(tmp_path / "dojo")
-    camp = Campaign(**seed["campaign"])
-    store.campaigns.save(camp)
-    for ins in seed.get("insights", []):
-        store.insights.save(camp.id, Insight(**ins))
-    if "exercise" in seed:
-        store.exercises.save(camp.id, Exercise(**seed["exercise"]))
-    for att in seed.get("attempts", []):
-        store.attempts.save(camp.id, Attempt(**{"campaign_id": camp.id, **att}))
-    return store
-
-
-def compile_scenario(store: DojoStore, scenario: dict):
-    camp = store.campaigns.get(scenario["seed"]["campaign"]["id"])
-    args = dict(scenario["compile"])
-    fn = args.pop("fn")
-    if fn == "generate":
-        return compiler.compile_generate(store, camp, **args)
-    if fn == "diagnostic":
-        return compiler.compile_diagnostic(store, camp, **args)
-    if fn == "grade":
-        attempt = store.attempts.get(camp.id, args.pop("attempt_id"))
-        exercise = store.exercises.get(camp.id, attempt.exercise_id)
-        return compiler.compile_grade(
-            store, camp, exercise,
-            attempt_id=attempt.id, user_answer=attempt.user_answer,
-        )
-    raise ValueError(f"unknown compile fn: {fn}")
 
 
 def run_fulfiller(prompt: str) -> str:
@@ -137,7 +105,7 @@ def test_scenario_compliance_meets_baseline(scenario_path: Path, tmp_path: Path,
     ok_count, errors, signals = 0, [], {}
     for sample in range(SAMPLES):
         store = seed_store(tmp_path / f"s{sample}", scenario["seed"])
-        compiled = compile_scenario(store, scenario)
+        compiled = compile_step(store, scenario['seed']['campaign']['id'], scenario['compile'])
         task = service.emit(store, compiled)
         raw = run_fulfiller(task.prompt)
         outcome = service.submit(store, task.id, raw)

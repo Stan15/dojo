@@ -27,20 +27,20 @@ from pathlib import Path
 import pytest
 import yaml
 
-from evals_lib import (
-    EVALS_DIR,
+from dojo.evals.runner import (
+    CORPUS_DIR,
+    ComplianceFailure,
     calibration_gate,
-    compile_step,
-    fulfill_step,
+    execute_quality_scenario,
     judge_output,
-    seed_store,
     slug_for,
-    submit_canned,
 )
+
+EVALS_DIR = Path(__file__).parent.parent / "evals"  # dev baselines/reports
 
 pytestmark = pytest.mark.eval
 
-SCENARIOS = sorted((EVALS_DIR / "scenarios" / "quality").glob("*.yaml"))
+SCENARIOS = sorted((CORPUS_DIR / "quality").glob("*.yaml"))
 
 DRIVER = os.environ.get("DOJO_EVAL_FULFILLER", "").strip()
 JUDGE = os.environ.get("DOJO_EVAL_JUDGE", "").strip() or DRIVER
@@ -79,30 +79,6 @@ def quality_card():
         baseline_file.write_text(json.dumps(card, indent=2), encoding="utf-8")
 
 
-def execute_scenario(scenario: dict, tmp_path: Path) -> str:
-    """Runs the scenario's steps; returns the final step's extracted output
-    (the thing on trial). Chain steps with `respond_with` are scripted so the
-    judged step is isolated from upstream model variance."""
-    store = seed_store(tmp_path, scenario["seed"])
-    campaign_id = scenario["seed"]["campaign"]["id"]
-    final_output = None
-    for step in scenario["steps"]:
-        compiled = compile_step(store, campaign_id, step["compile"])
-        if "respond_with" in step:
-            outcome = submit_canned(store, compiled, step["respond_with"])
-            assert outcome.ok, f"scripted step rejected: {outcome.errors}"
-            final_output = json.dumps(step["respond_with"], indent=1)
-        else:
-            outcome, extracted = fulfill_step(store, compiled, DRIVER, TIMEOUT)
-            if not outcome.ok:
-                pytest.fail(
-                    f"driver failed compliance inside a quality scenario "
-                    f"(fix Tier 2 first): {outcome.errors[:3]}"
-                )
-            final_output = extracted
-    assert final_output is not None
-    return final_output
-
 
 @pytest.mark.parametrize("scenario_path", SCENARIOS, ids=lambda p: p.stem)
 def test_pedagogical_quality_meets_baseline(scenario_path: Path, tmp_path: Path, quality_card):
@@ -116,7 +92,10 @@ def test_pedagogical_quality_meets_baseline(scenario_path: Path, tmp_path: Path,
         pytest.fail(f"{scenario_path.stem}: {problem}")
 
     # 2. Drive the system for real; judge the final output.
-    output_text = execute_scenario(scenario, tmp_path)
+    try:
+        output_text = execute_quality_scenario(scenario, tmp_path, DRIVER, TIMEOUT)
+    except ComplianceFailure as e:
+        pytest.fail(f"driver failed compliance inside a quality scenario (fix Tier 2 first): {e.errors[:3]}")
     result = judge_output(JUDGE, context, output_text, criteria, TIMEOUT)
 
     quality_card["scenarios"][scenario_path.stem] = {

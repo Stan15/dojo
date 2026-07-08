@@ -11,11 +11,11 @@ from pathlib import Path
 import pytest
 import yaml
 
-from evals_lib import EVALS_DIR, compile_step, seed_store, submit_canned
+from dojo.evals.runner import CORPUS_DIR, compile_step, seed_store, submit_canned
 from dojo.schemas import RESULT_SCHEMAS
 from dojo.tasks import service
 
-QUALITY_SCENARIOS = sorted((EVALS_DIR / "scenarios" / "quality").glob("*.yaml"))
+QUALITY_SCENARIOS = sorted((CORPUS_DIR / "quality").glob("*.yaml"))
 COMPILE_FN_TO_KIND = {
     "generate": "exercise.generate",
     "diagnostic": "exercise.diagnostic",

@@ -1394,12 +1394,127 @@ def cmd_task_run(args: argparse.Namespace) -> int:
     return 0 if ok_count == len(pending) else 1
 
 
+def _score_bar(score: float, width: int = 10) -> str:
+    filled = round(score * width)
+    return "█" * filled + "░" * (width - filled)
+
+
+def _score_style(score: float) -> str:
+    return "green" if score >= 0.8 else ("yellow" if score >= 0.5 else "red")
+
+
+def cmd_benchmark(args: argparse.Namespace) -> int:
+    """Benchmarks the user's model(s) on dojo's shipped pedagogy corpus and
+    shows, by category, where that (driver, judge) pair is strong or weak —
+    headline first, full detail opt-in (--detail)."""
+    import tempfile
+    from datetime import datetime, timezone
+
+    from .evals.runner import run_benchmark
+
+    driver = args.fulfiller
+    judge = args.judge or driver
+    tiers = ("compliance",) if args.tier == "compliance" else (
+        ("quality",) if args.tier == "quality" else ("compliance", "quality")
+    )
+
+    if not _use_json(args):
+        console.print("\n[bold]🥋 Dojo model benchmark[/bold]")
+        console.print(f"  Driver (does the work):   [cyan]{driver}[/cyan]")
+        console.print(f"  Judge  (grades quality):  [cyan]{judge}[/cyan]")
+        console.print("  [dim]This drives your models on real scenarios — expect several minutes.[/dim]\n")
+
+    def progress(msg: str) -> None:
+        if not _use_json(args):
+            console.print(f"  [dim]·[/dim] {msg}")
+
+    with tempfile.TemporaryDirectory(prefix="dojo-bench-") as workdir:
+        report = run_benchmark(
+            driver=driver, judge=judge, workdir=Path(workdir),
+            timeout=args.timeout, tiers=tiers, progress=progress,
+        )
+
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    out_path = Path(args.output or f"dojo-benchmark-{report['pair']}-{stamp}.json")
+    out_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
+
+    if _use_json(args):
+        _print_json(report)
+        return 0
+
+    console.print()
+    overall = report["overall"]
+    console.print(
+        f"  [bold]Overall[/bold]  [{_score_style(overall)}]{_score_bar(overall)} "
+        f"{overall:.2f}[/{_score_style(overall)}]  "
+        f"[dim]({report['total_scenarios']} scenarios"
+        + (f", {report['errors']} could not be scored" if report["errors"] else "")
+        + ")[/dim]\n"
+    )
+
+    table = Table(show_header=True, header_style="bold", box=None, pad_edge=False)
+    table.add_column("Category")
+    table.add_column("Score", justify="left")
+    table.add_column("What it measures", style="dim")
+    for name, cat in report["categories"].items():
+        style = _score_style(cat["mean"])
+        table.add_row(name, f"[{style}]{_score_bar(cat['mean'])} {cat['mean']:.2f}[/{style}]", cat["blurb"])
+    console.print(table)
+
+    cats = list(report["categories"].items())
+    if len(cats) >= 2:
+        best, worst = cats[0], cats[-1]
+        console.print(
+            f"\n  [green]Strongest:[/green] {best[0]} ({best[1]['mean']:.2f})"
+            f"\n  [red]Weakest:[/red]   {worst[0]} ({worst[1]['mean']:.2f}) — {worst[1]['blurb']}"
+        )
+
+    if args.detail:
+        console.print("\n[bold]Per-scenario detail[/bold]")
+        for name, cat in report["categories"].items():
+            console.print(f"\n  [bold]{name}[/bold]")
+            for sc in cat["scenarios"]:
+                style = _score_style(sc["score"])
+                line = f"    [{style}]{sc['score']:.2f}[/{style}]  {sc['name']}"
+                if sc.get("error"):
+                    line += f"  [red]⚠ {sc['error']}[/red]"
+                console.print(line)
+                for cid, verdict in (sc.get("detail", {}).get("verdicts") or {}).items():
+                    mark = "[green]✓[/green]" if verdict == "pass" else f"[red]✗[/red] [dim]{verdict}[/dim]"
+                    console.print(f"        {cid} {mark}")
+                for err in (sc.get("detail", {}).get("errors") or [])[:2]:
+                    console.print(f"        [red]{err}[/red]")
+    else:
+        console.print("\n  [dim]Run with --detail for per-scenario criterion verdicts.[/dim]")
+
+    console.print(f"\n  Report saved: [cyan]{out_path}[/cyan]\n")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="dojo")
     parser.add_argument("--db", help="Dojo root directory (backward compatible option name)")
     parser.add_argument("--json", action="store_true", help="output structured JSON instead of human-friendly text")
     parser.add_argument("--no-input", action="store_true", help="disable all interactive prompts")
     sub = parser.add_subparsers(dest="command", required=True)
+
+    p_bench = sub.add_parser(
+        "benchmark",
+        help="benchmark a model pair on dojo's pedagogy corpus (compliance + judged quality)",
+    )
+    p_bench.add_argument(
+        "--fulfiller", "-f", required=True,
+        help='driver command, e.g. "codex exec" or "ollama run llama3" (prompt on stdin)',
+    )
+    p_bench.add_argument(
+        "--judge", "-j",
+        help="evaluator command grading output quality (default: same as --fulfiller)",
+    )
+    p_bench.add_argument("--tier", choices=["all", "compliance", "quality"], default="all")
+    p_bench.add_argument("--detail", action="store_true", help="show per-scenario criterion verdicts")
+    p_bench.add_argument("--timeout", type=int, default=300)
+    p_bench.add_argument("--output", "-o", help="report JSON path (default: ./dojo-benchmark-<pair>-<ts>.json)")
+    p_bench.set_defaults(func=cmd_benchmark)
 
     p_task = sub.add_parser("task", help="the AI task queue (ADR 010)")
     p_task_sub = p_task.add_subparsers(dest="task_command", required=True)

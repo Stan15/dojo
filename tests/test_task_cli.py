@@ -99,3 +99,39 @@ class TestTaskCli:
         emit_task(dojo_dir)
         rc, data = run(capsys, "--db", str(dojo_dir), "task", "run")
         assert rc == 1 and "fulfiller.command" in data["error"]
+
+
+class TestBenchmarkCli:
+    def test_compliance_benchmark_with_scripted_model(self, dojo_dir: Path, tmp_path: Path, capsys):
+        """A scripted driver that always answers with one fixed generate payload:
+        generate scenarios pass, the grade scenario fails its schema — the report
+        must show both, grouped by category, without crashing or lying."""
+        script = tmp_path / "scripted_model.py"
+        script.write_text(
+            "import sys\nsys.stdin.read()\n"
+            "print('''{\"items\": [\n"
+            "  {\"prompt\": \"Translate: the cat sleeps.\", \"answer\": \"Le chat dort.\","
+            "   \"rubric\": \"- correct verb\", \"skill\": \"produce\"},\n"
+            "  {\"prompt\": \"Translate: the dog eats.\", \"answer\": \"Le chien mange.\","
+            "   \"rubric\": \"- correct verb\", \"skill\": \"produce\"},\n"
+            "  {\"prompt\": \"Translate: I am here.\", \"answer\": \"Je suis ici.\","
+            "   \"rubric\": \"- correct verb\", \"skill\": \"produce\"}\n"
+            "], \"note\": null, \"intervention\": null}''')\n",
+            encoding="utf-8",
+        )
+        out_file = tmp_path / "report.json"
+        rc, report = run(
+            capsys, "--db", str(dojo_dir), "--json", "benchmark",
+            "--fulfiller", f"python {script}", "--tier", "compliance",
+            "--output", str(out_file),
+        )
+        assert rc == 0
+        assert report["total_scenarios"] == 4
+        assert "contract-compliance" in report["categories"]
+        scores = {
+            s["name"]: s["score"]
+            for s in report["categories"]["contract-compliance"]["scenarios"]
+        }
+        assert scores["generate_grounded_french.yaml".removesuffix(".yaml")] == 1.0
+        assert scores["grade_partial_credit"] == 0.0, "wrong-shape output must fail honestly"
+        assert out_file.exists()
