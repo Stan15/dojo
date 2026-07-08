@@ -2,6 +2,7 @@
 # one topic while others are mastered points at a missing prerequisite. Strong
 # reflection names the pattern and adds support; weak reflection raises
 # difficulty (mastery elsewhere!) or shrugs.
+category: calibration
 scenario_context: |
   Statistics learner. Topic stats.hypothesis_testing: seven attempts across
   three sessions, scores flat between 0.3 and 0.7 — never failing outright,

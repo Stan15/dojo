@@ -1,0 +1,71 @@
+# Domain breadth: procedural math. A struggling beginner (chain-rule failures,
+# high scaffolding) needs single-concept, step-supported problems whose
+# phrasing doesn't leak answers. Weak output: composite multi-rule problems or
+# leaky phrasing.
+category: domain-breadth
+scenario_context: |
+  Calculus learner, beginner, scaffolding HIGH. Recent evidence: three failed
+  attempts on chain-rule derivatives (error tag "chain rule skipped" — they
+  differentiate the outer function and stop). Generation was asked for 3
+  beginner exercises on calculus.derivatives.chain_rule. Strong output:
+  single-concept chain-rule problems with visible scaffolding (worked pattern
+  or decomposition hint), each solvable in one step-chain, answers not leaked.
+  Weak output: composite problems mixing product/quotient rules, or prompts
+  that reveal the answer structure.
+seed:
+  campaign:
+    id: calc-1
+    name: Calculus I
+    mission: Pass the Calculus I midterm with confidence in differentiation.
+    strategy_profile: {difficulty: beginner, scaffolding: high}
+  insights:
+    - id: ins_chain
+      key: derivatives.chain_rule_skipped
+      description: Differentiates the outer function but forgets to multiply by the inner derivative.
+      topic_path: calculus.derivatives.chain_rule
+  attempts:
+    - {id: att_1, session_id: s1, exercise_id: ex_1, score: 0.0, latency_seconds: 80.0,
+       error_tag: chain rule skipped, user_answer: "d/dx sin(3x) = cos(3x)"}
+    - {id: att_2, session_id: s1, exercise_id: ex_2, score: 0.3, latency_seconds: 95.0,
+       error_tag: chain rule skipped, user_answer: "(x²+1)⁵ → 5(x²+1)⁴"}
+    - {id: att_3, session_id: s2, exercise_id: ex_3, score: 0.0, latency_seconds: 70.0,
+       error_tag: chain rule skipped, user_answer: "e^(2x) → e^(2x)"}
+steps:
+  - compile: {fn: generate, topic_path: calculus.derivatives.chain_rule, n_items: 3,
+              difficulty: beginner}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does every problem isolate the chain rule (no
+      product/quotient rule mixing, no trig identities on top)?"}
+  - {id: c2, weight: 3, question: "Does at least one exercise scaffold the documented
+      error — e.g. show a worked pattern, or ask the learner to identify inner and
+      outer functions before differentiating?"}
+  - {id: c3, weight: 2, question: "Do the prompts avoid leaking answers (no answer
+      structure visible in the question, no 'remember to multiply by 3' in the same
+      item that asks for sin(3x))?"}
+  - {id: c4, weight: 1, question: "Do rubrics check the inner-derivative factor
+      explicitly (the exact documented failure)?"}
+references:
+  good:
+    items:
+      - {prompt: "Worked pattern: d/dx sin(5x) = cos(5x)·5. Now differentiate
+          sin(7x) following the same pattern.", answer: "7·cos(7x)",
+         rubric: "- cos(7x) present\n- multiplied by inner derivative 7", skill: apply}
+      - {prompt: "For f(x) = (3x + 1)⁴: first name the OUTER function and the INNER
+          function, then differentiate.", answer: "outer u⁴, inner 3x+1; f' = 12(3x+1)³",
+         rubric: "- decomposition named\n- factor 3 from inner derivative present", skill: produce}
+      - {prompt: "Differentiate g(x) = e^(4x).", answer: "4·e^(4x)",
+         rubric: "- e^(4x) preserved\n- multiplied by 4", skill: produce}
+    note: null
+    intervention: null
+  bad:
+    items:
+      - {prompt: "Differentiate h(x) = x²·sin(3x)/ln(5x) using every rule you know.",
+         answer: "A long quotient+product+chain expression.",
+         rubric: "- fully simplified", skill: produce}
+      - {prompt: "Differentiate sin(3x). Remember: the answer is cos(3x) times the
+          derivative of 3x, which is 3.", answer: "3cos(3x)",
+         rubric: "- answer is correct", skill: recall}
+      - {prompt: "Prove the chain rule from the limit definition of the derivative.",
+         answer: "A proof.", rubric: "- rigorous proof", skill: produce}
+    note: null
+    intervention: null

@@ -1,0 +1,71 @@
+# The control for the escape hatch: everything a tutor needs IS provided —
+# clear mission, grounding source, documented profile. Intervening here is
+# cowardice, not diligence. Strong output generates; weak output stalls with
+# questions already answered by the context.
+category: meta-learning
+scenario_context: |
+  Everything needed is present: mission "read Georgian restaurant menus and
+  order food confidently on a trip in May"; a source slice with concrete
+  Georgian food vocabulary; an insight that the learner confuses the similar
+  letters ვ and კ; beginner level with high scaffolding. Generation was asked
+  for 3 beginner exercises on georgian.menu_vocab. Strong output: 3 grounded
+  exercises drawn from the provided vocabulary. Weak output: an intervention
+  asking for information already given (goal, level, materials).
+seed:
+  campaign:
+    id: georgian-trip
+    name: Georgian for the Trip
+    mission: Read Georgian restaurant menus and order food confidently on a trip in May.
+    strategy_profile: {difficulty: beginner, scaffolding: high}
+  insights:
+    - id: ins_letters
+      key: script.similar_letters
+      description: Confuses the similar-looking letters ვ (v) and კ (k').
+      topic_path: georgian.script
+steps:
+  - compile:
+      fn: generate
+      topic_path: georgian.menu_vocab
+      n_items: 3
+      difficulty: beginner
+      source_slice: |
+        # Georgian menu basics
+        ხაჭაპური (khachapuri) — cheese bread. ხინკალი (khinkali) — soup
+        dumplings. მწვადი (mtsvadi) — grilled meat skewers. ლობიო (lobio) —
+        bean stew. ღვინო (ghvino) — wine. წყალი (tsqali) — water.
+        Ordering: მინდა... (minda) — I want...; გთხოვთ (gtkhovt) — please.
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does the output contain 3 exercises (no
+      intervention — the context already answers a tutor's questions)?"}
+  - {id: c2, weight: 2, question: "Is every exercise grounded in the provided
+      vocabulary (khachapuri, khinkali, minda, gtkhovt, etc.), not invented words?"}
+  - {id: c3, weight: 1, question: "Is at least one exercise a realistic ordering/menu
+      situation matching the mission?"}
+  - {id: c4, weight: 1, question: "Are the items beginner-scaffolded (hints, romanized
+      support, or pattern examples consistent with scaffolding=high)?"}
+references:
+  good:
+    items:
+      - {prompt: "On the menu you see « ხინკალი ». Your friend asks what it is —
+          answer in English. (Hint: it's in your vocab list.)",
+         answer: "Soup dumplings (khinkali).", rubric: "- identifies khinkali as soup dumplings",
+         skill: recall}
+      - {prompt: "Order cheese bread politely. Complete: « ______ ხაჭაპური, ______ »
+          (I want / please — romanized answers accepted).",
+         answer: "მინდა (minda) ხაჭაპური, გთხოვთ (gtkhovt)",
+         rubric: "- uses minda for 'I want'\n- adds gtkhovt for 'please'", skill: produce}
+      - {prompt: "You want water and wine. Which is which: წყალი / ღვინო?
+          (Hint: one starts with the 'ts' letter წ.)",
+         answer: "წყალი = water, ღვინო = wine", rubric: "- both mapped correctly", skill: recall}
+    note: null
+    intervention: null
+  bad:
+    items: []
+    note: null
+    intervention:
+      kind: need_context
+      questions:
+        - "What is your goal with Georgian?"
+        - "What level are you at?"
+        - "Do you have any learning materials I could use?"
+      reason: "need more information about the learner before generating"

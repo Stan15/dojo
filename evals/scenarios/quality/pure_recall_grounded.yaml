@@ -1,0 +1,63 @@
+# Domain breadth: pure fact memory, grounded. Recall items must be verbatim-
+# answerable from the source with exact answers — no invented facts, no
+# essay-ification of memorization work.
+category: domain-breadth
+scenario_context: |
+  Medical student memorizing cranial nerve basics from their own notes (the
+  SOURCE). Generation was asked for 3 beginner RECALL exercises on
+  anatomy.cranial_nerves grounded in that source. Strong output: precise
+  recall items whose answers appear verbatim in the source, with exact-match
+  answers and tight rubrics. Weak output: facts not in the source (invented
+  numbers), essay prompts, or trivia beyond the notes.
+seed:
+  campaign:
+    id: anatomy-boards
+    name: Anatomy Boards
+    mission: Memorize high-yield anatomy facts for board exams.
+    strategy_profile: {difficulty: beginner, scaffolding: medium}
+steps:
+  - compile:
+      fn: generate
+      topic_path: anatomy.cranial_nerves
+      n_items: 3
+      difficulty: beginner
+      source_slice: |
+        # Cranial nerves — my notes
+        CN I olfactory: smell (sensory). CN II optic: vision (sensory).
+        CN V trigeminal: facial sensation + muscles of mastication (both).
+        CN VII facial: facial expression + anterior 2/3 taste (both).
+        CN X vagus: parasympathetic to thoracic and abdominal viscera (both).
+        Mnemonic for sensory/motor/both: "Some Say Marry Money But My Brother
+        Says Big Brains Matter Most."
+judge_rubric:
+  - {id: c1, weight: 3, question: "Is every fact tested present in the SOURCE notes
+      (no invented nerve functions, numbers, or facts beyond them)?"}
+  - {id: c2, weight: 2, question: "Is every item a precise recall production (name the
+      nerve / state the function) with a short exact answer — no essays, no yes/no?"}
+  - {id: c3, weight: 2, question: "Do the answers match the source exactly (e.g.
+      trigeminal = facial sensation + mastication; facial = expression + anterior 2/3
+      taste)?"}
+  - {id: c4, weight: 1, question: "Do the three items cover three different nerves or
+      facts (breadth across the notes, not one fact three ways)?"}
+references:
+  good:
+    items:
+      - {prompt: "Which cranial nerve carries smell, and is it sensory, motor, or both?",
+         answer: "CN I olfactory — sensory.", rubric: "- CN I named\n- sensory", skill: recall}
+      - {prompt: "State the two functions of CN V (trigeminal) from your notes.",
+         answer: "Facial sensation and muscles of mastication.",
+         rubric: "- both functions\n- no extras", skill: recall}
+      - {prompt: "Which nerve provides parasympathetic supply to thoracic and
+          abdominal viscera?", answer: "CN X vagus.", rubric: "- CN X named", skill: recall}
+    note: null
+    intervention: null
+  bad:
+    items:
+      - {prompt: "How many axons does the optic nerve contain?", answer: "About 1.2 million",
+         rubric: "- correct count", skill: recall}
+      - {prompt: "Write a short essay on the embryological development of the cranial
+          nerves.", answer: "An essay.", rubric: "- thorough coverage", skill: explain}
+      - {prompt: "Is the trigeminal nerve the largest cranial nerve? Yes or no.",
+         answer: "Yes", rubric: "- answer is correct", skill: recall}
+    note: null
+    intervention: null

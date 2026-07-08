@@ -33,7 +33,7 @@ def load(path: Path) -> dict:
 class TestCorpusIntegrity:
     def test_shape(self, path: Path):
         sc = load(path)
-        for key in ("scenario_context", "seed", "steps", "judge_rubric", "references"):
+        for key in ("category", "scenario_context", "seed", "steps", "judge_rubric", "references"):
             assert key in sc, f"missing {key}"
         ids = [c["id"] for c in sc["judge_rubric"]]
         assert len(ids) == len(set(ids)), "duplicate rubric criterion ids"

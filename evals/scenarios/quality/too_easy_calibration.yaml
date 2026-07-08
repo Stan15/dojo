@@ -1,6 +1,7 @@
 # Reflection discipline under a clear one-directional signal: high accuracy
 # plus repeated too_easy skips. Strong output raises difficulty and refuses to
 # invent problems; weak output churns (spurious insights, plan rewrites).
+category: calibration
 scenario_context: |
   Docker-compose learner. Last six attempts: five scored 1.0 with fast
   latencies, one was skipped with reason "too_easy" and feedback "I do this

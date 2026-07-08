@@ -1,0 +1,69 @@
+# The owner's canonical vague request: "i want to improve my memory".
+# Planning must elucidate, not survey. Strong output: smallest honest plan
+# (calibration-first) + questions that pin down what "memory" means for THIS
+# person. Weak output: a confident mnemonics curriculum for an unknown problem.
+category: planning
+scenario_context: |
+  The goal, verbatim: "i want to improve my memory". Nothing else is known —
+  no context notes, no existing topics. "Memory" could mean names at events,
+  studied material, daily intentions (keys, appointments), or recall under
+  pressure; each needs a different plan. Strong output: a minimal plan whose
+  first (and possibly only) phase is diagnostic calibration, a small honest
+  topic set, a mission that admits the scope is being established, and
+  refinement questions that pin down WHAT is forgotten, WHERE it bites, and
+  what success looks like. Weak output: a sweeping memory-techniques
+  curriculum (method of loci, spaced repetition theory, dual n-back...) that
+  commits to content no one asked for.
+seed:
+  campaign:
+    id: placeholder
+    name: placeholder
+    mission: placeholder
+steps:
+  - compile: {fn: plan, goal: "i want to improve my memory"}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Do the refinement questions pin down what kind of
+      forgetting hurts (names? studied facts? intentions/appointments?) and in which
+      real situations?"}
+  - {id: c2, weight: 3, question: "Is the plan minimal and calibration-first — few
+      topics, with the first phase diagnostic — rather than a committed multi-phase
+      techniques curriculum?"}
+  - {id: c3, weight: 2, question: "Does the mission avoid inventing an unstated goal
+      (no assumed exams, no assumed memory-athlete ambitions)?"}
+  - {id: c4, weight: 1, question: "Does at least one question probe the success
+      standard (what 'improved' would look like)?"}
+references:
+  good:
+    mission: "Establish where memory actually fails for this learner, then train
+      the one or two recall contexts that matter most."
+    topics:
+      - {path: memory.baseline.everyday_recall, kind: skill, summary: "where forgetting bites today"}
+      - {path: memory.baseline.retention_habits, kind: recall, summary: "current habits and supports"}
+    phases:
+      - {phase: 1, topics: [memory.baseline.everyday_recall, memory.baseline.retention_habits],
+         criteria: {min_attempts: 5, min_accuracy: 0.0}, focus: "diagnostic calibration only"}
+    refinement_questions:
+      - "What do you forget most: names, studied material, or daily intentions?"
+      - "In which situations does forgetting actually cost you?"
+      - "What would noticeably 'improved memory' look like for you?"
+  bad:
+    mission: "Master the complete science and toolkit of human memory to achieve
+      elite recall across all domains of life."
+    topics:
+      - {path: memory.theory.encoding_storage_retrieval, kind: recall, summary: "the three stages"}
+      - {path: memory.theory.working_vs_longterm, kind: recall, summary: "memory systems"}
+      - {path: memory.techniques.method_of_loci, kind: skill, summary: "memory palaces"}
+      - {path: memory.techniques.major_system, kind: skill, summary: "number pegs"}
+      - {path: memory.techniques.chunking, kind: skill, summary: "chunking drills"}
+      - {path: memory.techniques.dual_n_back, kind: skill, summary: "working-memory training"}
+      - {path: memory.lifestyle.sleep_hygiene, kind: recall, summary: "sleep and consolidation"}
+      - {path: memory.lifestyle.nutrition, kind: recall, summary: "diet for cognition"}
+      - {path: memory.competition.card_decks, kind: skill, summary: "speed cards"}
+    phases:
+      - {phase: 1, topics: [memory.theory.encoding_storage_retrieval, memory.theory.working_vs_longterm],
+         criteria: {min_attempts: 20, min_accuracy: 0.9}, focus: "theoretical foundations"}
+      - {phase: 2, topics: [memory.techniques.method_of_loci, memory.techniques.major_system],
+         criteria: {min_attempts: 30, min_accuracy: 0.85}, focus: "core techniques"}
+      - {phase: 3, topics: [memory.competition.card_decks],
+         criteria: {min_attempts: 40, min_accuracy: 0.9}, focus: "competitive application"}
+    refinement_questions: []

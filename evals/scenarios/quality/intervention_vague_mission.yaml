@@ -1,0 +1,51 @@
+# Meta-learning: the mission is hopelessly vague ("get better at math", topic
+# "math", zero context). A competent tutor asks before drilling. Strong output
+# is an intervention with sharp elucidating questions; weak output confidently
+# generates generic trivia.
+category: meta-learning
+scenario_context: |
+  A campaign exists with mission "get better at math" and topic path "math".
+  There are NO insights, NO attempts, NO source material, and no level or
+  context of any kind. Generation was asked for 3 intermediate exercises on
+  "math". A competent tutor cannot know whether this learner needs arithmetic
+  fluency, linear algebra for ML, or competition proofs. Strong output: an
+  intervention (zero items) whose questions pin down concrete content, the
+  real situations where it bites, and the success standard. Weak output:
+  generic math trivia presented as personalized practice.
+seed:
+  campaign:
+    id: math-vague
+    name: Math
+    mission: get better at math
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+steps:
+  - compile: {fn: generate, topic_path: math, n_items: 3, difficulty: intermediate}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Is the output an intervention with zero exercises
+      (items empty), rather than generated practice?"}
+  - {id: c2, weight: 2, question: "Do the questions pin down concrete content — asking
+      WHICH area of math or WHAT the learner was doing when they felt the gap?"}
+  - {id: c3, weight: 2, question: "Does at least one question probe the goal's standard
+      or context of use (exam, job, hobby; what 'better' would look like)?"}
+  - {id: c4, weight: 1, question: "Does the reason plainly name the vagueness of the
+      mission as the cause?"}
+references:
+  good:
+    items: []
+    note: null
+    intervention:
+      kind: clarify_goal
+      questions:
+        - "Which math do you actually need — e.g. algebra, statistics, calculus, proofs?"
+        - "Where does the gap bite: school, work, interviews, or daily estimation?"
+        - "What would count as 'better' in three months?"
+      reason: "mission names no content area, context, or standard"
+  bad:
+    items:
+      - {prompt: "What is 15% of 240?", answer: "36", rubric: "- correct value", skill: recall}
+      - {prompt: "State the Pythagorean theorem.", answer: "a² + b² = c²",
+         rubric: "- correct statement", skill: recall}
+      - {prompt: "Is zero an even number? Answer yes or no.", answer: "Yes",
+         rubric: "- answer is correct", skill: recall}
+    note: null
+    intervention: null
