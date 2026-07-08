@@ -45,3 +45,22 @@ Non-obvious learnings. Newest at the bottom. Never delete; strike through only i
   but absent from `pyproject.toml` dependencies; two ADRs share number 003; README
   says v1.0.0 while pyproject says 0.1.0; `docs/api-specification.md` still documents
   the SQLite era. Tracked in OPEN-PROBLEMS.
+
+## 2026-07-07 — First real Tier-3 run: the eval system audits its own authors
+The first (codex,codex) quality run (mean 0.52) split cleanly into three kinds
+of findings, and two of them were OURS, not the model's:
+- **Scenario bugs**: pure_recall's judge couldn't verify grounding because the
+  source facts weren't in scenario_context (the judge sees only context +
+  output); too_easy seeded 5/6=0.83 accuracy while the reflect prompt's own
+  threshold says raise only >0.85 — codex obeyed the prompt and the rubric
+  punished it. Lesson: **rubrics must be checked for coherence against the
+  prompts they judge**, and the judge must be given every fact a verdict needs.
+- **Prompt weaknesses**: an escape hatch buried in rule 9 loses to an imperative
+  TASK line ("draft exactly 3") — the alternative must appear IN the imperative;
+  "compress" without a number doesn't compress (codex: 15 topics under a
+  2-week deadline).
+- **Real model signal** (kept as baseline): codex is excellent at grading
+  integrity and preference adherence (1.00), conservative to a fault on state
+  changes (won't resolve mastered insights, hesitates to raise difficulty).
+Also: judges wrap verbatim quotes in ellipses — evidence matching needs
+edge-tolerant comparison or ~15% of honest passes get discarded.

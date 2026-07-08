@@ -39,9 +39,9 @@ judge_rubric:
   - {id: c2, weight: 3, question: "Does at least one exercise scaffold the documented
       error — e.g. show a worked pattern, or ask the learner to identify inner and
       outer functions before differentiating?"}
-  - {id: c3, weight: 2, question: "Do the prompts avoid leaking answers (no answer
-      structure visible in the question, no 'remember to multiply by 3' in the same
-      item that asks for sin(3x))?"}
+  - {id: c3, weight: 2, question: "Do the prompts avoid stating final answer VALUES or completed
+      derivative expressions for their own item (naming inner/outer decomposition as
+      scaffolding is fine and expected)?"}
   - {id: c4, weight: 1, question: "Do rubrics check the inner-derivative factor
       explicitly (the exact documented failure)?"}
 references:

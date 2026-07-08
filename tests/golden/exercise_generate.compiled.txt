@@ -2,7 +2,8 @@ You are drafting practice exercises for one learner. Their time is scarce: every
 weak exercise displaces a good one.
 
 TASK: Draft exactly 3 exercises for topic "french.grammar.conditional"
-at difficulty "intermediate".
+at difficulty "intermediate" — or, when rule 9 applies, return an
+intervention instead of exercises.
 
 RULES
 1. Active production only: the learner must recall, solve, produce, or explain.

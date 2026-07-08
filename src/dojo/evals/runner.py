@@ -124,6 +124,12 @@ def _norm(text: str) -> str:
     return _WS.sub(" ", text).strip().lower()
 
 
+def _evidence_core(quote: str) -> str:
+    """Judges often wrap quotes in ellipses or quotation marks; the core must
+    still be verbatim."""
+    return _norm(quote).strip("…. \"'“”‘’")
+
+
 def render_judge_prompt(scenario_context: str, output_text: str, criteria: list[dict]) -> str:
     template = (PACKAGE_DIR / "judge_prompt.md").read_text(encoding="utf-8")
     lines = "\n".join(f"{c['id']}: {c['question']}" for c in criteria)
@@ -158,7 +164,7 @@ def judge_output(
             continue
         if v["verdict"] == "pass":
             evidence = v.get("evidence") or ""
-            if not evidence or _norm(evidence) not in _norm(output_text):
+            if not evidence or _evidence_core(evidence) not in _norm(output_text):
                 discarded.append(c["id"])
                 verdicts[c["id"]] = "discarded-unproven-pass"
                 continue

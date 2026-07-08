@@ -3,9 +3,14 @@
 # essay-ification of memorization work.
 category: domain-breadth
 scenario_context: |
-  Medical student memorizing cranial nerve basics from their own notes (the
-  SOURCE). Generation was asked for 3 beginner RECALL exercises on
-  anatomy.cranial_nerves grounded in that source. Strong output: precise
+  Medical student memorizing cranial nerve basics from their own notes.
+  Generation was asked for 3 beginner RECALL exercises on
+  anatomy.cranial_nerves grounded in those notes. The notes contain EXACTLY
+  these facts (anything beyond them is invented): CN I olfactory = smell
+  (sensory); CN II optic = vision (sensory); CN V trigeminal = facial
+  sensation + muscles of mastication (both); CN VII facial = facial
+  expression + anterior 2/3 taste (both); CN X vagus = parasympathetic to
+  thoracic and abdominal viscera (both); plus the sensory/motor mnemonic. Strong output: precise
   recall items whose answers appear verbatim in the source, with exact-match
   answers and tight rubrics. Weak output: facts not in the source (invented
   numbers), essay prompts, or trivia beyond the notes.

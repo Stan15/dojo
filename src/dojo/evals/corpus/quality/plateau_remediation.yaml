@@ -45,9 +45,9 @@ judge_rubric:
   - {id: c1, weight: 3, question: "Does the output create exactly one insight naming
       the recurring null-hypothesis confusion (its role/'accepting the null'), citing
       multiple attempts as evidence?"}
-  - {id: c2, weight: 3, question: "Does the output raise scaffolding to high WITHOUT
-      raising difficulty (a plateau with conceptual confusion needs support, not
-      harder items)?"}
+  - {id: c2, weight: 3, question: "Does the output raise scaffolding to high while difficulty is
+      NOT raised (difficulty null, or restated unchanged at intermediate, both count
+      as not raised)?"}
   - {id: c3, weight: 1, question: "Is the plan either untouched (null — acceptable) or,
       if revised, targeted at the conceptual gap (e.g. a prerequisite/foundations
       phase) rather than adding volume?"}

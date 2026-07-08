@@ -12,8 +12,9 @@ RULES
 3. 3-6 phases. Phase 1 is always a short calibration (diagnostic; criteria:
    min_attempts 5). Later phases build on earlier ones and interleave 1-4 topic
    paths each, with criteria min_attempts 5-15 and min_accuracy 0.6-0.8.
-4. If GOAL implies a deadline, compress: highest-leverage topics only, lower
-   min_attempts, note the trade-off in the mission.
+4. If GOAL implies a deadline, compress hard: aim for ≤ 10 topics (well under
+   the cap), highest-leverage only, lower min_attempts, and note the trade-off
+   in the mission.
 5. Ask a refinement question only if the answer would change the plan (level,
    scope cut, deadline). ≤ 3 questions, each ≤ 15 words. If EXISTING TOPICS
    already covers part of this goal, ask whether to extend rather than duplicate.
