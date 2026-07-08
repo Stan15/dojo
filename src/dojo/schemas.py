@@ -364,6 +364,8 @@ class Exercise(StoredEntity):
     id: str
     topic_path: str
     difficulty: str
+    kind: str = "recall"  # recall: repeats verbatim under FSRS | skill: disposable, topic-scheduled (ADR 012)
+    sr: Optional[Dict[str, Any]] = None  # FSRS card state (scheduling.py owns the shape)
     generation_run: Optional[str] = None
     candidate_id: Optional[str] = None
     archived: bool = False
@@ -382,6 +384,7 @@ class Candidate(StoredEntity):
     id: str
     topic_path: str
     difficulty: str
+    kind: str = "recall"
     generation_run: Optional[str] = None
     archived: bool = False
     quality: str = "reviewed"

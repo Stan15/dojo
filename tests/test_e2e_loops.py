@@ -174,3 +174,50 @@ def test_source_to_graded_practice_loop(tmp_path: Path):
     attempt = api.store.attempts.get(campaign_id, freeform["attempt_id"])
     assert attempt.score == 0.3 and attempt.grader == "ai" and attempt.error_tag == "aux choice"
     assert freeform["is_session_completed"]
+
+    # 4. Memory model advanced at each FINAL score, and only then (ADR 014):
+    #    the exact-match answer landed at answer time; the free-form one landed
+    #    when the grade task applied, not at the provisional 0.0.
+    exercises = {ex.id: ex for ex in api.store.exercises.list(campaign_id)}
+    exact_ex = exercises[exact["exercise_id"]]
+    graded_ex = exercises[freeform["exercise_id"]]
+    assert exact_ex.sr is not None and exact_ex.sr["last_review"] is not None
+    assert graded_ex.sr is not None and graded_ex.sr["last_review"] is not None
+    from dojo import scheduling
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
+    assert not scheduling.is_due(exact_ex.sr, now), "a perfect answer schedules the item away"
+    assert scheduling.due_at(graded_ex.sr) <= scheduling.due_at(exact_ex.sr), (
+        "a 0.3 lapse must come back no later than a perfect answer"
+    )
+
+
+def test_skip_signals_advance_the_memory_model(tmp_path: Path):
+    from dojo.schemas import Exercise
+
+    api = DojoAPI(tmp_path)
+    campaign_id = api.create_campaign(
+        name="Vocab", topic_path="vocab", mission="Retain core vocabulary.",
+    )["id"]
+    for i, prompt in enumerate(["mot un", "mot deux"]):
+        api.store.exercises.save(campaign_id, Exercise(
+            id=f"ex_{i}", topic_path="vocab.core", difficulty="beginner",
+            answer="x", prompt=prompt,
+        ))
+    session_id = api.start_practice_session(campaign_id=campaign_id)["session"]["id"]
+
+    api.reveal_prompt(session_id=session_id)
+    api.skip_active_exercise("too_easy", session_id=session_id)
+    ex0 = api.store.exercises.get(campaign_id, "ex_0")
+    assert ex0.quality == "too_easy", "archived out of rotation"
+    assert ex0.sr is not None, "an Easy review still feeds the memory model"
+
+    api.reveal_prompt(session_id=session_id)
+    api.skip_active_exercise("forgot", session_id=session_id)
+    ex1 = api.store.exercises.get(campaign_id, "ex_1")
+    from dojo import scheduling
+    from datetime import datetime, timedelta, timezone
+    assert ex1.quality not in ("archived", "too_easy"), "forgot keeps the item in rotation"
+    assert scheduling.due_at(ex1.sr) - datetime.now(timezone.utc) < timedelta(days=1), (
+        "a retrieval failure comes back fast"
+    )

@@ -17,6 +17,7 @@ from .schemas import (
     PracticeSession,
     AttackPlanPhase,
 )
+from . import scheduling
 from .store import DojoStore, slugify
 
 
@@ -28,6 +29,27 @@ class DojoAPI:
                 dojo_dir = path.parent
         self.store = DojoStore(dojo_dir)
         self.log = get_logger(self.store.dojo_dir, "api")
+
+    def _land_score(
+        self,
+        campaign_id: str,
+        exercise_id: str,
+        *,
+        score: float,
+        latency_seconds: float | None = None,
+        skip_reason: str | None = None,
+    ) -> None:
+        """The single point where a FINAL score advances the memory model
+        (ADR 014). Provisional scores (pending AI grade) must not call this —
+        they would poison the schedule with a placeholder 0.0."""
+        ex = self.store.exercises.get(campaign_id, exercise_id)
+        if ex is None or ex.quality == "diagnostic":
+            return  # diagnostics gather information; they are not memories to maintain
+        ex.sr = scheduling.record_outcome(
+            ex.sr, score=score, latency_seconds=latency_seconds, skip_reason=skip_reason,
+        )
+        ex.updated_at = datetime.now(timezone.utc).isoformat()
+        self.store.exercises.save(campaign_id, ex)
 
     # ==========================================
     # Sources Operations
@@ -212,6 +234,7 @@ class DojoAPI:
                     id=cand.id,
                     topic_path=cand.topic_path,
                     difficulty=cand.difficulty,
+                    kind=cand.kind,
                     generation_run=cand.generation_run,
                     candidate_id=cand.id,
                     prompt=cand.prompt,
@@ -593,6 +616,8 @@ class DojoAPI:
             task = flows.request_grade(self.store, campaign, ex, attempt)
             pending_grade_task = flows.task_ref(task)
             self.log.info(f"Emitted grade task {task.id} for attempt {attempt_id}")
+        else:
+            self._land_score(campaign_id, exercise_id, score=score, latency_seconds=latency)
 
         next_index = idx + 1
         is_completed = next_index >= len(exercise_ids)
@@ -785,6 +810,14 @@ class DojoAPI:
             ex.quality = "bad_quality"
         self.store.exercises.save(campaign_id, ex)
 
+        # Skips are calibration evidence (ADR 014): too_easy → Easy review;
+        # forgot → Again (retrieval failed, comes back fast). Archival reasons
+        # (too_hard/bad_quality) leave rotation, so no memory update. Landed
+        # after the quality save so the sr write is the last one (no stale
+        #-copy clobber).
+        if reason in ("too_easy", "forgot"):
+            self._land_score(campaign_id, exercise_id, score=0.0, skip_reason=reason)
+
         next_index = idx + 1
         is_completed = next_index >= len(exercise_ids)
         target_session.current_index = next_index
@@ -827,9 +860,18 @@ class DojoAPI:
         campaign_id = latest_att.campaign_id
 
         latest_att.score = score
+        latest_att.grader = "self"  # human override is the highest authority (I10)
         if feedback is not None:
             latest_att.feedback = feedback
         self.store.attempts.save(campaign_id, latest_att)
+
+        # The corrected score lands as an additional review. Exact undo of the
+        # previous review would need an sr snapshot per attempt — ledgered in
+        # OPEN-PROBLEMS; the extra review is monotone-safe and conservative.
+        self._land_score(
+            campaign_id, latest_att.exercise_id,
+            score=score, latency_seconds=latest_att.latency_seconds,
+        )
 
         return latest_att.model_dump()
 
