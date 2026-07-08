@@ -1,0 +1,63 @@
+# Coming back after three weeks away: rusty, not regressed. Strong reflection
+# treats early wobbles as re-entry (no panic recalibration, no insight spam);
+# weak reflection reads the gap as decline and slams the settings down.
+category: calibration
+domain: sql
+scenario_context: |
+  SQL learner returning after a 21-day break. Before the break: consistent
+  0.7-1.0 performance at intermediate. Since returning (today): first attempt
+  0.3 (rusty on window-function syntax), second 0.7, third 1.0 — a classic
+  warm-up curve within one session. Reflection ran. Strong output: little or
+  no change — no insight from the single rusty miss, difficulty stays
+  intermediate (scaffolding may tick up at most), journal names the layoff
+  and the visible recovery. Weak output: drops difficulty to beginner,
+  creates a "regression" insight, or rewrites the plan over one warm-up miss.
+seed:
+  campaign:
+    id: sql-analyst
+    name: SQL for Analytics
+    mission: Write windowed analytics queries fluently at work.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  attempts:
+    - {id: att_old1, session_id: s8, exercise_id: ex_20, score: 1.0, latency_seconds: 40.0,
+       created_at: "2026-06-14T10:00:00+00:00", reflected: true, user_answer: "ROW_NUMBER() OVER (PARTITION BY ...)"}
+    - {id: att_old2, session_id: s8, exercise_id: ex_21, score: 0.7, latency_seconds: 60.0,
+       created_at: "2026-06-14T10:05:00+00:00", reflected: true, user_answer: "LAG(amount) OVER (ORDER BY day)"}
+    - {id: att_new1, session_id: s9, exercise_id: ex_22, score: 0.3, latency_seconds: 120.0,
+       created_at: "2026-07-05T09:00:00+00:00", error_tag: window syntax,
+       user_answer: "SUM(x) PARTITION OVER day? I'm blanking on the order."}
+    - {id: att_new2, session_id: s9, exercise_id: ex_23, score: 0.7, latency_seconds: 70.0,
+       created_at: "2026-07-05T09:06:00+00:00", user_answer: "SUM(x) OVER (PARTITION BY day) — right."}
+    - {id: att_new3, session_id: s9, exercise_id: ex_24, score: 1.0, latency_seconds: 35.0,
+       created_at: "2026-07-05T09:12:00+00:00", user_answer: "AVG(x) OVER (PARTITION BY region ORDER BY day)"}
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does the output refrain from lowering difficulty
+      (null strategy, or scaffolding-only adjustment), given the within-session
+      recovery to 1.0?"}
+  - {id: c2, weight: 3, question: "Does the output refrain from creating an insight
+      out of the single warm-up miss (0.3 → 0.7 → 1.0 is re-entry, not a pattern)?"}
+  - {id: c3, weight: 1, question: "Does the journal name the layoff/return context
+      and the visible recovery rather than describing decline?"}
+  - {id: c4, weight: 1, question: "Is plan_revision null (one rusty session justifies
+      no restructuring)?"}
+references:
+  good:
+    insight_updates: []
+    strategy: null
+    plan_revision: null
+    journal: "Back after a 3-week gap: one rusty start, recovered to 1.0 same session. No change."
+  bad:
+    insight_updates:
+      - {op: create, key: sql.window_regression,
+         text: "Learner has regressed significantly on window functions.",
+         evidence: [att_new1], reason: "failed a previously mastered topic"}
+    strategy: {difficulty: beginner, scaffolding: high,
+               reason: "performance has collapsed since June"}
+    plan_revision:
+      phases:
+        - {phase: 1, topics: [sql.windows.retraining],
+           criteria: {min_attempts: 20, min_accuracy: 0.9}, focus: "rebuild from basics"}
+      reason: "restart window functions from scratch"
+    journal: "Major regression detected; reset to beginner and rebuilding."

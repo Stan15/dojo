@@ -2,6 +2,7 @@
 # high scaffolding) needs single-concept, step-supported problems whose
 # phrasing doesn't leak answers. Weak output: composite multi-rule problems or
 # leaky phrasing.
+domain: calculus
 category: domain-breadth
 scenario_context: |
   Calculus learner, beginner, scaffolding HIGH. Recent evidence: three failed

@@ -2,6 +2,7 @@
 # Planning must elucidate, not survey. Strong output: smallest honest plan
 # (calibration-first) + questions that pin down what "memory" means for THIS
 # person. Weak output: a confident mnemonics curriculum for an unknown problem.
+domain: memory
 category: planning
 scenario_context: |
   The goal, verbatim: "i want to improve my memory". Nothing else is known —

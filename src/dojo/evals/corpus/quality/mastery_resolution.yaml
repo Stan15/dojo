@@ -1,6 +1,7 @@
 # The learning loop must also let go: an old misconception has been beaten in
 # recent evidence. Strong reflection resolves it; weak reflection keeps stale
 # state alive (bloating every future prompt) or invents replacements.
+domain: french
 category: calibration
 scenario_context: |
   French learner. Insight ins_aux (avoir/être auxiliary confusion for motion

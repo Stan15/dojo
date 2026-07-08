@@ -1,5 +1,6 @@
 # Timeline awareness: a hard 2-week deadline must compress the plan to
 # high-yield essentials. Strong output is ruthless; weak output is a semester.
+domain: kubernetes
 category: planning
 scenario_context: |
   A software engineer must pass a Kubernetes fundamentals certification in TWO

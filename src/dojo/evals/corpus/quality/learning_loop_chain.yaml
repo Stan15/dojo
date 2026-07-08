@@ -2,6 +2,7 @@
 # generation runs — did the system visibly use what reflection just learned?
 # Isolates the judged step from upstream model variance by scripting the
 # reflect response.
+domain: spanish
 category: personalization
 scenario_context: |
   Spanish-conversation learner. A reflection pass just (1) recorded a NEW

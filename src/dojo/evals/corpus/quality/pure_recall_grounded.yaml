@@ -1,6 +1,7 @@
 # Domain breadth: pure fact memory, grounded. Recall items must be verbatim-
 # answerable from the source with exact answers — no invented facts, no
 # essay-ification of memorization work.
+domain: anatomy
 category: domain-breadth
 scenario_context: |
   Medical student memorizing cranial nerve basics from their own notes.

@@ -1,0 +1,66 @@
+# Verbatim memory work: the learner wants the poem WORD-PERFECT. Recall items
+# must demand exact lines (cloze/next-line), and rubrics must reject
+# paraphrase. Weak output treats poetry like comprehension homework.
+category: domain-breadth
+domain: poetry
+scenario_context: |
+  The learner is memorizing Dylan Thomas's villanelle refrains WORD-PERFECT
+  for a wedding reading. Their source contains exactly these two refrain
+  lines: "Do not go gentle into that good night" and "Rage, rage against the
+  dying of the light" (plus the note: second refrain ends stanzas 2 and 4).
+  Generation was asked for 3 beginner RECALL exercises on
+  poetry.thomas.villanelle. Strong output: cloze / next-line / which-stanza
+  drills whose rubrics demand the EXACT wording. Weak output: interpretation
+  essays, paraphrase-accepting rubrics, or facts not in the source.
+seed:
+  campaign:
+    id: wedding-reading
+    name: Wedding Reading
+    mission: Recite the Thomas villanelle word-perfect, calm, from memory.
+    strategy_profile: {difficulty: beginner, scaffolding: medium}
+steps:
+  - compile:
+      fn: generate
+      topic_path: poetry.thomas.villanelle
+      n_items: 3
+      difficulty: beginner
+      source_slice: |
+        # Refrains to memorize (word-perfect)
+        Refrain A: "Do not go gentle into that good night"
+        Refrain B: "Rage, rage against the dying of the light"
+        Structure note: refrain B closes stanzas 2 and 4.
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does every exercise demand exact wording
+      (cloze completion, next-line, or full-line recitation) rather than meaning,
+      interpretation, or paraphrase?"}
+  - {id: c2, weight: 3, question: "Do the rubrics explicitly require word-perfect
+      answers (reject paraphrases/synonyms)?"}
+  - {id: c3, weight: 1, question: "Is every tested line/fact present verbatim in the
+      source (no other stanzas or invented lines)?"}
+  - {id: c4, weight: 1, question: "Do the items drill differently (e.g. cloze vs
+      next-line vs structure), not the same cue three times?"}
+references:
+  good:
+    items:
+      - {prompt: "Complete word-perfectly: \"Do not go ______ into that ______ ______\"",
+         answer: "gentle / good night", rubric: "- exact words, no synonyms accepted",
+         skill: recall}
+      - {prompt: "Recite refrain B in full, word-perfect.",
+         answer: "Rage, rage against the dying of the light",
+         rubric: "- exact line including the repeated 'Rage, rage'\n- no paraphrase",
+         skill: recall}
+      - {prompt: "Which stanzas does refrain B close, per your notes?",
+         answer: "Stanzas 2 and 4", rubric: "- both stanza numbers exact", skill: recall}
+    note: null
+    intervention: null
+  bad:
+    items:
+      - {prompt: "In your own words, what is Thomas saying about death in this poem?",
+         answer: "Resist death passionately.", rubric: "- captures the general theme",
+         skill: explain}
+      - {prompt: "Write a short essay on the villanelle form and its history.",
+         answer: "An essay.", rubric: "- accurate and thoughtful", skill: produce}
+      - {prompt: "What year was Dylan Thomas born?", answer: "1914",
+         rubric: "- correct year", skill: recall}
+    note: null
+    intervention: null

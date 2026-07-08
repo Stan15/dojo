@@ -35,7 +35,7 @@ REFLECT_JOURNAL_WORDS = 30
 
 # --- planning (campaign.plan) ---
 PLAN_MAX_TOPICS = 18
-PLAN_MAX_TOPIC_DEPTH = 3
+PLAN_MAX_TOPIC_DEPTH = 4  # deep enough to EXTEND existing namespaces (music.guitar.fingerstyle.x)
 PLAN_MIN_PHASES = 1  # deadline compression may collapse phases; 3-6 is guidance, not a gate
 PLAN_MAX_PHASES = 6
 PLAN_MISSION_WORDS = 40

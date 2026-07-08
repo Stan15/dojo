@@ -5,7 +5,7 @@ TASK: From GOAL, produce a mission, a topic tree, a phased plan, and up to 3
 refinement questions.
 
 RULES
-1. Include a topic only if the mission fails without it. ≤ 18 topics, ≤ 3 levels,
+1. Include a topic only if the mission fails without it. ≤ 18 topics, ≤ 4 levels,
    dot-separated paths.
 2. Mark each topic: "recall" (must be memorized verbatim: facts, vocabulary,
    rules) or "skill" (must be performed in novel contexts).

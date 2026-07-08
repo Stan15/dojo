@@ -1,6 +1,7 @@
 # Personalization beyond error-targeting: a documented format preference
 # ("hands-on completion over conceptual explanation") must shape what
 # generation produces without derailing the target topic.
+domain: docker
 category: personalization
 scenario_context: |
   Docker-compose learner with a documented, stable preference: wants hands-on

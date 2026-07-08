@@ -1,0 +1,67 @@
+# The overwhelm signal: low accuracy + too_hard skips + a plea in feedback.
+# Strong reflection lowers difficulty AND raises scaffolding without shame;
+# weak reflection blames the learner or doubles down.
+category: calibration
+domain: chess
+scenario_context: |
+  Chess tactics learner (intermediate difficulty, low scaffolding). Last six
+  attempts: 0.0, 0.0, 0.3, then two skips with reason "too_hard", one with
+  feedback "these multi-move combinations are way beyond me". Reflection ran.
+  Strong output: difficulty to beginner AND scaffolding to high (both
+  directions of relief), optionally one insight naming the concrete gap
+  (multi-move visualization), an honest journal. Weak output: keeps settings,
+  frames the learner as unmotivated, or creates shame-flavored insights.
+seed:
+  campaign:
+    id: chess-tactics
+    name: Chess Tactics
+    mission: Reach 1600 tactics rating on puzzles.
+    strategy_profile: {difficulty: intermediate, scaffolding: low}
+  attempts:
+    - {id: att_1, session_id: s1, exercise_id: ex_1, score: 0.0, latency_seconds: 180.0,
+       error_tag: missed defender, user_answer: "Qxf7? I don't see it."}
+    - {id: att_2, session_id: s1, exercise_id: ex_2, score: 0.0, latency_seconds: 200.0,
+       error_tag: missed defender, user_answer: "Maybe Nd5? Lost."}
+    - {id: att_3, session_id: s1, exercise_id: ex_3, score: 0.3, latency_seconds: 240.0,
+       user_answer: "I see the fork idea but not the forcing order."}
+    - {id: att_4, session_id: s2, exercise_id: ex_4, score: 0.0, latency_seconds: 30.0,
+       skip_reason: too_hard, user_answer: ""}
+    - {id: att_5, session_id: s2, exercise_id: ex_5, score: 0.0, latency_seconds: 25.0,
+       skip_reason: too_hard, feedback: "these multi-move combinations are way beyond me",
+       user_answer: ""}
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does the strategy lower difficulty to beginner AND
+      raise scaffolding to high (both reliefs, given accuracy ~0.06 and explicit
+      too_hard signals)?"}
+  - {id: c2, weight: 2, question: "If an insight is created, does it name a concrete
+      skill gap (e.g. multi-move visualization / forcing-order calculation) with
+      attempt evidence — not motivation, effort, or ability judgments?"}
+  - {id: c3, weight: 1, question: "Does the journal read as calibration, not blame
+      (no 'learner is struggling/unmotivated/weak' framing)?"}
+  - {id: c4, weight: 1, question: "Is plan_revision either null or a support move
+      (e.g. inserting a shorter-pattern phase), not added volume or criteria?"}
+references:
+  good:
+    insight_updates:
+      - {op: create, key: tactics.forcing_order_visualization,
+         text: "Sees motifs but cannot hold multi-move forcing sequences in view.",
+         evidence: [att_3, att_5], reason: "self-report matches the miss pattern"}
+    strategy: {difficulty: beginner, scaffolding: high,
+               reason: "0/5 solved with two too_hard skips and explicit overwhelm"}
+    plan_revision: null
+    journal: "Recalibrated to beginner/high-scaffold; tracking forcing-order gap."
+  bad:
+    insight_updates:
+      - {op: create, key: learner.gives_up_easily,
+         text: "Learner gives up quickly and lacks persistence on hard problems.",
+         evidence: [att_4], reason: "skipped instead of trying"}
+    strategy: null
+    plan_revision:
+      phases:
+        - {phase: 1, topics: [chess.tactics.grit],
+           criteria: {min_attempts: 30, min_accuracy: 0.8},
+           focus: "build resilience through volume"}
+      reason: "more reps will toughen them up"
+    journal: "Learner needs to push through; keeping difficulty to build character."

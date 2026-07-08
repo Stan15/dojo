@@ -1,0 +1,60 @@
+# Confidence-blindness, the other direction: a hedging, self-doubting answer
+# that is RIGHT. Strong grading scores the content (1.0); weak grading docks
+# points for the hedge or grades the confidence.
+category: grading-integrity
+domain: music-theory
+scenario_context: |
+  Music theory exercise: "What interval is C to A♭ (ascending), and is it
+  consonant or dissonant in common-practice harmony?" Rubric: (1) identifies a
+  minor sixth; (2) classifies it as (imperfect) consonance. The learner's
+  answer is riddled with hedges ("I think", "not sure") but states exactly:
+  minor sixth, consonant. A fair grade is 1.0 — hedging is not an error.
+  Feedback may reassure, but the score must reflect content only.
+seed:
+  campaign:
+    id: theory-abrsm
+    name: ABRSM Theory
+    mission: Pass ABRSM grade 5 theory comfortably.
+    strategy_profile: {difficulty: beginner, scaffolding: medium}
+  exercise:
+    id: ex_interval
+    topic_path: theory.intervals
+    difficulty: beginner
+    prompt: "What interval is C to A♭ (ascending), and is it consonant or dissonant
+      in common-practice harmony?"
+    answer: "A minor sixth; an imperfect consonance."
+    rubric: |-
+      - identifies minor sixth
+      - classifies as consonant (imperfect consonance)
+  attempts:
+    - id: att_hedge
+      session_id: s1
+      exercise_id: ex_interval
+      score: 0.0
+      latency_seconds: 45.0
+      user_answer: "Hmm, I think that's a minor sixth? I'm really not sure though.
+        And I want to say it's consonant... imperfect consonance maybe? I always
+        second-guess these."
+steps:
+  - compile: {fn: grade, attempt_id: att_hedge}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Is the score 1.0 (minor sixth + consonant are both
+      present — hedging is not an error the rubric recognizes)?"}
+  - {id: c2, weight: 2, question: "Does the feedback confirm the content was right
+      (possibly noting the knowledge is solid), without inventing deductions for
+      uncertainty?"}
+  - {id: c3, weight: 1, question: "Does the evidence quote the learner's substantive
+      claim (minor sixth / consonance), not their hedging words?"}
+references:
+  good:
+    score: 1.0
+    evidence: "a minor sixth"
+    feedback: "Both right: minor sixth, imperfect consonance. Your instinct is
+      accurate — trust it."
+    error_tag: null
+  bad:
+    score: 0.3
+    evidence: "I'm really not sure though"
+    feedback: "The uncertainty in your answer shows the concept isn't secure yet;
+      confidence is part of mastery, so full credit isn't appropriate."
+    error_tag: "low confidence"

@@ -1,0 +1,72 @@
+# Namespace stewardship: the learner already has guitar topics. A new,
+# overlapping goal must extend the existing tree and ask before duplicating —
+# not mint a parallel universe of paths.
+category: planning
+domain: guitar
+scenario_context: |
+  The learner asks to plan "fingerstyle guitar arrangements of songs I like".
+  EXISTING TOPICS already contains music.guitar.chords.open,
+  music.guitar.chords.barre, and music.guitar.rhythm.strumming — clearly the
+  same instrument and skill family. Strong output: new topics extend the
+  music.guitar.* namespace (e.g. music.guitar.fingerstyle.*), reuse rather
+  than re-teach chords, and a refinement question explicitly offers to build
+  on the existing work. Weak output: a parallel namespace (fingerstyle.*,
+  guitar2.*) duplicating chord basics from scratch.
+seed:
+  campaign:
+    id: placeholder
+    name: placeholder
+    mission: placeholder
+steps:
+  - compile:
+      fn: plan
+      goal: "fingerstyle guitar arrangements of songs I like"
+      existing_topics: |-
+        music.guitar.chords.open
+        music.guitar.chords.barre
+        music.guitar.rhythm.strumming
+judge_rubric:
+  - {id: c1, weight: 3, question: "Do the new topics extend the existing
+      music.guitar namespace (music.guitar.fingerstyle... or similar), rather than
+      starting a parallel root?"}
+  - {id: c2, weight: 3, question: "Does the plan avoid re-teaching what EXISTING
+      TOPICS already covers (no open-chords or basic-strumming topics reappearing)?"}
+  - {id: c3, weight: 2, question: "Does a refinement question acknowledge the
+      existing guitar work (asking to build on it, or where chord fluency stands)?"}
+  - {id: c4, weight: 1, question: "Are fingerstyle-specific skills present (e.g.
+      thumb independence / travis picking / arrangement), marked as skill?"}
+references:
+  good:
+    mission: "Arrange and play fingerstyle versions of favorite songs, building on
+      existing chord and rhythm foundations."
+    topics:
+      - {path: music.guitar.fingerstyle.thumb_independence, kind: skill, summary: "steady thumb under melody"}
+      - {path: music.guitar.fingerstyle.travis_picking, kind: skill, summary: "core alternating pattern"}
+      - {path: music.guitar.fingerstyle.arranging, kind: skill, summary: "melody + bass from a song"}
+      - {path: music.guitar.fingerstyle.tab_reading, kind: recall, summary: "fingerstyle notation"}
+    phases:
+      - {phase: 1, topics: [music.guitar.fingerstyle.thumb_independence],
+         criteria: {min_attempts: 5, min_accuracy: 0.6}, focus: "calibrate current independence"}
+      - {phase: 2, topics: [music.guitar.fingerstyle.travis_picking, music.guitar.fingerstyle.tab_reading],
+         criteria: {min_attempts: 10, min_accuracy: 0.7}, focus: "the core pattern"}
+      - {phase: 3, topics: [music.guitar.fingerstyle.arranging],
+         criteria: {min_attempts: 10, min_accuracy: 0.6}, focus: "arrange one loved song"}
+    refinement_questions:
+      - "Build on your existing chord work — how fluent are barre chords now?"
+      - "Which two or three songs should we arrange first?"
+  bad:
+    mission: "Become a complete fingerstyle guitarist from the ground up."
+    topics:
+      - {path: fingerstyle.basics.holding_the_guitar, kind: recall, summary: "posture"}
+      - {path: fingerstyle.basics.open_chords, kind: skill, summary: "learn open chords"}
+      - {path: fingerstyle.basics.barre_chords, kind: skill, summary: "learn barre chords"}
+      - {path: fingerstyle.basics.strumming, kind: skill, summary: "strumming first"}
+      - {path: fingerstyle.patterns.travis, kind: skill, summary: "travis picking"}
+    phases:
+      - {phase: 1, topics: [fingerstyle.basics.holding_the_guitar, fingerstyle.basics.open_chords],
+         criteria: {min_attempts: 15, min_accuracy: 0.8}, focus: "start from zero"}
+      - {phase: 2, topics: [fingerstyle.basics.barre_chords, fingerstyle.basics.strumming],
+         criteria: {min_attempts: 15, min_accuracy: 0.8}, focus: "chords again"}
+      - {phase: 3, topics: [fingerstyle.patterns.travis],
+         criteria: {min_attempts: 15, min_accuracy: 0.8}, focus: "patterns"}
+    refinement_questions: []

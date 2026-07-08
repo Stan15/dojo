@@ -29,11 +29,67 @@ def load(path: Path) -> dict:
     return yaml.safe_load(path.read_text(encoding="utf-8"))
 
 
+class TestCorpusCoverage:
+    """The corpus must be SERIOUS and VARIED (owner directive 2026-07-07) —
+    breadth is a ratcheted invariant, not an aspiration. These floors may only
+    ever go UP; raising them is how the corpus grows deliberately."""
+
+    MIN_TOTAL = 20
+    MIN_PER_CATEGORY = {
+        "personalization": 3,
+        "calibration": 5,
+        "planning": 4,
+        "grading-integrity": 3,
+        "meta-learning": 3,
+        "domain-breadth": 4,
+    }
+    MIN_DISTINCT_DOMAINS = 12
+
+    def _scenarios(self) -> list[dict]:
+        return [load(p) for p in QUALITY_SCENARIOS]
+
+    def test_total_floor(self):
+        assert len(QUALITY_SCENARIOS) >= self.MIN_TOTAL
+
+    def test_every_category_meets_its_floor(self):
+        counts: dict[str, int] = {}
+        for sc in self._scenarios():
+            counts[sc["category"]] = counts.get(sc["category"], 0) + 1
+        for category, floor in self.MIN_PER_CATEGORY.items():
+            assert counts.get(category, 0) >= floor, (
+                f"{category}: {counts.get(category, 0)} scenarios < floor {floor}"
+            )
+        unknown = set(counts) - set(self.MIN_PER_CATEGORY)
+        assert not unknown, f"new categories need a floor here too: {unknown}"
+
+    def test_domain_variety_floor(self):
+        domains = {sc["domain"] for sc in self._scenarios()}
+        assert len(domains) >= self.MIN_DISTINCT_DOMAINS, (
+            f"only {len(domains)} distinct domains: {sorted(domains)}"
+        )
+
+    def test_signal_variety(self):
+        """The corpus must test the LEARNING LOOP, not just single-shot output:
+        at least one longitudinal chain, one intervention-expected scenario, one
+        false-intervention control, and one plan-elucidation scenario."""
+        scenarios = self._scenarios()
+        assert any(len(sc["steps"]) > 1 for sc in scenarios), "no longitudinal chain"
+        assert any(
+            sc["references"]["good"].get("intervention") for sc in scenarios
+        ), "no intervention-expected scenario"
+        assert any(
+            sc["references"]["bad"].get("intervention") for sc in scenarios
+        ), "no false-intervention control"
+        assert any(
+            sc["references"]["good"].get("refinement_questions") for sc in scenarios
+        ), "no plan-elucidation scenario"
+
+
 @pytest.mark.parametrize("path", QUALITY_SCENARIOS, ids=lambda p: p.stem)
 class TestCorpusIntegrity:
     def test_shape(self, path: Path):
         sc = load(path)
-        for key in ("category", "scenario_context", "seed", "steps", "judge_rubric", "references"):
+        for key in ("category", "domain", "scenario_context", "seed", "steps", "judge_rubric", "references"):
             assert key in sc, f"missing {key}"
         ids = [c["id"] for c in sc["judge_rubric"]]
         assert len(ids) == len(set(ids)), "duplicate rubric criterion ids"

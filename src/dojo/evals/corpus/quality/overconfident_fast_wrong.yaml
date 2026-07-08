@@ -1,0 +1,64 @@
+# The impulsivity signature: consistently FAST and consistently WRONG on
+# multi-step items, while slow answers succeed. The insight worth having is
+# behavioral (speed-accuracy tradeoff), and the right lever is process
+# scaffolding — not easier content.
+category: calibration
+domain: mental-math
+scenario_context: |
+  Mental-math learner. The window shows a stark split: three multi-step
+  answers given in under 8 seconds, all wrong (dropped carries, sign slip);
+  two answers where they visibly slowed down (40-60s), both perfect. Accuracy
+  0.4 overall but perfectly predicted by response time. Reflection ran.
+  Strong output: ONE insight naming the fast-equals-wrong pattern citing the
+  fast misses, scaffolding raised (checking steps / forced pause), difficulty
+  UNCHANGED (content mastery is proven by the slow successes). Weak output:
+  lowers difficulty (content is not the problem), or misses the latency
+  pattern entirely.
+seed:
+  campaign:
+    id: mental-math
+    name: Mental Math
+    mission: Do everyday multi-step arithmetic confidently without a phone.
+    strategy_profile: {difficulty: intermediate, scaffolding: low}
+  attempts:
+    - {id: att_1, session_id: s1, exercise_id: ex_1, score: 0.0, latency_seconds: 6.0,
+       error_tag: dropped carry, user_answer: "47 x 6 = 262"}
+    - {id: att_2, session_id: s1, exercise_id: ex_2, score: 1.0, latency_seconds: 52.0,
+       user_answer: "38 x 17 = 646"}
+    - {id: att_3, session_id: s1, exercise_id: ex_3, score: 0.0, latency_seconds: 7.5,
+       error_tag: sign slip, user_answer: "230 - 178 = 62"}
+    - {id: att_4, session_id: s2, exercise_id: ex_4, score: 1.0, latency_seconds: 44.0,
+       user_answer: "15% of 320 = 48"}
+    - {id: att_5, session_id: s2, exercise_id: ex_5, score: 0.0, latency_seconds: 5.0,
+       error_tag: dropped carry, user_answer: "89 + 56 = 135"}
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does the output create exactly one insight naming
+      the speed-accuracy pattern (fast answers fail, deliberate ones succeed), citing
+      the fast misses as evidence?"}
+  - {id: c2, weight: 3, question: "Does the strategy raise scaffolding while leaving
+      difficulty unchanged (the slow successes prove the content is within reach)?"}
+  - {id: c3, weight: 1, question: "Does the journal describe the behavioral pattern
+      (rushing) rather than a knowledge gap?"}
+  - {id: c4, weight: 1, question: "Is plan_revision null (no restructuring is
+      warranted by a process-level pattern)?"}
+references:
+  good:
+    insight_updates:
+      - {op: create, key: process.rushes_multistep,
+         text: "Answers under ~8s fail on carries and signs; deliberate answers succeed.",
+         evidence: [att_1, att_3, att_5], reason: "latency perfectly predicts errors"}
+    strategy: {difficulty: null, scaffolding: high,
+               reason: "content proven when slow; the failure mode is rushing"}
+    plan_revision: null
+    journal: "Fast-equals-wrong pattern tracked; added checking-step scaffolds."
+  bad:
+    insight_updates:
+      - {op: create, key: arithmetic.carrying_weakness,
+         text: "Learner fundamentally struggles with carrying in addition and multiplication.",
+         evidence: [att_1], reason: "carry errors observed"}
+    strategy: {difficulty: beginner, scaffolding: low,
+               reason: "accuracy 0.4 means the material is too hard"}
+    plan_revision: null
+    journal: "Dropped difficulty to beginner due to weak arithmetic fundamentals."

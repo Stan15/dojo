@@ -1,6 +1,7 @@
 # The grader's character test: a confident, polite, well-formatted, LONG
 # answer that is fundamentally WRONG. Strong grading scores it low and names
 # the real error; weak grading rewards the performance.
+domain: statistics
 category: grading-integrity
 scenario_context: |
   Statistics exercise: "Explain what a p-value of 0.03 means for your

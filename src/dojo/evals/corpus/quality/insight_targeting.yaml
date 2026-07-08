@@ -1,6 +1,7 @@
 # Does generation USE the learner profile, or just generate nice exercises?
 # Seeds a documented misconception + two recent failures on it. Strong output
 # attacks the weakness; weak output is generically pleasant.
+domain: french
 category: personalization
 scenario_context: |
   The learner is preparing for the French TEF oral exam (intermediate).

@@ -1,0 +1,68 @@
+# need_context, earned: the learner's own source contradicts itself on the
+# key fact. Generating would silently pick a side; a competent tutor flags it.
+# Strong output: intervention naming the contradiction (or grounded items that
+# avoid it with an explicit note). Weak output: confidently teaches one side.
+category: meta-learning
+domain: nutrition
+scenario_context: |
+  The learner's notes on protein timing CONTRADICT THEMSELVES: one paragraph
+  says the post-workout "anabolic window" is critical and closes within 30
+  minutes; the next says total daily protein is what matters and timing
+  windows are a myth. Generation was asked for 3 grounded exercises on
+  nutrition.protein_timing. Teaching either side as fact would silently
+  resolve a contradiction the learner needs to notice. Strong output: a
+  need_context intervention naming the contradiction and asking which source
+  or stance to trust (or items explicitly framed around the disagreement,
+  with a note naming it). Weak output: exercises asserting one side as
+  settled fact.
+seed:
+  campaign:
+    id: fitness-nutrition
+    name: Evidence-based Nutrition
+    mission: Actually understand the nutrition science behind my training.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+steps:
+  - compile:
+      fn: generate
+      topic_path: nutrition.protein_timing
+      n_items: 3
+      difficulty: intermediate
+      source_slice: |
+        # Protein timing notes
+        The anabolic window is critical: consume 25-40g protein within 30
+        minutes post-workout or gains are substantially blunted. This window
+        is the single most important nutrition factor for hypertrophy.
+
+        Later meta-analyses (Schoenfeld 2013) show total daily protein intake
+        is what drives hypertrophy; timing windows are largely a myth and the
+        "anabolic window", if it exists at all, spans many hours.
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does the output refuse to teach one side as
+      settled fact — either an intervention naming the contradiction, or items/note
+      explicitly framing the two claims as conflicting?"}
+  - {id: c2, weight: 2, question: "If it intervened: does a question ask which
+      source/stance to trust or whether to study the disagreement itself?"}
+  - {id: c3, weight: 1, question: "Is the contradiction identified precisely (30-minute
+      window vs total-daily-protein/myth), not just 'the source is unclear'?"}
+references:
+  good:
+    items: []
+    note: null
+    intervention:
+      kind: need_context
+      questions:
+        - "Your notes conflict: 30-minute anabolic window vs 'timing is a myth' — which stance should we practice?"
+        - "Want exercises on evaluating the two claims against each other instead?"
+      reason: "source asserts both that timing is critical and that it is a myth"
+  bad:
+    items:
+      - {prompt: "Within how many minutes post-workout must you consume protein to
+          avoid blunting gains?", answer: "30 minutes",
+         rubric: "- says 30 minutes", skill: recall}
+      - {prompt: "How many grams of protein does the anabolic window require?",
+         answer: "25-40g", rubric: "- correct range", skill: recall}
+      - {prompt: "Why is the anabolic window the most important nutrition factor for
+          hypertrophy?", answer: "Muscle protein synthesis peaks then.",
+         rubric: "- cites MPS peak", skill: explain}
+    note: null
+    intervention: null

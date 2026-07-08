@@ -2,6 +2,7 @@
 # clear mission, grounding source, documented profile. Intervening here is
 # cowardice, not diligence. Strong output generates; weak output stalls with
 # questions already answered by the context.
+domain: georgian
 category: meta-learning
 scenario_context: |
   Everything needed is present: mission "read Georgian restaurant menus and

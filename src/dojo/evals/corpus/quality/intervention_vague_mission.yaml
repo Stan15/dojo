@@ -2,6 +2,7 @@
 # "math", zero context). A competent tutor asks before drilling. Strong output
 # is an intervention with sharp elucidating questions; weak output confidently
 # generates generic trivia.
+domain: math
 category: meta-learning
 scenario_context: |
   A campaign exists with mission "get better at math" and topic path "math".

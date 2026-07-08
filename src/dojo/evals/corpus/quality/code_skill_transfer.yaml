@@ -1,0 +1,67 @@
+# Procedural code skill with a transfer angle: a JS developer learning Python
+# comprehensions. Strong output makes them WRITE code in novel contexts and
+# leverages what they already know (map/filter); weak output quizzes syntax
+# trivia or ignores the JS bridge.
+category: domain-breadth
+domain: python
+scenario_context: |
+  An experienced JavaScript developer is learning Python. Documented insight:
+  they reach for map()/filter() chains and find comprehensions unreadable.
+  Recent attempts show working JS-to-Python translations but comprehension
+  avoidance. Generation was asked for 3 intermediate SKILL exercises on
+  python.comprehensions. Strong output: production tasks (write/convert real
+  code), at least one explicitly bridging from map/filter to a comprehension,
+  varied contexts. Weak output: syntax trivia, yes/no questions, or tasks
+  ignoring what the learner already knows.
+seed:
+  campaign:
+    id: py-for-js
+    name: Python for JS devs
+    mission: Ship Python at work as comfortably as JavaScript within a quarter.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  insights:
+    - id: ins_mapfilter
+      key: comprehensions.mapfilter_habit
+      description: Reaches for map()/filter() chains; finds comprehensions unreadable.
+      topic_path: python.comprehensions
+  attempts:
+    - {id: att_1, session_id: s1, exercise_id: ex_1, score: 0.7, latency_seconds: 50.0,
+       user_answer: "list(map(lambda u: u.name, filter(lambda u: u.active, users)))"}
+steps:
+  - compile: {fn: generate, topic_path: python.comprehensions, n_items: 3,
+              difficulty: intermediate}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Is every exercise a code-production task (write or
+      convert actual code), never syntax trivia or yes/no?"}
+  - {id: c2, weight: 3, question: "Does at least one exercise explicitly bridge from
+      the learner's map/filter habit (convert a given map/filter chain to a
+      comprehension)?"}
+  - {id: c3, weight: 1, question: "Do the three items use different data contexts
+      (not the same list of numbers three times)?"}
+  - {id: c4, weight: 1, question: "Do rubrics check comprehension-specific structure
+      (condition placement, nesting, or dict/set variants), not just 'code works'?"}
+references:
+  good:
+    items:
+      - {prompt: "Convert your habitual pattern to a comprehension:\n`list(map(lambda u: u.name, filter(lambda u: u.active, users)))`",
+         answer: "[u.name for u in users if u.active]",
+         rubric: "- comprehension form\n- condition after the for clause", skill: produce}
+      - {prompt: "Write a dict comprehension mapping each word in `sentence.split()`
+          to its length, skipping words shorter than 3 characters.",
+         answer: "{w: len(w) for w in sentence.split() if len(w) >= 3}",
+         rubric: "- dict comprehension\n- filter condition present", skill: produce}
+      - {prompt: "Flatten `matrix` (a list of rows) into one list using a single
+          comprehension.", answer: "[cell for row in matrix for cell in row]",
+         rubric: "- nested for order correct (row before cell)", skill: produce}
+    note: null
+    intervention: null
+  bad:
+    items:
+      - {prompt: "Are list comprehensions faster than map() in CPython? Yes or no.",
+         answer: "Usually yes", rubric: "- answer is correct", skill: recall}
+      - {prompt: "In what Python version were dict comprehensions introduced?",
+         answer: "2.7", rubric: "- correct version", skill: recall}
+      - {prompt: "Explain in prose why comprehensions are considered Pythonic.",
+         answer: "An essay.", rubric: "- mentions readability", skill: explain}
+    note: null
+    intervention: null
