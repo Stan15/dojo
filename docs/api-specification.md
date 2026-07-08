@@ -1,158 +1,88 @@
-# Dojo API & Command Specification
+# Dojo CLI & API Reference
 
-> **Status (2026-07-07):** this documents the **prototype** surface as implemented
-> today. The authoritative v1 design is [`docs/design/blueprint.md`](design/blueprint.md);
-> where the two conflict, the blueprint wins, and this document will be rewritten
-> as milestones M1–M3 land the new surface (Store protocol, task contract,
-> `dojo daily`/`capture`/`inbox`).
+_Rewritten 2026-07-08 against the shipped surface (M6 truth pass). Design
+rationale lives in [`design/blueprint.md`](design/blueprint.md); this documents
+what exists. Every command supports `--json` (structured envelopes) and
+`--db <dir>` (store location, default `~/.local/share/dojo`)._
 
-This document provides the technical reference for the implemented Dojo programmatic Python API (`DojoAPI`), the CLI command-line interface, and key architectural nuances.
+## The envelope protocol
 
----
+Every JSON response may carry:
 
-## 1. Programmatic API (`DojoAPI`)
+- `tasks: [{id, kind, prompt_file, submit_with, payload_bytes}]` — AI work for
+  the driving agent (or `dojo task run`) to fulfill NOW. This is the only way
+  AI touches dojo: read the prompt, produce the JSON it demands, submit it;
+  the result is schema-validated and applied atomically (ADR 010, I5).
+- `next` — one plain-language sentence naming the next step.
+- Honest degradation counts where relevant: `skipped`, `generation_deferred`,
+  `inbox_waiting`, `pending_grade`.
 
-The programmatic Python API is defined in [`src/dojo/api.py`](file:///Users/stans/projects/dojo/src/dojo/api.py) and is the single source of truth for business logic.
+## Commands
 
-### Initialization
-```python
-from dojo.api import DojoAPI
-api = DojoAPI(dojo_dir=None)
+### Learning goals & material
+
+| Command | What it does |
+|---|---|
+| `dojo campaign plan "<goal>" [--level] [--context]` | Emits a `campaign.plan` task: mission, lean topic tree, phases, refinement questions. Vague goals get calibration-first plans + elucidating questions. |
+| `dojo campaign create --from-task <tsk-id> [--name]` | Materializes a fulfilled plan proposal — nothing is created before your approval (I2). |
+| `dojo campaign create "<goal>" [--level] [--source]` | Deterministic creation with a diagnostic phase (no AI plan). |
+| `dojo add <path|--text> [--topic] [--generate]` | Ingests a source; `--generate` emits a grounded generation task. |
+| `dojo capture "<text>" [--why]` | Saves a micro-source durably BEFORE any AI runs, then emits a `capture.route` task. |
+| `dojo inbox [confirm|dismiss <cap-id>]` | Captures awaiting a home; routes are proposals until you confirm (Q6; `capture.autofile` config opts into auto-filing high-confidence routes). |
+| `dojo source list|show|topics|candidates|review` | Inspect sources; review gates AI-drafted candidates. |
+| `dojo queue <candidate-id> | --source <id>` | Promotes reviewed candidates to active practice (queue caps enforced). |
+
+### Daily practice
+
+| Command | What it does |
+|---|---|
+| `dojo daily [--size N] [--reset]` | Builds today's packet: bounded (default 5, hard cap 8), interleaved across campaigns, every pick explained. Cold campaigns get ONE diagnostic task first; stock requests are phase-gated and capped at 2 AI tasks per run. Resumes within the day. |
+| `dojo why` | Replays every scheduling reason behind the current packet, including Tier-1 campaign ranking and your boosts. |
+| `dojo ready` / `dojo answer "<answer>"` | Reveal prompt (timer starts) / submit. Exact matches and diagnostics grade deterministically; rubric-bearing answers emit an `attempt.grade` task (`pending_grade: true`). |
+| `dojo skip --reason too_easy|too_hard|forgot|bad_quality [--feedback]` | Calibration signals. `forgot` keeps the item due (Again); `too_easy` archives with an Easy review; `too_hard`/`bad_quality` archive. |
+| `dojo correct [--score] [--feedback]` | Human override of the last grade (highest authority; lands as an additional review — OP #13). |
+| `dojo feedback "<comment>"` | Free-text learning feedback, consumed by reflection. |
+| `dojo campaign boost <id> <factor>` | This CAMPAIGN surfaces more/less in daily packets (Tier-1 multiplier, visible in `why`). |
+| `dojo campaign topic-boost <id> <path> <factor> [--kind]` | This TOPIC comes due `<factor>`× faster and wins packet ties. |
+| `dojo start|reveal|due|progress` | Session utilities predating `daily`; `start` also replenishes when a topic runs low. |
+
+### Understanding & upkeep
+
+| Command | What it does |
+|---|---|
+| `dojo stats` | Estimated retention per campaign (tagged estimate), due counts, 20-attempt accuracy, idle days, insights, and AI token spend per task kind. |
+| `dojo reflect [--campaign]` | Emits `campaign.reflect` over unreflected evidence → insights (created/updated/resolved under mechanical rails), strategy calibration, rare plan revisions, journal. No new evidence → honest no-op. |
+| `dojo task list|show [--prompt]|submit|run` | The task queue. `run` drains pending tasks through one configured command string (`fulfiller.command`) — prompt on stdin, JSON on stdout. |
+| `dojo benchmark --driver "<cmd>" [--judge] [--tier] [--detail]` | Scores a (driver, judge) model pair on the shipped pedagogy corpus by category, with measured token economy. Runs in throwaway stores — never touches yours. |
+| `dojo export <dir>` | Writes your entire store as a fresh markdown store, read through the storage protocol (backend-blind). Refuses non-empty destinations. |
+| `dojo doctor` | Validates store structure, schemas, task queue, inbox, and audit health. |
+| `dojo config set|show` | Key-value config: `daily.packet_size`, `fulfiller.command`, `fulfiller.tier` (frugal/standard/rich context budgets), `capture.autofile`. |
+| `dojo install [<agent>|--dest] [--argv]` / `dojo uninstall [<agent>|--dest|--self]` | Skill install into an agent's directory / removal (ownership-guarded; learning data never touched). |
+
+## Python API
+
+`dojo.api.DojoAPI(dojo_dir=None)` mirrors the CLI: `daily()`, `why()`,
+`capture()`, `inbox()/inbox_confirm()/inbox_dismiss()`, `stats()`,
+`add_source()`, `start_practice_session()`, `reveal_prompt()`,
+`submit_answer()`, `skip_active_exercise()`, `correct_last_attempt()`,
+`consolidate_learner_profile()`, `create_campaign()`. Storage is the `DojoStore`
+protocol (`dojo.store`) — typed repositories per entity, ID references only
+(ADR 011); `dojo.export.export_store(src, dest)` is the portability path.
+
+## Storage layout (markdown backend)
+
 ```
-*   `dojo_dir`: Path to the Dojo data directory. If omitted, defaults to
-    `~/.local/share/dojo/`. Storage is markdown files with YAML frontmatter,
-    versioned by git (see ADR 011); directory structure is created automatically.
+~/.local/share/dojo/
+  config.yaml
+  inbox/cap_*.md                 # captures (body = the note)
+  sources/src_*.md               # provenance in frontmatter, content as body
+  tasks/tsk_*.md                 # task prompts as bodies; status/errors in frontmatter
+  campaigns/camp_<id>/
+    campaign.md                  # mission/strategy/topics(+sr)/journal; syllabus as body
+    plan.yaml
+    exercises/ candidates/ attempts/ insights/
+  archive/                       # archived campaigns & sessions
+```
 
-### Source & Candidate Methods
-
-*   `add_source(title, content, kind, path=None, mission=None, generate_candidates=False, topic=None) -> dict`
-    *   Saves a raw text/file/URL source.
-    *   If `generate_candidates=True`, invokes the default AI connector with task `exercise.generate` to draft exercises.
-*   `list_sources() -> list[dict]`
-    *   Returns meta-information for all ingested sources, including draft candidate counts.
-*   `get_source(source_id) -> dict | None`
-    *   Retrieves source metadata and content.
-*   `get_source_topics(source_id) -> list[dict]`
-    *   Lists all unique topics and candidate counts drafted from a source.
-*   `get_source_candidates(source_id, topic_path=None) -> list[dict]`
-    *   Lists draft candidate exercises for a source, optionally filtered by topic.
-*   `get_candidate(candidate_id) -> dict | None`
-    *   Retrieves a single candidate's details.
-*   `save_candidate(id, source_id, prompt, answer=None, rubric=None, topic_path, source_refs, difficulty=None, quality="candidate") -> dict`
-    *   Upserts or modifies a candidate exercise draft.
-*   `remove_candidate(candidate_id) -> dict`
-    *   Permanently deletes a draft candidate from the database.
-
-### Queueing & Promotion
-
-*   `promote_candidate(candidate_id) -> dict`
-    *   Deletes the candidate draft and promotes it to an active `Exercise`.
-    *   Enforces the active queue limit (max 20). Raises `ValueError` if the limit is exceeded.
-*   `promote_source_topic(source_id, topic_path=None, limit=None) -> list[dict]`
-    *   Promotes multiple candidates from a source/topic. Enforces the active queue limit per item.
-
-### Practice Session Lifecycle
-
-*   `start_practice_session(topic=None, limit=5, reset=False) -> dict`
-    *   Starts a session of up to `limit` active exercises. Resumes the active session by default unless `reset=True`.
-    *   **JIT Replenishment:** If the due exercise queue falls below 3 items, it automatically triggers candidate generation from active sources and promotes them.
-*   `get_active_practice_session() -> dict | None`
-    *   Retrieves the current active session.
-*   `reveal_prompt(session_id=None) -> dict`
-    *   Reveals the prompt of the active exercise in the session and starts the response timer.
-*   `submit_answer(user_answer, session_id=None) -> dict`
-    *   Submits the response, records the attempt score and latency, and increments the session index.
-
-### Skip & Correct Feedback Loop
-
-*   `get_due_count(topic=None) -> int`
-    *   Queries active unattempted exercises (including exercises where the only attempts are skips with reason `"forgot"`).
-*   `skip_active_exercise(reason, feedback=None, session_id=None) -> dict`
-    *   Skips the active exercise with a reason (`forgot`, `too_easy`, `too_hard`, `bad_quality`) and optional notes.
-    *   If `"forgot"`, the exercise remains due in rotation. For other reasons, it is archived.
-*   `correct_last_attempt(score=1.0, feedback=None, session_id=None) -> dict`
-    *   Overrides the last recorded attempt score (default `1.0`) in the session (or globally) and resets consolidated status to `False`.
-*   `add_learner_feedback(content, campaign_id=None, attempt_id=None) -> dict`
-    *   Saves a learner feedback comment as a learner hypothesis scoped under `feedback.user.<uuid>`. If `attempt_id` is provided, links it directly to that attempt and its campaign. If both are `None`, defaults to campaign-level routing based on the last attempt's campaign (with `attempt_id = None`).
-
-### Learner Profile Consolidation
-
-*   `get_learner_hypotheses(status="active") -> list[dict]`
-    *   Lists consolidated learner hypotheses (misconceptions/patterns).
-*   `save_learner_hypothesis(key, description, status="active") -> dict`
-    *   Upserts a hypothesis key-description record.
-*   `consolidate_learner_profile(campaign_id=None) -> dict`
-    *   Synthesizes the unconsolidated attempts and active feedback using the default AI connector (`profile.consolidate`). If `campaign_id` is provided, consolidates just that campaign; if not, loops over and consolidates all active campaigns.
-    *   Outdated active hypotheses not returned by the connector are set to `"resolved"`.
-
-### Configuration Preferences
-
-*   `save_config(key, value) -> dict`
-    *   Saves or updates a learner configuration preference key-value pair.
-*   `get_config(key) -> str | None`
-    *   Retrieves the value of a configuration key.
-*   `list_configs() -> dict[str, str]`
-    *   Retrieves all saved configuration key-value pairs.
-
----
-
-## 2. CLI Command Specification
-
-| Command | Arguments | Description |
-| :--- | :--- | :--- |
-| `dojo add` | `<path> [--text <txt>] [--title <t>] [--generate]` | Ingests a text source/file/URL. |
-| `dojo source list` | None | Lists ingested sources and candidate counts. |
-| `dojo source show` | `<source-id>` | Shows source metadata and content snippet. |
-| `dojo source topics` | `<source-id>` | Lists draft topics for a source. |
-| `dojo source candidates` | `<source-id> [--topic <path>]` | Lists candidate details for a source/topic. |
-| `dojo source review` | `<source-id>` | Interactive terminal review of candidates. |
-| `dojo queue` | `<candidate-id> | --source <id> [--limit <n>]` | Promotes candidate(s) to active exercises. |
-| `dojo start` | `[--topic <path>] [--limit <n>] [--reset]` | Starts/resumes a session (triggers JIT if due queue < 3). |
-| `dojo ready` | `[--session <id>]` | Reveals the prompt and starts the timer. |
-| `dojo answer` | `<answer> [--session <id>]` | Submits response and scores correctness. |
-| `dojo due` | `[--topic <path>]` | Returns the count of active due exercises. |
-| `dojo skip` | `--reason <reason> [--feedback <txt>]` | Skips exercise (`forgot` keeps due; others archive). |
-| `dojo correct` | `[--feedback <txt>] [--score <n>]` | Overrides the score (default `1.0`) of the last attempt. |
-| `dojo feedback` | `<comment> [--campaign <id>] [--attempt <id>]` | Logs a user feedback comment (campaign default; no guessing). |
-| `dojo progress` | None | Lists accuracy, latency, and recent attempts. |
-| `dojo admin consolidate` | `[--campaign <id>]` | Synthesizes stable hypotheses from attempts/feedback. |
-| `dojo config set` | `<key> <value>` | Sets a learner configuration preference. |
-| `dojo config show` | None | Lists all active configuration preferences. |
-| `dojo install` | `[<agent>] [--dest <path>] [--argv <cmd>]` | Installs skill and auto-configures default AI connector. |
-| `dojo campaign plan` | `<goal>` | Proposes a syllabus outline and refinement questions for a learning goal. |
-| `dojo campaign create` | `<goal> [--level <lvl>] [--name <str>] [--exclude <str>] [--feedback <str>]` | Finalizes planning, generates syllabus source, and registers the campaign. |
-| `dojo connect ai command` | `<name> -- argv` | Registers a command-based AI connector. |
-| `dojo connect ai list` | None | Lists registered AI connectors. |
-| `dojo connect ai test` | `[<name>]` | Tests AI connector connectivity. |
-
----
-
-## 3. Structural Nuances
-
-### The Dual Purpose of Sources
-Sources serve two distinct dual purposes in Dojo:
-
-#### A. Content-Type: Factual Reference vs. Structured Learning Plan
-Depending on the content ingested, a `Source` behaves as factual target material or a roadmap syllabus. We resolve the tension between these two modes by recognizing that **every structured reference document is also a syllabus via its outline hierarchy** (see [ADR 001](file:///Users/stans/projects/dojo/docs/adr/001-unified-source-representation.md) for details):
-1.  **Factual Reference Material:** Contains target raw text, articles, papers, codebases, or reference notes. Dojo uses these to extract specific factual items, QA pairs, or procedural practice prompts.
-2.  **Learning Plan / Syllabus:** Contains a structured study roadmap, curriculum outline, course syllabus, or list of learning milestones. When ingested, this acts as the outline for a `Campaign`, which coordinates the progression sequence, active phase, and pedagogical strategy profile parameters to direct JIT generation (see [ADR 002](file:///Users/stans/projects/dojo/docs/adr/002-campaign-as-pedagogical-director.md) for details).
-
-#### B. Execution-Type: Generative Input vs. Provenance Trace
-During the practice loop, a source acts as:
-1.  **Generative Input:** Serves as the raw contextual prompt input fed into the default AI connector during draft generation.
-2.  **Provenance Anchor:** Grounds promoted exercises. The `source_refs` map exercises back to their exact line numbers or positions in the original source, allowing the learner to review context, verify grading correctness, and resolve active learner hypotheses.
-
-### The "Forgot" Skip Exception
-*   **Volatile Skips:** Skips with reasons `"too_easy"`, `"too_hard"`, or `"bad_quality"` indicate curriculum calibration issues. The exercise quality is immediately set to the skip reason, archiving the item out of active rotation.
-*   **Desirable Difficulty Skips:** Skips with reason `"forgot"` represent a retrieval failure. The exercise remains active and **due** in rotation so the learner re-encounters it in future sessions.
-
-### Active Queue Guardrail
-*   Dojo enforces a strict cap of **20 active due exercises** at any given time.
-*   If the due count is $\ge 20$, promotion via reviews or queue commands is blocked. This prevents cognitive overload and bombardment, forcing the learner to practice due items before adding more material.
-
-### Pedagogical Diagnostic Loops & Gaps
-To maintain an optimal zone of proximal development and prevent learner overload or intimidation, Dojo supports dynamic pedagogical diagnostic sessions:
-1.  **JIT Gap Detection:** During JIT exercise generation (`exercise.generate`), if the default AI connector determines that it lacks sufficient context about the learner's background, goals, or learning style relative to the current source/topic to create useful, calibrated exercises, or if it determines that a pedagogical intervention is required, it can target its generation output at producing 1–3 targeted, highly concise diagnostic questions (marked with `quality="diagnostic"`).
-2.  **Scoring Bypass:** Diagnostic exercises do not have a defined answer or grading rubric. Consequently, any answer submitted by the user is considered correct and receives a score of `1.0` automatically.
-3.  **Synthesis and Calibration:** Direct user responses to diagnostic questions are saved as standard `Attempt` records. When `consolidate_learner_profile()` is invoked, the AI connector processes these responses to synthesize new, active `LearnerHypothesis` records (e.g., `preference.practical_code` or `goals.career_transition`). These hypotheses automatically guide subsequent candidate generation sessions to deliver a highly tailored training experience. Additionally, the host agent or campaign director can inspect these active hypotheses to dynamically adjust active Campaign strategy parameters or sequence phases (the "Attack Plan") to align with the user's goals.
-
+Everything is git-versioned with one recovery point per CLI command; the log
+reads as a narrative of your learning life.

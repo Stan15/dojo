@@ -37,6 +37,11 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
    test harness for the task contract itself (we can drive it with a mock command
    in CI). 
 
+1. **Version tag**: all planned milestones are delivered and verified; corpus
+   wave 4 + reflect-prompt work remain from your directives. Tag `v0.2.0` now
+   and reserve `v1.0.0` for after that work, or hold tags entirely?
+   **Default: tag v0.2.0 at the next natural pause.**
+
 ## Answered (2026-07-07)
 
 - **Grading source of truth** — AI grades against rubric when a harness is
