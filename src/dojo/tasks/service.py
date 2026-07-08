@@ -287,14 +287,12 @@ def apply_grade(store, task: Task, result: GradeResult) -> dict[str, Any]:
 
     # The grade is final: advance the memory model now (ADR 014). Pending
     # attempts deliberately skipped this at answer time.
-    exercise = store.exercises.get(campaign_id, ctx["exercise_id"])
-    if exercise is not None:
-        from .. import scheduling
+    from ..outcomes import land_score
 
-        exercise.sr = scheduling.record_outcome(
-            exercise.sr, score=result.score, latency_seconds=attempt.latency_seconds,
-        )
-        store.exercises.save(campaign_id, exercise)
+    land_score(
+        store, campaign_id, ctx["exercise_id"],
+        score=result.score, latency_seconds=attempt.latency_seconds,
+    )
 
     return {"attempt_id": attempt_id, "score": result.score, "error_tag": result.error_tag}
 

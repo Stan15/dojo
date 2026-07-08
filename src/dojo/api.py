@@ -39,17 +39,15 @@ class DojoAPI:
         latency_seconds: float | None = None,
         skip_reason: str | None = None,
     ) -> None:
-        """The single point where a FINAL score advances the memory model
-        (ADR 014). Provisional scores (pending AI grade) must not call this —
-        they would poison the schedule with a placeholder 0.0."""
-        ex = self.store.exercises.get(campaign_id, exercise_id)
-        if ex is None or ex.quality == "diagnostic":
-            return  # diagnostics gather information; they are not memories to maintain
-        ex.sr = scheduling.record_outcome(
-            ex.sr, score=score, latency_seconds=latency_seconds, skip_reason=skip_reason,
+        """Delegates to outcomes.land_score — the one lane-aware landing
+        (ADR 012/014). Provisional scores (pending AI grade) must not call
+        this: a placeholder 0.0 would poison the schedule."""
+        from .outcomes import land_score
+
+        land_score(
+            self.store, campaign_id, exercise_id,
+            score=score, latency_seconds=latency_seconds, skip_reason=skip_reason,
         )
-        ex.updated_at = datetime.now(timezone.utc).isoformat()
-        self.store.exercises.save(campaign_id, ex)
 
     # ==========================================
     # Sources Operations

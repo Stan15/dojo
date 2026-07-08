@@ -351,6 +351,9 @@ class Campaign(StoredEntity):
     sources_config: List[Dict[str, Any]] = Field(default_factory=list)
     status: str = "active"
     attack_plan: List[AttackPlanPhase] = Field(default_factory=list)
+    # Topic registry: {path, kind: recall|skill, summary, sr?} — skill topics
+    # carry FSRS state here (ADR 012: memory attaches to the stable node).
+    topics: List[Dict[str, Any]] = Field(default_factory=list)
     pedagogical_journal: List[Dict[str, Any]] = Field(default_factory=list)
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())

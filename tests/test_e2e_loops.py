@@ -136,10 +136,16 @@ def test_source_to_graded_practice_loop(tmp_path: Path):
 
     fulfill(api, src_res["tasks"][0], {
         "items": [
-            {"prompt": f"Traduisez la phrase {i} : He would have gone.",
+            # one recall-lane item (verbatim fact, FSRS on the item itself) and
+            # two skill-lane items (disposable; memory lives on the topic)
+            {"prompt": "Quel auxiliaire pour les verbes de mouvement au conditionnel passé ?",
+             "answer": "être", "rubric": "- says être", "skill": "recall"},
+            {"prompt": "Traduisez : He would have gone.",
              "answer": "Il serait allé.", "rubric": "- être as auxiliary",
-             "skill": "produce"}
-            for i in range(3)
+             "skill": "produce"},
+            {"prompt": "Traduisez : She would have come.",
+             "answer": "Elle serait venue.", "rubric": "- être as auxiliary",
+             "skill": "produce"},
         ],
         "note": None,
     })
@@ -152,20 +158,27 @@ def test_source_to_graded_practice_loop(tmp_path: Path):
         api.promote_candidate(cand.id)
     assert len(api.store.exercises.list(campaign_id)) == 2
 
-    # 3. Practice: one exact-match answer, one free-form → grade task
+    # 3. Practice: one exact-match recall answer, one free-form skill → grade task
     sess = api.start_practice_session(campaign_id=campaign_id)
     session_id = sess["session"]["id"]
 
-    api.reveal_prompt(session_id=session_id)
-    exact = api.submit_answer(user_answer="Il serait allé.", session_id=session_id)
+    answers = {}
+    for _ in range(2):
+        prompt_info = api.reveal_prompt(session_id=session_id)
+        ex = api.store.exercises.get(campaign_id, prompt_info["exercise_id"])
+        if ex.kind == "recall":
+            answers["recall"] = api.submit_answer(user_answer="être", session_id=session_id)
+        else:
+            answers["skill"] = api.submit_answer(
+                user_answer="Il aurait allé, je crois.", session_id=session_id
+            )
+
+    exact = answers["recall"]
     assert exact["score"] == 1.0 and exact["grader"] == "exact" and not exact["pending_grade"]
-
-    api.reveal_prompt(session_id=session_id)
-    freeform = api.submit_answer(user_answer="Il aurait allé, je crois.", session_id=session_id)
+    freeform = answers["skill"]
     assert freeform["pending_grade"] and freeform["grader"] is None
-    grade_ref = freeform["tasks"][0]
 
-    fulfill(api, grade_ref, {
+    fulfill(api, freeform["tasks"][0], {
         "score": 0.3,
         "evidence": "aurait allé",
         "feedback": "Right tense; aller takes être: il serait allé.",
@@ -173,22 +186,27 @@ def test_source_to_graded_practice_loop(tmp_path: Path):
     })
     attempt = api.store.attempts.get(campaign_id, freeform["attempt_id"])
     assert attempt.score == 0.3 and attempt.grader == "ai" and attempt.error_tag == "aux choice"
-    assert freeform["is_session_completed"]
 
-    # 4. Memory model advanced at each FINAL score, and only then (ADR 014):
-    #    the exact-match answer landed at answer time; the free-form one landed
-    #    when the grade task applied, not at the provisional 0.0.
-    exercises = {ex.id: ex for ex in api.store.exercises.list(campaign_id)}
-    exact_ex = exercises[exact["exercise_id"]]
-    graded_ex = exercises[freeform["exercise_id"]]
-    assert exact_ex.sr is not None and exact_ex.sr["last_review"] is not None
-    assert graded_ex.sr is not None and graded_ex.sr["last_review"] is not None
-    from dojo import scheduling
+    # 4. Both memory lanes advanced at FINAL scores only (ADR 012/014):
+    #    recall → FSRS on the item; skill → FSRS on the topic + item retires.
     from datetime import datetime, timezone
+    from dojo import scheduling
     now = datetime.now(timezone.utc)
-    assert not scheduling.is_due(exact_ex.sr, now), "a perfect answer schedules the item away"
-    assert scheduling.due_at(graded_ex.sr) <= scheduling.due_at(exact_ex.sr), (
-        "a 0.3 lapse must come back no later than a perfect answer"
+
+    recall_ex = api.store.exercises.get(campaign_id, exact["exercise_id"])
+    assert recall_ex.sr is not None and not scheduling.is_due(recall_ex.sr, now), (
+        "a perfect recall answer schedules the item away"
+    )
+
+    skill_ex = api.store.exercises.get(campaign_id, freeform["exercise_id"])
+    assert skill_ex.sr is None and skill_ex.quality == "spent", (
+        "skill items are disposable: no per-item memory, retired after use"
+    )
+    campaign = api.store.campaigns.get(campaign_id)
+    topic = next(t for t in campaign.topics if t["path"] == "french.grammar.conditional")
+    assert topic["sr"]["last_review"] is not None, "skill memory lives on the topic node"
+    assert scheduling.due_at(topic["sr"]) - now < __import__("datetime").timedelta(days=1), (
+        "a 0.3 lapse on the topic comes back fast"
     )
 
 
