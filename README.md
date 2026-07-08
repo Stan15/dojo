@@ -84,6 +84,25 @@ backends exist. The export is itself a working dojo store.
 install method — and your learning data in `~/.local/share/dojo/` is never
 touched either way.
 
+## Tell it what you want to learn
+
+With an agent, just say it — "I want to learn X" triggers the skill. Direct:
+
+```bash
+dojo campaign plan "conversational Spanish, in-laws visit in December"
+#   → emits a planning task; your AI (or `dojo task run`) fulfills it
+dojo task show tsk_xxx           # review the proposed mission, topics, phases
+dojo campaign create --from-task tsk_xxx    # you approve; nothing is created before this
+```
+
+One-off things you just learned go straight in, from anywhere:
+
+```bash
+dojo capture "git log -S counts occurrences, not diff lines" --why "archaeology"
+dojo inbox                       # see where the AI proposes to file it
+dojo inbox confirm cap_xxxx      # you confirm; it becomes practice material
+```
+
 ## The daily loop
 
 ```bash
