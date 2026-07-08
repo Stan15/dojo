@@ -71,6 +71,11 @@ dojo config set fulfiller.command "codex exec"   # or "ollama run llama3", …
 dojo task run                                     # drain pending AI work
 ```
 
+**Leaving?** `dojo uninstall <agent>` removes the skill (only if dojo owns it),
+`dojo uninstall --self` tells you exactly how to remove the program for your
+install method — and your learning data in `~/.local/share/dojo/` is never
+touched either way.
+
 ## The daily loop
 
 ```bash
@@ -153,7 +158,7 @@ can't silently regress.
 ## Status & roadmap
 
 Dojo is **v0.1 — a working core, moving fast**. What you read above exists and
-is tested (98 tests, plus live model evals). On the bench next, per the
+is tested (225 tests, plus live model evals). On the bench next, per the
 [blueprint](docs/design/blueprint.md): one-utterance capture with an inbox
 (`dojo capture "TIL…"`), a leaner agent skill, and a wider pedagogical
 benchmark corpus.
