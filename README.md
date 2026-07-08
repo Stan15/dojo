@@ -51,8 +51,11 @@ back into a learner profile that sharpens the next session.
 ## Get started in 60 seconds
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Stan15/dojo/main/install.sh | sh
+git clone https://github.com/Stan15/dojo && cd dojo && sh install.sh
 ```
+
+(One-liner `curl -fsSL https://raw.githubusercontent.com/Stan15/dojo/main/install.sh | sh`
+works once this repo is public.)
 
 **Using an AI coding agent (the happy path)?** Install the skill and you're done
 — no API keys, no configuration. Your agent fulfills dojo's AI work itself:
