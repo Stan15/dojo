@@ -4,9 +4,11 @@ _Last updated: 2026-07-07 (session 3)_
 
 ## Phase
 
-**Implementation.** M0 ✅ M1 ✅ M2 ✅ (task contract) · Tier-3 evals + `dojo
-benchmark` ✅ · **M3 ✅ (pedagogy engine)**. Next: corpus wave 3 (owner priority:
-serious + varied), then M4 capture/inbox.
+**Implementation.** M0–M3 ✅ · Tier-3 evals + `dojo benchmark` ✅ · corpus
+wave 3 ✅ (23 scenarios, ratcheted coverage floors) · **M4 core ✅ (capture/
+inbox/route)** · M5 mostly ✅ (SKILL rewritten + tested; `dojo stats` still
+open) · token-footprint regression + benchmark context-economy ✅. Pushed to
+github.com/Stan15/dojo main (owner installs via curl).
 
 ## What M2 delivered (all committed, 94 tests green + 4 eval-marked)
 
@@ -73,9 +75,39 @@ serious + varied), then M4 capture/inbox.
 - `dojo daily` / `dojo why`; offline floor (I4) proven end-to-end.
 - Second codex quality baseline: mean 0.646 (from 0.52 after prompt fixes).
 
+## Since M3 (all committed AND PUSHED, 220 tests green)
+
+- Corpus wave 3: 23 quality scenarios / 6 categories / 17 domains; coverage
+  floors are ratcheted tests; implicit-ease detection scenario (owner q:
+  pattern-based too-easy/hard detection — yes, plus explicit skips as the
+  strongest signal). Integrity harness caught topic-depth-3 blocking namespace
+  extension (raised to 4 coherently).
+- FSRS fuzzing was ON by default (global random ⇒ I8 violation) — caught as a
+  test flake, disabled forever, pinned.
+- M4: dojo capture / inbox (confirm|dismiss) / route applier with registry
+  validation; confirm-by-default (Q6), capture.autofile opt-in; filing turns
+  captures into ordinary Sources; daily nags about waiting captures. 9 tests.
+- M5: SKILL.md rewritten (≤60-line budget test + anti-staleness test that
+  immediately caught `dojo reflect` never existing as a verb — added). Boost
+  disambiguation + intervention relay included.
+- Fresh-install verification caught the store-birth deadlock (doctor flagged
+  its own init forever); stores now born committed, audit commits carry
+  identity fallback. Install verified end-to-end in a clean venv.
+- Token footprint (owner ask): committed per-kind payload baseline ±5% CI gate
+  (evals/baselines/token-footprint.json; generate ≈680 tokens, skill ≈700);
+  `dojo benchmark` now reports measured context economy (tokens in/out per task).
+- One honest gate violation: pushed once with a red conformance test (birth-
+  commit count); fixed in the next commit.
+
 ## NEXT ACTIONS (in order)
 
-1. **Corpus wave 3** (owner: "serious corpus… varied"): ~15 new scenarios —
+1. **Background eval run lands** → commit fresh (codex,codex) baselines incl.
+   wave-3 scenarios; triage insight_targeting calibration if still failing.
+2. `dojo stats` (last M5 item): retention/atrophy + token telemetry surfaces.
+3. M6 — drive the real loop from a real harness session (capture → route →
+   daily → answer → grade → reflect), LOOK at artifacts, docs truth pass
+   (api-specification rewrite), ship v1.
+4. Corpus wave 4 (owner: "serious corpus… varied"): ~15 new scenarios —
    domains: music, chess, writing, law, code, poetry-verbatim, numeric-tolerance
    math; signals: too_hard response, overconfident-fast-wrong, atrophy re-entry,
    extend-don't-duplicate planning, unrealistic-timeline honesty, terse-but-
