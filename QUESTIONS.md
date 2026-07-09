@@ -112,6 +112,19 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
 1. **Post-packet appetite — SUPERSEDES the `dojo more` bonus-packet design
    below** (your 2026-07-09 "core need" question).
    → **Owner-approved 2026-07-09** — directed work, STATE item 2.
+   → **Shipped 2026-07-09**: `dojo more [--force]` + the spec'd
+   daily-completion message (agent copy verbatim, status
+   "complete_for_today"; human copy in interactive). Debt guard global
+   (`_review_load_7d`: item + skill-topic FSRS dues incl. overdue vs
+   packet×7×`pacing.headroom`), sourcing unattempted→candidates→ONE
+   generation on the weakest graded topic (auto-promote), once per calendar
+   day (`--force` overrides the guard with the projection printed, never
+   the daily cap), refusal is `ok: true` with projection + `dojo start
+   --topic` alternative. Extension attempts carry `origin: "extension"`
+   (round-trip pinned) and reflect rows label them. One refinement: a
+   pending plan PROPOSAL hint still appends to the completion `next` —
+   consent questions repeat until resolved; they are not practice
+   solicitation.
    The foundational need is
    a CAPACITY CHANNEL: the learner's daily time/energy varies and the system
    has no input for it ("more" and "too much" are the same missing channel).

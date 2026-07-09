@@ -316,7 +316,14 @@ def compile_reflect(store, campaign: Campaign, *, window_n: int = 15) -> Compile
         # answer carries grader="ai"/"exact"/"self". Legacy grader-less rows
         # with score 0.0 err toward "ungraded" (they stay unreflected — safe).
         pending = a.grader is None and a.score == 0.0 and not a.skip_reason
-        signal = a.skip_reason or ""
+        # Appetite-mode evidence is labeled (QUESTIONS 2026-07-09): extension
+        # rows come from learner-requested extra practice, not the ritual, so
+        # reflection can weigh fatigue/novelty effects instead of absorbing
+        # them blind.
+        signal = " · ".join(filter(None, [
+            a.skip_reason or "",
+            "extension (extra practice, learner-requested)" if a.origin == "extension" else "",
+        ]))
         row = (
             f"{a.id} · {a.exercise_id} · "
             + ("(ungraded — ignore the score)" if pending else f"score {a.score}")

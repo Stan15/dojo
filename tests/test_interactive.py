@@ -44,6 +44,7 @@ class TestAgentPathNeverBlocks:
         ["inbox"],
         ["campaign", "plan", "learn knots"],
         ["learn", "tie", "better", "knots"],
+        ["more"],
         ["stats"],
     ])
     def test_json_mode_never_touches_input(self, tmp_path: Path, argv, capsys):

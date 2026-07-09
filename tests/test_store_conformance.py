@@ -121,6 +121,7 @@ def make_attempt() -> Attempt:
         campaign_id=CAMP_ID,
         score=0.7,
         latency_seconds=42.5,
+        origin="extension",  # appetite-mode marker (dojo more) must round-trip
         feedback="felt rushed",
         prompt="Traduisez :\n\n> He would have gone.\n",
         user_answer="Il serait allé.\n\nAvec hésitation.",

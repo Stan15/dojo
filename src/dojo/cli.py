@@ -1782,6 +1782,20 @@ def cmd_daily(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_more(args: argparse.Namespace) -> int:
+    """`dojo more`: the capacity channel — answers an explicit ask for extra
+    practice with a bounded acquisition top-up, or refuses honestly with the
+    7-day review-debt projection. Never offered; only discovered via the
+    daily-completion message."""
+    api = DojoAPI(_db_path(args))
+    if not _use_json(args):
+        from .interactive import more_flow
+        return more_flow(api, force=bool(getattr(args, "force", False)))
+    res = api.more(force=bool(getattr(args, "force", False)))
+    _print_json({"ok": True, **res})  # a refusal is an answer, not an error
+    return 0
+
+
 def cmd_why(args: argparse.Namespace) -> int:
     """`dojo why`: replay the honest scheduling reason behind every item in the current packet (I9)."""
     api = DojoAPI(_db_path(args))
@@ -2134,6 +2148,15 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_why = sub.add_parser("why", help="explain every scheduling choice behind the current packet")
     p_why.set_defaults(func=cmd_why)
+
+    p_more = sub.add_parser(
+        "more",
+        help="ask for a bounded extra-practice top-up — granted only when your "
+             "7-day review budget agrees; refusals show the projection",
+    )
+    p_more.add_argument("--force", action="store_true",
+                        help="override the debt guard (the projection still prints); the once-per-day cap stays")
+    p_more.set_defaults(func=cmd_more)
 
     p_learn = sub.add_parser(
         "learn",

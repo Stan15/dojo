@@ -163,6 +163,37 @@ class DojoAPI:
         ]
 
         if not pkt.items:
+            # Daily-completion (QUESTIONS 2026-07-09, exact spec'd copy): the
+            # learner practiced today and the schedule is drained — today is
+            # DONE. Push surfaces get principles, not counters; `dojo more` is
+            # mentioned as the ANSWER to a request, never as an offer, and the
+            # copy binds the harness to the same no-solicitation rule.
+            today = now.date().isoformat()
+            practiced_today = any(
+                a.created_at[:10] == today
+                for c in self.store.campaigns.list() if c.status == "active"
+                for a in self.store.attempts.list(c.id)
+            )
+            if practiced_today:
+                return {
+                    "is_new": False,
+                    "session": None,
+                    "status": "complete_for_today",
+                    "tasks": tasks,
+                    "stale_tasks": stale,
+                    "skipped": pkt.skipped,
+                    **plan_keys,
+                    # The copy is static (spec'd verbatim); a pending plan
+                    # PROPOSAL still rides along — it is a consent question
+                    # that repeats until resolved, not practice solicitation.
+                    "next": (
+                        "today's practice is complete — tell the learner it's done, "
+                        "playfully (go touch grass); tomorrow's session is what makes "
+                        "it stick (consistency beats volume); do not offer more "
+                        "practice unprompted; if the learner explicitly asks for "
+                        "more, run: dojo more --json"
+                    ) + proposal_hint,
+                }
             return {
                 "is_new": False,
                 "session": None,
@@ -223,6 +254,191 @@ class DojoAPI:
             ],
             "campaigns": session.campaign_reasons,
         }
+
+    def _review_load_7d(self, now: datetime) -> tuple[int, int]:
+        """(projected_due_7d, capacity_7d): the global review-debt projection
+        behind the capacity channel's guard. Projected load counts every FSRS
+        memory due inside the next 7 days — overdue included — across active
+        campaigns: recall/skill exercises with `sr` state plus due skill
+        TOPICS (each due topic demands one novel exercise). Never-practiced
+        stock is acquisition, not review debt, so it does not count. Capacity
+        is packet_size × 7 × `pacing.headroom` (default 0.8)."""
+        from datetime import timedelta
+
+        from . import packet as packet_mod
+
+        horizon = now + timedelta(days=7)
+        projected = 0
+        for camp in self.store.campaigns.list():
+            if camp.status != "active":
+                continue
+            for ex in self.store.exercises.list(camp.id):
+                if ex.quality in packet_mod.EXCLUDED_QUALITIES or not ex.sr:
+                    continue
+                due = scheduling.due_at(ex.sr)
+                if due is not None and due <= horizon:
+                    projected += 1
+            for topic in camp.topics or []:
+                if topic.get("kind") != "skill" or not topic.get("sr"):
+                    continue
+                due = scheduling.due_at(topic["sr"])
+                if due is not None and due <= horizon:
+                    projected += 1
+        configured = int(self.store.configs.get_value(
+            "daily.packet_size", packet_mod.DEFAULT_PACKET_SIZE))
+        packet_size = max(1, min(configured, packet_mod.HARD_MAX_PACKET_SIZE))
+        headroom = float(self.store.configs.get_value("pacing.headroom", 0.8))
+        return projected, int(packet_size * 7 * headroom)
+
+    def _weakest_topic(self) -> Optional[tuple[str, str]]:
+        """(campaign_id, topic_path) with the lowest mean graded score —
+        where one extension generation buys the most; None without scored
+        evidence anywhere (generating hard content blind is how day-one
+        bombardment happened)."""
+        means: dict[tuple[str, str], list[float]] = {}
+        for camp in self.store.campaigns.list():
+            if camp.status != "active":
+                continue
+            topic_of = {ex.id: ex.topic_path for ex in self.store.exercises.list(camp.id)}
+            for a in self.store.attempts.list(camp.id):
+                topic = topic_of.get(a.exercise_id)
+                if topic and not a.skip_reason and a.grader is not None:
+                    means.setdefault((camp.id, topic), []).append(a.score)
+        if not means:
+            return None
+        return min(means, key=lambda k: (sum(means[k]) / len(means[k]), k))
+
+    def more(self, force: bool = False) -> dict[str, Any]:
+        """The capacity channel (QUESTIONS 2026-07-09, STATE item 2) — answers
+        an explicit request for more practice; nothing in the system ever
+        OFFERS it. Retention is fixed by memory science, so this never serves
+        today's completed reviews and never pulls tomorrow's forward: it
+        grants up to `daily.extension_cap` (default 3) NEW items — unattempted
+        stock, then candidates, then at most ONE generation task on the
+        weakest topic — and only while the projected 7-day review load stays
+        inside packet capacity × `pacing.headroom`. Refusal is an answer, not
+        an error: the envelope carries the projection and the debt-free
+        alternative. Once per calendar day. Extension attempts carry
+        `origin: extension` so reflection can discount appetite-mode
+        evidence. `force` overrides the debt guard (the projection is still
+        reported first-class) but never the daily cap."""
+        from . import packet as packet_mod
+        from .tasks import flows
+
+        now = datetime.now(timezone.utc)
+        projected, capacity = self._review_load_7d(now)
+        projection = {"projected_due_7d": projected, "capacity_7d": capacity}
+
+        active = self.store.sessions.get_active()
+        if active and active.status == "active":
+            return {
+                "extension_available": False, **projection,
+                "reason": "a session is already open — finish it first",
+                "alternative": "dojo ready continues the current session",
+            }
+
+        today = now.date().isoformat()
+        if any(
+            s.origin == "extension" and s.created_at[:10] == today
+            for s in self.store.sessions.list_archived()
+        ):
+            return {
+                "extension_available": False, **projection,
+                "reason": "today's extension is already used — one per day keeps tomorrow's session doable",
+                "alternative": "dojo daily tomorrow; dojo start --topic <path> re-drills existing material debt-free",
+            }
+
+        cap = max(1, int(self.store.configs.get_value("daily.extension_cap", 3)))
+        headroom_left = capacity - projected
+        if headroom_left < 1 and not force:
+            return {
+                "extension_available": False, **projection,
+                "reason": (
+                    f"{projected} reviews already land in the next 7 days against a "
+                    f"capacity of {capacity} — new material now would become debt you'd meet on days 3/7/21"
+                ),
+                "alternative": "dojo start --topic <path> — targeted retrieval of existing material adds no review debt",
+            }
+        granted_cap = cap if force else min(cap, headroom_left)
+
+        # Sourcing order (spec): unattempted stock → candidates → ONE generation.
+        picks: list[tuple[str, str, str]] = []  # (campaign_id, exercise_id, reason)
+        ranked = sorted(
+            (c for c in self.store.campaigns.list() if c.status == "active"),
+            key=lambda c: (-packet_mod.campaign_priority(self.store, c, now)[0], c.id),
+        )
+        for camp in ranked:
+            if len(picks) >= granted_cap:
+                break
+            attempted = {a.exercise_id for a in self.store.attempts.list(camp.id)}
+            fresh = sorted(
+                (ex for ex in self.store.exercises.list(camp.id)
+                 if ex.quality not in packet_mod.EXCLUDED_QUALITIES
+                 and ex.id not in attempted and ex.sr is None),
+                key=lambda e: e.id,
+            )
+            for ex in fresh[: granted_cap - len(picks)]:
+                picks.append((camp.id, ex.id, "extension: unattempted stock, no new review debt beyond it"))
+        for camp in ranked:
+            if len(picks) >= granted_cap:
+                break
+            for cand in sorted(self.store.candidates.list(camp.id), key=lambda c: c.id):
+                if len(picks) >= granted_cap:
+                    break
+                promoted = self.promote_candidate(cand.id)
+                picks.append((camp.id, promoted["id"], "extension: promoted candidate (recorded auto-accept)"))
+
+        tasks = []
+        if len(picks) < granted_cap:
+            weakest = self._weakest_topic()
+            if weakest is not None:
+                camp = self.store.campaigns.get(weakest[0])
+                task = flows.request_generation(
+                    self.store, camp,
+                    topic_path=weakest[1],
+                    n_items=min(granted_cap - len(picks), 3),
+                    source_slice=flows.grounding_slice(self.store, camp, weakest[1]),
+                    auto_promote=True,
+                )
+                tasks.append(flows.task_ref(task))
+
+        if not picks:
+            if tasks:
+                return {
+                    "extension_available": True, **projection, "session": None,
+                    "tasks": tasks, "granted": 0,
+                    "next": "no stock on hand — fulfill the generation task, then run dojo more again",
+                }
+            return {
+                "extension_available": False, **projection,
+                "reason": "no new material available and no graded evidence to target generation at",
+                "alternative": "dojo start --topic <path> re-drills existing material debt-free",
+            }
+
+        session = PracticeSession(
+            id=f"sess_{uuid.uuid4().hex[:8]}",
+            origin="extension",
+            exercise_ids=[ex_id for _, ex_id, _ in picks],
+            packet_reasons={ex_id: reason for _, ex_id, reason in picks},
+        )
+        self.store.sessions.save_active(session)
+        self.log.info(f"Extension granted: {len(picks)} items (asked, not offered)")
+        out = {
+            "extension_available": True, **projection,
+            "session": session.model_dump(),
+            "items": [
+                {"exercise_id": ex_id, "campaign_id": camp_id, "reason": reason}
+                for camp_id, ex_id, reason in picks
+            ],
+            "tasks": tasks, "granted": len(picks),
+            "next": "dojo ready reveals the first prompt",
+        }
+        if force and headroom_left < len(picks):
+            out["warning"] = (
+                f"debt guard overridden: {projected} reviews already due within 7 days "
+                f"against capacity {capacity}"
+            )
+        return out
 
     def stats(self, now: datetime | None = None) -> dict[str, Any]:
         """Observability surface (blueprint §11): retention/atrophy per campaign
@@ -1247,6 +1463,7 @@ class DojoAPI:
             score=score,
             grader=grader,
             latency_seconds=latency,
+            origin="extension" if target_session.origin == "extension" else None,
             user_answer=user_ans,
             prompt=ex.prompt,
         )
@@ -1462,6 +1679,7 @@ class DojoAPI:
             campaign_id=campaign_id,
             score=0.0,
             latency_seconds=latency,
+            origin="extension" if target_session.origin == "extension" else None,
             skip_reason=reason,
             feedback=feedback,
             prompt=ex.prompt,

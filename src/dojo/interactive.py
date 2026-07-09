@@ -202,6 +202,13 @@ def daily_flow(api: DojoAPI, size: Optional[int] = None, reset: bool = False) ->
     for _ in range(2):  # at most: drain → rebuild → drain (cold-start diagnostic round)
         if res.get("session") is not None:
             break
+        if res.get("status") == "complete_for_today":
+            # Exact spec'd copy (QUESTIONS 2026-07-09): line 1 static, lesson
+            # implicit, concession last; `dojo more` styled as a COMMAND.
+            _print_done_for_today()
+            if res.get("tasks"):
+                drain_tasks(api, res["tasks"])  # tomorrow's replenishment, non-blocking
+            return 0
         if not res.get("tasks"):
             console.print(f"[green]Nothing due — {res.get('next', 'enjoy the day off')}[/green]")
             return 0
@@ -283,6 +290,56 @@ def plan_flow(api: DojoAPI, *, goal: str, level: Optional[str], context: Optiona
                   "[bold]dojo daily[/bold] starts the first session.")
     if confirm("Start practicing now?"):
         return daily_flow(api)
+    return 0
+
+
+def _print_done_for_today() -> None:
+    """The daily-completion message, exact spec'd copy (owner-ruled
+    2026-07-09): no counters, no offers — a statement with the concession
+    last. Line 1 is static; never varies."""
+    console.print(
+        "\n[bold green]✓ Done for today.[/bold green]\n"
+        "Coming back tomorrow is what makes it stick.\n"
+        "Go touch grass. 🌱  [dim](Genuinely still hungry? Run[/dim] "
+        "[bold cyan]dojo more[/bold cyan] [dim]— it only says yes when your "
+        "review budget agrees.)[/dim]"
+    )
+
+
+# ------------------------------------------------------------------
+# More: the capacity channel, at the learner's request only
+# ------------------------------------------------------------------
+
+def more_flow(api: DojoAPI, *, force: bool = False) -> int:
+    """The human `dojo more`: grants the bounded top-up and runs it as a
+    normal practice loop, or relays the honest refusal with the 7-day
+    projection and the debt-free alternative. One inline drain covers the
+    no-stock → generation → re-ask round."""
+    res = api.more(force=force)
+    for _ in range(2):  # at most: generation → drain → re-ask
+        if not res.get("extension_available"):
+            console.print(f"[yellow]Not today:[/yellow] {res['reason']}")
+            console.print(
+                f"  [dim]{res['projected_due_7d']} review(s) due in the next 7 days · "
+                f"capacity {res['capacity_7d']}[/dim]"
+            )
+            console.print(f"  [dim]{res['alternative']}[/dim]")
+            return 0
+        if res.get("session") is not None:
+            break
+        if not res.get("tasks") or not drain_tasks(api, res["tasks"]):
+            for t in res.get("tasks", []):
+                console.print(f"  pending: [cyan]{t['id']}[/cyan] — {t['submit_with']}")
+            return 0
+        res = api.more(force=force)
+    if res.get("session") is None:
+        console.print("[yellow]Nothing practicable came back — dojo stats shows the state.[/yellow]")
+        return 0
+    if res.get("warning"):
+        console.print(f"[yellow]{res['warning']}[/yellow]")
+    console.print(f"[bold]Extension granted[/bold] — {res['granted']} new item(s), "
+                  "labeled so tomorrow's schedule stays honest.")
+    practice_loop(api, res["session"])
     return 0
 
 

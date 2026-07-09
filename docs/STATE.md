@@ -13,9 +13,10 @@ the use-case lifecycle audit with its 10 fixes, the **documentation
 system** (ProperDocs+Material+mkdocstrings site via `mise run docs`; 100%
 public-surface docstrings gated by tests/test_docs_coverage.py; README
 currency-audited), **plan change authority** (tasks/authority.py; the
-plan is a consent-gated contract), and **route-first entry** (`dojo learn`;
-a goal routes against the registry before any new campaign is planned).
-**306 tests green** + 28 eval-marked.
+plan is a consent-gated contract), **route-first entry** (`dojo learn`;
+a goal routes against the registry before any new campaign is planned), and
+the **capacity channel** (`dojo more`; at-request-only, debt-guarded).
+**325 tests green** + 28 eval-marked.
 Repo is PRIVATE (owner's choice) — install via checkout `sh install.sh`;
 owner's machine runs the current build.
 
@@ -66,16 +67,17 @@ committed work, not proposals awaiting an answer. Item numbering is stable
    campaign.plan task), `--new`/zero-campaign skip, interactive learn_flow,
    SKILL.md goal section rewritten (footprint baseline 3735→3902,
    deliberate). 306 tests green.
-2. **Capacity channel — owner-approved 2026-07-09** — QUESTIONS.md has the
-   full interface spec: bounded acquisition top-up + global review-debt
-   guard; honest refusal with projection; `start --topic` as the debt-free
-   alternative. **AT-REQUEST ONLY (owner ruling): the system never solicits
-   extra practice** — no session-end offer, no proactive capacity block;
-   one verb `dojo more`, discovered via the spec'd daily-completion message
-   (encouraging, consistency-beats-volume implicit, concession last; exact
-   copy in QUESTIONS.md; agent variant binds the harness to
-   no-unprompted-offers). DO NOT lose this: it replaced the bonus-packet
-   idea after the owner's core-need analysis request.
+2. ✓ **DONE 2026-07-09 — Capacity channel (`dojo more`) shipped** per the
+   QUESTIONS.md spec: at-request-only top-up (unattempted → candidates →
+   ONE generation on the weakest graded topic), global 7-day debt guard
+   (items + skill topics, incl. overdue, vs packet×7×`pacing.headroom`),
+   honest `ok: true` refusal with projection + `start --topic` alternative,
+   once per calendar day (`--force` overrides the guard never the cap),
+   `origin: "extension"` on session+attempts (round-trip pinned; reflect
+   rows labeled), spec'd completion message verbatim on both surfaces
+   (status `complete_for_today`; plan-proposal hints still append — consent
+   ≠ solicitation). **The system never solicits extra practice** — still
+   binding for all future surfaces. 325 tests green.
 3. **Ownership/visibility block — owner-approved 2026-07-09** (QUESTIONS.md
    has both designs):
    a. **Insight visibility with provenance**: `dojo insights` (see) /
@@ -131,4 +133,6 @@ committed work, not proposals awaiting an answer. Item numbering is stable
   block); delegation/model-economy rules added to the METHOD repo (§4).
 - 07-09 (learn session): route-first entry shipped (`dojo learn` +
   goal.route kind + extend|new consent verbs + learn_flow; 306 tests);
-  STATE item 1 closed.
+  STATE item 1 closed. Same session: capacity channel shipped (`dojo more`
+  + debt guard + origin markers + spec'd completion copy; 325 tests);
+  STATE item 2 closed.

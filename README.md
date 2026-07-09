@@ -154,6 +154,12 @@ dojo campaign boost french 2.0            # this CAMPAIGN surfaces more in packe
 dojo campaign topic-boost french french.oral 3.0   # this TOPIC comes due 3x faster
 ```
 
+Still hungry after today's session? `dojo more` grants a bounded top-up of
+NEW material — but only when your projected 7-day review load stays inside
+capacity; otherwise it refuses with the numbers and points you at
+`dojo start --topic` (re-drilling costs no new debt). It's never offered,
+only answered — dojo doesn't manufacture appetite.
+
 Under the hood: FSRS-6 spaced repetition (the algorithm behind Anki, via
 py-fsrs) for facts; skills schedule on their topic and always get *novel*
 exercises so you learn the skill, not the question. The scheduler is pure,

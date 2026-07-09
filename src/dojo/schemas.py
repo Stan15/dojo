@@ -514,6 +514,7 @@ class Attempt(StoredEntity):
     campaign_id: str
     score: float
     latency_seconds: float
+    origin: Optional[str] = None  # "extension" marks appetite-mode evidence (dojo more); None = the ritual
     skip_reason: Optional[str] = None
     feedback: Optional[str] = None  # the learner's own comment (reflection input)
     grader: Optional[str] = None  # "exact" | "self" | "ai" — I10: who produced the score
@@ -602,6 +603,7 @@ class PracticeSession(StoredEntity):
     id: str
     packet_reasons: Dict[str, str] = Field(default_factory=dict)  # exercise_id → why chosen (I9)
     campaign_reasons: Dict[str, str] = Field(default_factory=dict)  # Tier-1 ranking explained
+    origin: str = "ritual"  # "extension" = a dojo more top-up; stamps its attempts
     status: str = "active"
     exercise_ids: List[str] = Field(default_factory=list)
     current_index: int = 0
