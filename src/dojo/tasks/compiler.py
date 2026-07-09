@@ -42,6 +42,7 @@ SECTION_BUDGETS: dict[str, dict[str, int]] = {
     "campaign.reflect": {
         "mission": 200,
         "strategy_line": 120,
+        "plan_lines": 400,
         "active_insights_with_ids": 800,
         "attempt_rows": 2560,
         "learner_feedback_or_none": 400,
@@ -268,11 +269,23 @@ def compile_grade(store, campaign: Campaign, exercise: Exercise, *, attempt_id: 
 
 
 def compile_reflect(store, campaign: Campaign, *, window_n: int = 15) -> CompiledTask:
-    """Payload for `campaign.reflect`: active insights (with ids the model
-    must cite), a sliding window of attempt rows (ADR 008) plus older
-    unreflected ones, and verbatim learner feedback. `context.attempt_ids`
-    lists exactly the graded rows that FIT the byte budget — those are the
-    only citable ids, and the only ones marked reflected on apply."""
+    """Payload for `campaign.reflect`: the current attack plan (a revision the
+    model can't see the plan for would be blind), active insights (with ids
+    the model must cite), a sliding window of attempt rows (ADR 008) plus
+    older unreflected ones, and verbatim learner feedback.
+    `context.attempt_ids` lists exactly the graded rows that FIT the byte
+    budget — those are the only citable ids, and the only ones marked
+    reflected on apply."""
+    plan_rows = []
+    for i, p in enumerate(campaign.attack_plan):
+        marker = " (done)" if i < campaign.active_phase_index else (
+            " (active)" if i == campaign.active_phase_index else "")
+        c = p.criteria
+        plan_rows.append(
+            f"phase {p.phase}{marker}: {', '.join(p.topics)} · "
+            f"{c.min_attempts}+ @ {c.min_accuracy:.0%}"
+            + (f" · {p.focus}" if p.focus else "")
+        )
     active = store.insights.list(campaign.id, filters={"status": "active"})
     insight_lines = [
         f"- [{ins.id}] {ins.key}: {(ins.description or '').splitlines()[0]}"
@@ -317,6 +330,7 @@ def compile_reflect(store, campaign: Campaign, *, window_n: int = 15) -> Compile
         "window_n": window_n,
         "mission": campaign.mission,
         "strategy_line": strategy_line(campaign),
+        "plan_lines": "\n".join(plan_rows) or "(no plan yet)",
         "active_insights_with_ids": "\n".join(insight_lines) or "(none)",
         "attempt_rows": "\n".join(rows) or "(none)",
         "learner_feedback_or_none": "\n".join(feedback_lines) or "(none)",

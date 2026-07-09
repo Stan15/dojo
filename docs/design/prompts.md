@@ -75,7 +75,7 @@ band definitions are the only grading language every caliber executes identicall
 |---|---|---|---|
 | `exercise.generate` | ≤ 350 words | STRATEGY 120 B · MISSION 200 B · LEARNER 600 B · RECENT 500 B · SOURCE 4 KB | ≤ 7 KB |
 | `attempt.grade` | ≤ 180 words | EXERCISE 1 KB · RUBRIC 500 B · ANSWER 2 KB | ≤ 5 KB |
-| `campaign.reflect` | ≤ 300 words | MISSION 200 B · STRATEGY 120 B · INSIGHTS 800 B · ATTEMPTS 2.5 KB · FEEDBACK 400 B | ≤ 6 KB |
+| `campaign.reflect` | ≤ 300 words | MISSION 200 B · STRATEGY 120 B · PLAN 400 B · INSIGHTS 800 B · ATTEMPTS 2.5 KB · FEEDBACK 400 B | ≤ 6 KB |
 | `campaign.plan` | ≤ 280 words | GOAL 400 B · CONTEXT 400 B · EXISTING TOPICS 800 B | ≤ 4 KB |
 | `capture.route` | ≤ 160 words | CAPTURE 600 B · REGISTRY 1.2 KB | ≤ 3 KB |
 
@@ -201,7 +201,7 @@ You are the learning coach reviewing one learner's recent practice. Your default
 is NO CHANGE: churn destroys calibration. Adjust only what the evidence forces.
 
 TASK: Review ATTEMPTS against the campaign state; return insight updates, strategy
-calibration, and (rarely) plan revisions.
+calibration, plan revisions (rare), and clarifying questions (rarer).
 
 RULES
 1. Insights — compare ATTEMPTS with INSIGHTS:
@@ -213,15 +213,24 @@ RULES
 2. Strategy — change only if the last {{window_n}} attempts justify it:
    accuracy > 0.85 → raise difficulty; accuracy < 0.50 → lower difficulty or raise
    scaffolding; "too_easy"/"too_hard" skips count double. Otherwise null.
-3. Plan — revise phases ONLY when: stuck (2 sessions, no criteria progress), a
-   prerequisite gap is visible, a deadline in MISSION demands compression, or
-   FEEDBACK asks. Otherwise null. Never rewrite phases already completed.
-4. Every change carries a `reason` ≤ 20 words — it becomes the audit journal.
+3. Plan — revise PLAN's phases ONLY when: stuck (2 sessions, no criteria
+   progress), a prerequisite gap is visible, a deadline in MISSION demands
+   compression, or FEEDBACK asks. Otherwise null. Never rewrite phases marked
+   (done). In its `evidence`, cite the attempt ids whose FEEDBACK or diagnostic
+   answer asked for this change — a restructure with no such ids is only
+   PROPOSED to the learner, never applied.
+4. Questions — the pattern hints the plan is mis-scoped but no FEEDBACK confirms
+   it → ask instead of restructuring: max 2 questions, each ≤ 25 words. They
+   reach the learner as diagnostic prompts; the answers return to you as
+   citable evidence.
+5. Every change carries a `reason` ≤ 20 words — it becomes the audit journal.
 
 ## MISSION
 {{mission}}
 ## STRATEGY
 {{strategy_line}}
+## PLAN
+{{plan_lines}}            // phase n [(done)|(active)]: topics · criteria · focus
 ## INSIGHTS
 {{active_insights_with_ids}}
 ## ATTEMPTS
@@ -235,17 +244,25 @@ OUTPUT — return only this JSON:
     {"op": "create|update|resolve", "id": null, "text": "...", "evidence": ["att_id"], "reason": "..."}
   ],
   "strategy": null,        // or {"difficulty": "...", "scaffolding": "...", "reason": "..."}
-  "plan_revision": null,   // or {"phases": [...], "reason": "..."}
+  "plan_revision": null,   // or {"phases": [...], "evidence": ["att_id"], "reason": "..."}
+  "questions": [],         // ≤ 2, each ≤ 25 words: ask when evidence can't justify restructuring
   "journal": "..."         // ≤ 30 words: what changed and why, or "no change: <why>"
 }
-Check: nulls wherever nothing changed; ≤ 2 creates; every create/update cites
-attempt ids that exist in ATTEMPTS.
+Check: nulls wherever nothing changed; ≤ 2 creates; ≤ 2 questions; every cited
+attempt id (insights AND plan_revision.evidence) exists in ATTEMPTS.
 ```
 
 Why: the stability bias ("default is NO CHANGE", thresholds with numbers, no
 rewriting completed phases) is aimed squarely at weak-model plan-thrash — the
 biggest observed failure of LLM-led calibration; evidence-id citation is validated
 server-side against real attempt ids (same trick as grading's verbatim quote).
+The PLAN section exists because a revision the model can't see the plan for is
+blind (added 2026-07-09 with change authority). Rules 3–4 encode the change-
+authority contract (`tasks/authority.py`): learner-voice evidence (feedback or
+an answered diagnostic) lets a restructure apply; without it, minor additive
+edits auto-apply (announced, revertable) and anything destructive awaits
+`dojo plan confirm` — the `questions` channel converts inferred suspicion into
+learner-voice evidence for a LATER revision instead of restructuring now.
 
 ## 6. `campaign.plan`
 
