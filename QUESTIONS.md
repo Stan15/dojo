@@ -4,6 +4,33 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
 
 ## Open
 
+1. **Generate prompt OUTPUT skeletons from code?** (your 2026-07-09 question —
+   motivated by the day's finding that every eval failure was a validator the
+   template never stated). My analysis: full generation is the wrong fix —
+   (a) it inverts your own 2026-07-07 requirement that prompts are editable
+   markdown artifacts (iteration never touches Python); (b) INSIGHTS
+   2026-07-07: skeletons beat formal schema dumps for weak models precisely
+   because they're CRAFTED (elisions, inline comments, per-mode emphasis) —
+   generation doesn't delete that editorial content, it relocates it into
+   Field metadata where it's harder to read, iterate, and review; (c) the
+   skeleton phrasing is load-bearing for the judged 0.835 mean — mechanical
+   regeneration risks silent quality regressions that cost real eval money
+   to find; (d) the context-aware branching you want already IS code: the
+   compiler chooses templates/fragments per mode.
+   **Proposed instead — single-source the CONSTRAINTS, verify the TEXT:**
+   - Refactor per-schema word caps/counts (limits.py + scattered
+     `_cap_words` validators) into ONE declarative table per result schema;
+     validators derive from it. Change a cap in one place.
+   - Add a drift-gate test: for each task kind, every declared cap's literal
+     number must appear in its template, and every schema field name must
+     appear in its OUTPUT block. A template that forgets a floor goes red at
+     commit time instead of failing a live model.
+   - Escalation if drift ever recurs: a compiler-injected `{{ limits_line }}`
+     footer generated from the declaration (structurally impossible to omit
+     floors; skeleton stays editorial). Not the default — costs bytes and
+     moves text out of the editable artifact.
+   **Default: declarative caps + drift-gate test, next session.**
+
 1. **Fulfiller runner** (was "subprocess connectors" — refined per your 2026-07-07
    notes, which changed my recommendation):
 
