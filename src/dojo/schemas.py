@@ -1,3 +1,19 @@
+"""Every persisted and validated shape in dojo, in one place (ADR 006).
+
+Three families:
+
+- **Plan structures** (`AttackPlanPhase`, `CriteriaEntry`) — shared between
+  campaigns and the plan/reflect task results.
+- **Task result schemas** (`GenerateResult`, `GradeResult`, `ReflectResult`,
+  `PlanResult`, `RouteResult`) — what a fulfiller's JSON must parse into at
+  `task submit`. This is the I5 validation boundary: word caps and counts
+  mirror `limits.py`, so a weak model physically cannot flood the store.
+  `RESULT_SCHEMAS` maps task kind → schema.
+- **Stored entities** (`Source`, `Campaign`, `Exercise`, …) — subclasses of
+  `StoredEntity`, serialized as markdown files with YAML frontmatter; one
+  designated field becomes the file body (ADR 011 public storage contract).
+"""
+
 from __future__ import annotations
 
 import re
@@ -11,6 +27,9 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 # ==========================================
 
 class CriteriaEntry(BaseModel):
+    """Mastery gate for one attack-plan phase; `api` checks it in
+    `_evaluate_campaign_phase_advancement` — pure arithmetic, no AI."""
+
     min_attempts: int = Field(
         description="Minimum attempts required to complete this phase."
     )
@@ -21,6 +40,10 @@ class CriteriaEntry(BaseModel):
 
 
 class AttackPlanPhase(BaseModel):
+    """One phase of a campaign's attack plan: which topics are in play and
+    the criteria to graduate past it. The plan is data, not prose — reflection
+    may revise it (`PlanRevision`) but phase advancement is deterministic."""
+
     phase: int = Field(
         description="Phase index number."
     )
@@ -62,6 +85,11 @@ def _cap_words(field_name: str, cap: int):
 
 
 class GeneratedItem(BaseModel):
+    """One exercise a generation fulfiller proposes. `skill` classifies the
+    cognitive act (recall repeats verbatim under FSRS; the rest are
+    disposable, topic-scheduled — ADR 012). Prompt/answer word caps stop
+    weak-model rambling at the boundary."""
+
     prompt: str = Field(min_length=1)
     answer: Optional[str] = None
     rubric: Optional[str] = None
@@ -100,6 +128,9 @@ class Intervention(BaseModel):
 
 
 class GenerateResult(BaseModel):
+    """Submission shape for `exercise.generate` / `exercise.diagnostic`
+    tasks: exercises OR an `Intervention`, never both, never neither."""
+
     items: List[GeneratedItem] = Field(default_factory=list, max_length=_limits.GENERATE_MAX_ITEMS)
     note: Optional[str] = None
     intervention: Optional[Intervention] = None
@@ -116,6 +147,11 @@ class GenerateResult(BaseModel):
 
 
 class GradeResult(BaseModel):
+    """Submission shape for `attempt.grade`: a banded score (only the values
+    in `limits.GRADE_BANDS`), a verbatim `evidence` quote from the learner's
+    answer (extract-never-enrich, checked by the applier), one `feedback`
+    correction, and an optional error-pattern tag that feeds reflection."""
+
     score: float
     evidence: str = Field(min_length=1)
     feedback: str = Field(min_length=1)
@@ -140,6 +176,10 @@ class GradeResult(BaseModel):
 
 
 class InsightUpdate(BaseModel):
+    """One reflection edit to the learner model: create (needs key + text +
+    evidence attempt ids), update (id + text), or resolve (id). Evidence
+    requirements keep insights grounded in actual attempts, not vibes."""
+
     op: Literal["create", "update", "resolve"]
     id: Optional[str] = None  # required for update/resolve; checked below
     key: Optional[str] = None  # required for create: stable dotted label
@@ -171,6 +211,9 @@ class InsightUpdate(BaseModel):
 
 
 class StrategyChange(BaseModel):
+    """Reflection's dial adjustment: difficulty and/or scaffolding (at least
+    one), with a reason. These are the ONLY strategy knobs a model can turn."""
+
     difficulty: Optional[Literal["beginner", "intermediate", "advanced"]] = None
     scaffolding: Optional[Literal["high", "medium", "low"]] = None
     reason: str = Field(min_length=1)
@@ -185,6 +228,9 @@ class StrategyChange(BaseModel):
 
 
 class PlanRevision(BaseModel):
+    """Reflection's replacement attack plan (whole-plan swap, bounded phase
+    count) — the applier decides whether it's accepted."""
+
     phases: List[AttackPlanPhase] = Field(min_length=1, max_length=_limits.PLAN_MAX_PHASES)
     reason: str = Field(min_length=1)
 
@@ -192,6 +238,10 @@ class PlanRevision(BaseModel):
 
 
 class ReflectResult(BaseModel):
+    """Submission shape for `campaign.reflect`: bounded insight edits (new
+    creates capped per run), optional strategy change and plan revision, and
+    a mandatory journal line for the pedagogical record."""
+
     insight_updates: List[InsightUpdate] = Field(default_factory=list)
     strategy: Optional[StrategyChange] = None
     plan_revision: Optional[PlanRevision] = None
@@ -212,6 +262,9 @@ class ReflectResult(BaseModel):
 
 
 class PlanTopic(BaseModel):
+    """One topic a plan declares: dot-path (bounded depth), recall/skill
+    kind, optional summary. Phases may only reference declared topics."""
+
     path: str = Field(min_length=1, pattern=r"^[a-z0-9_]+(\.[a-z0-9_]+)*$")
     kind: Literal["recall", "skill"]
     summary: str = ""
@@ -225,6 +278,10 @@ class PlanTopic(BaseModel):
 
 
 class PlanResult(BaseModel):
+    """Submission shape for `campaign.plan`: distilled mission, bounded topic
+    registry, phased attack plan over those topics only, plus optional
+    refinement questions back to the learner."""
+
     mission: str = Field(min_length=1)
     topics: List[PlanTopic] = Field(min_length=1, max_length=_limits.PLAN_MAX_TOPICS)
     phases: List[AttackPlanPhase] = Field(
@@ -257,6 +314,11 @@ class PlanResult(BaseModel):
 
 
 class RouteResult(BaseModel):
+    """Submission shape for `capture.route`: where a capture should live.
+    attach/new_topic need a campaign + topic path; propose_campaign needs a
+    name + mission; stay_inbox is an honest "not sure". `seed` asks filing to
+    also emit a first generation task from the capture."""
+
     action: Literal["attach", "new_topic", "propose_campaign", "stay_inbox"]
     campaign: Optional[str] = None
     topic_path: Optional[str] = None

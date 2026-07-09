@@ -1,3 +1,20 @@
+"""The Python API behind every dojo surface.
+
+`DojoAPI` is the single façade the CLI, the interactive flows, and the agent
+SKILL all call — one behavior, three skins. Every method returns plain dicts
+(JSON-ready, so `--json` output is the same object humans see rendered) and
+follows the system's two structural rules:
+
+- **Never block on AI** (blueprint I4): anything that needs a model becomes an
+  emitted task with a `tasks` list in the response; deterministic work
+  (scheduling, scoring floors, phase math) happens inline.
+- **Deterministic pedagogy core** (ADR 012): scheduling state changes go
+  through `outcomes.land_score`, never ad-hoc.
+
+Responses carry a `next` hint — the one action that keeps the learning loop
+moving — because agents and humans alike resume from cold context.
+"""
+
 from __future__ import annotations
 
 import json
@@ -22,6 +39,18 @@ from .store import DojoStore, slugify
 
 
 class DojoAPI:
+    """Façade over the store, scheduler, and task system.
+
+    Construct one per process; it owns a `DojoStore` (git-versioned markdown
+    under the dojo directory) and a file logger. All state lives in the store —
+    the API object itself is stateless and cheap.
+
+    Args:
+        dojo_dir: Root of the dojo data directory. `None` resolves the
+            default location; a file path is tolerated by using its parent
+            (legacy callers passed the old SQLite db file).
+    """
+
     def __init__(self, dojo_dir: str | Path | None = None):
         if dojo_dir is not None:
             path = Path(dojo_dir)
@@ -278,6 +307,10 @@ class DojoAPI:
         }
 
     def inbox(self) -> dict[str, Any]:
+        """Lists captures still awaiting a home: unrouted (route task not yet
+        fulfilled) or proposed (route landed, awaiting human confirmation).
+        Text is truncated to the first line — the inbox is a triage view,
+        not a reader."""
         captures = [c for c in self.store.captures.list() if c.status in ("unrouted", "proposed")]
         return {
             "captures": [
@@ -293,6 +326,14 @@ class DojoAPI:
         }
 
     def inbox_confirm(self, capture_id: str) -> dict[str, Any]:
+        """Accepts a capture's route proposal and files it (ADR 013): the
+        capture becomes a Source attached to the proposed campaign/topic,
+        ready to ground future generation.
+
+        Raises:
+            ValueError: unknown capture, or its route task hasn't produced a
+                proposal yet.
+        """
         from .filing import file_capture
 
         cap = self.store.captures.get(capture_id)
@@ -305,6 +346,12 @@ class DojoAPI:
         return {**filed, "next": "the note is now a source; exercises can ground on it"}
 
     def inbox_dismiss(self, capture_id: str) -> dict[str, Any]:
+        """Marks a capture dismissed. The file stays in the store (git is the
+        archive) but leaves every inbox and routing view.
+
+        Raises:
+            ValueError: unknown capture id.
+        """
         cap = self.store.captures.get(capture_id)
         if cap is None:
             raise ValueError(f"capture {capture_id} not found")
@@ -327,6 +374,29 @@ class DojoAPI:
         generate_candidates: bool = False,
         topic: str | None = None,
     ) -> dict[str, Any]:
+        """Saves learning material as a Source; optionally starts generation.
+
+        The save always succeeds standalone. With `generate_candidates`, the
+        source must resolve to exactly ONE campaign — a `topic` prefix match,
+        or an unambiguous single active campaign; anything else saves the
+        source and returns a `note` asking for `--topic` rather than misfiling
+        (use-case audit F1). On success the source is linked into the
+        campaign's `sources_config` so it grounds ALL future generation for
+        its topics (F2), and one grounded generation task is emitted.
+
+        Args:
+            title: Human name; also seeds the topic slug when none is given.
+            content: The material itself (markdown/plain text, stored verbatim).
+            kind: Freeform origin tag, e.g. "note", "article", "book".
+            path: Optional original file path, recorded for provenance.
+            mission: Optional statement of why this material matters.
+            generate_candidates: Emit a generation task grounded on this source.
+            topic: Dot-path that selects the target campaign and topic.
+
+        Returns:
+            `{source_id, title, kind, tasks, next|note}` — `tasks` non-empty
+            only when generation was requested and a campaign resolved.
+        """
         self.log.info(f"Adding source: '{title}' (kind={kind}, generate_candidates={generate_candidates})")
         source_id = f"src_{uuid.uuid4().hex[:8]}"
 
@@ -418,31 +488,34 @@ class DojoAPI:
         }
 
     def list_sources(self) -> list[dict[str, Any]]:
+        """All stored sources as dicts, including full content."""
         return [s.model_dump() for s in self.store.sources.list()]
 
     def get_source(self, source_id: str) -> dict[str, Any] | None:
+        """One source as a dict, or None if the id is unknown."""
         src = self.store.sources.get(source_id)
         return src.model_dump() if src else None
 
     def get_source_topics(self, source_id: str) -> list[dict[str, Any]]:
-        # In Markdown-native JIT, candidates belong to campaigns. We scan active campaign candidates.
-        topics = {}
+        """Candidate counts per topic path.
+
+        Candidates don't record which source grounded them, so `source_id`
+        cannot narrow the scan yet: counts cover ALL candidates across all
+        campaigns. Honest limitation, not a filter.
+        """
+        topics: dict[str, int] = {}
         for camp in self.store.campaigns.list():
             for cand in self.store.candidates.list(camp.id):
-                # Check if candidate is associated with this source
-                # Sources references are parsed in candidate prompt/frontmatter
-                # For simplicity, if source_id matches
-                pass
-        # Fallback to scanning all candidates across campaigns
-        for camp in self.store.campaigns.list():
-            for cand in self.store.candidates.list(camp.id):
-                # Parse topic hierarchy
                 path = cand.topic_path
                 topics[path] = topics.get(path, 0) + 1
         return [{"topic_path": k, "count": v} for k, v in topics.items()]
 
     def get_source_candidates(self, source_id: str, topic_path: str | None = None) -> list[dict[str, Any]]:
-        # Collect candidates across active campaigns matching the source_id and topic_path
+        """Candidates awaiting review, optionally filtered by exact topic path.
+
+        Same limitation as `get_source_topics`: candidates carry no source
+        provenance, so `source_id` does not narrow the result.
+        """
         cands = []
         for camp in self.store.campaigns.list():
             for cand in self.store.candidates.list(camp.id):
@@ -455,6 +528,7 @@ class DojoAPI:
     # Candidates & Exercises Operations
     # ==========================================
     def get_candidate(self, candidate_id: str) -> dict[str, Any] | None:
+        """Finds a candidate by id across all campaigns, or None."""
         for camp in self.store.campaigns.list():
             cand = self.store.candidates.get(camp.id, candidate_id)
             if cand:
@@ -470,6 +544,10 @@ class DojoAPI:
         rubric: str | None = None,
         difficulty: str = "intermediate",
     ) -> None:
+        """Creates or overwrites a candidate by id, scoped to the FIRST
+        campaign (or literal "default" when none exists). A manual-authoring
+        escape hatch — the normal path is generation-task fulfillment via
+        `task submit`."""
         # Default to the first campaign
         campaign_id = "default"
         camps = self.store.campaigns.list()
@@ -496,6 +574,12 @@ class DojoAPI:
         self.store.candidates.save(campaign_id, cand)
 
     def remove_candidate(self, candidate_id: str) -> dict[str, Any]:
+        """Deletes a candidate (rejection during review) and returns its last
+        state.
+
+        Raises:
+            ValueError: no campaign holds a candidate with this id.
+        """
         for camp in self.store.campaigns.list():
             cand = self.store.candidates.get(camp.id, candidate_id)
             if cand:
@@ -520,6 +604,14 @@ class DojoAPI:
             self.log.info(f"Queue limit enforced: archived exercise '{ex.id}' in campaign '{campaign_id}'")
 
     def promote_candidate(self, candidate_id: str) -> dict[str, Any]:
+        """Accepts a candidate into the practice rotation: it becomes an
+        Exercise (same id, `candidate_id` kept for lineage), the candidate is
+        deleted, and the campaign's queue limit is enforced (oldest exercises
+        beyond 30 are archived).
+
+        Raises:
+            ValueError: no campaign holds a candidate with this id.
+        """
         for camp in self.store.campaigns.list():
             cand = self.store.candidates.get(camp.id, candidate_id)
             if cand:
@@ -545,6 +637,10 @@ class DojoAPI:
     def promote_source_topic(
         self, source_id: str, topic_path: str, limit: int | None = None
     ) -> dict[str, Any]:
+        """Batch-promotes candidates matching an exact topic path, up to
+        `limit`. Stops at the first campaign that yields any promotion
+        (candidates carry no source provenance, so `source_id` does not
+        narrow the scan). Returns `{promoted_count, exercises}`."""
         promoted = []
         for camp in self.store.campaigns.list():
             candidates = self.store.candidates.list(camp.id)
@@ -584,6 +680,26 @@ class DojoAPI:
         reset: bool = False,
         campaign_id: str | None = None,
     ) -> dict[str, Any]:
+        """Starts (or resumes) a manual practice session outside the daily
+        packet — `dojo daily` is the preferred ritual; this is the targeted
+        drill path.
+
+        Resolution order for the campaign: explicit `campaign_id`, then
+        topic-prefix match, then the first campaign. A reflection pass runs
+        first so strategy/insights are current. An existing active session is
+        returned as-is unless `reset` archives it. Exercises are drawn from
+        the campaign's active phase topics, unattempted-first, oldest-first;
+        when fewer than 3 are due, a replenishment generation task is emitted
+        and the session proceeds with what exists (ADR 003b — never blocks
+        on AI).
+
+        Returns:
+            `{is_new, session, tasks}`; `session` is None (with `next`) when
+            nothing is due but generation is pending.
+
+        Raises:
+            ValueError: queue empty and no way to replenish (no campaign).
+        """
         self.log.info(f"Starting practice session (topic={topic}, limit={limit}, reset={reset}, campaign_id={campaign_id})")
 
         # 1. Resolve matching campaign
@@ -767,10 +883,24 @@ class DojoAPI:
         }
 
     def get_active_practice_session(self) -> dict[str, Any] | None:
+        """The current active session as a dict, or None."""
         ps = self.store.sessions.get_active()
         return ps.model_dump() if ps else None
 
     def reveal_prompt(self, session_id: str | None = None) -> dict[str, Any]:
+        """Reveals the current exercise's prompt and STARTS THE CLOCK:
+        `started_at` is stamped on the session, and `submit_answer` measures
+        latency from this moment (latency feeds FSRS calibration). Walking
+        past the last exercise completes and archives the session.
+
+        Args:
+            session_id: Target a specific (possibly archived) session;
+                default is the active one.
+
+        Raises:
+            ValueError: no session, session already completed, or the
+                exercise file is missing from the store.
+        """
         active = self.store.sessions.get_active()
         target_session = active
         if session_id:
@@ -826,6 +956,26 @@ class DojoAPI:
         }
 
     def submit_answer(self, user_answer: str, session_id: str | None = None) -> dict[str, Any]:
+        """Records an attempt for the current exercise and advances the
+        session.
+
+        Scoring is a deterministic floor with AI as an emitted task, never a
+        block (I4): diagnostic exercises auto-score 1.0 (calibration answers
+        are information, not tests); an exact case-insensitive match on the
+        stored answer scores 1.0; otherwise, if a rubric or answer exists,
+        the score is PROVISIONAL 0.0 and a grade task is emitted — the real
+        score lands via `task submit`, which also updates the FSRS schedule.
+        Provisional scores never touch the schedule (a placeholder 0.0 would
+        poison it). Latency runs from `reveal_prompt`.
+
+        Returns:
+            Result dict; when `pending_grade` is true, `tasks` holds the
+            grade task the fulfiller must complete.
+
+        Raises:
+            ValueError: no session, completed session, missing exercise, or
+                prompt not yet revealed.
+        """
         self.log.info(f"Submitting answer (session_id={session_id}, user_answer_len={len(user_answer)})")
         active = self.store.sessions.get_active()
         target_session = active
@@ -951,6 +1101,9 @@ class DojoAPI:
     # Progress & Metrics Operations
     # ==========================================
     def get_progress(self) -> dict[str, Any]:
+        """Lifetime aggregates across all campaigns: attempt count, mean
+        score, mean latency, and the 10 most recent attempts. For the richer
+        per-campaign view (retention, due counts, token spend) use `stats`."""
         attempts = []
         for camp in self.store.campaigns.list():
             attempts.extend(self.store.attempts.list(camp.id))
@@ -977,6 +1130,10 @@ class DojoAPI:
         }
 
     def get_due_count(self, topic: str | None = None) -> int:
+        """Count of active exercises not yet meaningfully attempted (a
+        `forgot` skip doesn't count as attempted), optionally under a topic
+        prefix. This is the manual-session queue view, not FSRS due-ness —
+        scheduled reviews are `packet`'s territory."""
         all_ex = []
         for c in self.store.campaigns.list():
             all_ex.extend(self.store.exercises.list(c.id))
@@ -1009,13 +1166,17 @@ class DojoAPI:
         return len(due_exercises)
 
     def get_learner_hypotheses(self, status: str = "active") -> list[dict[str, Any]]:
-        # Map to insights
+        """Insights (learner-model hypotheses, ADR 004) across all campaigns,
+        filtered by status ("active" / "resolved" / …)."""
         insights = []
         for camp in self.store.campaigns.list():
             insights.extend(self.store.insights.list(camp.id, filters={"status": status}))
         return [ins.model_dump() for ins in insights]
 
     def save_learner_hypothesis(self, key: str, description: str, status: str = "active") -> dict[str, Any]:
+        """Manually records an insight, scoped to the first campaign (or
+        "default" when none exists). The normal path is reflection-task
+        fulfillment; this is the escape hatch."""
         # Scoped to first campaign or default
         campaign_id = "default"
         camps = self.store.campaigns.list()
@@ -1033,6 +1194,18 @@ class DojoAPI:
         return insight.model_dump()
 
     def skip_active_exercise(self, reason: str, feedback: str | None = None, session_id: str | None = None) -> dict[str, Any]:
+        """Skips the current exercise, recording the reason as calibration
+        evidence (ADR 014).
+
+        `reason` drives two distinct updates: exercise QUALITY (`too_easy` /
+        `too_hard` / `bad_quality` pull it from future rotation) and the FSRS
+        MEMORY schedule — `too_easy` lands as an Easy review, `forgot` as
+        Again (retrieval failed, so it comes back fast); archival reasons
+        leave memory untouched. A 0-score attempt is always recorded.
+
+        Raises:
+            ValueError: no session, completed session, or missing exercise.
+        """
         self.log.info(f"Skipping active exercise (session_id={session_id}, reason={reason})")
         active = self.store.sessions.get_active()
         target_session = active
@@ -1140,6 +1313,14 @@ class DojoAPI:
         }
 
     def correct_last_attempt(self, score: float, feedback: str | None = None) -> dict[str, Any]:
+        """Human override of the most recent attempt's score — the highest
+        grading authority (I10); `grader` becomes "self". The corrected score
+        lands as an ADDITIONAL FSRS review (exact undo would need an sr
+        snapshot per attempt — ledgered in OPEN-PROBLEMS #13).
+
+        Raises:
+            ValueError: no attempts exist anywhere.
+        """
         # Resolve latest attempt across all campaigns
         all_attempts = []
         for camp in self.store.campaigns.list():
@@ -1171,6 +1352,10 @@ class DojoAPI:
         return latest_att.model_dump()
 
     def add_learner_feedback(self, comment: str, campaign_id: str | None = None) -> dict[str, Any]:
+        """Stores a freeform learner comment as a raw `feedback.user.*`
+        insight (ADR 004 raw-to-refined): the next reflection distills it into
+        strategy. The user's words are stored verbatim — extract, never
+        enrich. Defaults to the first campaign."""
         self.log.info(f"Adding user feedback: '{comment}'")
         # Resolve target campaign
         resolved_id = campaign_id
@@ -1313,13 +1498,17 @@ class DojoAPI:
 
 
     def save_config(self, key: str, value: str) -> dict[str, Any]:
+        """Sets one config key (e.g. `daily.packet_size`, `capture.autofile`)
+        in the store's config file. Values are strings; consumers coerce."""
         self.store.configs.set(key, value)
         return {"key": key, "value": value}
 
     def get_config(self, key: str) -> str | None:
+        """One config value, or None when unset."""
         return self.store.configs.get(key)
 
     def list_configs(self) -> dict[str, str]:
+        """Every stored config key/value, stringified."""
         config = self.store.configs._read_config()
         return {str(k): str(v) for k, v in config.items()}
 
@@ -1327,6 +1516,8 @@ class DojoAPI:
     # System Metadata / Helper Operations
     # ==========================================
     def get_all_topic_paths(self) -> list[str]:
+        """Every dot-path topic in use (campaign roots + exercise topics),
+        sorted."""
         topics = set()
         for camp in self.store.campaigns.list():
             if camp.topic_path:
@@ -1336,6 +1527,8 @@ class DojoAPI:
         return sorted(list(topics))
 
     def format_topic_tree(self, flat_paths: list[str]) -> str:
+        """Renders dot-paths ("git.rebase.interactive") as an indented
+        markdown bullet tree for display."""
         tree = {}
         for path in flat_paths:
             parts = path.split(".")
@@ -1365,6 +1558,22 @@ class DojoAPI:
         source_id: str | None = None,
         syllabus_markdown: str | None = None,
     ) -> dict[str, Any]:
+        """Creates a campaign — the pedagogical director for a learning goal
+        (ADR 002).
+
+        The id comes from the NAME, suffixed `-2`, `-3`… on collision so an
+        existing campaign is never silently overwritten (use-case audit A2).
+        Ships with a one-phase calibration attack plan (3 attempts @ 80%),
+        a default practice strategy, an initial journal entry, and a stub
+        syllabus unless `syllabus_markdown` is given.
+
+        Args:
+            name: Human title; source of the id slug.
+            topic_path: Root dot-path this campaign owns.
+            mission: Why the learner cares — grounds generation and reflection.
+            source_id: Optional source to link as syllabus reference.
+            syllabus_markdown: Optional full syllabus; a stub is written otherwise.
+        """
         self.log.info(f"Creating campaign: '{name}' (topic_path={topic_path})")
         # Id from the NAME (distinctive), never silently overwriting an existing
         # campaign (use-case audit A2: topic-root ids collided — a second
@@ -1422,6 +1631,13 @@ class DojoAPI:
     def attach_source_to_campaign(
         self, campaign_id: str, source_id: str, purpose: str = "Reference materials"
     ) -> dict[str, Any]:
+        """Links a source into a campaign's `sources_config` (idempotent —
+        re-attaching updates the purpose). Linked sources ground the
+        campaign's future generation tasks.
+
+        Raises:
+            ValueError: unknown campaign.
+        """
         campaign = self.store.campaigns.get(campaign_id)
         if not campaign:
             raise ValueError(f"Campaign {campaign_id} not found")
@@ -1441,6 +1657,8 @@ class DojoAPI:
         return campaign.model_dump()
 
     def get_campaign_history(self, campaign_id: str | None = None) -> dict[str, Any]:
+        """The pedagogical journal (creation, phase advances, reflection
+        interventions), newest first, for one campaign or all."""
         # Return history of pedagogical changes
         campaigns = []
         if campaign_id:
@@ -1469,6 +1687,13 @@ class DojoAPI:
     def export_campaign_syllabus(
         self, campaign_id: str, format: str = "pdf", output_path: str | Path | None = None
     ) -> dict[str, Any]:
+        """Writes the campaign syllabus to disk as PDF or markdown
+        (default path: inside the dojo directory).
+
+        Raises:
+            ValueError: unknown campaign, or PDF requested without the
+                optional `dojo[pdf]` extra installed.
+        """
         campaign = self.store.campaigns.get(campaign_id)
         if not campaign:
             raise ValueError(f"Campaign {campaign_id} not found")
