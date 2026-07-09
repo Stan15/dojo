@@ -53,6 +53,11 @@ Never pipe eval runs through `tail` — it masks the exit code.
   (`evals/baselines/token-footprint.json` gates ±5%; deliberate changes update it).
 - Two audiences, one guarantee: agents (`--json`) can never hit interactive
   input (tested tripwire); humans get flows in `src/dojo/interactive.py`.
+- Docs are generated: `mise run docs` builds the site (ProperDocs — the
+  maintained MkDocs continuation, not a typo); every public symbol needs a
+  real docstring (tests/test_docs_coverage.py gates it).
+- The attack plan is a consent-gated contract (`src/dojo/tasks/authority.py`):
+  AI restructures never apply blind — read it before touching apply_reflect.
 - The owner reports field bugs from THEIR install mid-session — treat those as
   the highest-signal tests you have.
 - An out-of-date `docs/STATE.md` at session end is a bug you introduced.

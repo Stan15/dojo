@@ -9,12 +9,13 @@ history carries the detail._
 All blueprint milestones M0–M6 delivered and E2E-verified; plus (owner-directed,
 post-blueprint): three-tier eval system with `dojo benchmark`, interactive human
 CLI, capture/inbox with `--locator`, export/uninstall, token-footprint gates,
-the use-case lifecycle audit with its 10 fixes, and the **documentation
+the use-case lifecycle audit with its 10 fixes, the **documentation
 system** (ProperDocs+Material+mkdocstrings site via `mise run docs`; 100%
 public-surface docstrings gated by tests/test_docs_coverage.py; README
-currency-audited). **257 tests green** + 28 eval-marked. Repo is PRIVATE
-(owner's choice) — install via checkout `sh install.sh`; owner's machine runs
-the current build.
+currency-audited), and **plan change authority** (tasks/authority.py; the
+plan is a consent-gated contract). **283 tests green** + 28 eval-marked.
+Repo is PRIVATE (owner's choice) — install via checkout `sh install.sh`;
+owner's machine runs the current build.
 
 ## What the system is now (one paragraph)
 
@@ -26,8 +27,11 @@ advances phases, auto-emits reflection at ≥5 unreflected attempts,
 re-surfaces stale tasks, auto-promotes+grounds replenishment. Agents drive
 via SKILL (always `--json`, extract-never-enrich); humans get interactive
 flows on the same machinery (structurally impossible to block an agent).
-Quality is guarded by ratcheted per-(driver,judge) baselines over a
-24-scenario judged corpus + compliance corpus + golden payload/footprint pins.
+AI plan restructures are consent-gated (minor/asked-for auto-apply with
+undo; major inferred await `dojo plan confirm`; reflection can ASK via its
+questions channel). Quality is guarded by ratcheted per-(driver,judge)
+baselines over a 26-scenario judged corpus + compliance corpus + golden
+payload/footprint pins.
 
 ## NEXT ACTIONS (in order)
 
@@ -113,3 +117,7 @@ committed work, not proposals awaiting an answer._
 - 07-09 (docs session): ProperDocs+mkdocstrings site (`mise run docs`); 100%
   docstring coverage + gate (257 tests); README audit; change-authority +
   `dojo more` designs ledgered in QUESTIONS; task-run Q confirmed shipped.
+- 07-09 (authority session): change authority shipped (rails+prompt+corpus,
+  283 tests); items 1–3 designs finalized with owner (at-request `more`,
+  final completion-message copy, streak→stats, route-first, ownership
+  block); delegation/model-economy rules added to the METHOD repo (§4).
