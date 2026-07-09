@@ -35,6 +35,7 @@ CATEGORY_BLURBS = {
 
 
 def slug_for(command: str) -> str:
+    """Filesystem-safe slug of a driver/judge command (baseline filenames)."""
     return re.sub(r"[^a-z0-9]+", "-", command.lower()).strip("-")[:40]
 
 
@@ -51,6 +52,9 @@ def load_corpus(tier: str) -> list[dict]:
 
 
 def seed_store(tmp_path: Path, seed: dict) -> DojoStore:
+    """Builds a throwaway store from a scenario's `seed` block (campaign,
+    insights, exercises, attempts). Seeded attempts default to grader="exact"
+    so they count as graded history."""
     store = DojoStore(tmp_path / "dojo")
     camp = Campaign(**seed["campaign"])
     store.campaigns.save(camp)
@@ -69,6 +73,8 @@ def seed_store(tmp_path: Path, seed: dict) -> DojoStore:
 
 
 def compile_step(store: DojoStore, campaign_id: str, spec: dict):
+    """Dispatches a scenario's `compile:` spec to the production compiler
+    (`fn`: generate | diagnostic | reflect | grade | plan)."""
     camp = store.campaigns.get(campaign_id)
     args = dict(spec)
     fn = args.pop("fn")
@@ -90,6 +96,8 @@ def compile_step(store: DojoStore, campaign_id: str, spec: dict):
 
 
 def run_command(command: str, prompt: str, timeout: int) -> str:
+    """Pipes a prompt to a model command's stdin, returns stdout; nonzero
+    exit raises with the stderr head."""
     proc = subprocess.run(
         shlex.split(command), input=prompt, capture_output=True, text=True, timeout=timeout,
     )
@@ -116,6 +124,8 @@ def fulfill_step(store: DojoStore, compiled, fulfiller: str, timeout: int):
 
 
 def submit_canned(store: DojoStore, compiled, payload: dict):
+    """Submits a scripted (non-model) payload through the production door —
+    used to stage multi-step scenarios deterministically."""
     task = service.emit(store, compiled)
     return service.submit(store, task.id, json.dumps(payload))
 
@@ -138,6 +148,8 @@ def _evidence_core(quote: str) -> str:
 
 
 def render_judge_prompt(scenario_context: str, output_text: str, criteria: list[dict]) -> str:
+    """Fills judge_prompt.md with the scenario context, the output on trial,
+    and the criterion questions."""
     template = (PACKAGE_DIR / "judge_prompt.md").read_text(encoding="utf-8")
     lines = "\n".join(f"{c['id']}: {c['question']}" for c in criteria)
     return (
@@ -215,6 +227,9 @@ def calibration_gate(
 
 @dataclass
 class ScenarioResult:
+    """One scenario's outcome; `error` marks infrastructure/judge failures,
+    which are reported separately and never averaged into scores."""
+
     name: str
     category: str
     tier: str  # compliance | quality
@@ -251,6 +266,9 @@ def execute_quality_scenario(
 
 
 class ComplianceFailure(Exception):
+    """The driver's output was rejected by the production validators —
+    a model failure (scored 0), distinct from infrastructure errors."""
+
     def __init__(self, errors: list[str]):
         super().__init__("; ".join(errors[:3]))
         self.errors = errors
@@ -331,6 +349,9 @@ def summarize(
     driver: str, judge: str, results: list[ScenarioResult],
     byte_counts: Optional[list[dict[str, int]]] = None,
 ) -> dict[str, Any]:
+    """Aggregates scenario results into the report dict: per-category means
+    (errored scenarios reported, never averaged in — I10), overall score,
+    and the mean token footprint over measured driver calls."""
     categories: dict[str, dict[str, Any]] = {}
     for r in results:
         cat = categories.setdefault(r.category, {"scores": [], "scenarios": []})

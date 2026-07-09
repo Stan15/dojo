@@ -1,3 +1,13 @@
+"""The `dojo` command-line interface.
+
+One parser, two audiences (blueprint "two audiences, one guarantee"):
+agents get JSON envelopes and are never blocked on interactive input
+(`_use_json` triggers on --json, piped stdout, or --no-input); humans at a
+TTY get the rich interactive flows from `dojo.interactive`. Every handler is
+a thin wrapper: parse args, call `DojoAPI`, render. On success, `main` writes
+one git recovery point per command (ADR 011).
+"""
+
 from __future__ import annotations
 
 import argparse
@@ -44,6 +54,7 @@ def _print_json(value: Any) -> None:
 
 
 def cmd_add(args: argparse.Namespace) -> int:
+    """`dojo add`: ingest a file or --text as a Source; --generate also emits a grounded generation task (needs an unambiguous campaign or --topic)."""
     if args.path and args.text:
         raise SystemExit("provide either file path or --text, not both")
     if not args.path and not args.text:
@@ -93,6 +104,7 @@ def cmd_add(args: argparse.Namespace) -> int:
 
 
 def cmd_source_list(args: argparse.Namespace) -> int:
+    """`dojo source list`: all sources as a table or JSON."""
     api = DojoAPI(_db_path(args))
     sources = api.list_sources()
     if _use_json(args):
@@ -120,6 +132,7 @@ def cmd_source_list(args: argparse.Namespace) -> int:
 
 
 def cmd_source_show(args: argparse.Namespace) -> int:
+    """`dojo source show`: one source; --start-line/--end-line slice the content view."""
     api = DojoAPI(_db_path(args))
     source = api.get_source(args.name)
     if source is None:
@@ -154,6 +167,7 @@ def cmd_source_show(args: argparse.Namespace) -> int:
 
 
 def cmd_source_topics(args: argparse.Namespace) -> int:
+    """`dojo source topics`: candidate counts per topic path."""
     api = DojoAPI(_db_path(args))
     try:
         output_data = api.get_source_topics(args.name)
@@ -178,6 +192,7 @@ def cmd_source_topics(args: argparse.Namespace) -> int:
 
 
 def cmd_source_candidates(args: argparse.Namespace) -> int:
+    """`dojo source candidates`: candidates awaiting review, optionally filtered by --topic."""
     api = DojoAPI(_db_path(args))
     try:
         output_data = api.get_source_candidates(args.name, topic_path=args.topic)
@@ -216,6 +231,7 @@ def cmd_source_candidates(args: argparse.Namespace) -> int:
 
 
 def cmd_source_review(args: argparse.Namespace) -> int:
+    """`dojo source review`: interactive accept/queue, reject, or $EDITOR-edit walk over candidates. TTY only — agents promote with `dojo queue`."""
     if _use_json(args) or getattr(args, "no_input", False):
         raise SystemExit("source review requires interactive terminal; use 'dojo queue' for non-blocking agent queueing")
 
@@ -316,6 +332,7 @@ def cmd_source_review(args: argparse.Namespace) -> int:
 
 
 def cmd_queue(args: argparse.Namespace) -> int:
+    """`dojo queue`: promote a candidate (cand_*) or a source topic's batch into active exercises."""
     api = DojoAPI(_db_path(args))
     promoted_exercises = []
 
@@ -363,6 +380,7 @@ def cmd_queue(args: argparse.Namespace) -> int:
 
 
 def cmd_start(args: argparse.Namespace) -> int:
+    """`dojo start`: start or resume a manual practice session; a thin queue emits generation tasks instead of blocking (I4)."""
     api = DojoAPI(_db_path(args))
     limit = args.limit if args.limit is not None else 5
     try:
@@ -415,6 +433,7 @@ def cmd_start(args: argparse.Namespace) -> int:
 
 
 def cmd_ready(args: argparse.Namespace) -> int:
+    """`dojo ready` / `dojo reveal`: show the current exercise prompt and start the latency clock."""
     api = DojoAPI(_db_path(args))
     try:
         output_data = api.reveal_prompt(args.session)
@@ -441,6 +460,7 @@ def cmd_ready(args: argparse.Namespace) -> int:
 
 
 def cmd_answer(args: argparse.Namespace) -> int:
+    """`dojo answer`: record an answer; exact/diagnostic scores render immediately, rubric answers emit a grade task."""
     api = DojoAPI(_db_path(args))
     try:
         output_data = api.submit_answer(args.response, args.session)
@@ -482,6 +502,7 @@ def cmd_answer(args: argparse.Namespace) -> int:
 
 
 def cmd_progress(args: argparse.Namespace) -> int:
+    """`dojo progress`: lifetime attempt aggregates plus the last 10 attempts."""
     api = DojoAPI(_db_path(args))
     output_data = api.get_progress()
 
@@ -550,6 +571,7 @@ def _is_owned_by_dojo(target_path: Path) -> bool:
 
 
 def cmd_install(args: argparse.Namespace) -> int:
+    """`dojo install`: copy the packaged SKILL into an agent's skills directory (doctor-gated; ownership-checked unless --force; --argv records a fulfiller command)."""
     store = DojoStore(_db_path(args))
     results = store.doctor.run()
     all_errors = [err for errs in results.values() for err in errs]
@@ -688,6 +710,7 @@ def cmd_install(args: argparse.Namespace) -> int:
 
 
 def cmd_doctor(args: argparse.Namespace) -> int:
+    """`dojo doctor`: run every store health check; exit 1 on any finding."""
     store = DojoStore(_db_path(args))
     results = store.doctor.run()
     
@@ -724,6 +747,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
 
 
 def cmd_due(args: argparse.Namespace) -> int:
+    """`dojo due`: count of unattempted active exercises, optionally under a topic prefix."""
     api = DojoAPI(_db_path(args))
     count = api.get_due_count(topic=args.topic)
     if _use_json(args):
@@ -734,6 +758,7 @@ def cmd_due(args: argparse.Namespace) -> int:
 
 
 def cmd_skip(args: argparse.Namespace) -> int:
+    """`dojo skip`: skip the current exercise with a reason — calibration evidence, not failure."""
     api = DojoAPI(_db_path(args))
     try:
         res = api.skip_active_exercise(reason=args.reason, feedback=args.feedback, session_id=args.session)
@@ -759,6 +784,7 @@ def cmd_skip(args: argparse.Namespace) -> int:
 
 
 def cmd_correct(args: argparse.Namespace) -> int:
+    """`dojo correct`: human override of the last attempt's score (highest grading authority)."""
     api = DojoAPI(_db_path(args))
     try:
         res = api.correct_last_attempt(score=args.score, feedback=args.feedback)
@@ -780,6 +806,7 @@ def cmd_correct(args: argparse.Namespace) -> int:
 
 
 def cmd_admin_consolidate(args: argparse.Namespace) -> int:
+    """`dojo reflect` / `dojo admin consolidate`: emit reflection tasks for campaigns holding unreflected evidence."""
     api = DojoAPI(_db_path(args))
     try:
         res = api.consolidate_learner_profile(campaign_id=args.campaign)
@@ -830,6 +857,7 @@ def cmd_admin_consolidate(args: argparse.Namespace) -> int:
 
 
 def cmd_feedback(args: argparse.Namespace) -> int:
+    """`dojo feedback`: store the learner's comment verbatim as a feedback insight for the next reflection."""
     api = DojoAPI(_db_path(args))
     try:
         res = api.add_learner_feedback(
@@ -854,6 +882,7 @@ def cmd_feedback(args: argparse.Namespace) -> int:
 
 
 def cmd_config_set(args: argparse.Namespace) -> int:
+    """`dojo config set`: write one config key to the store's config.yaml."""
     api = DojoAPI(_db_path(args))
     res = api.save_config(args.key, args.value)
     if _use_json(args):
@@ -864,6 +893,7 @@ def cmd_config_set(args: argparse.Namespace) -> int:
 
 
 def cmd_config_show(args: argparse.Namespace) -> int:
+    """`dojo config show`: every configured key/value."""
     api = DojoAPI(_db_path(args))
     configs = api.list_configs()
     if _use_json(args):
@@ -989,6 +1019,7 @@ def _materialize_campaign_from_task(args: argparse.Namespace) -> int:
 
 
 def cmd_campaign_create(args: argparse.Namespace) -> int:
+    """`dojo campaign create`: materialize a fulfilled plan task (--from-task), or create directly — at a TTY this runs the diagnostic onboarding conversation; failures/cancel clean up the partial campaign."""
     if getattr(args, "from_task", None):
         return _materialize_campaign_from_task(args)
     api = DojoAPI(_db_path(args))
@@ -1195,6 +1226,7 @@ def cmd_campaign_create(args: argparse.Namespace) -> int:
 
 
 def cmd_campaign_link(args: argparse.Namespace) -> int:
+    """`dojo campaign link`: attach a source to a campaign, then re-run consolidation so it grounds future work."""
     api = DojoAPI(_db_path(args))
     try:
         api.attach_source_to_campaign(
@@ -1239,6 +1271,7 @@ def cmd_campaign_link(args: argparse.Namespace) -> int:
 
 
 def cmd_campaign_history(args: argparse.Namespace) -> int:
+    """`dojo campaign history`: the pedagogical journal (creation, phase advances, reflections), newest first."""
     api = DojoAPI(_db_path(args))
     try:
         res = api.get_campaign_history(args.campaign)
@@ -1275,6 +1308,7 @@ def cmd_campaign_history(args: argparse.Namespace) -> int:
 
 
 def cmd_campaign_export(args: argparse.Namespace) -> int:
+    """`dojo campaign export`: write a campaign's syllabus to PDF or markdown ('latest' picks the most recently active)."""
     api = DojoAPI(_db_path(args))
     campaign_id = args.campaign
 
@@ -1326,6 +1360,7 @@ def cmd_campaign_export(args: argparse.Namespace) -> int:
 
 
 def cmd_task_list(args: argparse.Namespace) -> int:
+    """`dojo task list`: tasks as JSON (optionally by --status), with fulfillment instructions in `next`."""
     from .store import DojoStore
 
     store = DojoStore(_db_path(args))
@@ -1347,6 +1382,7 @@ def cmd_task_list(args: argparse.Namespace) -> int:
 
 
 def cmd_task_show(args: argparse.Namespace) -> int:
+    """`dojo task show`: one task as JSON; --prompt prints only the raw prompt body (pipe it to a model)."""
     from .store import DojoStore
 
     store = DojoStore(_db_path(args))
@@ -1362,6 +1398,7 @@ def cmd_task_show(args: argparse.Namespace) -> int:
 
 
 def cmd_task_submit(args: argparse.Namespace) -> int:
+    """`dojo task submit`: feed result JSON (stdin or --file) through the one validated door; exit 1 on rejection."""
     from .store import DojoStore
     from .tasks import service
 
@@ -1455,6 +1492,7 @@ def _detect_install_method(
 
 
 def cmd_export(args: argparse.Namespace) -> int:
+    """`dojo export`: write the whole store as a fresh markdown store at an empty destination."""
     from .export import export_store
     from .store import DojoStore
 
@@ -1637,6 +1675,7 @@ def cmd_benchmark(args: argparse.Namespace) -> int:
 
 
 def cmd_stats(args: argparse.Namespace) -> int:
+    """`dojo stats`: per-campaign retention/due/accuracy/idle plus AI token spend, estimates tagged."""
     api = DojoAPI(_db_path(args))
     res = api.stats()
     if _use_json(args):
@@ -1667,6 +1706,7 @@ def cmd_stats(args: argparse.Namespace) -> int:
 
 
 def cmd_capture(args: argparse.Namespace) -> int:
+    """`dojo capture`: durably save one utterance BEFORE any AI runs; TTY gets the capture->route->confirm flow, agents get the envelope."""
     api = DojoAPI(_db_path(args))
     if not _use_json(args):
         from .interactive import capture_flow
@@ -1677,6 +1717,7 @@ def cmd_capture(args: argparse.Namespace) -> int:
 
 
 def cmd_inbox(args: argparse.Namespace) -> int:
+    """`dojo inbox [confirm|dismiss]`: triage captures awaiting a home; bare TTY invocation walks them interactively."""
     api = DojoAPI(_db_path(args))
     if not _use_json(args) and not args.inbox_command:
         from .interactive import inbox_flow
@@ -1691,6 +1732,7 @@ def cmd_inbox(args: argparse.Namespace) -> int:
 
 
 def cmd_daily(args: argparse.Namespace) -> int:
+    """`dojo daily`: the ritual heartbeat — build or resume today's packet; TTY hands off to the full interactive flow."""
     api = DojoAPI(_db_path(args))
     if not _use_json(args):
         from .interactive import daily_flow
@@ -1722,6 +1764,7 @@ def cmd_daily(args: argparse.Namespace) -> int:
 
 
 def cmd_why(args: argparse.Namespace) -> int:
+    """`dojo why`: replay the honest scheduling reason behind every item in the current packet (I9)."""
     api = DojoAPI(_db_path(args))
     res = api.why()
     if _use_json(args):
@@ -1776,6 +1819,7 @@ def cmd_topic_boost(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """The full argparse tree; every subcommand binds func= to its handler."""
     parser = argparse.ArgumentParser(prog="dojo")
     parser.add_argument("--db", help="Dojo root directory (backward compatible option name)")
     parser.add_argument("--json", action="store_true", help="output structured JSON instead of human-friendly text")
@@ -2023,6 +2067,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Console entry point: dispatch the handler, then write one git
+    recovery point on success (`_audit_command_boundary`)."""
     parser = build_parser()
     args = parser.parse_args(argv)
     rc = args.func(args)

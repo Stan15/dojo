@@ -1,3 +1,7 @@
+"""Rotating file logging into the dojo data directory (`dojo.log`). Loggers
+are cached per (directory, name); nothing ever logs to stdout — the CLI owns
+the terminal."""
+
 from __future__ import annotations
 
 import logging

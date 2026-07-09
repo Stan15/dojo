@@ -34,6 +34,9 @@ EXCLUDED_QUALITIES = RETIRED_QUALITIES | {"diagnostic"}
 
 @dataclass
 class PacketItem:
+    """One scheduled exercise plus the honest one-sentence reason it was
+    chosen (I9 — `dojo why` replays these)."""
+
     campaign_id: str
     exercise_id: str
     reason: str  # I9: one honest sentence
@@ -41,6 +44,10 @@ class PacketItem:
 
 @dataclass
 class Packet:
+    """A built daily packet: chosen items, skill topics due with no stock
+    (`needs_generation` — the caller emits tasks), per-campaign ranking
+    explanations, and honest counts of everything skipped (I10)."""
+
     items: list[PacketItem] = field(default_factory=list)
     needs_generation: list[dict[str, Any]] = field(default_factory=list)  # skill topics due, no stock
     campaign_reasons: dict[str, str] = field(default_factory=dict)  # Tier-1 choices explained

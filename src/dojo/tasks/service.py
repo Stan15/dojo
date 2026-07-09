@@ -94,6 +94,9 @@ def extract_json(raw: str) -> Any:
 
 @dataclass
 class SubmitOutcome:
+    """What `submit` tells the fulfiller: success, the task's new status,
+    actionable `errors` on rejection, and the applier's `applied` summary."""
+
     ok: bool
     task_id: str
     status: str  # task status after this submission
@@ -102,6 +105,12 @@ class SubmitOutcome:
 
 
 def submit(store, task_id: str, raw: str) -> SubmitOutcome:
+    """The one door for AI output (I5): parse → schema-validate → applier.
+
+    Rejections record the errors on the task and count toward
+    `max_submissions` (then the task fails permanently — honest degradation).
+    Resubmitting a fulfilled task is an acknowledged no-op; a failed task
+    must be re-emitted, not retried."""
     task = store.tasks.get(task_id)
     if task is None:
         return SubmitOutcome(ok=False, task_id=task_id, status="unknown",
@@ -171,6 +180,13 @@ class ApplyRejection(Exception):
 # ------------------------------------------------------------------
 
 def apply_generate(store, task: Task, result: GenerateResult) -> dict[str, Any]:
+    """Lands generation output. Four paths: an intervention becomes diagnostic
+    exercises (its questions enter the normal loop); diagnostic items land as
+    exercises directly (answering them IS the review); `auto_promote` items
+    (daily replenishment) land as exercises under the queue cap; everything
+    else lands as candidates awaiting review (I2). Cross-checks: exact item
+    count (fewer needs a note), diagnostic/practice skill consistency,
+    answer+rubric present on practice items."""
     ctx = task.context
     campaign_id = ctx["campaign_id"]
     n_items = int(ctx["n_items"])
@@ -300,6 +316,10 @@ def _normalize(text: str) -> str:
 
 
 def apply_grade(store, task: Task, result: GradeResult) -> dict[str, Any]:
+    """Lands a grade: rejects unless `evidence` is a verbatim quote from the
+    learner's answer (the anti-hallucination anchor), then finalizes the
+    attempt's score and advances the FSRS memory model — the step
+    deliberately skipped while the score was provisional."""
     ctx = task.context
     campaign_id, attempt_id = ctx["campaign_id"], ctx["attempt_id"]
     attempt = store.attempts.get(campaign_id, attempt_id)
@@ -333,6 +353,13 @@ def apply_grade(store, task: Task, result: GradeResult) -> dict[str, Any]:
 
 
 def apply_reflect(store, task: Task, result: ReflectResult) -> dict[str, Any]:
+    """Lands a reflection: insight creates/updates/resolves (every citation
+    must be an attempt id the model was shown; every touched insight must
+    exist), strategy-dial changes, plan revision, a journal entry, and marks
+    the consumed attempts reflected.
+
+    Note: strategy and plan_revision currently apply WITHOUT a consent gate —
+    the tiered change-authority design in QUESTIONS.md addresses this."""
     ctx = task.context
     campaign_id = ctx["campaign_id"]
     campaign = store.campaigns.get(campaign_id)

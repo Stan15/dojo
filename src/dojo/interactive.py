@@ -40,6 +40,7 @@ def _input(prompt: str) -> str:
 
 
 def confirm(question: str, default: bool = True) -> bool:
+    """Y/n keypress with a default; empty input takes the default."""
     suffix = "[Y/n]" if default else "[y/N]"
     answer = _input(f"{question} [bold]{suffix}[/bold] ").strip().lower()
     if not answer:
@@ -48,10 +49,13 @@ def confirm(question: str, default: bool = True) -> bool:
 
 
 def fulfiller_command(api: DojoAPI) -> Optional[str]:
+    """The configured one-string local model command, or None."""
     return api.store.configs.get_value("fulfiller.command")
 
 
 def explain_no_fulfiller() -> None:
+    """Tells the human their two options when an AI step has no fulfiller:
+    drive dojo from an agent, or set `fulfiller.command` once."""
     console.print(
         "\n[yellow]This step needs an AI and no fulfiller is configured.[/yellow]\n"
         "Either drive dojo from your AI agent (it fulfills tasks itself), or set\n"
@@ -95,6 +99,10 @@ def drain_tasks(api: DojoAPI, task_refs: list[dict[str, Any]], *, timeout: int =
 # ------------------------------------------------------------------
 
 def practice_loop(api: DojoAPI, session: dict[str, Any]) -> None:
+    """Runs a session as one continuous conversation: reveal → answer →
+    next, with `/skip <reason>` and `/quit` (pause; daily resumes). Free-form
+    answers grade in ONE batch at the end (D1 — a model call between
+    questions stalls the human), then a stats summary prints."""
     total = len(session["exercise_ids"])
     done = session.get("current_index", 0)
     console.print(f"\n[bold]Session[/bold] — {total - done} prompt(s) to go. "
@@ -179,6 +187,10 @@ def _session_summary(api: DojoAPI) -> None:
 
 
 def daily_flow(api: DojoAPI, size: Optional[int] = None, reset: bool = False) -> int:
+    """The human `dojo daily`: builds the packet, drains blocking generation
+    tasks inline (at most drain → rebuild → drain, covering the cold-start
+    diagnostic round), then hands off to `practice_loop`. Exits gracefully
+    with printed task handles when no fulfiller is configured."""
     res = api.daily(size=size, reset=reset)
     for _ in range(2):  # at most: drain → rebuild → drain (cold-start diagnostic round)
         if res.get("session") is not None:
@@ -222,6 +234,12 @@ def _render_proposal(proposal: dict[str, Any]) -> None:
 
 def plan_flow(api: DojoAPI, *, goal: str, level: Optional[str], context: Optional[str],
               emit_plan_task, materialize) -> int:
+    """Plan → refine → create as one conversation: renders the proposal,
+    walks the model's refinement questions (answers trigger one re-plan),
+    and only materializes a campaign on explicit confirmation. Declining
+    keeps the fulfilled task as a proposal (`campaign create --from-task`).
+    `emit_plan_task(goal, notes)` and `materialize(task_id)` are injected by
+    the CLI to avoid owning command wiring here."""
     if not fulfiller_command(api):
         explain_no_fulfiller()
         return 1
@@ -265,6 +283,10 @@ def plan_flow(api: DojoAPI, *, goal: str, level: Optional[str], context: Optiona
 
 def capture_flow(api: DojoAPI, *, text: str, why: Optional[str],
                  locator: Optional[str] = None) -> int:
+    """Capture → route → confirm in one breath: the text is durably saved
+    FIRST (even with no fulfiller), the route task drains inline, and the
+    proposal confirms with a keypress — declined or unroutable captures stay
+    in the inbox."""
     res = api.capture(text, why=why, locator=locator)
     console.print(f"[green]✓ captured[/green] [dim]({res['capture_id']})[/dim]")
     if not fulfiller_command(api):
@@ -294,6 +316,8 @@ def capture_flow(api: DojoAPI, *, text: str, why: Optional[str],
 
 
 def inbox_flow(api: DojoAPI) -> int:
+    """Walks every waiting capture: confirm (file it), dismiss, or leave —
+    unproposed captures just report that a route is still pending."""
     data = api.inbox()
     if not data["captures"]:
         console.print("[green]Inbox is empty.[/green]")

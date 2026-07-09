@@ -49,4 +49,5 @@ ROUTE_NEW_MISSION_WORDS = 15
 
 
 def word_count(text: str) -> int:
+    """Whitespace-token count — the one definition of "word" for every cap."""
     return len(text.split())

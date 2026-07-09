@@ -25,6 +25,9 @@ def land_score(
     latency_seconds: Optional[float] = None,
     skip_reason: Optional[str] = None,
 ) -> None:
+    """Advances the right memory model for one FINAL score (see module
+    docstring for the lane rules). Provisional scores must never call this.
+    Unknown exercises are a silent no-op."""
     ex = store.exercises.get(campaign_id, exercise_id)
     if ex is None:
         return

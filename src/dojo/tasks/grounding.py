@@ -11,6 +11,9 @@ from typing import Any
 
 
 def parse_markdown_headings(content: str) -> list[dict[str, Any]]:
+    """Extracts `#`–`######` headings with their line spans and full ancestor
+    path (e.g. ["Git", "Rebasing", "Interactive"]). A heading's span ends
+    where the next same-or-higher-level heading begins."""
     lines = content.splitlines()
     headings = []
     stack = []
@@ -43,6 +46,9 @@ def parse_markdown_headings(content: str) -> list[dict[str, Any]]:
 
 
 def score_heading(heading_path: list[str], target_topic: str) -> float:
+    """Relevance of one heading path to a dot-path topic. Later (more
+    specific) topic segments weigh exponentially more; whole-word matches
+    beat substring matches; a leaf-on-leaf match earns the largest bonus."""
     topic_parts = [p.lower().strip() for p in target_topic.split(".") if p.strip()]
     if not topic_parts:
         return 0.0
@@ -79,6 +85,8 @@ def score_heading(heading_path: list[str], target_topic: str) -> float:
 
 
 def expand_window(headings: list[dict[str, Any]], matched_idx: int, total_lines: int, min_lines: int) -> tuple[int, int]:
+    """Grows the matched heading's span to at least `min_lines` by climbing
+    to enclosing (parent) sections. Returns 1-based (start, end)."""
     matched = headings[matched_idx]
     start = matched["start_line"]
     end = matched["end_line"]
@@ -102,6 +110,9 @@ def expand_window(headings: list[dict[str, Any]], matched_idx: int, total_lines:
 
 
 def resolve_paragraph_window(content: str, target_topic: str, min_lines: int) -> tuple[int, int]:
+    """Heading-free fallback: picks the paragraph mentioning the most topic
+    segments and grows symmetrically to `min_lines`. Returns 1-based
+    (start, end)."""
     lines = content.splitlines()
     total_lines = len(lines)
     if total_lines <= min_lines:
@@ -156,6 +167,10 @@ def resolve_paragraph_window(content: str, target_topic: str, min_lines: int) ->
 
 
 def resolve_source_context(content: str, title: str, target_topic: str, min_lines: int = 100) -> tuple[str, int, int]:
+    """The entry point: best topic-relevant window of a source document —
+    heading-scored when the document has headings that match at all,
+    paragraph-scan otherwise. Returns (slice_text, start_line, end_line),
+    1-based inclusive. The compiler's byte budget does the final clipping."""
     if not content.strip():
         return "", 1, 1
 

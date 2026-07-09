@@ -1,3 +1,7 @@
+"""File-level storage machinery: markdown (de)serialization, the frontmatter
+index, Unix file locking, and git recovery points. Everything above this
+module thinks in entities; everything in it thinks in paths and bytes."""
+
 from __future__ import annotations
 
 import fcntl
@@ -180,6 +184,15 @@ def _match_filter(data: dict[str, Any], filters: dict[str, Any] | None, entity_t
 # ==========================================
 
 class StorageEngine:
+    """The physical layer under every repository: paths, file I/O,
+    frontmatter+body (de)serialization, the `.index.json` frontmatter index,
+    the `dojo.lock` write lock, and git recovery points.
+
+    Constructing one bootstraps the store: creates the contract directory
+    tree, initializes git, loads and syncs the index. Repositories own all
+    entity semantics; the engine knows only files.
+    """
+
     def __init__(self, dojo_dir: str | Path | None = None):
         self.dojo_dir = Path(dojo_dir or DEFAULT_DOJO_DIR).resolve()
         self.index_file = self.dojo_dir / ".index.json"

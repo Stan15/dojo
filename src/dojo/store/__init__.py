@@ -1,3 +1,13 @@
+"""The Store: git-versioned markdown as the canonical database (ADR 011).
+
+Every entity is one human-readable/editable markdown file (YAML frontmatter +
+body); identity is the frontmatter `id`, never the filename, so users can
+rename files freely. An in-memory index over frontmatter keeps lookups fast;
+`sync_index` reconciles it with external edits before every read path. The
+on-disk format is a PUBLIC CONTRACT — changes require a fixture round-trip
+test and a blueprint §5 update in the same commit.
+"""
+
 from __future__ import annotations
 from pathlib import Path
 from typing import Any, Type
@@ -66,14 +76,17 @@ class DojoStore:
 
     @property
     def dojo_dir(self) -> Path:
+        """Absolute root of the data directory."""
         return self.engine.dojo_dir
 
     @property
     def logger(self):
+        """The engine's file logger."""
         return self.engine.logger
 
     @property
     def index(self):
+        """The engine's in-memory frontmatter index (read-only use)."""
         return self.engine.index
 
     def audit(self, message: str):
@@ -82,22 +95,29 @@ class DojoStore:
 
     # Low-level delegation for adapters and the doctor
     def sync_index(self):
+        """Reconciles the index with on-disk reality (external edits/renames)."""
         self.engine.sync_index()
 
     def write_lock(self):
+        """Process-wide write lock context manager (engine-owned)."""
         return self.engine.write_lock()
 
     def read_text(self, rel_path: str) -> str:
+        """Raw file read, path relative to the dojo dir."""
         return self.engine.read_text(rel_path)
 
     def write_text(self, rel_path: str, content: str):
+        """Raw file write, path relative to the dojo dir."""
         self.engine.write_text(rel_path, content)
 
     def delete_file(self, rel_path: str):
+        """Removes one file (path relative to the dojo dir)."""
         self.engine.delete_file(rel_path)
 
     def read_markdown_file(self, rel_path: str, schema_cls: Type[Any], body_field: str) -> Any:
+        """Parses one frontmatter+body markdown file into `schema_cls`."""
         return self.engine.read_markdown_file(rel_path, schema_cls, body_field)
 
     def write_markdown_file(self, rel_path: str, obj: BaseModel, body_field: str):
+        """Serializes an entity to frontmatter+body markdown at `rel_path`."""
         self.engine.write_markdown_file(rel_path, obj, body_field)

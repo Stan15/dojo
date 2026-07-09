@@ -23,6 +23,10 @@ from .store import DojoStore
 
 
 def export_store(src: DojoStore, dest_dir: str | Path) -> dict[str, Any]:
+    """Copies every entity into a fresh store at `dest_dir` and git-commits
+    it there as the first recovery point. Refuses to write into the source
+    store or any non-empty directory (never merges, never overwrites).
+    Returns per-entity counts plus the destination path."""
     dest_dir = Path(dest_dir).expanduser().resolve()
     if dest_dir == src.dojo_dir.resolve():
         raise ValueError("destination is the source store itself")

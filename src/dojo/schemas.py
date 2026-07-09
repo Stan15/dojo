@@ -387,6 +387,10 @@ class StoredEntity(BaseModel):
 
 
 class Source(StoredEntity):
+    """Learning material the user trusts (note, article, book excerpt…),
+    stored verbatim at `sources/<id>.md` with the content as the body.
+    Sources ground generation: linked topics keep drawing on them (F2)."""
+
     _body_field: ClassVar[Optional[str]] = "content"
 
     id: str
@@ -401,6 +405,12 @@ class Source(StoredEntity):
 
 
 class Campaign(StoredEntity):
+    """The pedagogical director for one learning goal (ADR 002): mission,
+    topic registry, phased attack plan, strategy dials, linked sources, and
+    the append-only pedagogical journal. Lives at
+    `campaigns/camp_<id>/campaign.md` with the syllabus as the body; the
+    plan and journal are also projected to plan.yaml / changelog.md."""
+
     _body_field: ClassVar[Optional[str]] = "syllabus_markdown"
 
     id: str
@@ -424,6 +434,12 @@ class Campaign(StoredEntity):
 
 
 class Exercise(StoredEntity):
+    """A practice item in rotation. `kind` decides its scheduling life:
+    recall repeats verbatim under FSRS (`sr` state on the exercise); skill
+    items are disposable — their topic carries the FSRS state (ADR 012).
+    `quality` tracks trust: reviewed / auto_accepted / diagnostic / spent /
+    the skip verdicts (too_easy, too_hard, bad_quality) / archived."""
+
     _body_field: ClassVar[Optional[str]] = "prompt"
 
     id: str
@@ -444,6 +460,10 @@ class Exercise(StoredEntity):
 
 
 class Candidate(StoredEntity):
+    """A generated exercise awaiting human review (I2 trust gate) — same
+    shape as Exercise minus scheduling state; promotion copies it into the
+    rotation and deletes the candidate."""
+
     _body_field: ClassVar[Optional[str]] = "prompt"
 
     id: str
@@ -462,6 +482,11 @@ class Candidate(StoredEntity):
 
 
 class Attempt(StoredEntity):
+    """One answer (or skip) to one exercise — the atomic unit of learning
+    evidence. Stores the prompt as seen at the time, the learner's verbatim
+    answer as the body, who graded it (`grader`, I10), and `reflected`, which
+    tracks whether reflection has consumed it yet."""
+
     _body_field: ClassVar[Optional[str]] = "user_answer"
 
     id: str
@@ -484,6 +509,11 @@ class Attempt(StoredEntity):
 
 
 class Insight(StoredEntity):
+    """One hypothesis about the learner (ADR 004): a stable dotted `key`
+    ("conditional.aux_choice", "feedback.user.…"), the description as body,
+    and `sources` citing the attempt ids that evidence it. Reflection
+    creates, updates, and resolves these."""
+
     _body_field: ClassVar[Optional[str]] = "description"
 
     id: str
@@ -545,6 +575,11 @@ class Task(StoredEntity):
 
 
 class PracticeSession(StoredEntity):
+    """Workflow state for one sitting: the ordered exercise ids, a cursor,
+    the reveal timestamp the latency clock runs from, and the packet/campaign
+    reasons that `dojo why` replays (I9). Stored as JSON, not markdown —
+    it's ephemeral machinery, not learning evidence."""
+
     id: str
     packet_reasons: Dict[str, str] = Field(default_factory=dict)  # exercise_id → why chosen (I9)
     campaign_reasons: Dict[str, str] = Field(default_factory=dict)  # Tier-1 ranking explained

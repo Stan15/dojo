@@ -1,3 +1,11 @@
+"""Syllabus-markdown → styled PDF, for `dojo campaign export --format pdf`.
+
+Optional surface: importing this module requires the `dojo[pdf]` extra
+(fpdf2); callers guard the import and offer markdown export instead. The
+renderer handles the syllabus subset of markdown (#/##/### headings, bullets,
+**bold**, *italic*) — it is not a general markdown engine.
+"""
+
 from __future__ import annotations
 
 import re
@@ -5,7 +13,11 @@ from pathlib import Path
 from fpdf import FPDF
 
 class SyllabusPDF(FPDF):
+    """FPDF with the dojo syllabus chrome: branded header rule + page-number
+    footer, applied automatically on every page."""
+
     def header(self) -> None:
+        """Draws the top-of-page banner and separator line."""
         self.set_font("Helvetica", "B", 8)
         self.set_text_color(100, 100, 100)
         self.cell(0, 10, "DOJO STUDY SYLLABUS", border=0, new_x="LMARGIN", new_y="NEXT", align="R")
@@ -14,6 +26,7 @@ class SyllabusPDF(FPDF):
         self.ln(4)
 
     def footer(self) -> None:
+        """Draws the centered page number."""
         self.set_y(-15)
         self.set_font("Helvetica", "I", 8)
         self.set_text_color(150, 150, 150)
@@ -21,6 +34,7 @@ class SyllabusPDF(FPDF):
 
 
 def write_styled_text(pdf: SyllabusPDF, text: str, line_height: float = 5.0) -> None:
+    """Writes one line, honoring inline `**bold**` and `*italic*` spans."""
     parts = re.split(r'(\*\*.*?\*\*|\*.*?\*)', text)
     current_family = pdf.font_family
     current_size = pdf.font_size_pt
@@ -40,6 +54,9 @@ def write_styled_text(pdf: SyllabusPDF, text: str, line_height: float = 5.0) -> 
 
 
 def render_markdown_to_pdf(markdown_text: str, output_path: str | Path) -> None:
+    """Renders syllabus markdown to a PDF file at `output_path`. Unicode
+    outside latin-1 is transliterated or replaced (fpdf2 core-font
+    limitation) — content survives, exotic glyphs may not."""
     replacements = {
         "\u2014": " - ",   # em-dash
         "\u2013": "-",     # en-dash

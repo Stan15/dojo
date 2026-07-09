@@ -19,6 +19,8 @@ E = TypeVar("E", bound=BaseModel)
 
 
 class BaseRepository:
+    """Common ancestor: holds the shared `StorageEngine`."""
+
     def __init__(self, engine: StorageEngine):
         self.engine = engine
 
@@ -41,6 +43,7 @@ def attempt_filename(repo: "CampaignScopedRepository", campaign_id: str, entity:
 
 
 def slug_filename(repo: "CampaignScopedRepository", campaign_id: str, entity: Any) -> str:
+    """Plain `<id-slug>.md` — for entities whose id is already descriptive."""
     return f"{slugify(entity.id)}.md"
 
 
@@ -74,6 +77,10 @@ class RootScopedRepository(BaseRepository, Generic[E]):
         return None
 
     def list(self, filters: dict[str, Any] | None = None) -> List[E]:
+        """All entities of this type, sorted by `created_at` (id fallback).
+        `filters` matches frontmatter fields exactly. Unreadable files are
+        logged and skipped, never fatal — a user's half-edited file must not
+        take the whole store down."""
         self.engine.sync_index()
         results: List[E] = []
         for rel_path, info in self.engine.index["files"].items():
@@ -90,6 +97,7 @@ class RootScopedRepository(BaseRepository, Generic[E]):
         return sorted(results, key=lambda x: getattr(x, "created_at", x.id))
 
     def get(self, id: str) -> Optional[E]:
+        """One entity by frontmatter id; None when missing or unreadable."""
         rel_path = self._find_path(id)
         if not rel_path:
             return None
@@ -100,12 +108,15 @@ class RootScopedRepository(BaseRepository, Generic[E]):
             return None
 
     def save(self, entity: E):
+        """Upsert: rewrites the existing file when the id is known (wherever
+        the user may have renamed it to), else creates `<subdir>/<id>.md`."""
         rel_path = self._find_path(entity.id) or f"{self.subdir}/{entity.id}.md"
         with self.engine.write_lock():
             self.engine.write_markdown_file(rel_path, entity, self.body_field)
             self.engine.sync_index()
 
     def delete(self, id: str):
+        """Removes the entity's file; silently a no-op for unknown ids."""
         rel_path = self._find_path(id)
         if not rel_path:
             return
@@ -115,6 +126,11 @@ class RootScopedRepository(BaseRepository, Generic[E]):
 
 
 class CampaignScopedRepository(BaseRepository, Generic[E]):
+    """Entities living under `campaigns/camp_<id>/<subdir>/` (exercises,
+    candidates, attempts, insights): one generic implementation configured by
+    schema, subdirectory, new-file naming, and sort order. Every method takes
+    the owning `campaign_id` first."""
+
     def __init__(
         self,
         engine: StorageEngine,
@@ -151,6 +167,9 @@ class CampaignScopedRepository(BaseRepository, Generic[E]):
         return None
 
     def list(self, campaign_id: str, filters: dict[str, Any] | None = None) -> List[E]:
+        """All of the campaign's entities of this type, in the repository's
+        configured sort order. `filters` matches frontmatter exactly;
+        unreadable files are logged and skipped."""
         self.engine.sync_index()
         prefix = self._prefix(campaign_id)
         results: List[E] = []
@@ -168,6 +187,8 @@ class CampaignScopedRepository(BaseRepository, Generic[E]):
         return sorted(results, key=self.sort_key)
 
     def get(self, campaign_id: str, id: str) -> Optional[E]:
+        """One entity by frontmatter id within the campaign; None when
+        missing or unreadable."""
         rel_path = self._find_path(campaign_id, id)
         if not rel_path:
             return None
@@ -178,6 +199,8 @@ class CampaignScopedRepository(BaseRepository, Generic[E]):
             return None
 
     def save(self, campaign_id: str, entity: E):
+        """Upsert: rewrites the file the id currently lives in, else creates
+        one named by the repository's `new_filename` policy."""
         rel_path = self._find_path(campaign_id, entity.id) or (
             f"{self._prefix(campaign_id)}/{self.new_filename(self, campaign_id, entity)}"
         )
@@ -186,6 +209,7 @@ class CampaignScopedRepository(BaseRepository, Generic[E]):
             self.engine.sync_index()
 
     def delete(self, campaign_id: str, id: str):
+        """Removes the entity's file; silently a no-op for unknown ids."""
         rel_path = self._find_path(campaign_id, id)
         if not rel_path:
             return

@@ -1,3 +1,10 @@
+"""Campaign persistence: one directory per campaign, three files.
+
+`campaign.md` (frontmatter + syllabus body) is canonical; `plan.yaml` and
+`changelog.md` are readable projections of the attack plan and pedagogical
+journal, rebuilt on every save and folded back in on read.
+"""
+
 from typing import List, Optional
 import shutil
 
@@ -16,6 +23,7 @@ class CampaignRepository(BaseRepository):
     """
 
     def list(self) -> List[Campaign]:
+        """All campaigns, newest first, fully hydrated (plan + journal)."""
         recs = self.engine.query_index("campaign")
         recs = sorted(recs, key=lambda x: x["data"].get("created_at", ""), reverse=True)
         campaigns = []
@@ -29,6 +37,10 @@ class CampaignRepository(BaseRepository):
         return campaigns
 
     def get(self, id: str) -> Optional[Campaign]:
+        """One campaign by id, with `attack_plan` re-read from plan.yaml and
+        `pedagogical_journal` from changelog.md when those files exist (a
+        user's hand-edit to either projection wins). None when missing or
+        unreadable."""
         rel_path = f"campaigns/camp_{id}/campaign.md"
         if not (self.engine.dojo_dir / rel_path).exists():
             return None
@@ -52,6 +64,8 @@ class CampaignRepository(BaseRepository):
             return None
 
     def save(self, campaign: Campaign):
+        """Writes all three files atomically under the write lock: campaign.md,
+        regenerated plan.yaml, and changelog.md (journal newest-first)."""
         camp_dir_rel = f"campaigns/camp_{campaign.id}"
 
         with self.engine.write_lock():
@@ -80,6 +94,9 @@ class CampaignRepository(BaseRepository):
             self.engine.sync_index()
 
     def archive(self, id: str):
+        """Moves the whole campaign directory (children included) to
+        `archive/campaigns/`, replacing any earlier archive of the same id.
+        Archived campaigns disappear from `list`/`get`."""
         src_dir = self.engine.dojo_dir / "campaigns" / f"camp_{id}"
         dest_dir = self.engine.dojo_dir / "archive" / "campaigns" / f"camp_{id}"
         if src_dir.exists():

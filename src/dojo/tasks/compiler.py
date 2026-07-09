@@ -78,6 +78,9 @@ TEMPLATES: dict[str, str] = {
 
 @dataclass
 class CompiledTask:
+    """A ready-to-emit payload: the rendered prompt, the applier `context`
+    stored on the Task record, and which sections were clipped."""
+
     kind: str
     prompt: str
     context: dict[str, Any]  # applier inputs, stored on the Task record
@@ -85,6 +88,7 @@ class CompiledTask:
 
     @property
     def payload_bytes(self) -> int:
+        """UTF-8 size of the prompt — what the footprint gates measure."""
         return len(self.prompt.encode("utf-8"))
 
 
@@ -143,6 +147,7 @@ def _compile(store, kind: str, values: dict[str, Any], context: dict[str, Any]) 
 # ------------------------------------------------------------------
 
 def strategy_line(campaign: Campaign) -> str:
+    """The strategy dials as one compact `k=v` line (defaults filled in)."""
     sp = campaign.strategy_profile or {}
     return (
         f"difficulty={sp.get('difficulty', 'intermediate')}, "
@@ -172,6 +177,8 @@ def recent_rows(store, campaign_id: str, n: int = 10) -> str:
 
 
 def source_section(source_slice: Optional[str]) -> str:
+    """Wraps a grounding slice under a `## SOURCE` heading; empty when
+    generation is synthetic."""
     if not source_slice:
         return ""
     return f"## SOURCE\n{source_slice}"
@@ -190,6 +197,10 @@ def compile_generate(
     difficulty: str,
     source_slice: Optional[str] = None,
 ) -> CompiledTask:
+    """Payload for `exercise.generate`: mission + strategy + insights digest +
+    recent evidence rows, with the grounding rule chosen by whether a source
+    slice is present (grounded extracts; synthetic may draw on model
+    knowledge). The compiler picks the fragment — the model never branches."""
     mode = "grounded" if source_slice else "synthetic"
     grounding_rule = render(
         f"fragments/grounding_{mode}.md", {"n_items": n_items}
@@ -216,6 +227,9 @@ def compile_generate(
 
 
 def compile_diagnostic(store, campaign: Campaign, *, topic_path: str, n_items: int) -> CompiledTask:
+    """Payload for `exercise.diagnostic`: deliberately minimal (mission +
+    insights only) — calibration questions probe the learner, so recent
+    scores and sources would only bias them."""
     values = {
         "n_items": n_items,
         "topic_path": topic_path,
@@ -232,6 +246,9 @@ def compile_diagnostic(store, campaign: Campaign, *, topic_path: str, n_items: i
 
 
 def compile_grade(store, campaign: Campaign, exercise: Exercise, *, attempt_id: str, user_answer: str) -> CompiledTask:
+    """Payload for `attempt.grade`: the exercise prompt, whatever rubric/
+    answer exists (or an honest no-rubric instruction), and the learner's
+    answer. No campaign context — grading must judge THIS answer only."""
     rubric_parts = []
     if exercise.answer:
         rubric_parts.append(f"Answer: {exercise.answer}")
@@ -251,6 +268,11 @@ def compile_grade(store, campaign: Campaign, exercise: Exercise, *, attempt_id: 
 
 
 def compile_reflect(store, campaign: Campaign, *, window_n: int = 15) -> CompiledTask:
+    """Payload for `campaign.reflect`: active insights (with ids the model
+    must cite), a sliding window of attempt rows (ADR 008) plus older
+    unreflected ones, and verbatim learner feedback. `context.attempt_ids`
+    lists exactly the graded rows that FIT the byte budget — those are the
+    only citable ids, and the only ones marked reflected on apply."""
     active = store.insights.list(campaign.id, filters={"status": "active"})
     insight_lines = [
         f"- [{ins.id}] {ins.key}: {(ins.description or '').splitlines()[0]}"
@@ -308,6 +330,9 @@ def compile_reflect(store, campaign: Campaign, *, window_n: int = 15) -> Compile
 
 
 def compile_plan(store, *, goal: str, context_notes: str = "", existing_topics: str = "") -> CompiledTask:
+    """Payload for `campaign.plan`: the learner's goal verbatim, optional
+    level/constraint notes, and existing topic paths so a new plan extends
+    the registry instead of duplicating it."""
     values = {
         "goal_and_why": goal,
         "level_feedback_exclusions_or_none": context_notes or "(none)",
@@ -317,6 +342,9 @@ def compile_plan(store, *, goal: str, context_notes: str = "", existing_topics: 
 
 
 def compile_route(store, *, capture_id: str, capture_text: str, learner_note: str = "") -> CompiledTask:
+    """Payload for `capture.route`: the capture text (+ learner note) and the
+    real campaign/topic registry (up to 20 topic paths per campaign) — the
+    router may only file into places that exist (ADR 013)."""
     campaigns = store.campaigns.list()
     registry_lines = []
     for camp in campaigns:

@@ -1,3 +1,8 @@
+"""Store health checks. `dojo doctor` (and the installer's safety gate) runs
+`DoctorService.run()` to verify the data directory matches the ADR 011 layout
+contract and every file still parses — the early-warning system for hand
+edits gone wrong and silently failing git audit commits."""
+
 from typing import Any
 import re
 import yaml
@@ -19,10 +24,14 @@ from ..schemas import (
 )
 
 class DoctorService(BaseRepository):
+    """Read-only validator over the whole store; never mutates or repairs."""
+
     def run(self) -> dict[str, list[str]]:
-        """Runs a diagnostic check on the Dojo store repository directory structure and contents.
-        Returns a dictionary mapping check names to list of validation error messages.
-        """
+        """Checks layout (only contract directories/files at each level),
+        parses every entity file against its schema, and audits git health
+        (uncommitted store changes mean a failed audit commit). Returns
+        {check name: [error messages]}; all-empty lists mean a healthy store.
+        A missing store directory returns silently (nothing to check)."""
         results = {
             "Root directory layout": [],
             "Ingested sources": [],

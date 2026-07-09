@@ -88,6 +88,8 @@ def request_generation(
 
 
 def request_grade(store, campaign: Campaign, exercise: Exercise, attempt: Attempt) -> Task:
+    """Emits a grade task for an attempt whose deterministic score was
+    provisional (rubric/answer exists, no exact match)."""
     compiled = compiler.compile_grade(
         store, campaign, exercise,
         attempt_id=attempt.id, user_answer=attempt.user_answer or "",
@@ -96,6 +98,9 @@ def request_grade(store, campaign: Campaign, exercise: Exercise, attempt: Attemp
 
 
 def request_plan(store, *, goal: str, context_notes: str = "", existing_topics: str = "") -> Task:
+    """Emits a planning task for a learning goal. Its result is only a
+    PROPOSAL — `dojo campaign create` materializes it after the learner
+    confirms (apply_plan writes no state)."""
     compiled = compiler.compile_plan(
         store, goal=goal, context_notes=context_notes, existing_topics=existing_topics
     )

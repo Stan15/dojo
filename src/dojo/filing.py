@@ -16,6 +16,8 @@ from .store import slugify
 
 
 def known_topic_paths(store, campaign: Campaign) -> set[str]:
+    """Every topic path that verifiably exists in a campaign (registry +
+    exercise topics + the root) — the set a route may attach to."""
     paths = {t["path"] for t in (campaign.topics or []) if t.get("path")}
     paths |= {ex.topic_path for ex in store.exercises.list(campaign.id)}
     if campaign.topic_path:

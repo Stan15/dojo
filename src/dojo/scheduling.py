@@ -74,6 +74,7 @@ def record_outcome(
 
 
 def due_at(sr: Optional[dict[str, Any]]) -> Optional[datetime]:
+    """The stored due timestamp, or None for never-practiced state."""
     if not sr or not sr.get("due"):
         return None
     return datetime.fromisoformat(sr["due"])
