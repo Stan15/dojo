@@ -128,6 +128,25 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
    - This structurally answers all three ledgered `more` risks: bounded K of
      new items (no binge evidence floods), debt-gated generation (no churn),
      global guard (no Anki collapse).
+   **Interface spec (owner asked for exact shape, 2026-07-09):**
+   - Human: offer appears ONLY at practice_loop session end, after the stats
+     summary, default No ("Extend with up to 3 new items (2 in stock + 1
+     generated)? [y/N]"); guard-closed replaces the offer with the honest
+     refusal + projection + `dojo start --topic <weakest>` alternative.
+     Standalone: `dojo daily --extend`.
+   - Agent: `capacity` block on `dojo answer --json` (when
+     is_session_completed) and `dojo daily --json` (packet done/empty):
+     {extension_available, cap, new_items_in_stock, projected_due_7d,
+     capacity_7d, next|reason+alternative}. `dojo daily --extend --json`
+     returns a normal session envelope with items origin:"extension", or the
+     refusal block with ok:true (no is an answer, not an error). `--force`
+     overrides but always emits the projection first.
+   - Guard: projected_due_7d + K ≤ packet_size × 7 × pacing.headroom(0.8),
+     global across campaigns, counting existing FSRS dues incl. overdue.
+   - Sourcing order: unattempted → candidates → max ONE generation task on
+     the weakest topic. Never today's reviews; no pull-forward. Once per
+     calendar day. Extension attempts carry an origin marker (reflection can
+     discount appetite-mode evidence).
    **Default: build the capacity channel (extension + debt guard) INSTEAD of
    `dojo more`, after route-first entry.**
    Independent defect found during this analysis, ledgered in OPEN-PROBLEMS:
@@ -155,6 +174,15 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
    - Ship: `dojo campaign list` (status/phase/retention/idle), `dojo campaign
      archive <id>` (+confirm), completion + idle notices in daily,
      maintenance status per ADR 005.
+   - Include the **windowed-criteria fix** (owner asked "can the end state
+     be reached?", 2026-07-09): phase advancement currently averages accuracy
+     over ALL attempts ever on the phase's topics — a bad start drags a
+     lifetime mean and can stall the final phase long past current ability.
+     Evaluate criteria over a recent window (ADR 008 style) so completion is
+     reachable in time proportional to current performance. Also: today
+     NOTHING observes active_phase_index == len(plan) — a finished campaign
+     silently keeps practicing/replenishing; the completion notice is what
+     makes the end state real.
    **Default: implement after route-first entry and the capacity channel —
    it composes with both.**
 
