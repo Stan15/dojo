@@ -129,18 +129,22 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
      new items (no binge evidence floods), debt-gated generation (no churn),
      global guard (no Anki collapse).
    **Interface spec (owner asked for exact shape, 2026-07-09):**
-   - Human: offer appears ONLY at practice_loop session end, after the stats
-     summary, default No ("Extend with up to 3 new items (2 in stock + 1
-     generated)? [y/N]"); guard-closed replaces the offer with the honest
-     refusal + projection + `dojo start --topic <weakest>` alternative.
-     Standalone: `dojo daily --extend`.
+   - **Verb decision (owner asked 2026-07-09): three doors, one word.**
+     (1) Session-end offer in practice_loop (primary, zero commands,
+     default No); (2) re-running `dojo daily` after completion IS the
+     capacity moment (what a naive user does anyway — offer or honest
+     refusal instead of just "day off"); (3) explicit verb **`dojo more`**
+     — the word users guess; the superseded thing was the bonus-packet
+     MECHANISM, not the word; `more` is now simply the system's honest
+     answer to appetite. `daily --extend` is DROPPED; agents use
+     `dojo more --json`. One implementation, three doors.
    - Agent: `capacity` block on `dojo answer --json` (when
      is_session_completed) and `dojo daily --json` (packet done/empty):
      {extension_available, cap, new_items_in_stock, projected_due_7d,
-     capacity_7d, next|reason+alternative}. `dojo daily --extend --json`
-     returns a normal session envelope with items origin:"extension", or the
-     refusal block with ok:true (no is an answer, not an error). `--force`
-     overrides but always emits the projection first.
+     capacity_7d, next|reason+alternative}. `dojo more --json` returns a
+     normal session envelope with items origin:"extension", or the refusal
+     block with ok:true (no is an answer, not an error). `--force` overrides
+     but always emits the projection first.
    - Guard: projected_due_7d + K ≤ packet_size × 7 × pacing.headroom(0.8),
      global across campaigns, counting existing FSRS dues incl. overdue.
    - Sourcing order: unattempted → candidates → max ONE generation task on
@@ -153,6 +157,35 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
    `_enforce_queue_limit` archives oldest-by-created_at regardless of FSRS
    state — it can discard consolidated memories to make room for fresh
    generations today, no appetite feature needed.
+
+1. **Insight visibility with provenance** (owner-directed 2026-07-09:
+   "insanely well thought out visibility tools so user feels complete
+   ownership over their learning"). The learner model personalizes
+   everything yet is invisible today (stats shows only a COUNT; no insights
+   command exists). Design — inspectable, traceable, contestable,
+   consequential:
+   - SEE: `dojo insights [--campaign] [--all]` — the model grouped by topic:
+     key, description in the model's recorded words, status, age, evidence
+     count, last-cited. Resolved insights under --all (what you overcame is
+     part of ownership).
+   - TRACE: `dojo insights show <id>` — the receipts card: every evidence
+     attempt rendered as date · prompt · the learner's VERBATIM answer ·
+     score · grader (I10) · error_tag. All data already stored
+     (insight.sources → attempt ids; attempts keep prompt + user_answer).
+     "We believe this because on these occasions you wrote this."
+   - CONTEST: `dojo insights resolve <id> --because "..."` — learner override
+     is highest authority; the reason stored verbatim, fed to the next
+     reflection as learner-voice feedback. ALSO advertise: insights are plain
+     markdown files — direct edits are first-class (conformance-tested).
+   - EFFECT: daily announces insight creates/updates once ("reflection
+     updated 2 beliefs about you — dojo insights") via the same
+     announce-once machinery as plan changes (Tier-0 applies silently;
+     silent ≠ invisible). Forward tracing gap: generation doesn't stamp
+     which insights it targeted — record targeted insight keys in generation
+     task context so `insights show` can say "3 exercises this week targeted
+     this" (the visible-work moment).
+   **Default: implement alongside campaign lifecycle (both are the
+   ownership/visibility block, STATE item 3).**
 
 1. **Campaign lifecycle: view, complete, archive** (your 2026-07-09 question).
    → **Owner-approved 2026-07-09** — directed work, STATE item 3.

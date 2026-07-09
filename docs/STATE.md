@@ -54,15 +54,23 @@ committed work, not proposals awaiting an answer._
    in QUESTIONS.md: goals route against the registry first (extend = minor
    additive plan change under authority), propose_campaign/"no, new" hands
    off to the full plan pipeline; skip when zero campaigns or explicit new.
-2. **Capacity channel (supersedes `dojo more` — owner-approved 2026-07-09)**
-   — QUESTIONS.md: bounded acquisition top-up at session end + global
-   review-debt guard; honest refusal with projection; `start --topic` as the
-   debt-free alternative. DO NOT lose this: it replaced the bonus-packet
+2. **Capacity channel — owner-approved 2026-07-09** — QUESTIONS.md has the
+   full interface spec: bounded acquisition top-up + global review-debt
+   guard; honest refusal with projection; `start --topic` as the debt-free
+   alternative. Verb decision (owner asked): three doors — session-end
+   offer, capacity-aware `daily` re-run, and explicit **`dojo more`**
+   (`daily --extend` dropped; the superseded thing was the bonus-packet
+   mechanism, not the word). DO NOT lose this: it replaced the bonus-packet
    idea after the owner's core-need analysis request.
-3. **Campaign lifecycle: list/show/archive + completion detection** — owner-
-   approved 2026-07-09 (QUESTIONS.md): consent-gated archive, deterministic
-   all-phases-done detection, maintain/archive/extend choice (ties to
-   ADR 005 backlog).
+3. **Ownership/visibility block — owner-approved 2026-07-09** (QUESTIONS.md
+   has both designs):
+   a. **Insight visibility with provenance**: `dojo insights` (see) /
+      `insights show` (receipts: verbatim answers behind every belief) /
+      `insights resolve --because` (contest, learner-voice) / announce-once
+      in daily + generation stamping targeted insight keys (effect).
+   b. **Campaign lifecycle**: list/show/archive, deterministic completion
+      detection with maintain/archive/extend choice, windowed phase
+      criteria (end state must be reachable), ADR 005 maintenance status.
 4. **Fresh full eval re-baseline** — prompts/payloads changed again (reflect
    +PLAN section): delete the (codex,codex) pair baseline, run
    `DOJO_EVAL_DRIVER="codex exec --skip-git-repo-check -s read-only" python -m pytest -m eval -q`
