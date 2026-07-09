@@ -77,6 +77,14 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
 
    **Default: implement the tiered model with corpus wave 4 (STATE item 2) —
    rails first (pure code+tests), then prompt + scenarios.**
+   → **Shipped 2026-07-09** (owner: "we need to address this"): rails in
+   tasks/authority.py + gated apply_reflect + `dojo plan` lifecycle + daily
+   surfacing; reflect prompt gained PLAN section, revision evidence rule, and
+   the questions channel; corpus wave 4 change-authority scenarios landed.
+   One refinement to the ledgered design: learner-voice evidence includes
+   answers to DIAGNOSTIC questions (the system asked, the learner told it) —
+   this is what makes onboarding calibration and the Tier-3 question loop
+   compose.
 
 1. **Route-first entry for learning goals** (your 2026-07-09 question):
    "I want to learn xyz" should hit the ROUTER first, not `campaign plan`.
@@ -123,6 +131,28 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
    `_enforce_queue_limit` archives oldest-by-created_at regardless of FSRS
    state — it can discard consolidated memories to make room for fresh
    generations today, no appetite feature needed.
+
+1. **Campaign lifecycle: view, complete, archive** (your 2026-07-09 question).
+   Findings: there is NO `dojo campaign list` (campaigns visible only via
+   stats), and `store.campaigns.archive()` exists but is unexposed. Your
+   mechanism, refined:
+   - Detection is DETERMINISTIC, not a generation meta-question: all-phases-
+     passed is pure math (active_phase_index ≥ len(plan)) — daily announces
+     completion like it announces plan proposals. Reflection's new
+     `questions` channel handles the SOFT signals (mission drift, long idle:
+     days_since_practice is already computed).
+   - Reflection never PERFORMS the archive — AI proposes, learner disposes
+     (same authority grammar as plans). Archive = "I accept forgetting";
+     always a human command/confirm.
+   - Completion offers three doors: **maintain** (default — no new material,
+     retention trickle only; this is ADR 005's maintenance phase), **archive**
+     (leave rotation, git keeps history), **extend** (feeds the route-first
+     learn flow).
+   - Ship: `dojo campaign list` (status/phase/retention/idle), `dojo campaign
+     archive <id>` (+confirm), completion + idle notices in daily,
+     maintenance status per ADR 005.
+   **Default: implement after route-first entry and the capacity channel —
+   it composes with both.**
 
 1. **Post-packet appetite: `dojo more`** (your 2026-07-09 question). Today:
    re-running `dojo daily` drains due items the packet cap held back (works);
