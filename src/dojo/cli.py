@@ -1401,7 +1401,9 @@ def cmd_task_list(args: argparse.Namespace) -> int:
 
 
 def cmd_task_show(args: argparse.Namespace) -> int:
-    """`dojo task show`: one task as JSON; --prompt prints only the raw prompt body (pipe it to a model)."""
+    """`dojo task show`: one task as JSON; --prompt prints only the raw prompt
+    body (pipe it to a model); --trace prints the submission history — the
+    model's own words, verbatim, behind whatever this task produced."""
     from .store import DojoStore
 
     store = DojoStore(_db_path(args))
@@ -1411,6 +1413,21 @@ def cmd_task_show(args: argparse.Namespace) -> int:
         return 1
     if args.prompt:
         print(task.prompt)
+        return 0
+    if getattr(args, "trace", False):
+        if _use_json(args):
+            _print_json({"ok": True, "task_id": task.id, "kind": task.kind,
+                         "status": task.status, "trace": task.trace})
+            return 0
+        if not task.trace:
+            console.print("[dim]no submissions yet — the task is still pending[/dim]")
+            return 0
+        for i, entry in enumerate(task.trace, 1):
+            mark = "[green]✓ accepted[/green]" if entry.get("ok") else "[red]✗ rejected[/red]"
+            console.print(f"\n[bold]submission {i}[/bold] · {entry.get('at', '?')} · {mark}")
+            for err in entry.get("errors", []):
+                console.print(f"  [red]{err}[/red]")
+            console.print(entry.get("raw", ""))
         return 0
     _print_json({**task.model_dump(exclude={"prompt"}), "prompt": task.prompt})
     return 0
@@ -2110,6 +2127,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_task_show = p_task_sub.add_parser("show")
     p_task_show.add_argument("task_id")
     p_task_show.add_argument("--prompt", action="store_true", help="print only the prompt body")
+    p_task_show.add_argument("--trace", action="store_true",
+                             help="the submission history: the model's own words, accepted and rejected")
     p_task_show.set_defaults(func=cmd_task_show)
     p_task_submit = p_task_sub.add_parser("submit")
     p_task_submit.add_argument("task_id")

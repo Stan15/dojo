@@ -4,6 +4,40 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
 
 ## Open
 
+1. **Model-output traces with provenance** (your 2026-07-09 question: "a
+   model might fetch a website, do whatever, before the final JSON — JSON
+   may not be all it outputs"). Analysis of the core need:
+   - Entity→task provenance already exists everywhere (insight/exercise
+     `generation_run`, plan journal `task_id`, capture `proposal.task_id`)
+     — but the task discards the model's actual words: `submit` keeps
+     `response_bytes` and truncated error strings, never the raw text. The
+     audit chain dead-ends one hop before "what did the model say?".
+   - **Boundary principle**: dojo's provenance domain is the TASK BOUNDARY.
+     The harness's intermediate steps (fetches, tool calls, its own
+     reasoning turns) happen in the harness's context — invisible and
+     unverifiable to dojo, by design (ADR 009/010 single-turn value
+     injection keeps the injection surface closed). Demanding them would
+     break install-and-it-works and record unverifiable claims. What
+     crosses the boundary is the SUBMISSION — and unknown-caliber models
+     wrap their JSON in prose (why extract_json exists): reasoning,
+     "I fetched X", partial work. That text IS the trace.
+   - Material provenance beyond the boundary already has its honest,
+     agent-supplied channel: `capture --locator` (the agent tells us where
+     it read; dojo never fetches). No new channel needed.
+   **Design (implemented same day)**: every submission — accepted AND
+   rejected — is persisted verbatim on the Task entity (`trace` list:
+   timestamp, ok, errors, raw), TAIL-clipped at TASK_TRACE_CLIP_BYTES
+   (heads are prompt echoes; answers and their surrounding reasoning live
+   at the end), truncation marked (I10). On the entity, not a sidecar
+   file, so I7 round-trip, `dojo export`, and future backends carry it for
+   free; `submit` stays the only writer (I5). The missing link closed:
+   attempts record `grade_run` when an AI grade lands. Surfaces:
+   `dojo task show <id> --trace` renders the submission history;
+   `dojo insights show` names the generating task and the trace command —
+   belief → verbatim answers → generating task → the model's own words.
+   Storage: tasks/ already grows forever (ledgered housekeeping backlog
+   now includes traces — same cleanup, richer payoff).
+
 1. **Generate prompt OUTPUT skeletons from code?** (your 2026-07-09 question —
    motivated by the day's finding that every eval failure was a validator the
    template never stated). My analysis: full generation is the wrong fix —

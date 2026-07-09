@@ -705,12 +705,20 @@ class DojoAPI:
             "description": ins.description,
             "resolution": ins.resolution,
             "receipts": receipts,
+            # Full provenance chain: the reflection task that wrote this
+            # belief keeps the model's verbatim submission in its trace.
+            "generated_by": ins.generation_run,
             "effect": {
                 "exercises_targeting": len(targeted),
                 "last_7_days": sum(1 for ex in targeted if ex.created_at >= week_ago),
             },
-            "next": "disagree with this belief? dojo insights resolve "
-                    f"{ins.id} --because \"<your words>\" — your reason outranks the evidence",
+            "next": (
+                f"the model's own words behind it: dojo task show {ins.generation_run} --trace; "
+                if ins.generation_run else ""
+            ) + (
+                "disagree? dojo insights resolve "
+                f"{ins.id} --because \"<your words>\" — your reason outranks the evidence"
+            ),
         }
 
     def insight_resolve(self, insight_id: str, because: str) -> dict[str, Any]:

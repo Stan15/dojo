@@ -49,6 +49,12 @@ ROUTE_REASON_WORDS = 12
 ROUTE_NEW_NAME_WORDS = 4
 ROUTE_NEW_MISSION_WORDS = 15
 
+# --- task traces (provenance, owner decision 2026-07-09) ---
+# Raw submissions are kept TAIL-first: harness CLIs echo the prompt before
+# the answer, so the head duplicates the stored payload while the answer and
+# its surrounding reasoning live at the end.
+TASK_TRACE_CLIP_BYTES = 8 * 1024
+
 
 def word_count(text: str) -> int:
     """Whitespace-token count — the one definition of "word" for every cap."""

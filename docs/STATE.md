@@ -113,10 +113,10 @@ committed work, not proposals awaiting an answer. Item numbering is stable
 5. ✓ v0.2.0 tagged + pushed 2026-07-09 (owner's default at the pause);
    v1.0.0 decision still reserved for after the quality-iteration work.
 6. Backlog (ledgered in docs/design/usecase-audit.md + OPEN-PROBLEMS):
-   OP #14 queue-limit archives consolidated memories; fulfilled-task
-   housekeeping (tasks/ grows forever); interleave share tuning (wants real
-   usage data); OP #13 snapshot-undo. (ADR 005 maintenance: shipped in
-   item 3b.)
+   fulfilled-task housekeeping (tasks/ grows forever — now including
+   submission traces, so the cleanup pays for provenance too); interleave
+   share tuning (wants real usage data); OP #13 snapshot-undo. (ADR 005
+   maintenance: shipped in item 3b; OP #14: fixed 2026-07-09.)
 
 ## Standing owner directives (must survive every session)
 

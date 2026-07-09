@@ -357,3 +357,60 @@ class TestGradeApplier:
             "score": 0.5, "evidence": "aurait", "feedback": "ok", "error_tag": None,
         }))
         assert not outcome.ok and any("score" in e for e in outcome.errors)
+
+
+class TestSubmissionTraces:
+    """Provenance (owner decision 2026-07-09): every submission — accepted or
+    rejected — persists verbatim on the task; entities point at it via
+    generation_run/grade_run, so the model's own words back every AI-derived
+    belief, item, and score."""
+
+    def test_accepted_submission_lands_in_trace_verbatim(self, store):
+        task_id = emit_generate(store)
+        raw = "Let me think about this...\n" + valid_generate_payload() + "\nDone!"
+        assert service.submit(store, task_id, raw).ok
+        trace = store.tasks.get(task_id).trace
+        assert len(trace) == 1 and trace[0]["ok"] is True
+        assert trace[0]["raw"] == raw, "prose around the JSON is the trace — keep it"
+        assert "errors" not in trace[0]
+
+    def test_rejected_submissions_keep_raw_and_errors(self, store):
+        task_id = emit_generate(store)
+        service.submit(store, task_id, "utter nonsense, no JSON at all")
+        assert service.submit(store, task_id, valid_generate_payload()).ok
+        trace = store.tasks.get(task_id).trace
+        assert [e["ok"] for e in trace] == [False, True]
+        assert "nonsense" in trace[0]["raw"]
+        assert trace[0]["errors"], "why it was rejected rides with what was rejected"
+
+    def test_trace_clips_from_the_head_keeping_the_answer(self, store):
+        from dojo import limits
+        task_id = emit_generate(store)
+        raw = ("prompt echo " * 2000) + valid_generate_payload()
+        assert service.submit(store, task_id, raw).ok
+        kept = store.tasks.get(task_id).trace[0]["raw"]
+        assert kept.startswith("…[head truncated]")
+        assert len(kept.encode()) <= limits.TASK_TRACE_CLIP_BYTES + len("…[head truncated]".encode())
+        assert '"note": null' in kept, "the tail (the actual answer) survives the clip"
+
+    def test_ai_grade_links_attempt_to_its_task(self, store):
+        store.exercises.save(CAMP_ID, Exercise(
+            id="ex_g", topic_path="french.oral", difficulty="beginner",
+            answer="oui", rubric="- says oui", prompt="dire oui?",
+        ))
+        store.attempts.save(CAMP_ID, Attempt(
+            id="att_g", session_id="s1", exercise_id="ex_g", campaign_id=CAMP_ID,
+            score=0.0, latency_seconds=3.0, user_answer="euh, oui je crois",
+        ))
+        camp = store.campaigns.get(CAMP_ID)
+        compiled = compiler.compile_grade(
+            store, camp, store.exercises.get(CAMP_ID, "ex_g"),
+            attempt_id="att_g", user_answer="euh, oui je crois",
+        )
+        task = service.emit(store, compiled)
+        payload = json.dumps({"score": 0.7, "evidence": "oui je crois",
+                              "feedback": "Close; drop the hedge.", "error_tag": None})
+        assert service.submit(store, task.id, payload).ok
+        att = store.attempts.get(CAMP_ID, "att_g")
+        assert att.grade_run == task.id, "a score's trace is one pointer away"
+        assert store.tasks.get(task.id).trace[0]["ok"] is True

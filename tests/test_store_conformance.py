@@ -122,6 +122,7 @@ def make_attempt() -> Attempt:
         score=0.7,
         latency_seconds=42.5,
         origin="extension",  # appetite-mode marker (dojo more) must round-trip
+        grade_run="tsk_j9k0",  # provenance link to the grading task's trace
         feedback="felt rushed",
         prompt="Traduisez :\n\n> He would have gone.\n",
         user_answer="Il serait allé.\n\nAvec hésitation.",
@@ -134,6 +135,11 @@ def make_task() -> Task:
         kind="exercise.generate",
         campaign_id=CAMP_ID,
         context={"n_items": 3, "topic_path": "french.oral.part_a", "mode": "grounded"},
+        trace=[{  # the model's words behind every derived entity must round-trip
+            "at": "2026-07-09T12:00:00+00:00", "ok": False,
+            "errors": ["items[0] needs both answer and rubric"],
+            "raw": "Sure! Here is the JSON:\n{\"items\": []}\n…multiline\nprose…",
+        }],
         payload_bytes=4096,
         prompt="You are drafting practice exercises for one learner.\n\n## MISSION\nReach NCLC 7.",
     )

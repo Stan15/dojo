@@ -518,6 +518,7 @@ class Attempt(StoredEntity):
     skip_reason: Optional[str] = None
     feedback: Optional[str] = None  # the learner's own comment (reflection input)
     grader: Optional[str] = None  # "exact" | "self" | "ai" — I10: who produced the score
+    grade_run: Optional[str] = None  # the attempt.grade task whose trace backs an AI score
     grade_feedback: Optional[str] = None  # grader → learner, one correction
     grade_evidence: Optional[str] = None  # verbatim quote from the answer
     error_tag: Optional[str] = None  # compact pattern label, feeds reflection
@@ -586,6 +587,7 @@ class Task(StoredEntity):
     status: str = "pending"  # pending | fulfilled | failed
     campaign_id: Optional[str] = None
     context: Dict[str, Any] = Field(default_factory=dict)  # applier inputs (session_id, n_items, …)
+    trace: List[Dict[str, Any]] = Field(default_factory=list)  # every submission verbatim (tail-clipped): at · ok · errors · raw
     submissions: int = 0
     max_submissions: int = 3  # first try + 2 retries (I5)
     error_history: List[str] = Field(default_factory=list)

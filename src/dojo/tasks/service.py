@@ -104,8 +104,25 @@ class SubmitOutcome:
     applied: Optional[dict[str, Any]] = None
 
 
+def _trace_raw(raw: str) -> str:
+    """The submission verbatim, TAIL-clipped to TASK_TRACE_CLIP_BYTES with a
+    visible marker (I10): harness CLIs echo the prompt before the answer, so
+    the head duplicates the stored payload while the answer and its
+    surrounding reasoning live at the end."""
+    data = raw.encode("utf-8")
+    if len(data) <= limits.TASK_TRACE_CLIP_BYTES:
+        return raw
+    kept = data[-limits.TASK_TRACE_CLIP_BYTES:].decode("utf-8", errors="ignore")
+    return "…[head truncated]" + kept
+
+
 def submit(store, task_id: str, raw: str) -> SubmitOutcome:
     """The one door for AI output (I5): parse → schema-validate → applier.
+
+    Every submission — accepted or rejected — lands verbatim (tail-clipped)
+    in the task's `trace`: entities point at their task via generation_run/
+    grade_run, so the trace is the model's own words behind every AI-derived
+    belief, item, and score (provenance, owner decision 2026-07-09).
 
     Rejections record the errors on the task and count toward
     `max_submissions` (then the task fails permanently — honest degradation).
@@ -127,6 +144,12 @@ def submit(store, task_id: str, raw: str) -> SubmitOutcome:
     task.submissions += 1
     task.response_bytes = len(raw.encode("utf-8"))
     task.updated_at = datetime.now(timezone.utc).isoformat()
+    task.trace.append({
+        "at": task.updated_at,
+        "ok": not errors,
+        **({"errors": errors[:5]} if errors else {}),
+        "raw": _trace_raw(raw),
+    })
 
     if errors:
         task.error_history.extend(errors[:5])
@@ -335,6 +358,7 @@ def apply_grade(store, task: Task, result: GradeResult) -> dict[str, Any]:
 
     attempt.score = result.score
     attempt.grader = "ai"
+    attempt.grade_run = task.id  # provenance: the trace behind this score
     attempt.grade_evidence = result.evidence
     attempt.grade_feedback = result.feedback
     attempt.error_tag = result.error_tag

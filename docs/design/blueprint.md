@@ -385,8 +385,11 @@ that prove it; fixtures precede implementations for anything format-shaped.
 
 `dojo why` (every scheduling choice, one sentence), `dojo stats` (retention,
 atrophy, token spend per task kind), `dojo doctor` (store validation, git health,
-task-queue health), task run traces in-store (payload/response byte counts,
-validation error history), and honest counters in every envelope (`skipped`,
+task-queue health), full task traces in-store (every submission verbatim,
+tail-clipped and marked — accepted AND rejected — plus payload/response byte
+counts; entities point at their task via `generation_run`/`grade_run`, so the
+model's own words back every AI-derived belief, item, and score: `dojo task
+show <id> --trace`), and honest counters in every envelope (`skipped`,
 `truncated`, `pending_tasks`, `unrouted_captures`). The learner's git log doubles
 as a complete audit trail of their learning life.
 
