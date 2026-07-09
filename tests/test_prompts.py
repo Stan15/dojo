@@ -12,7 +12,9 @@ from pathlib import Path
 
 import pytest
 
+from dojo import limits
 from dojo.prompts import TemplateError, render, _templates_dir
+from dojo.tasks.compiler import TEMPLATES
 
 TASK_TEMPLATES = [
     "exercise_generate.md",
@@ -21,6 +23,7 @@ TASK_TEMPLATES = [
     "campaign_reflect.md",
     "campaign_plan.md",
     "capture_route.md",
+    "goal_route.md",
 ]
 
 FRAGMENTS = [
@@ -49,6 +52,38 @@ class TestInventory:
         for construct in ("{% ", "{{#", "{{^", "<%"):
             assert construct not in text, "templates are value-injection only — no logic"
 
+    @pytest.mark.parametrize("kind", sorted(limits.TEMPLATE_CAPS))
+    def test_every_declared_cap_is_stated_in_its_template(self, kind: str):
+        """The drift gate (owner decision 2026-07-09): every validator cap a
+        fulfiller can trip must appear in its template — as a PLACEHOLDER, so
+        the number is injected from limits.py and can never go stale. A
+        template that forgets a floor goes red here, not in a live model run
+        (the failure class behind every 2026-07-09 eval triage)."""
+        text = (_templates_dir() / TEMPLATES[kind]).read_text(encoding="utf-8")
+        missing = [
+            name for name in limits.TEMPLATE_CAPS[kind]
+            if not re.search(r"\{\{\s*" + re.escape(name) + r"\s*\}\}", text)
+        ]
+        assert not missing, (
+            f"{TEMPLATES[kind]} never states these validator caps: {missing} — "
+            "a floor the model can trip must be visible in the prompt"
+        )
+
+    def test_no_stale_literal_numbers_for_declared_caps(self):
+        """Belt and braces: a declared cap's literal value must not ALSO appear
+        hard-coded next to 'words'/'topics' etc. in its template — that's the
+        drift vector the placeholders exist to remove. Structural literals
+        (score bands, rubric counts) are fine; this only patrols phrases the
+        caps own ('≤ N words')."""
+        for kind, caps in limits.TEMPLATE_CAPS.items():
+            text = (_templates_dir() / TEMPLATES[kind]).read_text(encoding="utf-8")
+            for name, value in caps.items():
+                if name.endswith("_words"):
+                    assert f"≤ {value} words" not in text, (
+                        f"{TEMPLATES[kind]}: literal '≤ {value} words' should be the "
+                        f"{{{{ {name} }}}} placeholder"
+                    )
+
 
 class TestRenderStrictness:
     def test_missing_placeholder_raises(self):
@@ -62,6 +97,7 @@ class TestRenderStrictness:
     def test_value_smuggling_placeholder_raises(self):
         with pytest.raises(TemplateError, match="un-interpolated"):
             render("attempt_grade.md", {
+                **limits.TEMPLATE_CAPS["attempt.grade"],
                 "exercise_prompt": "p",
                 "rubric_and_answer": "{{ sneaky }}",
                 "user_answer": "a",
@@ -69,6 +105,7 @@ class TestRenderStrictness:
 
     def test_extra_values_are_fine(self):
         out = render("attempt_grade.md", {
+            **limits.TEMPLATE_CAPS["attempt.grade"],
             "exercise_prompt": "Translate X.",
             "rubric_and_answer": "- correct tense",
             "user_answer": "Il va.",
@@ -87,6 +124,7 @@ class TestGoldenRender:
 
     def test_attempt_grade_golden(self):
         out = render("attempt_grade.md", {
+            **limits.TEMPLATE_CAPS["attempt.grade"],
             "exercise_prompt": "Traduisez : He would have gone.",
             "rubric_and_answer": "Answer: Il serait allé.\n- past conditional with être",
             "user_answer": "Il aurait allé.",

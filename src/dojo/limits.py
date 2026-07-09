@@ -53,3 +53,57 @@ ROUTE_NEW_MISSION_WORDS = 15
 def word_count(text: str) -> int:
     """Whitespace-token count — the one definition of "word" for every cap."""
     return len(text.split())
+
+
+# Every VALIDATOR-ENFORCED cap a fulfiller can trip, per task kind, under the
+# placeholder name its template interpolates (owner decision 2026-07-09: the
+# template states exactly the limits it needs, values injected from here — a
+# number can never go stale, and tests/test_prompts.py fails any template
+# missing one of its declared placeholders, so a floor can never go unstated).
+# Guidance numbers (e.g. "aim for ≤ 10 topics under deadline") stay literal
+# prose: they are pedagogy, not gates.
+TEMPLATE_CAPS: dict[str, dict[str, int]] = {
+    "exercise.generate": {
+        "prompt_words": GENERATE_PROMPT_WORDS,
+        "answer_words": GENERATE_ANSWER_WORDS,
+        "note_words": GENERATE_NOTE_WORDS,
+        "intervention_max_questions": INTERVENTION_MAX_QUESTIONS,
+        "intervention_question_words": INTERVENTION_QUESTION_WORDS,
+        "intervention_reason_words": INTERVENTION_REASON_WORDS,
+    },
+    "exercise.diagnostic": {
+        "diagnostic_prompt_words": DIAGNOSTIC_PROMPT_WORDS,
+    },
+    "attempt.grade": {
+        "evidence_words": GRADE_EVIDENCE_WORDS,
+        "feedback_words": GRADE_FEEDBACK_WORDS,
+        "error_tag_words": GRADE_ERROR_TAG_WORDS,
+    },
+    "campaign.reflect": {
+        "max_new_insights": REFLECT_MAX_NEW_INSIGHTS,
+        "insight_words": REFLECT_INSIGHT_WORDS,
+        "reason_words": REFLECT_REASON_WORDS,
+        "journal_words": REFLECT_JOURNAL_WORDS,
+        "max_questions": REFLECT_MAX_QUESTIONS,
+        "question_words": REFLECT_QUESTION_WORDS,
+        "topic_depth": PLAN_MAX_TOPIC_DEPTH,  # new phase topics (apply_reflect hygiene)
+    },
+    "campaign.plan": {
+        "max_topics": PLAN_MAX_TOPICS,
+        "topic_depth": PLAN_MAX_TOPIC_DEPTH,
+        "max_phases": PLAN_MAX_PHASES,
+        "max_questions": PLAN_MAX_QUESTIONS,
+        "question_words": PLAN_QUESTION_WORDS,
+        "mission_words": PLAN_MISSION_WORDS,
+    },
+    "capture.route": {
+        "reason_words": ROUTE_REASON_WORDS,
+        "new_name_words": ROUTE_NEW_NAME_WORDS,
+        "new_mission_words": ROUTE_NEW_MISSION_WORDS,
+    },
+    "goal.route": {
+        "reason_words": ROUTE_REASON_WORDS,
+        "new_name_words": ROUTE_NEW_NAME_WORDS,
+        "new_mission_words": ROUTE_NEW_MISSION_WORDS,
+    },
+}

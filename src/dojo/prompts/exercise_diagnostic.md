@@ -5,8 +5,9 @@ TASK: Write exactly {{ n_items }} short diagnostic questions for topic
 "{{ topic_path }}" that reveal the learner's level, prior knowledge, and goals.
 
 RULES
-1. Each question ≤ 40 words, answerable in one or two sentences. No trick
-   questions, no grading pressure — these calibrate, they do not test.
+1. Each question ≤ {{ diagnostic_prompt_words }} words, answerable in one or two
+   sentences. No trick questions, no grading pressure — these calibrate, they
+   do not test.
 2. Cover different axes across the set: current ability, prior exposure, concrete
    goals or deadlines, preferred kind of practice.
 3. Self-contained: no references to files, links, or earlier exercises.
@@ -22,7 +23,7 @@ OUTPUT — return only this JSON:
 {
   "items": [
     {
-      "prompt": "...",       // one diagnostic question, ≤ 40 words
+      "prompt": "...",       // one diagnostic question, ≤ {{ diagnostic_prompt_words }} words
       "answer": null,
       "rubric": null,
       "skill": "diagnostic"

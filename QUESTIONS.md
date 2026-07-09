@@ -30,6 +30,17 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
      floors; skeleton stays editorial). Not the default — costs bytes and
      moves text out of the editable artifact.
    **Default: declarative caps + drift-gate test, next session.**
+   → **Answered + shipped 2026-07-09** (owner: "i agree with you", with one
+   refinement that improved the design: templates should not know about
+   every limit — interpolate exactly the limits each prompt needs, where it
+   needs them). Implemented: `limits.TEMPLATE_CAPS` (kind → placeholder →
+   constant, single source; guidance numbers stay literal prose), the
+   compiler injects each kind's caps at render (existing `{{ }}` machinery,
+   `{{ window_n }}` precedent), templates now interpolate their own floors
+   only, and two gates in test_prompts.py: every declared cap must appear
+   as a placeholder in its template (a floor can't go unstated), and a
+   declared cap's literal value must not ALSO appear hard-coded ("≤ N
+   words") — the drift vector is patrolled, not just discouraged.
 
 1. **Fulfiller runner** (was "subprocess connectors" — refined per your 2026-07-07
    notes, which changed my recommendation):

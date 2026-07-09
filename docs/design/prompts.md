@@ -44,6 +44,20 @@ money, and pedagogy must survive weak execution:
 10. **Context is compiled, ranked, budgeted** (blueprint §9). Sections below list
     their budgets; the compiler truncates lowest-rank first and marks truncation.
 
+## 1a. Limits interpolate from code — templates state exactly their own floors
+
+(Owner decision 2026-07-09, after the eval triage found every failure was an
+unstated validator floor.) Numeric caps a fulfiller can trip live ONCE, in
+`limits.py`; `limits.TEMPLATE_CAPS` maps each task kind to the placeholder
+names its template interpolates (`≤ {{ reason_words }} words`), and the
+compiler injects them at render. A template references only its own limits —
+no prompt knows another's. Two test gates enforce the contract
+(tests/test_prompts.py): every declared cap must appear as a placeholder in
+its template, and its literal value must not also appear hard-coded. Guidance
+numbers (score bands, "aim for ≤ 10 topics under deadline") stay literal
+prose: pedagogy, not gates. The §3–§7 texts below show rendered values for
+readability.
+
 ## 1b. Model-strength neutrality — the contract is a floor, not a ceiling
 
 Dojo assumes nothing about the fulfiller's strength, in either direction. The

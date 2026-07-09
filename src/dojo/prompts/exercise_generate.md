@@ -17,17 +17,18 @@ RULES
    exercise directly at it.
 6. Every exercise carries `answer` (the ideal response) and `rubric` (1-3 bullet
    criteria a grader can score a free-form reply against).
-7. Each prompt ≤ 120 words. Never leak the answer via phrasing, option design, or
-   answer length.
+7. Each prompt ≤ {{ prompt_words }} words. Never leak the answer via phrasing,
+   option design, or answer length.
 8. Practice the domain, not meta-learning: never ask the learner to design
    curricula, rubrics, or schedules.
 9. Escape hatch — use it honestly: if MISSION or the topic is too vague, if
    SOURCE contradicts itself or the mission's premise (never teach one side of
    a conflict as settled), or if you lack context a competent tutor would need,
-   return ZERO items and an `intervention` with 1-3 sharp questions, each
-   ≤ 25 words (what exactly, in which situations, to what standard, which
-   source to trust). Bad exercises are worse than good questions. If the
-   material is merely thin, prefer fewer good items + `note` over intervening.
+   return ZERO items and an `intervention` with 1-{{ intervention_max_questions }}
+   sharp questions, each ≤ {{ intervention_question_words }} words (what exactly,
+   in which situations, to what standard, which source to trust). Bad exercises
+   are worse than good questions. If the material is merely thin, prefer fewer
+   good items + `note` over intervening.
 
 ## MISSION
 {{ mission }}
@@ -43,15 +44,15 @@ OUTPUT — return only this JSON:
 {
   "items": [
     {
-      "prompt": "...",       // the exercise, ≤ 120 words, markdown allowed
-      "answer": "...",       // ideal answer, ≤ 80 words
+      "prompt": "...",       // the exercise, ≤ {{ prompt_words }} words, markdown allowed
+      "answer": "...",       // ideal answer, ≤ {{ answer_words }} words
       "rubric": "- ...",     // 1-3 scoring criteria
       "skill": "recall|explain|apply|produce|critique"
     }
   ],
-  "note": null,              // ≤ 25 words, only if you had to deviate (e.g. source too thin)
+  "note": null,              // ≤ {{ note_words }} words, only if you had to deviate (e.g. source too thin)
   "intervention": null       // rule 9 only: {"kind": "clarify_goal|need_context|scope_too_broad",
-                             //  "questions": ["...?"], "reason": "≤ 25 words"} — with items []
+                             //  "questions": ["...?"], "reason": "≤ {{ intervention_reason_words }} words"} — with items []
 }
 Check before returning: valid JSON; exactly {{ n_items }} items (or fewer + note,
 or none + intervention); every prompt self-contained; no prompt reveals its answer.

@@ -2,12 +2,12 @@
   "note": "compiled payload bytes per task kind + skill; ~4 bytes ≈ 1 token",
   "tolerance": 0.05,
   "bytes": {
-    "diagnostic": 1199,
-    "generate": 2877,
-    "goal_route": 1524,
-    "grade": 1457,
-    "plan": 2252,
-    "reflect": 2826,
+    "diagnostic": 1202,
+    "generate": 2880,
+    "goal_route": 1527,
+    "grade": 1460,
+    "plan": 2256,
+    "reflect": 2834,
     "route": 1375,
     "skill_md": 4074
   }

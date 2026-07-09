@@ -18,17 +18,18 @@ exercises, return fewer and say why in "note".
    exercise directly at it.
 6. Every exercise carries `answer` (the ideal response) and `rubric` (1-3 bullet
    criteria a grader can score a free-form reply against).
-7. Each prompt ≤ 120 words. Never leak the answer via phrasing, option design, or
-   answer length.
+7. Each prompt ≤ 120 words. Never leak the answer via phrasing,
+   option design, or answer length.
 8. Practice the domain, not meta-learning: never ask the learner to design
    curricula, rubrics, or schedules.
 9. Escape hatch — use it honestly: if MISSION or the topic is too vague, if
    SOURCE contradicts itself or the mission's premise (never teach one side of
    a conflict as settled), or if you lack context a competent tutor would need,
-   return ZERO items and an `intervention` with 1-3 sharp questions, each
-   ≤ 25 words (what exactly, in which situations, to what standard, which
-   source to trust). Bad exercises are worse than good questions. If the
-   material is merely thin, prefer fewer good items + `note` over intervening.
+   return ZERO items and an `intervention` with 1-3
+   sharp questions, each ≤ 25 words (what exactly,
+   in which situations, to what standard, which source to trust). Bad exercises
+   are worse than good questions. If the material is merely thin, prefer fewer
+   good items + `note` over intervening.
 
 ## MISSION
 Reach NCLC 7 oral French by October for the TEF exam.

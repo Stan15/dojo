@@ -120,7 +120,12 @@ def _tier(store) -> float:
 
 
 def _compile(store, kind: str, values: dict[str, Any], context: dict[str, Any]) -> CompiledTask:
-    """Shared budget → clip → render → total-check pipeline for every kind."""
+    """Shared budget → clip → render → total-check pipeline for every kind.
+    The kind's validator caps (limits.TEMPLATE_CAPS) are injected so templates
+    interpolate exactly the limits they state — one source, never stale."""
+    from .. import limits
+
+    values = {**limits.TEMPLATE_CAPS.get(kind, {}), **values}
     mult = _tier(store)
     budgets = SECTION_BUDGETS[kind]
     truncated: list[str] = []

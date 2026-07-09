@@ -8,8 +8,8 @@ RULES
 1. Insights — compare ATTEMPTS with INSIGHTS:
    - pattern repeats → update that insight, appending the new attempt ids;
    - pattern beaten (3+ recent successes where it used to bite) → mark "resolved";
-   - new pattern with 2+ supporting attempts → create it: ≤ 25 words, cite the
-     attempt ids. Max 2 new insights per run;
+   - new pattern with 2+ supporting attempts → create it: ≤ {{ insight_words }}
+     words, cite the attempt ids. Max {{ max_new_insights }} new insights per run;
    - a single miss is a slip, not an insight.
 2. Strategy — change only if the last {{ window_n }} attempts justify it:
    accuracy > 0.85 → raise difficulty; accuracy < 0.50 → lower difficulty or raise
@@ -21,10 +21,11 @@ RULES
    answer asked for this change — a restructure with no such ids is only
    PROPOSED to the learner, never applied.
 4. Questions — the pattern hints the plan is mis-scoped but no FEEDBACK confirms
-   it → ask instead of restructuring: max 2 questions, each ≤ 25 words. They
-   reach the learner as diagnostic prompts; the answers return to you as
-   citable evidence.
-5. Every change carries a `reason` ≤ 20 words — it becomes the audit journal.
+   it → ask instead of restructuring: max {{ max_questions }} questions, each
+   ≤ {{ question_words }} words. They reach the learner as diagnostic prompts;
+   the answers return to you as citable evidence.
+5. Every change carries a `reason` ≤ {{ reason_words }} words — it becomes the
+   audit journal. `journal` sums the run in ≤ {{ journal_words }} words.
 
 ## MISSION
 {{ mission }}
@@ -53,6 +54,6 @@ OUTPUT — return only this JSON:
 A non-null plan_revision carries the FULL phase list, each phase shaped exactly:
 {"phases": [{"phase": 1, "topics": ["a.b"], "criteria": {"min_attempts": 5,
  "min_accuracy": 0.6}, "focus": "..."}], "evidence": ["att_id"], "reason": "..."}
-Check: nulls wherever nothing changed; ≤ 2 creates; ≤ 2 questions; creates carry
-a key; every cited attempt id (insights AND plan) exists in ATTEMPTS; phase
-topics reuse PLAN's — a new one is a lowercase dotted path, ≤ 4 levels.
+Check: nulls wherever nothing changed; ≤ {{ max_new_insights }} creates (each with
+a key); ≤ {{ max_questions }} questions; every cited attempt id (insights AND plan)
+exists in ATTEMPTS; new phase topics: lowercase dotted, ≤ {{ topic_depth }} levels.

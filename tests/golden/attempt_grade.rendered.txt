@@ -11,7 +11,8 @@ RULES
    0.7 — core is right; minor gap or imprecision
    0.3 — relevant attempt; core is wrong or missing
    0.0 — incorrect, empty, or off-topic
-3. Quote ≤ 10 words from the answer in `evidence` that justify the band.
+3. Quote ≤ 10 words from the answer in `evidence` that justify
+   the band.
 4. `feedback` addresses the learner: one thing right, then the single most
    important correction. ≤ 40 words, no greeting.
 5. If the mistake looks like a pattern (not a slip), name it in `error_tag`

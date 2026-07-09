@@ -7,8 +7,8 @@ RULES
    written in REGISTRY.
 2. Fits a campaign but no listed topic → "new_topic" with the closest existing
    parent path and a new leaf (≤ 3 words).
-3. Fits no campaign → "propose_campaign" (name ≤ 4 words, mission ≤ 15 words).
-   Never force a bad fit.
+3. Fits no campaign → "propose_campaign" (name ≤ {{ new_name_words }} words,
+   mission ≤ {{ new_mission_words }} words). Never force a bad fit.
 4. Torn between two homes → choose the better one, set confidence "low".
 5. "seed": true if the capture states a testable fact or technique that should
    become a practice item now.
@@ -21,6 +21,6 @@ RULES
 OUTPUT — return only this JSON:
 {"action": "attach|new_topic|propose_campaign|stay_inbox", "campaign": null,
  "topic_path": null, "new_name": null, "new_mission": null,
- "confidence": "high|low", "reason": "≤ 12 words", "seed": false}
+ "confidence": "high|low", "reason": "≤ {{ reason_words }} words", "seed": false}
 Check: campaign and topic_path copied verbatim from REGISTRY (only a new_topic
-leaf or a proposed campaign may be new text); reason ≤ 12 words.
+leaf or a proposed campaign may be new text); reason ≤ {{ reason_words }} words.
