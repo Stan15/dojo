@@ -87,6 +87,7 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
    compose.
 
 1. **Route-first entry for learning goals** (your 2026-07-09 question):
+   → **Owner-approved 2026-07-09** ("i agree with everything") — directed work, STATE item 1.
    "I want to learn xyz" should hit the ROUTER first, not `campaign plan`.
    Close fit → harness relays "looks like <campaign> › <topic> — extend or
    start fresh?"; extend = new_topic + appended phase (a MINOR additive plan
@@ -102,7 +103,9 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
    change-authority milestone (prompt+corpus) completes.**
 
 1. **Post-packet appetite — SUPERSEDES the `dojo more` bonus-packet design
-   below** (your 2026-07-09 "core need" question). The foundational need is
+   below** (your 2026-07-09 "core need" question).
+   → **Owner-approved 2026-07-09** — directed work, STATE item 2.
+   The foundational need is
    a CAPACITY CHANNEL: the learner's daily time/energy varies and the system
    has no input for it ("more" and "too much" are the same missing channel).
    Split the budgets: RETENTION (reviews due) is fixed by memory science —
@@ -133,6 +136,7 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
    generations today, no appetite feature needed.
 
 1. **Campaign lifecycle: view, complete, archive** (your 2026-07-09 question).
+   → **Owner-approved 2026-07-09** — directed work, STATE item 3.
    Findings: there is NO `dojo campaign list` (campaigns visible only via
    stats), and `store.campaigns.archive()` exists but is unexposed. Your
    mechanism, refined:

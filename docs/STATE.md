@@ -46,17 +46,23 @@ reflect prompt now SHOWS the plan (was blind; footprint 1967→2523B,
 deliberate), corpus wave 4 change-authority category (2 scenarios, floors
 raised). 283 tests green._
 
-1. **Route-first entry (`dojo learn`)** — owner-directed 2026-07-09, design
+_Items 1–3 are OWNER-APPROVED directives ("i agree with everything",
+2026-07-09) — execute them from their QUESTIONS.md designs; they are
+committed work, not proposals awaiting an answer._
+
+1. **Route-first entry (`dojo learn`)** — owner-approved 2026-07-09, design
    in QUESTIONS.md: goals route against the registry first (extend = minor
    additive plan change under authority), propose_campaign/"no, new" hands
    off to the full plan pipeline; skip when zero campaigns or explicit new.
-2. **Capacity channel (supersedes `dojo more`)** — QUESTIONS.md: bounded
-   acquisition top-up at session end + global review-debt guard; honest
-   refusal with projection; `start --topic` as the debt-free alternative.
-3. **Campaign lifecycle: list/show/archive + completion detection** — owner
-   question 2026-07-09 (see QUESTIONS.md entry): consent-gated archive,
-   deterministic all-phases-done detection, maintenance-vs-archive choice
-   (ties to ADR 005 backlog).
+2. **Capacity channel (supersedes `dojo more` — owner-approved 2026-07-09)**
+   — QUESTIONS.md: bounded acquisition top-up at session end + global
+   review-debt guard; honest refusal with projection; `start --topic` as the
+   debt-free alternative. DO NOT lose this: it replaced the bonus-packet
+   idea after the owner's core-need analysis request.
+3. **Campaign lifecycle: list/show/archive + completion detection** — owner-
+   approved 2026-07-09 (QUESTIONS.md): consent-gated archive, deterministic
+   all-phases-done detection, maintain/archive/extend choice (ties to
+   ADR 005 backlog).
 4. **Fresh full eval re-baseline** — prompts/payloads changed again (reflect
    +PLAN section): delete the (codex,codex) pair baseline, run
    `DOJO_EVAL_DRIVER="codex exec --skip-git-repo-check -s read-only" python -m pytest -m eval -q`
