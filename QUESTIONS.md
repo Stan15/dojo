@@ -93,6 +93,26 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
    **Default: build `dojo more` after the current docs/README directives,
    before the eval re-baseline.**
 
+   **Known risks under heavy use (owner asked 2026-07-09; analysis only, no
+   fixes yet — these gate the implementation):**
+   - *Binge evidence distorts the learner model*: Attempts carry no
+     session-context marker; reflection's sliding window can fill with
+     fatigue/novelty-mode rows and auto-reflect (≥5 unreflected) can fire off
+     a single binge, recalibrating from unrepresentative data.
+   - *Queue churn discards practiced memories*: `_enforce_queue_limit`
+     archives OLDEST by created_at regardless of FSRS state — heavy
+     generation+promotion replaces consolidated memories with fresh generic
+     items; consolidation loses to novelty, silently.
+   - *Cross-campaign review-debt compounding*: per-campaign caps (~20-30)
+     don't bound the global due-count against the daily packet cap (8);
+     appetite across campaigns can create a permanent "held back" backlog
+     (Anki-style collapse).
+   - Secondary: samey thin-topic generation → skip-row noise in reflection;
+     just-reviewed floods briefly inflate the stats retention estimate.
+   Root cause is provenance blindness (ritual vs appetite evidence;
+   consolidated vs disposable items) — the implementation must mark and
+   weight, not just cap.
+
 ## Answered (2026-07-07)
 
 - **Grading source of truth** — AI grades against rubric when a harness is
