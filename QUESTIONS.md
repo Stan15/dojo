@@ -138,16 +138,17 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
      (statement, never a question) in the daily-completion message.
    - **Daily-completion message** (re-running `daily` when today is done) —
      exact copy, short, lesson implicit, concession last:
-     Human:
+     Human (playful "touch grass" tone; `dojo more` styled as a COMMAND —
+     bold/cyan via rich, backticks in plain text):
        "✓ Done for today — 5 of 5, streak intact.
-        The rep that makes this stick is tomorrow's, not an extra one tonight.
-        Go enjoy the day.  (Really want more? dojo more works within your
-        review budget.)"
+        Tomorrow's rep is the one that makes this stick.
+        Go touch grass. 🌱  (Genuinely still hungry? Run `dojo more` — it
+        only says yes when your review budget agrees.)"
      Agent (--json): {ok: true, session: null, status: "complete_for_today",
-       next: "today's practice is complete — tell the learner it's done and
-       that tomorrow's session is what makes it stick (consistency beats
-       volume); do not offer more practice unprompted; if the learner
-       explicitly asks for more, run: dojo more --json"}
+       next: "today's practice is complete — tell the learner it's done,
+       playfully (go touch grass); tomorrow's session is what makes it stick
+       (consistency beats volume); do not offer more practice unprompted; if
+       the learner explicitly asks for more, run: dojo more --json"}
      (The agent line binds the HARNESS to the no-solicitation rule too.)
    - `dojo more --json` returns a normal session envelope with items
      origin:"extension", or the refusal block with ok:true (no is an answer,
