@@ -150,6 +150,13 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
        (consistency beats volume); do not offer more practice unprompted; if
        the learner explicitly asks for more, run: dojo more --json"}
      (The agent line binds the HARNESS to the no-solicitation rule too.)
+     Dynamic values (owner asked 2026-07-09): "5 of 5" = the completed
+     session's real counts (skips count — engagement, not absence). Streak =
+     DERIVED consecutive practice days from attempt timestamps (no stored
+     counter exists or is needed). **No-guilt rule**: show "day N in a row"
+     only when N ≥ 2 and true; day-1/post-gap runs simply omit the streak
+     clause — a broken streak is NEVER mentioned (absence shows up as
+     gentler scheduling, not commentary).
    - `dojo more --json` returns a normal session envelope with items
      origin:"extension", or the refusal block with ok:true (no is an answer,
      not an error): {extension_available: false, projected_due_7d,
