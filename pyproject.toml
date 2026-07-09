@@ -17,6 +17,17 @@ dependencies = [
 
 [project.optional-dependencies]
 pdf = ["fpdf2>=2.7.0"]
+# Built with ProperDocs (the maintained MkDocs 1.x continuation; MkDocs
+# itself was abandoned upstream in 2026). mkdocs-material still declares a
+# dep on mkdocs<2, so both end up installed; the build uses `properdocs`.
+docs = [
+    "properdocs>=1.6.5",
+    "mkdocs-material>=9.5",
+    "mkdocstrings[python]>=0.24",
+    "mkdocs-gen-files>=0.5",
+    "mkdocs-literate-nav>=0.6",
+    "mkdocs-section-index>=0.3",
+]
 
 [project.scripts]
 dojo = "dojo.cli:main"

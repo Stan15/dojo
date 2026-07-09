@@ -9,3 +9,11 @@ run = ".venv/bin/pytest"
 [tasks.run]
 description = "Run the local developer CLI"
 run = ".venv/bin/python run_dojo.py"
+
+[tasks.docs]
+description = "Build the documentation site into site/ (pip install -e '.[docs]' first)"
+run = ".venv/bin/properdocs build -f mkdocs.yml"
+
+[tasks.docs-serve]
+description = "Serve the documentation site with live reload"
+run = ".venv/bin/properdocs serve -f mkdocs.yml"
