@@ -22,6 +22,8 @@ COMPILE_FN_TO_KIND = {
     "grade": "attempt.grade",
     "reflect": "campaign.reflect",
     "plan": "campaign.plan",
+    "route": "capture.route",
+    "goal_route": "goal.route",
 }
 
 
@@ -43,6 +45,7 @@ class TestCorpusCoverage:
         "meta-learning": 3,
         "domain-breadth": 4,
         "change-authority": 2,
+        "routing": 3,
     }
     MIN_DISTINCT_DOMAINS = 14
 

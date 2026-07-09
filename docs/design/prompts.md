@@ -110,6 +110,13 @@ RULES
    answer length.
 8. Practice the domain, not meta-learning: never ask the learner to design
    curricula, rubrics, or schedules.
+9. Escape hatch — use it honestly: if MISSION or the topic is too vague, if
+   SOURCE contradicts itself or the mission's premise (never teach one side of
+   a conflict as settled), or if you lack context a competent tutor would need,
+   return ZERO items and an `intervention` with 1–3 sharp questions, each
+   ≤ 25 words (what exactly, in which situations, to what standard, which
+   source to trust). Bad exercises are worse than good questions. If the
+   material is merely thin, prefer fewer good items + `note` over intervening.
 
 ## MISSION
 {{mission}}
@@ -244,7 +251,9 @@ OUTPUT — return only this JSON:
     {"op": "create|update|resolve", "id": null, "text": "...", "evidence": ["att_id"], "reason": "..."}
   ],
   "strategy": null,        // or {"difficulty": "...", "scaffolding": "...", "reason": "..."}
-  "plan_revision": null,   // or {"phases": [...], "evidence": ["att_id"], "reason": "..."}
+  "plan_revision": null,   // or the FULL phase list: {"phases": [{"phase": 1, "topics": ["a.b"],
+                           //   "criteria": {"min_attempts": 5, "min_accuracy": 0.6}, "focus": "..."}],
+                           //   "evidence": ["att_id"], "reason": "..."} — shape shown in the template
   "questions": [],         // ≤ 2, each ≤ 25 words: ask when evidence can't justify restructuring
   "journal": "..."         // ≤ 30 words: what changed and why, or "no change: <why>"
 }
@@ -274,8 +283,9 @@ TASK: From GOAL, produce a mission, a topic tree, a phased plan, and up to 3
 refinement questions.
 
 RULES
-1. Include a topic only if the mission fails without it. ≤ 18 topics, ≤ 3 levels,
-   dot-separated paths.
+1. Include a topic only if the mission fails without it. ≤ 18 topics, ≤ 4 levels,
+   dot-separated paths. The 4-level cap binds even when extending EXISTING
+   TOPICS: flatten deeper ideas into a level-4 leaf (a.b.c.d_e), never nest past 4.
 2. Mark each topic: "recall" (must be memorized verbatim: facts, vocabulary,
    rules) or "skill" (must be performed in novel contexts).
 3. 3–6 phases. Phase 1 is always a short calibration (diagnostic; criteria:
@@ -338,12 +348,25 @@ OUTPUT — return only this JSON:
  "topic_path": null, "new_name": null, "new_mission": null,
  "confidence": "high|low", "reason": "≤ 12 words", "seed": false}
 Check: campaign and topic_path copied verbatim from REGISTRY (only a new_topic
-leaf or a proposed campaign may be new text).
+leaf or a proposed campaign may be new text); reason ≤ 12 words.
 ```
 
 Why: verbatim-copy rule + server-side existence validation (ADR 013) makes
 misfiling structurally shallow; the `stay_inbox`/`propose_campaign` hatches mean a
 weak model is never forced to jam a capture somewhere wrong.
+
+## 7b. `goal.route` (route-first entry, 2026-07-09)
+
+Template `goal_route.md`: the capture router's sibling for "I want to learn X"
+(QUESTIONS 2026-07-09). Same REGISTRY digest, same RouteResult contract and
+budgets (3 KB class), with goal-specific rules: `stay_inbox` is banned (a goal
+always takes attach / new_topic / propose_campaign — enforced by the applier),
+and the proposed name/mission of a `propose_campaign` seed the chained
+`campaign.plan` task. The applier writes nothing on a near fit — the learner
+resolves extend-or-start-fresh via `dojo learn extend|new <task-id>`; topic
+hygiene (existing path → attach, `[a-z0-9_]+` leaf, depth ≤ 4) is enforced
+mechanically for BOTH routers and benchmarked by the `routing` corpus
+category (reuse-over-create / warranted-new-leaf / extend-not-duplicate).
 
 ## 8. File layout — prompts are editable artifacts, not code
 

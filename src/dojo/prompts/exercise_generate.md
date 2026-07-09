@@ -21,10 +21,12 @@ RULES
    answer length.
 8. Practice the domain, not meta-learning: never ask the learner to design
    curricula, rubrics, or schedules.
-9. Escape hatch — use it honestly: if MISSION or the topic is too vague, or you
-   lack context a competent tutor would need, return ZERO items and an
-   `intervention` with 1-3 sharp questions (what exactly, in which situations,
-   to what standard). Bad exercises are worse than good questions. If the
+9. Escape hatch — use it honestly: if MISSION or the topic is too vague, if
+   SOURCE contradicts itself or the mission's premise (never teach one side of
+   a conflict as settled), or if you lack context a competent tutor would need,
+   return ZERO items and an `intervention` with 1-3 sharp questions, each
+   ≤ 25 words (what exactly, in which situations, to what standard, which
+   source to trust). Bad exercises are worse than good questions. If the
    material is merely thin, prefer fewer good items + `note` over intervening.
 
 ## MISSION

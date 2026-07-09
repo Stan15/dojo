@@ -88,3 +88,29 @@ edge-tolerant comparison or ~15% of honest passes get discarded.
   snapshot: tests/test_docs_coverage.py fails on any undocumented public
   symbol AND on placeholder (<4 word) docstrings, so the reference site can't
   silently rot.
+
+## 2026-07-09 (route-first / capacity / ownership session)
+
+- **Every server-side validator a model can trip must be STATED in the
+  template it gates — invisible floors are the corpus's dominant failure
+  class.** All four eval failures triaged today were the same bug wearing
+  different clothes: `limits.py` enforced a cap (topic depth 4, intervention
+  question ≤ 25 words, route reason ≤ 12 words) or Pydantic demanded a shape
+  (plan_revision phases) that the prompt never showed. Codex did the RIGHT
+  pedagogy and failed mechanically — the fixes moved scores 0.0→0.83,
+  fail→1.0, fail→0.67 with one-line prompt edits. Discipline going forward:
+  when adding a limit or schema field, grep the template for it in the same
+  commit (prompts.md §7b now models this).
+- **Reuse must be enforced mechanically before it is prompted.** Topic
+  hygiene had prompt-level "prefer attaching" but nothing stopped a router
+  from minting `new_topic` for a path that already exists, a prose leaf, or
+  a 6-level nest — and no eval measured reuse-over-create for either router.
+  Now: applier rejects (exists→"use attach", `[a-z0-9_]+` leaf, depth cap),
+  and the `routing` corpus category benchmarks the semantic half the rails
+  can't check. Rails catch what's checkable; benchmarks watch what isn't.
+- **Push surfaces get principles, pull surfaces get numbers** (owner ruling,
+  capacity channel): the daily-completion message carries no counters — a
+  streak number above "come back tomorrow" is chain pressure however gently
+  worded — while `dojo stats` (consulted by choice) keeps the derived facts.
+  The same shape generalizes: announce-once notices state facts with doors
+  (maintain/archive/extend), never scores.

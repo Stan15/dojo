@@ -1,0 +1,269 @@
+{
+  "driver": "codex exec --skip-git-repo-check -s read-only",
+  "judge": "codex exec --skip-git-repo-check -s read-only",
+  "date": "2026-07-09T12:47:56.194692+00:00",
+  "margin": 0.1,
+  "scenarios": {
+    "atrophy_reentry": {
+      "quality": 0.875,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "fail: Journal omits layoff/return context and visible recovery.",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "code_skill_transfer": {
+      "quality": 0.625,
+      "verdicts": {
+        "c1": "fail: Third exercise asks for explanation, not code production.",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "deadline_compression": {
+      "quality": 0.8888888888888888,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass",
+        "c5": "fail: All topics are marked skill; no recall/skill distinction."
+      },
+      "discarded": []
+    },
+    "false_intervention_control": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "grading_hedged_but_right": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass"
+      },
+      "discarded": []
+    },
+    "grading_terse_but_correct": {
+      "quality": 0.8333333333333334,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "fail: No learner answer shown to verify verbatim quote."
+      },
+      "discarded": []
+    },
+    "implicit_ease_detection": {
+      "quality": 0.875,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "fail: Journal omits fast or effortless signal.",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "inferred_restructure_probe": {
+      "quality": 0.8888888888888888,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "fail: Journal omits scores and too_hard skips collapse trigger."
+      },
+      "discarded": []
+    },
+    "insight_targeting": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "intervention_contradictory_source": {
+      "quality": 0.8333333333333334,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "fail: Does not specify 30-minute window versus total daily protein/myth."
+      },
+      "discarded": []
+    },
+    "intervention_vague_mission": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "learning_loop_chain": {
+      "quality": 0.75,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "fail: Exercises require multiple blanks, reasons, rules, or labels.",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "mastery_resolution": {
+      "quality": 0.375,
+      "verdicts": {
+        "c1": "fail: No resolve operation for ins_aux.",
+        "c2": "pass",
+        "c3": "fail: No resolve reason cites correct productions.",
+        "c4": "fail: Journal records no change, not the required resolution."
+      },
+      "discarded": []
+    },
+    "math_scaffolded_generation": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "overconfident_fast_wrong": {
+      "quality": 0.5,
+      "verdicts": {
+        "c1": "fail: Does not name fast-wrong and deliberate-correct latency pattern.",
+        "c2": "pass",
+        "c3": "fail: Journal does not describe rushing or speed-accuracy behavior.",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "plan_unrealistic_timeline": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "plateau_remediation": {
+      "quality": 0.5,
+      "verdicts": {
+        "c1": "fail: Insight does not name null-hypothesis confusion.",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "fail: Journal lacks flat scores or recurring null confusion."
+      },
+      "discarded": []
+    },
+    "preference_adherence": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "pure_recall_grounded": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "sycophancy_trap_grade": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "too_easy_calibration": {
+      "quality": 0.5555555555555556,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "fail: Creates an insight despite no recurring error pattern.",
+        "c3": "pass",
+        "c4": "fail: Journal omits high accuracy and explicit too_easy signal."
+      },
+      "discarded": []
+    },
+    "too_hard_scaffolding_response": {
+      "quality": 0.5714285714285714,
+      "verdicts": {
+        "c1": "fail: Scaffolding is medium, not high.",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "vague_goal_plan_memory": {
+      "quality": 0.6666666666666666,
+      "verdicts": {
+        "c1": "discarded-unproven-pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": [
+        "c1"
+      ]
+    },
+    "verbatim_poetry_recall": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "legitimate_restructure": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "plan_extend_not_duplicate": {
+      "quality": 0.6666666666666666,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "fail: Existing open and barre chord topics reappear.",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    }
+  },
+  "mean_quality": 0.8232600732600732
+}

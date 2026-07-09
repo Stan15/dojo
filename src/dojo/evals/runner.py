@@ -54,11 +54,17 @@ def load_corpus(tier: str) -> list[dict]:
 
 def seed_store(tmp_path: Path, seed: dict) -> DojoStore:
     """Builds a throwaway store from a scenario's `seed` block (campaign,
-    insights, exercises, attempts). Seeded attempts default to grader="exact"
-    so they count as graded history."""
+    insights, exercises, attempts, captures, extra campaigns). Seeded attempts
+    default to grader="exact" so they count as graded history."""
+    from ..schemas import Capture
+
     store = DojoStore(tmp_path / "dojo")
     camp = Campaign(**seed["campaign"])
     store.campaigns.save(camp)
+    for extra in seed.get("campaigns", []):
+        store.campaigns.save(Campaign(**extra))
+    for cap in seed.get("captures", []):
+        store.captures.save(Capture(**cap))
     for ins in seed.get("insights", []):
         store.insights.save(camp.id, Insight(**ins))
     if "exercise" in seed:
@@ -75,7 +81,7 @@ def seed_store(tmp_path: Path, seed: dict) -> DojoStore:
 
 def compile_step(store: DojoStore, campaign_id: str, spec: dict):
     """Dispatches a scenario's `compile:` spec to the production compiler
-    (`fn`: generate | diagnostic | reflect | grade | plan)."""
+    (`fn`: generate | diagnostic | reflect | grade | plan | route | goal_route)."""
     camp = store.campaigns.get(campaign_id)
     args = dict(spec)
     fn = args.pop("fn")
@@ -93,6 +99,10 @@ def compile_step(store: DojoStore, campaign_id: str, spec: dict):
         )
     if fn == "plan":
         return compiler.compile_plan(store, **args)
+    if fn == "route":
+        return compiler.compile_route(store, **args)
+    if fn == "goal_route":
+        return compiler.compile_goal_route(store, **args)
     raise ValueError(f"unknown compile fn: {fn}")
 
 

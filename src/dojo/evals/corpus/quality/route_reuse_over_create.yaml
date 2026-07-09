@@ -1,0 +1,62 @@
+# Registry stewardship: the capture's wording ("dry shake", "egg white foam")
+# never appears in the registry, but it IS shaking technique. A diligent router
+# attaches to the existing topic; a sloppy one mints a near-duplicate leaf and
+# the namespace starts fragmenting.
+category: routing
+domain: mixology
+scenario_context: |
+  A capture about dry-shaking egg-white cocktails must be filed into a
+  campaign "cocktail-craft" whose REGISTRY already lists
+  mixology.technique.shaking, mixology.technique.stirring, and
+  mixology.classics.sours. The capture's wording differs from every listed
+  path, but a dry shake is unambiguously shaking technique — the subject is
+  already covered. Strong output: action "attach" with campaign
+  "cocktail-craft" and topic_path "mixology.technique.shaking" copied exactly
+  as listed, confidence high, and a reason that names the fit. Weak output:
+  action "new_topic" minting a near-duplicate leaf (mixology.technique.
+  dry_shake or similar), splitting one subject across two paths.
+seed:
+  campaign:
+    id: cocktail-craft
+    name: Cocktail Craft
+    mission: "Mix balanced classic cocktails confidently at home."
+    topics:
+      - {path: mixology.technique.shaking, kind: skill, summary: "when and how to shake a drink"}
+      - {path: mixology.technique.stirring, kind: skill, summary: "stirred, spirit-forward drinks"}
+      - {path: mixology.classics.sours, kind: skill, summary: "the sour template: spirit, citrus, sweetener"}
+  captures:
+    - id: cap_egg_foam
+      text: "Egg-white drinks need a dry shake — shake hard without ice to build the foam, then shake again with ice to chill. Skipping the ice-less pass leaves the foam thin and flat."
+steps:
+  - compile:
+      fn: route
+      capture_id: cap_egg_foam
+      capture_text: "Egg-white drinks need a dry shake — shake hard without ice to build the foam, then shake again with ice to chill. Skipping the ice-less pass leaves the foam thin and flat."
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does the route attach to an existing topic
+      (action \"attach\") rather than creating a new one?"}
+  - {id: c2, weight: 3, question: "Are campaign and topic_path copied exactly as
+      listed in the registry (cocktail-craft / mixology.technique.shaking)?"}
+  - {id: c3, weight: 2, question: "Does the reason name why the capture fits that
+      topic (dry shaking is shaking technique)?"}
+  - {id: c4, weight: 2, question: "Does the output avoid minting a near-duplicate
+      leaf (no new dry_shake / egg_foam style path anywhere)?"}
+references:
+  good:
+    action: attach
+    campaign: cocktail-craft
+    topic_path: mixology.technique.shaking
+    new_name: null
+    new_mission: null
+    confidence: high
+    reason: "dry shaking is shaking technique, already listed"
+    seed: false
+  bad:
+    action: new_topic
+    campaign: cocktail-craft
+    topic_path: mixology.technique.dry_shake
+    new_name: null
+    new_mission: null
+    confidence: high
+    reason: "dry shaking deserves its own topic"
+    seed: false

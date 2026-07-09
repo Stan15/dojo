@@ -6,7 +6,8 @@ refinement questions.
 
 RULES
 1. Include a topic only if the mission fails without it. ≤ 18 topics, ≤ 4 levels,
-   dot-separated paths.
+   dot-separated paths. The 4-level cap binds even when extending EXISTING
+   TOPICS: flatten deeper ideas into a level-4 leaf (a.b.c.d_e), never nest past 4.
 2. Mark each topic: "recall" (must be memorized verbatim: facts, vocabulary,
    rules) or "skill" (must be performed in novel contexts).
 3. 3-6 phases. Phase 1 is always a short calibration (diagnostic; criteria:

@@ -95,15 +95,21 @@ committed work, not proposals awaiting an answer. Item numbering is stable
       campaign; windowed criteria (last 2×min_attempts graded, provisional
       excluded); neutral idle notices (`campaign.idle_days`=14).
    344 tests green.
-4. **Fresh full eval re-baseline** — prompts/payloads changed again (reflect
-   +PLAN section): delete the (codex,codex) pair baseline, run
-   `DOJO_EVAL_DRIVER="codex exec --skip-git-repo-check -s read-only" python -m pytest -m eval -q`
-   (NO output pipes — they mask the exit code), triage, commit scorecards.
-   Reflect-prompt iteration against the measured weaknesses (resolve 0.38,
-   patterns 0.12) continues against the ratchet; heartbeat-flow scenarios
-   still owed for wave 4.
-5. **Owner decision pending** (QUESTIONS.md): version tag — default v0.2.0 at
-   next pause (owner: "ok"), v1.0.0 after item 4.
+4. ✓ **DONE 2026-07-09 — eval re-baseline + triage**: fresh (codex,codex)
+   pair baseline committed — quality mean **0.823** over 26 scenarios (was
+   0.732), compliance 4/4 = 1.0. All three initial failures were INVISIBLE
+   VALIDATION FLOORS (limits enforced but never stated in templates) — the
+   recurring failure class of this corpus: plan depth cap when extending
+   deep namespaces (fix → 0.67), reflect plan_revision phase shape (fix →
+   1.0), intervention trigger for contradictory sources + 25-word question
+   cap (fix → 0.83). Same class found+fixed in both route prompts
+   (reason ≤ 12 words). Rule for future prompt work: every `limits.py`
+   validator a payload can trip must appear in its template's skeleton or
+   Check line. Remaining owed: reflect weak categories (resolve/patterns)
+   iteration; heartbeat-flow scenarios for wave 4; routing category floors
+   (3 scenarios added 2026-07-09, bootstrap pending).
+5. ✓ v0.2.0 tagged + pushed 2026-07-09 (owner's default at the pause);
+   v1.0.0 decision still reserved for after the quality-iteration work.
 6. Backlog (ledgered in docs/design/usecase-audit.md + OPEN-PROBLEMS):
    OP #14 queue-limit archives consolidated memories; fulfilled-task
    housekeeping (tasks/ grows forever); interleave share tuning (wants real

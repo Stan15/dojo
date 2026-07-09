@@ -1,0 +1,69 @@
+# Route-first goal entry: a new goal that is a facet of an existing campaign's
+# mission must extend that campaign, not spawn a semantic duplicate. Two
+# campaigns are in the registry, so the router also has to pick the right home
+# — proposing "Bowl Trimming" as a fresh campaign forks the pottery work in two.
+category: routing
+domain: pottery
+scenario_context: |
+  The learner states a new goal: "get good at trimming the feet of my bowls
+  once they are leather-hard". The REGISTRY holds two campaigns:
+  "wheel-pottery" (mission: throw functional stoneware bowls and mugs on the
+  wheel; topics pottery.wheel.centering, pottery.wheel.pulling_walls,
+  pottery.glaze.dipping) and an unrelated "knife-sharpening" campaign.
+  Trimming leather-hard bowls is plainly a facet of the wheel-pottery
+  mission, though no listed topic covers it yet. Strong output: action
+  "new_topic" in campaign "wheel-pottery" with a leaf hung off the existing
+  pottery.wheel namespace (pottery.wheel.trimming or similar). Weak output:
+  action "propose_campaign" duplicating the pottery work under a new name,
+  or filing the goal under knife-sharpening, or "stay_inbox" (a goal always
+  takes a definite action).
+seed:
+  campaign:
+    id: wheel-pottery
+    name: Wheel Pottery
+    mission: "Throw functional stoneware bowls and mugs on the wheel."
+    topics:
+      - {path: pottery.wheel.centering, kind: skill, summary: "centering clay reliably"}
+      - {path: pottery.wheel.pulling_walls, kind: skill, summary: "even walls to height"}
+      - {path: pottery.glaze.dipping, kind: skill, summary: "dip-glazing without drips"}
+  campaigns:
+    - id: knife-sharpening
+      name: Knife Sharpening
+      mission: "Sharpen kitchen knives freehand to a reliable working edge."
+      topics:
+        - {path: sharpening.freehand.angle_control, kind: skill, summary: "holding a consistent angle"}
+        - {path: sharpening.freehand.burr_detection, kind: skill, summary: "feeling and chasing the burr"}
+steps:
+  - compile:
+      fn: goal_route
+      goal: "get good at trimming the feet of my bowls once they are leather-hard"
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does the route extend an existing campaign
+      (action \"attach\" or \"new_topic\") rather than proposing a new campaign
+      that duplicates the pottery work?"}
+  - {id: c2, weight: 3, question: "Is the correct campaign chosen among the
+      several listed (wheel-pottery, not knife-sharpening)?"}
+  - {id: c3, weight: 2, question: "Does the topic path hang off the existing
+      pottery namespace (pottery.wheel... or pottery...), reusing the listed
+      tree?"}
+  - {id: c4, weight: 1, question: "Does the route take a definite action —
+      never \"stay_inbox\"?"}
+references:
+  good:
+    action: new_topic
+    campaign: wheel-pottery
+    topic_path: pottery.wheel.trimming
+    new_name: null
+    new_mission: null
+    confidence: high
+    reason: "trimming extends the wheel work already underway"
+    seed: false
+  bad:
+    action: propose_campaign
+    campaign: null
+    topic_path: null
+    new_name: "Bowl Trimming Skills"
+    new_mission: "Learn to trim leather-hard bowls to a clean finished foot."
+    confidence: high
+    reason: "trimming feels like its own project"
+    seed: false

@@ -120,6 +120,24 @@ class TestGoalRouteApplier:
                                  route_payload("attach", campaign=CAMP_ID, topic="french.made_up"))
         assert not outcome.ok and "does not exist" in "; ".join(outcome.errors)
 
+    def test_new_topic_for_existing_path_must_attach(self, api):
+        """Topic hygiene: a router cannot 'create' what already exists —
+        reuse is enforced mechanically, not just prompted."""
+        res = api.learn("improve my spoken French")
+        outcome = service.submit(api.store, res["tasks"][0]["id"],
+                                 route_payload("new_topic", campaign=CAMP_ID, topic="french.oral"))
+        assert not outcome.ok and "use attach" in "; ".join(outcome.errors)
+
+    def test_new_topic_leaf_shape_and_depth_enforced(self, api):
+        for bad_topic, msg in [
+            ("french.oral.Party Chat!", "lowercase"),
+            ("french.oral.a.b.c", "deeper than"),
+        ]:
+            res = api.learn("chat at parties in French")
+            outcome = service.submit(api.store, res["tasks"][0]["id"],
+                                     route_payload("new_topic", campaign=CAMP_ID, topic=bad_topic))
+            assert not outcome.ok and msg in "; ".join(outcome.errors), bad_topic
+
     def test_stay_inbox_rejected_for_goals(self, api):
         res = api.learn("something vague")
         outcome = service.submit(api.store, res["tasks"][0]["id"], route_payload("stay_inbox"))

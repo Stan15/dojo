@@ -521,10 +521,16 @@ def apply_plan(store, task: Task, result: PlanResult) -> dict[str, Any]:
     }
 
 
+_TOPIC_LEAF = re.compile(r"[a-z0-9_]+")
+
+
 def _check_route_target(store, result: RouteResult) -> None:
     """Registry cross-check shared by both routers (ADR 013: weak models
     cannot file into places that don't exist). attach must hit a listed
-    topic; a new_topic leaf must hang off a listed parent."""
+    topic; a new_topic leaf must hang off a listed parent, carry a clean
+    dotted-lowercase leaf within the namespace depth cap, and must not
+    already exist — reuse is enforced mechanically, not just prompted."""
+    from .. import limits
     from ..filing import known_topic_paths
 
     if result.action not in ("attach", "new_topic"):
@@ -541,7 +547,24 @@ def _check_route_target(store, result: RouteResult) -> None:
             "attach only to listed topics, or use new_topic"
         )
     if result.action == "new_topic":
-        parent = ".".join(result.topic_path.split(".")[:-1])
+        path = result.topic_path
+        if path in known:
+            raise ApplyRejection(
+                f"topic {path!r} already exists in {result.campaign!r} — use attach; "
+                "never create what is already there"
+            )
+        if path.count(".") + 1 > limits.PLAN_MAX_TOPIC_DEPTH:
+            raise ApplyRejection(
+                f"new_topic path {path!r} is deeper than {limits.PLAN_MAX_TOPIC_DEPTH} "
+                "levels — hang a flatter leaf off a shallower listed parent"
+            )
+        leaf = path.split(".")[-1]
+        if not _TOPIC_LEAF.fullmatch(leaf):
+            raise ApplyRejection(
+                f"new_topic leaf {leaf!r} must be lowercase letters/digits/underscores "
+                "(topic paths are stable identifiers, not prose)"
+            )
+        parent = ".".join(path.split(".")[:-1])
         if parent and parent not in known and not any(
             p.startswith(parent) for p in known
         ):

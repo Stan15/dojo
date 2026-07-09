@@ -1,0 +1,64 @@
+# The mirror of reuse-over-create: reuse must never become force-fitting. This
+# capture belongs to the birding campaign but genuinely matches NO listed
+# topic — a router that attaches anyway buries migration notes under feeder
+# habits, and the learner can never find or drill them again.
+category: routing
+domain: birdwatching
+scenario_context: |
+  A capture about warbler migration timing must be filed into a campaign
+  "backyard-birding" whose REGISTRY lists only birds.id.plumage,
+  birds.id.songs, and birds.behavior.feeding. The capture is clearly birding
+  material, but none of the listed topics covers migration — attaching to any
+  of them would be a forced fit. Strong output: action "new_topic" in
+  campaign "backyard-birding" with a concise lowercase snake_case leaf hung
+  off the closest existing parent (birds.behavior.migration or similar), and
+  a reason honest that no listed topic covers it. Weak output: action
+  "attach" to a semantically wrong topic such as birds.behavior.feeding or
+  birds.id.songs, reusing for reuse's sake.
+seed:
+  campaign:
+    id: backyard-birding
+    name: Backyard Birding
+    mission: "Identify the local birds by sight and song."
+    topics:
+      - {path: birds.id.plumage, kind: recall, summary: "field marks and plumage cues"}
+      - {path: birds.id.songs, kind: skill, summary: "identification by ear"}
+      - {path: birds.behavior.feeding, kind: recall, summary: "feeder habits and food preferences"}
+  captures:
+    - id: cap_migration
+      text: "Warbler migration peaks here around mid-May; the best window is the first hour after dawn along the river, and a cold front can stall the whole movement for days."
+steps:
+  - compile:
+      fn: route
+      capture_id: cap_migration
+      capture_text: "Warbler migration peaks here around mid-May; the best window is the first hour after dawn along the river, and a cold front can stall the whole movement for days."
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does the route create a new topic (action
+      \"new_topic\") rather than force-fitting the capture onto an existing
+      topic like feeding or songs?"}
+  - {id: c2, weight: 3, question: "Is the new path hung off the closest existing
+      parent in the registry (under birds.behavior or birds), staying inside the
+      birds namespace?"}
+  - {id: c3, weight: 2, question: "Is the new leaf concise lowercase snake_case
+      (three words or fewer, e.g. migration or migration_timing)?"}
+  - {id: c4, weight: 2, question: "Is the reason honest about why no existing
+      topic fits (migration is not covered by the listed topics)?"}
+references:
+  good:
+    action: new_topic
+    campaign: backyard-birding
+    topic_path: birds.behavior.migration
+    new_name: null
+    new_mission: null
+    confidence: high
+    reason: "no listed topic covers migration timing"
+    seed: false
+  bad:
+    action: attach
+    campaign: backyard-birding
+    topic_path: birds.behavior.feeding
+    new_name: null
+    new_mission: null
+    confidence: high
+    reason: "feeding and migration are both behavior"
+    seed: false
