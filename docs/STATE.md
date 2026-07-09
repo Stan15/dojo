@@ -112,6 +112,17 @@ committed work, not proposals awaiting an answer. Item numbering is stable
    wave 4.
 5. ✓ v0.2.0 tagged + pushed 2026-07-09 (owner's default at the pause);
    v1.0.0 decision still reserved for after the quality-iteration work.
+5b. ✓ **DONE 2026-07-09 — provenance traces** (owner-directed, design in
+   QUESTIONS): every submission persists verbatim on its Task (tail-clipped,
+   accepted AND rejected; `dojo task show <id> --trace`); `Attempt.grade_run`
+   closes the last pointer; `insights show` walks belief → answers → task →
+   the model's own words. Eval reports now carry `driver_trace` beside
+   ratchet scores (baselines stay lean via `lean_baseline`) — reflect-prompt
+   iteration (the remaining owed work) now has the model's thinking to read.
+   Also same session: validator caps interpolate from `limits.TEMPLATE_CAPS`
+   (owner-agreed; drift gates in test_prompts.py); reflect plan revisions
+   can't strand ghost topics (registry shown, paths validated, scheduled ⇒
+   registered).
 6. Backlog (ledgered in docs/design/usecase-audit.md + OPEN-PROBLEMS):
    fulfilled-task housekeeping (tasks/ grows forever — now including
    submission traces, so the cleanup pays for provenance too); interleave
