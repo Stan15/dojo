@@ -1,161 +1,66 @@
 # STATE
 
-_Last updated: 2026-07-09_
+_Last updated: 2026-07-09. Trust this snapshot; git history carries the detail._
 
 ## Phase
 
-**Implementation.** M0–M3 ✅ · Tier-3 evals + `dojo benchmark` ✅ · corpus
-wave 3 ✅ (23 scenarios, ratcheted coverage floors) · **M4 core ✅ (capture/
-inbox/route)** · M5 mostly ✅ (SKILL rewritten + tested; `dojo stats` still
-open) · token-footprint regression + benchmark context-economy ✅. Pushed to
-github.com/Stan15/dojo main (owner installs via curl).
+**Implementation — v1 feature-complete and shipped to main (`518e0c8`).**
+All blueprint milestones M0–M6 delivered and E2E-verified; plus (owner-directed,
+post-blueprint): three-tier eval system with `dojo benchmark`, interactive human
+CLI, capture/inbox with `--locator`, export/uninstall, token-footprint gates,
+and the use-case lifecycle audit with its 10 fixes. **255 tests green** +
+28 eval-marked. Repo is PRIVATE (owner's choice) — install via checkout
+`sh install.sh`; owner's machine runs the current build.
 
-## What M2 delivered (all committed, 94 tests green + 4 eval-marked)
+## What the system is now (one paragraph)
 
-- **Task contract end-to-end (ADR 010):** `Task` entity in `tasks/` (prompt as md
-  body) → budgeted compiler (`src/dojo/tasks/compiler.py`, I6 byte budgets +
-  fulfiller tiers) → `dojo task list/show/submit/run` → validated appliers
-  (`src/dojo/tasks/service.py`, I5: salvage → schema → cross-checks → idempotent
-  apply; fuzz-pinned state-hash invariance).
-- **All five flows rewired, zero blocking on AI:** add-source generation, session
-  JIT replenishment (no-session envelope when queue empty), answer grading
-  (exact/auto graders deterministic; AI grading = emitted task with verbatim-
-  evidence anchor), reflection (insights/strategy/plan under rails), campaign
-  planning (`campaign plan` task → `create --from-task` materialization, I2).
-- **Prompts as artifacts:** six templates + fragments in `src/dojo/prompts/`,
-  strict `render()` (raises on any placeholder problem), `limits.py` as single
-  source for every numeric promise, golden byte-pins.
-- **Evals (ADR 016):** Tier 1 golden payloads; Tier 2 `pytest -m eval` with
-  fulfiller-agnostic runner + ratcheted per-model baselines — **first real
-  baseline committed: codex 4/4 scenarios, 100% first-shot compliance, all
-  quality signals true.** Tier 3 (LLM-judged pedagogical quality: binary rubric
-  criteria, evidence-anchored verdicts, judge calibration gate against planted
-  good/bad references, (driver,judge)-pair baselines, longitudinal
-  learning-loop scenarios) is DESIGNED in ADR 016 — implementation is the next
-  work item, and the owner wants a WIDE, thoughtfully crafted corpus.
-- **Legacy deleted** (owner rule: git is the archive): connectors.py,
-  generate.py, legacy templates/loader-fallbacks/schemas, connect-ai CLI,
-  generation runs, wrapper-script generation. api.py 1810 → 1148 lines.
-
-## Since last update (all committed, 137 tests green + 17 eval-marked)
-
-- **Tier 3 DONE**: judge runner (binary rubrics, verbatim-evidence verdicts,
-  calibration gate vs planted references, (driver,judge)-pair baselines with
-  margin) + 12-scenario quality corpus across 6 categories (personalization,
-  calibration, planning, grading-integrity, meta-learning, domain-breadth),
-  including the owner's asks: vague-mission intervention, false-intervention
-  control, "improve my memory" plan elucidation, math scaffolding, pure recall.
-  Deterministic corpus-integrity tests keep it from rotting in CI.
-- **Intervention contract**: generator may return zero items + structured
-  intervention (clarify_goal/need_context/scope_too_broad, 1-3 questions);
-  applier turns questions into diagnostic exercises; plan prompt got the
-  vague-goal rule (9b3ec16).
-- **`dojo benchmark` shipped**: eval machinery lives in dojo.evals (corpus as
-  package data); category-grouped strength/weakness display, --detail opt-in,
-  JSON reports; README documents it (ebfd201, and display visually verified).
-- Real (codex,codex) full eval run in flight at session end — commit its
-  baselines (evals/baselines/) when it lands; investigate any scenario < 1.0
-  compliance or with judge-calibration failures.
-
-## M3 delivered (167 tests green; commits 1df00c1…5b7cad0)
-
-- `dojo/scheduling.py`: py-fsrs behind the boundary (band→Rating per ADR 014,
-  injected clock, YAML-safe sr dicts, retrievability).
-- `dojo/outcomes.py`: ONE lane-aware landing — recall→item FSRS, skill→topic
-  FSRS + item retires 'spent' — called from answers, AI grades, corrections
-  (OP #13: additional-review semantics), calibration skips. Diagnostics never
-  become memories.
-- `dojo/packet.py`: pure seeded builder — Tier-1 (due+atrophy × priority_weight),
-  interleaving, weakest/maintenance/frontier mix, skill-stock generation
-  requests, honest overflow counts; property tests pin I3/I8.
-- Owner's priority knobs (2026-07-07 ask): `dojo campaign boost <id> <f>` =
-  cross-campaign surfacing; `dojo campaign topic-boost <id> <path> <f>` =
-  intra-campaign emphasis (due-cycle ÷ factor); both visible in `dojo why`.
-  Conversational disambiguation guidance goes into SKILL.md at M5.
-- `dojo daily` / `dojo why`; offline floor (I4) proven end-to-end.
-- Second codex quality baseline: mean 0.646 (from 0.52 after prompt fixes).
-
-## Since M3 (all committed AND PUSHED, 220 tests green)
-
-- Corpus wave 3: 23 quality scenarios / 6 categories / 17 domains; coverage
-  floors are ratcheted tests; implicit-ease detection scenario (owner q:
-  pattern-based too-easy/hard detection — yes, plus explicit skips as the
-  strongest signal). Integrity harness caught topic-depth-3 blocking namespace
-  extension (raised to 4 coherently).
-- FSRS fuzzing was ON by default (global random ⇒ I8 violation) — caught as a
-  test flake, disabled forever, pinned.
-- M4: dojo capture / inbox (confirm|dismiss) / route applier with registry
-  validation; confirm-by-default (Q6), capture.autofile opt-in; filing turns
-  captures into ordinary Sources; daily nags about waiting captures. 9 tests.
-- M5: SKILL.md rewritten (≤60-line budget test + anti-staleness test that
-  immediately caught `dojo reflect` never existing as a verb — added). Boost
-  disambiguation + intervention relay included.
-- Fresh-install verification caught the store-birth deadlock (doctor flagged
-  its own init forever); stores now born committed, audit commits carry
-  identity fallback. Install verified end-to-end in a clean venv.
-- Token footprint (owner ask): committed per-kind payload baseline ±5% CI gate
-  (evals/baselines/token-footprint.json; generate ≈680 tokens, skill ≈700);
-  `dojo benchmark` now reports measured context economy (tokens in/out per task).
-- One honest gate violation: pushed once with a red conformance test (birth-
-  commit count); fixed in the next commit.
-
-## Session 2026-07-08/09 — human CLI + use-case audit (pushed @ 9025dbb)
-
-- **Interactive human CLI** (owner directive): daily/plan/capture/inbox flows on
-  the same api+task machinery — spinner-drained tasks via fulfiller.command,
-  one continuous practice loop with end-of-session batch grading, proposal
-  panels with inline refinements. Agents structurally cannot be blocked:
-  --json/--no-input/piped guard every entry + a no-TTY tripwire; tested.
-- **SKILL iron rules**: always --json; extract-never-enrich (agent adds NOTHING
-  the user didn't say); refinement answers re-plan via --context; capture
-  --locator (agent fetches links; dojo never networks). Skill packaged at
-  dojo/skills/dojo/.
-- **Use-case lifecycle audit** (docs/design/usecase-audit.md): 10 defects fixed;
-  root theme — daily is now the HEARTBEAT (phase advancement, auto-reflect at
-  ≥5 unreflected, stale-task resurfacing, auto-promoted+grounded replenishment).
-  add --generate links sources + never guesses; create_campaign never collides;
-  reflect payload integrity (ungraded labeled; only included rows marked).
-- Store bug caught by new tests: same-second attempt filenames overwrote each
-  other; uniqueness now id-based (conformance-pinned). 255 tests green.
-- Owner install refreshed; their reported plan-envelope crash verified dead.
+Deterministic core (scheduling via py-fsrs, packet building, validation,
+storage as git-versioned markdown) + AI-as-validated-tasks (ADR 010: any
+model fulfills compiled, byte-budgeted prompts through one `task submit`
+door). `dojo daily` is the HEARTBEAT: builds the bounded explained packet,
+advances phases, auto-emits reflection at ≥5 unreflected attempts,
+re-surfaces stale tasks, auto-promotes+grounds replenishment. Agents drive
+via SKILL (always `--json`, extract-never-enrich); humans get interactive
+flows on the same machinery (structurally impossible to block an agent).
+Quality is guarded by ratcheted per-(driver,judge) baselines over a
+24-scenario judged corpus + compliance corpus + golden payload/footprint pins.
 
 ## NEXT ACTIONS (in order)
 
-1. Full quality-eval re-baseline (prompt/payload changes since last run) +
-   corpus wave 4 + reflect-prompt improvements (measured conservative-
-   reflection weakness). Also add heartbeat-flow scenarios to the corpus.
-2. Backlog now ledgered in usecase-audit.md: maintenance phase (ADR 005),
-   task-file housekeeping, interleave tuning.
-3. (was) **Background eval run lands** → commit fresh (codex,codex) baselines incl.
-   wave-3 scenarios; triage insight_targeting calibration if still failing.
-2. `dojo stats` (last M5 item): retention/atrophy + token telemetry surfaces.
-3. M6 — drive the real loop from a real harness session (capture → route →
-   daily → answer → grade → reflect), LOOK at artifacts, docs truth pass
-   (api-specification rewrite), ship v1.
-4. Corpus wave 4 (owner: "serious corpus… varied"): ~15 new scenarios —
-   domains: music, chess, writing, law, code, poetry-verbatim, numeric-tolerance
-   math; signals: too_hard response, overconfident-fast-wrong, atrophy re-entry,
-   extend-don't-duplicate planning, unrealistic-timeline honesty, terse-but-
-   correct + hedged-but-right grading, contradictory-source intervention,
-   text-medium honesty for motor/listening skills. PLUS a coverage meta-test
-   (≥N per category, ≥M domains) so corpus breadth is a ratcheted invariant.
-2. Eval artifacts: multiline evidence quotes discarded (preference_adherence
-   0.14 artifact); insight_targeting judge calibration failing twice — diagnose
-   (add verdict detail to gate message), fix, fresh baseline run.
-3. M4 — capture/inbox/route + `dojo capture`; M5 — SKILL.md ≤60 lines rewrite
-   (incl. boost disambiguation + intervention handling), `dojo stats`; M6 —
-   real-harness E2E + ship v1.
+1. **Fresh full eval re-baseline** — prompts/payloads changed since the last
+   (codex,codex) run (mean quality 0.732): delete the pair baseline, run
+   `DOJO_EVAL_DRIVER="codex exec --skip-git-repo-check -s read-only" python -m pytest -m eval -q`
+   (NO output pipes — they mask the exit code), triage, commit scorecards.
+2. **Reflect-prompt improvements** targeting the measured weakness (codex won't
+   resolve mastered insights 0.38, misses behavioral patterns 0.12) — iterate
+   against the ratchet; corpus wave 4 alongside (heartbeat-flow scenarios,
+   more domains/signals; coverage floors may only rise).
+3. **Owner decision pending** (QUESTIONS.md): version tag — default v0.2.0 at
+   next pause, v1.0.0 after item 2.
+4. Backlog (ledgered in docs/design/usecase-audit.md + OPEN-PROBLEMS): ADR 005
+   maintenance phase; fulfilled-task housekeeping (tasks/ grows forever);
+   interleave share tuning (wants real usage data); OP #13 snapshot-undo.
 
-## Standing owner directives (beyond blueprint)
+## Standing owner directives (must survive every session)
 
-- No context bloat; model-strength neutrality (floor-not-ceiling; §1b prompts.md).
-- Delete-over-retain (git is the archive). `archived_implementation/` exempt (Q4).
-- Prompts live in .md files, value-only `{{ }}` injection.
-- Eval system: reproducible, fulfiller-agnostic, (driver,judge)-pair baselines;
-  codex locally available for real runs — never hardcoded.
-- Maintain README (viral-grade) and this STATE continuously.
+- No context bloat; token spend is the owner's money — budgets are tested.
+- Model-strength neutrality: floor-not-ceiling (design/prompts.md §1b).
+- Delete-over-retain: git is the archive (`archived_implementation/` exempt, Q4).
+- Never lose directed work; strictly highest-value-first (method §3).
+- Extract-never-enrich: the system learns the USER's words, not AI embellishment.
+- README tracks only shipped+working features; keep it and this STATE current.
+- Eval/benchmark: fulfiller-agnostic, per-(driver,judge) baselines, reproducible;
+  codex is locally available for real runs — never hardcoded.
+- Serious, VARIED corpus; benchmark results grouped by category for users.
 
-## Open questions
+## Session changelog (compressed; git log has the story)
 
-QUESTIONS.md Q1 (fulfiller runner) — answered by owner notes + built as designed;
-runner shipped as `dojo task run`. No open questions.
+- 07-07: design (blueprint, ADRs 010–016) → M0–M2 (store, task contract,
+  prompts, evals T1/T2) → M3 (py-fsrs, packet, daily/why, boosts).
+- 07-08: corpus waves 2–3 + interventions + coverage ratchets; benchmark CLI +
+  token footprint; capture/inbox; SKILL rewrite; export/uninstall; M6 live E2E
+  (caught day-one bombardment + diagnostic dead-loop); owner field reports fixed
+  (packaged skill, venv detection, benchmark honesty, ensure_ascii judge bug).
+- 07-08/09: interactive human CLI; use-case audit (10 fixes, daily-as-heartbeat);
+  attempt-filename overwrite bug found+pinned. Baselines: compliance 1.0,
+  quality 0.732 (pre-rebaseline).
