@@ -140,7 +140,7 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
      exact copy, short, lesson implicit, concession last:
      Human (playful "touch grass" tone; `dojo more` styled as a COMMAND —
      bold/cyan via rich, backticks in plain text):
-       "✓ Done for today — 5 of 5, streak intact.
+       "✓ Done for today — 5 of 5, day 12 in a row.
         Coming back tomorrow is what makes it stick.
         Go touch grass. 🌱  (Genuinely still hungry? Run `dojo more` — it
         only says yes when your review budget agrees.)"
@@ -151,12 +151,15 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
        the learner explicitly asks for more, run: dojo more --json"}
      (The agent line binds the HARNESS to the no-solicitation rule too.)
      Dynamic values (owner asked 2026-07-09): "5 of 5" = the completed
-     session's real counts (skips count — engagement, not absence). Streak =
-     DERIVED consecutive practice days from attempt timestamps (no stored
-     counter exists or is needed). **No-guilt rule**: show "day N in a row"
-     only when N ≥ 2 and true; day-1/post-gap runs simply omit the streak
-     clause — a broken streak is NEVER mentioned (absence shows up as
-     gentler scheduling, not commentary).
+     session's real counts (skips count — engagement, not absence).
+     "Day N in a row" = DERIVED consecutive practice days from attempt
+     timestamps (no stored counter exists or is needed). **The word "streak"
+     never appears user-facing** (owner 2026-07-09: it begs for a streak
+     FEATURE — counters, freezes, loss anxiety; "day N in a row" is
+     observation, not mechanic). **No-guilt rule**: show the clause only
+     when N ≥ 2 and true; day-1/post-gap runs simply omit it — a broken run
+     is NEVER mentioned (absence shows up as gentler scheduling, not
+     commentary).
    - `dojo more --json` returns a normal session envelope with items
      origin:"extension", or the refusal block with ok:true (no is an answer,
      not an error): {extension_available: false, projected_due_7d,
