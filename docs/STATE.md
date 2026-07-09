@@ -27,6 +27,22 @@ Quality is guarded by ratcheted per-(driver,judge) baselines over a
 
 ## NEXT ACTIONS (in order)
 
+0. **Owner directives 2026-07-09, ready for a fresh session** (no prior context
+   needed beyond this file):
+   a. **Documentation system**: thorough docs of ALL app behaviors with ZERO
+      custom doc-UI to maintain — reuse standard tooling. Direction agreed:
+      pdoc (zero-config, generates a full API site from docstrings, rust-doc
+      feel) as an optional extra + docs build script; a docstring QUALITY pass
+      over the public surface (api.py methods are thin; module docs are rich —
+      pdoc output must genuinely document behavior); a docstring-coverage gate
+      test so it stays maintained; and a docs index mapping prose docs
+      (blueprint, api-specification, pedagogy, ADRs, usecase-audit) to the
+      generated reference. No MkDocs/Sphinx unless pdoc proves insufficient —
+      the owner prefers reuse over config.
+   b. **README viral-grade currency audit**: verify every claim against shipped
+      behavior and ADD what's missing (interactive human CLI flows, dojo stats,
+      boosts, why, export/uninstall, capture --locator, daily-as-heartbeat).
+      README documents ONLY working features (standing directive).
 1. **Fresh full eval re-baseline** — prompts/payloads changed since the last
    (codex,codex) run (mean quality 0.732): delete the pair baseline, run
    `DOJO_EVAL_DRIVER="codex exec --skip-git-repo-check -s read-only" python -m pytest -m eval -q`
