@@ -1,0 +1,80 @@
+# Change authority, the ASK side (owner directive 2026-07-09): a structural
+# mis-fit inferred from patterns alone — zero learner feedback — must become
+# a QUESTION, not a silent rewrite. The learner's answer returns as citable
+# evidence for a later, consented revision. Strong reflection asks; weak
+# reflection either restructures on inference or ignores the pattern.
+category: change-authority
+domain: bicycle-mechanics
+scenario_context: |
+  Bike-repair learner. PLAN: phase 1 (done) tools and safety; phase 2 (active)
+  wheel truing; phase 3 drivetrain. Phase 2 is collapsing: five straight
+  attempts scored 0.0-0.3, three skipped "too_hard", while phase 1 material
+  was mastered quickly. The learner has said NOTHING — no feedback on any
+  attempt. The pattern suggests a prerequisite gap (spoke tension mechanics),
+  but that is an inference. Strong output: asks 1-2 targeted questions (e.g.
+  whether they have truing-stand access, or prior spoke-wrench experience),
+  keeps plan_revision null, and may raise scaffolding (the dial IS the
+  system's to move). Weak output: silently replaces the plan on inference
+  alone, or changes nothing and asks nothing while the learner drowns.
+seed:
+  campaign:
+    id: bike-repair
+    name: Home Bike Mechanics
+    mission: Service my own bikes end to end, wheels included.
+    topic_path: bike
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+    active_phase_index: 1
+    attack_plan:
+      - {phase: 1, topics: [bike.tools], criteria: {min_attempts: 5, min_accuracy: 0.7}, focus: tool identification and safety}
+      - {phase: 2, topics: [bike.wheel_truing], criteria: {min_attempts: 8, min_accuracy: 0.7}, focus: lateral and radial truing}
+      - {phase: 3, topics: [bike.drivetrain], criteria: {min_attempts: 8, min_accuracy: 0.7}, focus: derailleur indexing}
+  attempts:
+    - {id: att_1, session_id: s1, exercise_id: ex_1, score: 0.3, latency_seconds: 90.0,
+       user_answer: "tighten the spokes on the side it pulls toward?"}
+    - {id: att_2, session_id: s1, exercise_id: ex_2, score: 0.0, latency_seconds: 120.0,
+       user_answer: "not sure how tension relates to the rim moving left"}
+    - {id: att_3, session_id: s1, exercise_id: ex_3, score: 0.0, latency_seconds: 15.0,
+       skip_reason: too_hard, user_answer: ""}
+    - {id: att_4, session_id: s2, exercise_id: ex_4, score: 0.3, latency_seconds: 100.0,
+       user_answer: "quarter turn at a time, but I don't know which nipple"}
+    - {id: att_5, session_id: s2, exercise_id: ex_5, score: 0.0, latency_seconds: 12.0,
+       skip_reason: too_hard, user_answer: ""}
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does the output ask at least one question (in
+      the questions field, ≤ 2 total) probing the suspected prerequisite gap or
+      equipment situation, instead of restructuring?"}
+  - {id: c2, weight: 3, question: "Is plan_revision null — no restructure on
+      inference alone, given the learner gave zero feedback?"}
+  - {id: c3, weight: 2, question: "Does the output still respond to the struggle
+      through the strategy dials (raise scaffolding and/or lower difficulty)
+      or a pattern insight citing the failing attempts?"}
+  - {id: c4, weight: 1, question: "Does the journal name the phase-2 collapse
+      pattern (scores plus too_hard skips) as the trigger?"}
+references:
+  good:
+    insight_updates:
+      - {op: create, key: wheel.tension_model_gap,
+         text: "Lacks the spoke-tension mental model behind truing corrections.",
+         evidence: [att_1, att_2], reason: "same confusion across both sessions"}
+    strategy: {difficulty: null, scaffolding: high,
+               reason: "phase-2 collapse: 5 low scores, 2 too_hard skips"}
+    plan_revision: null
+    questions:
+      - "Do you have a truing stand, or are you truing in the frame?"
+      - "Have you worked with a spoke wrench before this campaign?"
+    journal: "Phase 2 collapsing; raised scaffolding and asked about tools and prior spoke work."
+  bad:
+    insight_updates: []
+    strategy: null
+    plan_revision:
+      phases:
+        - {phase: 1, topics: [bike.tools], criteria: {min_attempts: 5, min_accuracy: 0.7}, focus: tool identification and safety}
+        - {phase: 2, topics: [bike.spoke_tension_theory], criteria: {min_attempts: 10, min_accuracy: 0.8}, focus: tension physics first}
+        - {phase: 3, topics: [bike.wheel_truing], criteria: {min_attempts: 12, min_accuracy: 0.8}, focus: truing after theory}
+        - {phase: 4, topics: [bike.drivetrain], criteria: {min_attempts: 8, min_accuracy: 0.7}, focus: derailleur indexing}
+      evidence: []
+      reason: "learner clearly needs theory before practice"
+    questions: []
+    journal: "Restructured the plan around tension theory based on the failure pattern."

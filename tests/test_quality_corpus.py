@@ -34,7 +34,7 @@ class TestCorpusCoverage:
     breadth is a ratcheted invariant, not an aspiration. These floors may only
     ever go UP; raising them is how the corpus grows deliberately."""
 
-    MIN_TOTAL = 20
+    MIN_TOTAL = 22
     MIN_PER_CATEGORY = {
         "personalization": 3,
         "calibration": 5,
@@ -42,8 +42,9 @@ class TestCorpusCoverage:
         "grading-integrity": 3,
         "meta-learning": 3,
         "domain-breadth": 4,
+        "change-authority": 2,
     }
-    MIN_DISTINCT_DOMAINS = 12
+    MIN_DISTINCT_DOMAINS = 14
 
     def _scenarios(self) -> list[dict]:
         return [load(p) for p in QUALITY_SCENARIOS]

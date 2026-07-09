@@ -31,6 +31,7 @@ CATEGORY_BLURBS = {
     "grading-integrity": "grades content, immune to confident nonsense",
     "meta-learning": "knows when to ask instead of generate",
     "domain-breadth": "handles widely varying subject types well",
+    "change-authority": "restructures when the learner asks, asks when it merely suspects",
 }
 
 

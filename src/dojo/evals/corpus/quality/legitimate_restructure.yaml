@@ -1,0 +1,75 @@
+# Change authority, the APPLY side (owner directive 2026-07-09): when the
+# learner's own words demand a restructure, timidity is the failure. Before
+# this scenario the corpus never rewarded a non-null plan_revision — an
+# ossification bias the ratchet would have locked in. Strong reflection
+# revises AND cites the learner's feedback as evidence; weak reflection
+# "stays the course" or revises without provenance.
+category: change-authority
+domain: photography
+scenario_context: |
+  Portrait-photography learner. PLAN has three phases: phase 1 (done) exposure
+  basics; phase 2 (active) studio lighting; phase 3 natural-light portraits.
+  The learner's recent attempt feedback says, verbatim: "I sold my strobes -
+  outdoor natural light only from now on, please drop the studio phase"
+  (attempt att_4). Performance is otherwise fine (no plateau). Strong output:
+  a plan_revision that removes/replaces the studio-lighting phase, keeps the
+  completed phase 1 intact, and cites att_4 in the revision's evidence list
+  (the learner's own words are the mandate). Weak output: no plan change
+  ("stay the course"), or a revision with an empty evidence list, or one that
+  also rewrites the completed phase 1.
+seed:
+  campaign:
+    id: portraits
+    name: Portrait Photography
+    mission: Shoot confident, well-lit portraits on location.
+    topic_path: photo
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+    active_phase_index: 1
+    attack_plan:
+      - {phase: 1, topics: [photo.exposure], criteria: {min_attempts: 5, min_accuracy: 0.7}, focus: exposure triangle}
+      - {phase: 2, topics: [photo.studio_lighting], criteria: {min_attempts: 8, min_accuracy: 0.7}, focus: strobes and modifiers}
+      - {phase: 3, topics: [photo.natural_light], criteria: {min_attempts: 8, min_accuracy: 0.7}, focus: golden hour portraits}
+  attempts:
+    - {id: att_1, session_id: s1, exercise_id: ex_1, score: 0.7, latency_seconds: 40.0,
+       user_answer: "meter for the shadows, then stop down"}
+    - {id: att_2, session_id: s1, exercise_id: ex_2, score: 1.0, latency_seconds: 25.0,
+       user_answer: "key light 45 degrees, fill at half power"}
+    - {id: att_3, session_id: s2, exercise_id: ex_3, score: 0.7, latency_seconds: 35.0,
+       user_answer: "raise ISO before dropping shutter below 1/125"}
+    - {id: att_4, session_id: s2, exercise_id: ex_4, score: 1.0, latency_seconds: 30.0,
+       user_answer: "butterfly lighting, paramount position",
+       feedback: "I sold my strobes - outdoor natural light only from now on, please drop the studio phase"}
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does the output include a non-null plan_revision
+      that removes or replaces the studio-lighting phase in favor of
+      natural-light work?"}
+  - {id: c2, weight: 3, question: "Does the plan_revision's evidence list cite
+      att_4 (the attempt carrying the learner's explicit request)?"}
+  - {id: c3, weight: 2, question: "Does the revision leave completed phase 1
+      (exposure basics) intact rather than rewriting finished work?"}
+  - {id: c4, weight: 1, question: "Does the journal (≤ 30 words) attribute the
+      restructure to the learner's stated equipment change?"}
+references:
+  good:
+    insight_updates: []
+    strategy: null
+    plan_revision:
+      phases:
+        - {phase: 1, topics: [photo.exposure], criteria: {min_attempts: 5, min_accuracy: 0.7}, focus: exposure triangle}
+        - {phase: 2, topics: [photo.natural_light], criteria: {min_attempts: 8, min_accuracy: 0.7}, focus: golden hour portraits}
+        - {phase: 3, topics: [photo.natural_light], criteria: {min_attempts: 10, min_accuracy: 0.75}, focus: harsh midday light control}
+      evidence: [att_4]
+      reason: "learner sold strobes; studio phase is dead weight"
+    questions: []
+    journal: "Dropped studio phase at learner's request (att_4); natural light replaces it."
+  bad:
+    insight_updates:
+      - {op: create, key: photo.lighting_avoidance,
+         text: "Learner may be avoiding difficult studio-lighting material.",
+         evidence: [att_4], reason: "asked to skip studio work"}
+    strategy: null
+    plan_revision: null
+    questions: []
+    journal: "Staying the course; the plan was designed holistically and should not churn."
