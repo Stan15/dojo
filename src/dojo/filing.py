@@ -53,6 +53,7 @@ def file_capture(store, capture: Capture, proposal: dict[str, Any]) -> dict[str,
         id=f"src_{capture.id.removeprefix('cap_')}",
         title=(capture.text.strip().splitlines()[0][:60] or "captured note"),
         kind="capture",
+        path=capture.locator,  # provenance survives filing (URL/file the agent read)
         mission=capture.why,
         content=capture.text,
     )

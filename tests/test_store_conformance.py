@@ -201,6 +201,17 @@ class TestRoundTrip:
         store.tasks.save(tsk)
         assert store.tasks.list(filters={"status": "pending"}) == []
 
+    def test_rapid_attempts_on_same_exercise_all_survive(self, store: DojoStore):
+        """Minted filenames must be unique by ID, never by clock: five attempts
+        on one exercise within a second used to silently overwrite each other
+        (caught by the daily-heartbeat tests, 2026-07-09)."""
+        store.campaigns.save(make_campaign())
+        for i in range(5):
+            att = make_attempt()
+            att.id = f"att_rapid{i}"
+            store.attempts.save(CAMP_ID, att)
+        assert len(store.attempts.list(CAMP_ID)) == 5
+
     def test_update_in_place_keeps_single_record(self, store: DojoStore):
         store.campaigns.save(make_campaign())
         ex = make_exercise()

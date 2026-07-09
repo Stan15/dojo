@@ -66,11 +66,20 @@ class DojoAPI:
             }
 
         now = datetime.now(timezone.utc)
+
+        # daily is the ritual's HEARTBEAT (use-case audit 2026-07-08): every
+        # step the learning loop depends on either happens here deterministically
+        # or is re-surfaced here — never parked in commands nobody must run.
+
+        # 1. Phase advancement is pure math; it must not wait for a reflect call.
+        for campaign in self.store.campaigns.list():
+            if campaign.status == "active":
+                self._evaluate_campaign_phase_advancement(campaign)
+
         pkt = packet_mod.build_packet(self.store, now, size=size)
 
-        # Token frugality: at most 2 AI tasks per daily run; the rest wait for
-        # the next daily and are counted honestly (E2E finding 2026-07-08:
-        # a fresh plan emitted 5 generation tasks at once).
+        # 2. Token frugality: at most 2 generation tasks per daily run; the rest
+        # wait and are counted honestly (E2E finding: a fresh plan emitted 5 at once).
         MAX_DAILY_TASKS = 2
         tasks = []
         for need in pkt.needs_generation[:MAX_DAILY_TASKS]:
@@ -80,24 +89,50 @@ class DojoAPI:
             task = flows.request_generation(
                 self.store, campaign,
                 topic_path=need["topic_path"], n_items=2,
+                source_slice=flows.grounding_slice(self.store, campaign, need["topic_path"]),
                 diagnostic=bool(need.get("diagnostic")),
+                auto_promote=not bool(need.get("diagnostic")),
             )
             tasks.append(flows.task_ref(task))
         deferred = len(pkt.needs_generation) - min(len(pkt.needs_generation), MAX_DAILY_TASKS)
         if deferred:
             pkt.skipped["generation_deferred"] = deferred
 
+        # 3. Reflection fires by evidence threshold, not by hoping someone runs
+        # `dojo reflect` — the personalization loop must close mechanically.
+        REFLECT_THRESHOLD = 5
+        reflect_backlog = [
+            (sum(1 for a in self.store.attempts.list(c.id) if not a.reflected), c.id)
+            for c in self.store.campaigns.list() if c.status == "active"
+        ]
+        reflect_backlog = [x for x in reflect_backlog if x[0] >= REFLECT_THRESHOLD]
+        if reflect_backlog:
+            _, campaign_id = max(reflect_backlog)
+            reflect_task = flows.request_reflection(self.store, campaign_id)
+            if reflect_task is not None:
+                tasks.append(flows.task_ref(reflect_task))
+
+        # 4. Unfinished AI work from previous runs is re-surfaced every morning
+        # (a grade task forgotten yesterday must not starve silently).
+        emitted_ids = {t["id"] for t in tasks}
+        stale = [
+            flows.task_ref(t) for t in self.store.tasks.list(filters={"status": "pending"})
+            if t.id not in emitted_ids
+        ]
+
         if not pkt.items:
             return {
                 "is_new": False,
                 "session": None,
                 "tasks": tasks,
+                "stale_tasks": stale,
                 "skipped": pkt.skipped,
                 "campaign_reasons": pkt.campaign_reasons,
                 "next": (
                     "nothing is due right now"
                     + ("; fulfill the generation task(s) then re-run dojo daily" if tasks else
-                       " — enjoy the day off, the schedule is honest")
+                       (" — but finish the pending task(s) below first" if stale else
+                        " — enjoy the day off, the schedule is honest"))
                 ),
             }
 
@@ -122,9 +157,11 @@ class DojoAPI:
             ],
             "skipped": pkt.skipped,
             "tasks": tasks,
+            "stale_tasks": stale,
             "inbox_waiting": waiting,
             "next": "dojo ready reveals the first prompt"
-                    + (f" ({waiting} capture(s) awaiting a home: dojo inbox)" if waiting else ""),
+                    + (f" ({waiting} capture(s) awaiting a home: dojo inbox)" if waiting else "")
+                    + (f" ({len(stale)} unfinished task(s) from earlier — fulfill them too)" if stale else ""),
         }
 
     def why(self) -> dict[str, Any]:
@@ -212,17 +249,24 @@ class DojoAPI:
     # ==========================================
     # Capture & Inbox (ADR 013)
     # ==========================================
-    def capture(self, text: str, why: str | None = None) -> dict[str, Any]:
-        """One utterance, durably saved BEFORE any AI runs; routing is a task."""
+    def capture(
+        self, text: str, why: str | None = None, locator: str | None = None
+    ) -> dict[str, Any]:
+        """One utterance, durably saved BEFORE any AI runs; routing is a task.
+        `locator` records where the material came from (URL/file) — the agent
+        fetches and summarizes; dojo never touches the network."""
         from .schemas import Capture
         from .tasks import compiler, flows
         from .tasks import service as task_service
 
-        cap = Capture(id=f"cap_{uuid.uuid4().hex[:8]}", text=text.strip(), why=why)
+        cap = Capture(
+            id=f"cap_{uuid.uuid4().hex[:8]}", text=text.strip(), why=why, locator=locator,
+        )
         self.store.captures.save(cap)
 
+        note = " · ".join(filter(None, [why, f"source: {locator}" if locator else None]))
         compiled = compiler.compile_route(
-            self.store, capture_id=cap.id, capture_text=cap.text, learner_note=why or "",
+            self.store, capture_id=cap.id, capture_text=cap.text, learner_note=note,
         )
         task = task_service.emit(self.store, compiled)
         self.log.info(f"Captured {cap.id}; route task {task.id} emitted")
@@ -301,15 +345,8 @@ class DojoAPI:
             from .tasks import flows
             from .tasks.grounding import resolve_source_context
 
-            campaign = None
-            camps = self.store.campaigns.list()
-            if campaign_hint := (topic and next(
-                (c for c in camps if c.topic_path and topic.startswith(c.topic_path)), None
-            )):
-                campaign = campaign_hint
-            elif camps:
-                campaign = camps[0]
-            if campaign is None:
+            camps = [c for c in self.store.campaigns.list() if c.status == "active"]
+            if not camps:
                 return {
                     "source_id": source.id,
                     "title": source.title,
@@ -318,8 +355,47 @@ class DojoAPI:
                     "note": "source saved; no campaign exists yet, so no generation was requested — "
                             "create a campaign first (dojo campaign plan \"<goal>\")",
                 }
+            # Deterministic resolution only — never guess a home for material
+            # (use-case audit F1): a topic prefix match wins; a single campaign
+            # is unambiguous; anything else asks instead of misfiling.
+            if topic:
+                matched = [
+                    c for c in camps
+                    if (c.topic_path and topic.startswith(c.topic_path))
+                    or any(topic.startswith(t.get("path", "\x00")) for t in c.topics)
+                ]
+            else:
+                matched = camps
+            if len(matched) != 1:
+                return {
+                    "source_id": source.id,
+                    "title": source.title,
+                    "kind": source.kind,
+                    "tasks": [],
+                    "note": (
+                        "source saved, but its campaign is ambiguous — re-run with "
+                        "--topic <path> under one campaign's topics: "
+                        + "; ".join(f"{c.id} ({c.topic_path or '?'})" for c in camps)
+                    ),
+                }
+            campaign = matched[0]
 
             target_topic = topic or campaign.topic_path or slugify(title).replace("-", "_")
+
+            # Link the source so it keeps grounding ALL future generation for
+            # these topics (use-case audit F2) — trusted material must not be
+            # used once on ingest day and forgotten.
+            if not any(l.get("source_id") == source.id for l in campaign.sources_config):
+                campaign.sources_config.append({
+                    "source_id": source.id,
+                    "purpose": "ingested material",
+                    "topics": [target_topic],
+                })
+            if not any(t.get("path") == target_topic for t in campaign.topics):
+                campaign.topics.append({"path": target_topic, "kind": "recall", "summary": ""})
+            campaign.updated_at = datetime.now(timezone.utc).isoformat()
+            self.store.campaigns.save(campaign)
+
             slice_text, _, _ = resolve_source_context(content, title, target_topic)
             task = flows.request_generation(
                 self.store, campaign,
@@ -857,6 +933,7 @@ class DojoAPI:
         return {
             "session_id": target_session.id,
             "exercise_id": exercise_id,
+            "campaign_id": campaign_id,
             "attempt_id": attempt_id,
             "score": score,
             "grader": grader,
@@ -1289,8 +1366,15 @@ class DojoAPI:
         syllabus_markdown: str | None = None,
     ) -> dict[str, Any]:
         self.log.info(f"Creating campaign: '{name}' (topic_path={topic_path})")
-        # Folder is camp_{slugified_topic}
-        campaign_id = f"{slugify(topic_path)}"
+        # Id from the NAME (distinctive), never silently overwriting an existing
+        # campaign (use-case audit A2: topic-root ids collided — a second
+        # git-adjacent campaign would have destroyed the first).
+        campaign_id = slugify(name) or slugify(topic_path)
+        if self.store.campaigns.get(campaign_id) is not None:
+            suffix = 2
+            while self.store.campaigns.get(f"{campaign_id}-{suffix}") is not None:
+                suffix += 1
+            campaign_id = f"{campaign_id}-{suffix}"
 
         # Default attack plan
         plan = [

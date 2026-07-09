@@ -40,7 +40,7 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
 1. **Version tag**: all planned milestones are delivered and verified; corpus
    wave 4 + reflect-prompt work remain from your directives. Tag `v0.2.0` now
    and reserve `v1.0.0` for after that work, or hold tags entirely?
-   **Default: tag v0.2.0 at the next natural pause.**
+   **Default: tag v0.2.0 at the next natural pause.** ok
 
 ## Answered (2026-07-07)
 

@@ -37,6 +37,26 @@ def request_reflection(store, campaign_id: str) -> Optional[Task]:
     return service.emit(store, compiled)
 
 
+def grounding_slice(store, campaign: Campaign, topic_path: str) -> Optional[str]:
+    """The topic-relevant window of the campaign's linked source material —
+    trusted sources must keep grounding generation for as long as they're
+    linked, not just on ingest day (use-case audit F2)."""
+    from .grounding import resolve_source_context
+
+    for link in campaign.sources_config or []:
+        topics = link.get("topics") or []
+        if not topics or any(
+            topic_path == t or topic_path.startswith(t + ".") for t in topics
+        ):
+            source = store.sources.get(link.get("source_id"))
+            if source is not None and source.content:
+                text, _, _ = resolve_source_context(
+                    source.content, source.title, topic_path or "", min_lines=100
+                )
+                return text
+    return None
+
+
 def request_generation(
     store,
     campaign: Campaign,
@@ -46,7 +66,11 @@ def request_generation(
     difficulty: Optional[str] = None,
     source_slice: Optional[str] = None,
     diagnostic: bool = False,
+    auto_promote: bool = False,
 ) -> Task:
+    """auto_promote: daily replenishment items skip the manual candidate gate
+    (blueprint I2 allows recorded auto-accept policy) — bulk `add --generate`
+    material keeps review; trust differs by volume and origin."""
     if diagnostic:
         compiled = compiler.compile_diagnostic(
             store, campaign, topic_path=topic_path, n_items=n_items
@@ -58,6 +82,8 @@ def request_generation(
             difficulty=difficulty or campaign.strategy_profile.get("difficulty", "intermediate"),
             source_slice=source_slice,
         )
+        if auto_promote:
+            compiled.context["auto_promote"] = True
     return service.emit(store, compiled)
 
 

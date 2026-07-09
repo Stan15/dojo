@@ -259,10 +259,35 @@ def compile_reflect(store, campaign: Campaign, *, window_n: int = 15) -> Compile
     attempts = store.attempts.list(campaign.id)
     window = attempts[-window_n:]
     unreflected = [a for a in attempts if not a.reflected and a not in window]
-    rows = []
+
+    # Integrity (use-case audit G1+H1): pending-grade attempts are labeled, not
+    # counted as failures nor marked reflected; and only attempts whose rows
+    # actually FIT the byte budget enter attempt_ids — anything clipped stays
+    # unreflected for the next run instead of being silently skipped forever.
+    row_budget = int(
+        SECTION_BUDGETS["campaign.reflect"]["attempt_rows"] * _tier(store)
+    )
+    rows: list[str] = []
+    included_ids: list[str] = []
+    used = 0
     for a in unreflected + window:
+        # Provisional scores are ALWAYS 0.0 (submit_answer) — a graded wrong
+        # answer carries grader="ai"/"exact"/"self". Legacy grader-less rows
+        # with score 0.0 err toward "ungraded" (they stay unreflected — safe).
+        pending = a.grader is None and a.score == 0.0 and not a.skip_reason
         signal = a.skip_reason or ""
-        rows.append(f"{a.id} · {a.exercise_id} · score {a.score} · {signal}".rstrip(" ·"))
+        row = (
+            f"{a.id} · {a.exercise_id} · "
+            + ("(ungraded — ignore the score)" if pending else f"score {a.score}")
+            + (f" · {signal}" if signal else "")
+        )
+        cost = len(row.encode("utf-8")) + 1
+        if used + cost > row_budget:
+            break
+        rows.append(row)
+        used += cost
+        if not pending:
+            included_ids.append(a.id)
     feedback_lines = [
         f"- {a.feedback}" for a in window if a.feedback
     ]
@@ -277,7 +302,7 @@ def compile_reflect(store, campaign: Campaign, *, window_n: int = 15) -> Compile
     context = {
         "campaign_id": campaign.id,
         "window_n": window_n,
-        "attempt_ids": [a.id for a in unreflected + window],
+        "attempt_ids": included_ids,
     }
     return _compile(store, "campaign.reflect", values, context)
 

@@ -227,3 +227,77 @@ class TestColdStartAndPhaseGating:
             f"later-phase topics (bisect/merges) must not request stock yet: {emitted}"
         )
         assert len(res["tasks"]) <= 2, "token frugality: at most 2 AI tasks per daily"
+
+
+class TestHeartbeat:
+    """Use-case audit 2026-07-08: every loop-vital step happens in daily or is
+    re-surfaced by it — never parked in commands nobody must run."""
+
+    def test_reflection_fires_by_evidence_threshold(self, tmp_path: Path):
+        from dojo.schemas import Attempt
+        api = DojoAPI(tmp_path)
+        cid = seed(api)
+        for i in range(5):
+            api.store.attempts.save(cid, Attempt(
+                id=f"att_{i}", session_id="s1", exercise_id="ex_lapsed", campaign_id=cid,
+                score=0.3, grader="exact", latency_seconds=20.0, user_answer="…",
+            ))
+        res = api.daily()
+        kinds = {api.store.tasks.get(t["id"]).kind for t in res["tasks"]}
+        assert "campaign.reflect" in kinds, "5+ unreflected attempts must trigger reflection"
+
+    def test_stale_pending_tasks_resurface_every_morning(self, tmp_path: Path):
+        api = DojoAPI(tmp_path)
+        seed(api)
+        first = api.daily()
+        pending_before = {t["id"] for t in first["tasks"]}
+        assert pending_before, "seed emits a generation task"
+        res = api.daily(reset=True)
+        stale_ids = {t["id"] for t in res["stale_tasks"]}
+        assert pending_before <= stale_ids, "yesterday's unfulfilled work must reappear"
+
+    def test_daily_replenishment_auto_promotes_with_recorded_policy(self, tmp_path: Path):
+        import json as _json
+        from dojo.tasks import service
+        api = DojoAPI(tmp_path)
+        cid = seed(api)
+        task_ref = next(
+            t for t in api.daily()["tasks"]
+            if api.store.tasks.get(t["id"]).kind == "exercise.generate"
+        )
+        outcome = service.submit(api.store, task_ref["id"], _json.dumps({
+            "items": [
+                {"prompt": "Order coffee politely in French.", "answer": "Un café, s'il vous plaît.",
+                 "rubric": "- polite form", "skill": "produce"},
+                {"prompt": "Ask where the station is.", "answer": "Où est la gare ?",
+                 "rubric": "- correct question", "skill": "produce"},
+            ],
+            "note": None, "intervention": None,
+        }))
+        assert outcome.ok, outcome.errors
+        promoted = [ex for ex in api.store.exercises.list(cid) if ex.quality == "auto_accepted"]
+        assert len(promoted) == 2, "daily stock is practicable immediately (gate recorded)"
+        assert api.store.candidates.list(cid) == [], "no orphaned candidates"
+
+    def test_phase_advancement_happens_at_daily(self, tmp_path: Path):
+        from dojo.schemas import Attempt, AttackPlanPhase, CriteriaEntry
+        api = DojoAPI(tmp_path)
+        cid = seed(api)
+        camp = api.store.campaigns.get(cid)
+        camp.attack_plan = [
+            AttackPlanPhase(phase=1, topics=["french.vocab"],
+                            criteria=CriteriaEntry(min_attempts=2, min_accuracy=0.5)),
+            AttackPlanPhase(phase=2, topics=["french.oral"],
+                            criteria=CriteriaEntry(min_attempts=5, min_accuracy=0.7)),
+        ]
+        camp.active_phase_index = 0
+        api.store.campaigns.save(camp)
+        for i in range(2):
+            api.store.attempts.save(cid, Attempt(
+                id=f"att_p{i}", session_id="s1", exercise_id="ex_lapsed", campaign_id=cid,
+                score=1.0, grader="exact", latency_seconds=5.0, user_answer="oui",
+            ))
+        api.daily(reset=True)
+        assert api.store.campaigns.get(cid).active_phase_index == 1, (
+            "criteria met → phase advances at the heartbeat, no reflect call needed"
+        )

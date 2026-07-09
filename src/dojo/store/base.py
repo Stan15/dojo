@@ -31,9 +31,13 @@ def sequenced_filename(repo: "CampaignScopedRepository", campaign_id: str, entit
 
 
 def attempt_filename(repo: "CampaignScopedRepository", campaign_id: str, entity: Any) -> str:
-    """att_TIMESTAMP_exercise-id.md — evidence files read chronologically."""
+    """att_TIMESTAMP_exercise-id_UNIQ.md — chronological for humans, but
+    uniqueness comes from the entity id, never the clock: two attempts on the
+    same exercise within one second must not overwrite each other (bug caught
+    by the daily-heartbeat tests, 2026-07-09)."""
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-    return f"att_{timestamp}_{entity.exercise_id}.md"
+    uniq = entity.id.removeprefix("att_")[:6] or "x"
+    return f"att_{timestamp}_{entity.exercise_id}_{uniq}.md"
 
 
 def slug_filename(repo: "CampaignScopedRepository", campaign_id: str, entity: Any) -> str:

@@ -22,7 +22,12 @@ console = Console()
 
 
 def _use_json(args: argparse.Namespace) -> bool:
+    """Agent path: explicit --json, piped output, or --no-input. The guarantee
+    (owner directive 2026-07-08): this path NEVER blocks on interactive input;
+    humans at a TTY get the interactive flows instead."""
     if getattr(args, "json", False):
+        return True
+    if getattr(args, "no_input", False):
         return True
     if not sys.stdout.isatty():
         return True
@@ -618,9 +623,9 @@ def cmd_install(args: argparse.Namespace) -> int:
     # The skill ships as package data — installs must never depend on a repo
     # checkout (owner-reported: `dojo install codex` failed from a venv install).
     if hasattr(sys, "_MEIPASS"):
-        repo_skills_dojo = Path(getattr(sys, "_MEIPASS")) / "dojo" / "skills"
+        repo_skills_dojo = Path(getattr(sys, "_MEIPASS")) / "dojo" / "skills" / "dojo"
     else:
-        repo_skills_dojo = Path(__file__).resolve().parent / "skills"
+        repo_skills_dojo = Path(__file__).resolve().parent / "skills" / "dojo"
 
     if not (repo_skills_dojo / "SKILL.md").exists():
         raise SystemExit(f"error: packaged skill not found at {repo_skills_dojo} (broken install?)")
@@ -876,6 +881,23 @@ def cmd_config_show(args: argparse.Namespace) -> int:
     return 0
 
 
+def _emit_plan_task(store, goal: str, context_notes: str) -> dict[str, Any]:
+    from .tasks import flows
+
+    existing = sorted({
+        ex.topic_path
+        for camp in store.campaigns.list()
+        for ex in store.exercises.list(camp.id)
+    } | {
+        camp.topic_path for camp in store.campaigns.list() if camp.topic_path
+    })
+    task = flows.request_plan(
+        store, goal=goal, context_notes=context_notes,
+        existing_topics="\n".join(existing),
+    )
+    return flows.task_ref(task)
+
+
 def cmd_campaign_plan(args: argparse.Namespace) -> int:
     """Emits a campaign.plan task (ADR 010). The fulfilled task carries the
     proposal (mission/topics/phases/refinement questions); materialize it with:
@@ -884,55 +906,53 @@ def cmd_campaign_plan(args: argparse.Namespace) -> int:
     from .tasks import flows
 
     store = DojoStore(_db_path(args))
-    existing = sorted({
-        ex.topic_path
-        for camp in store.campaigns.list()
-        for ex in store.exercises.list(camp.id)
-    } | {
-        camp.topic_path for camp in store.campaigns.list() if camp.topic_path
-    })
+    if not _use_json(args):
+        from .api import DojoAPI as _API
+        from .interactive import plan_flow
+
+        api = _API(_db_path(args))
+        return plan_flow(
+            api, goal=args.goal, level=getattr(args, "level", None),
+            context=getattr(args, "context", None),
+            emit_plan_task=lambda goal, notes: _emit_plan_task(api.store, goal, notes),
+            materialize=lambda task_id: _materialize_core(api, task_id, None),
+        )
     notes = []
     if getattr(args, "level", None):
         notes.append(f"level: {args.level}")
     if getattr(args, "context", None):
         notes.append(args.context)
-    task = flows.request_plan(
-        store,
-        goal=args.goal,
-        context_notes="; ".join(notes),
-        existing_topics="\n".join(existing),
-    )
+    task_ref_ = _emit_plan_task(store, args.goal, "; ".join(notes))
+    tid = task_ref_["id"]
     _print_json({
         "ok": True,
-        "task": flows.task_ref(task),
+        "task": task_ref_,
         "next": (
-            f"fulfill the task (dojo task show {task.id} --prompt → produce the JSON → "
-            f"dojo task submit {task.id}); review the proposal and its refinement_questions "
-            f"with the learner, then: dojo campaign create --from-task {task.id} "
+            f"fulfill the task (dojo task show {tid} --prompt → produce the JSON → "
+            f"dojo task submit {tid}); review the proposal and its refinement_questions "
+            f"with the learner, then: dojo campaign create --from-task {tid} "
             f"[--name <override>]"
         ),
     })
     return 0
 
 
-def _materialize_campaign_from_task(args: argparse.Namespace) -> int:
+def _materialize_core(api: DojoAPI, task_id: str, name: str | None) -> dict[str, Any]:
     """Deterministic creation from a fulfilled campaign.plan task (I2:
-    review-before-trust — the human said yes before this runs)."""
-    from .store import DojoStore
-
-    api = DojoAPI(_db_path(args))
-    task = api.store.tasks.get(args.from_task)
+    review-before-trust — the human said yes before this runs). Shared by the
+    agent envelope path and the interactive flow."""
+    task = api.store.tasks.get(task_id)
     if task is None or task.kind != "campaign.plan":
-        raise SystemExit(f"error: {args.from_task} is not a campaign.plan task")
+        raise SystemExit(f"error: {task_id} is not a campaign.plan task")
     if task.status != "fulfilled":
-        raise SystemExit(f"error: task {args.from_task} is {task.status}, not fulfilled")
+        raise SystemExit(f"error: task {task_id} is {task.status}, not fulfilled")
     proposal = (task.context or {}).get("_applied")
     if not proposal:
-        raise SystemExit(f"error: task {args.from_task} carries no applied proposal")
+        raise SystemExit(f"error: task {task_id} carries no applied proposal")
 
     topic_paths = [t["path"] for t in proposal["topics"]]
     root = topic_paths[0].split(".")[0] if topic_paths else "general"
-    name = args.name or task.context.get("goal") or root
+    name = name or task.context.get("goal") or root
 
     res = api.create_campaign(
         name=name,
@@ -948,13 +968,22 @@ def _materialize_campaign_from_task(args: argparse.Namespace) -> int:
         lines.append(f"- `{t['path']}` ({t['kind']}): {t.get('summary', '')}")
     campaign.syllabus_markdown = "\n".join(lines)
     api.store.campaigns.save(campaign)
+    return {
+        "campaign": api.store.campaigns.get(res["id"]).model_dump(),
+        "id": res["id"],
+        "refinement_questions": proposal.get("refinement_questions", []),
+    }
 
+
+def _materialize_campaign_from_task(args: argparse.Namespace) -> int:
+    api = DojoAPI(_db_path(args))
+    result = _materialize_core(api, args.from_task, getattr(args, "name", None))
     _print_json({
         "ok": True,
         "type": "campaign_created",
-        "data": api.store.campaigns.get(res["id"]).model_dump(),
-        "refinement_questions": proposal.get("refinement_questions", []),
-        "next": "run dojo start to begin practicing",
+        "data": result["campaign"],
+        "refinement_questions": result["refinement_questions"],
+        "next": "run dojo daily to begin practicing",
     })
     return 0
 
@@ -1639,13 +1668,19 @@ def cmd_stats(args: argparse.Namespace) -> int:
 
 def cmd_capture(args: argparse.Namespace) -> int:
     api = DojoAPI(_db_path(args))
-    res = api.capture(args.text, why=args.why)
+    if not _use_json(args):
+        from .interactive import capture_flow
+        return capture_flow(api, text=args.text, why=args.why, locator=args.locator)
+    res = api.capture(args.text, why=args.why, locator=args.locator)
     _print_json({"ok": True, **res})
     return 0
 
 
 def cmd_inbox(args: argparse.Namespace) -> int:
     api = DojoAPI(_db_path(args))
+    if not _use_json(args) and not args.inbox_command:
+        from .interactive import inbox_flow
+        return inbox_flow(api)
     if args.inbox_command == "confirm":
         _print_json({"ok": True, **api.inbox_confirm(args.capture_id)})
     elif args.inbox_command == "dismiss":
@@ -1657,6 +1692,9 @@ def cmd_inbox(args: argparse.Namespace) -> int:
 
 def cmd_daily(args: argparse.Namespace) -> int:
     api = DojoAPI(_db_path(args))
+    if not _use_json(args):
+        from .interactive import daily_flow
+        return daily_flow(api, size=args.size, reset=args.reset)
     res = api.daily(size=args.size, reset=args.reset)
     if _use_json(args):
         _print_json({"ok": True, **res})
@@ -1905,9 +1943,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_stats = sub.add_parser("stats", help="retention, atrophy, and AI token spend — computed, estimates tagged")
     p_stats.set_defaults(func=cmd_stats)
 
-    p_capture = sub.add_parser("capture", help="save something you just learned — one utterance, filed later")
-    p_capture.add_argument("text", help="the thing to remember")
-    p_capture.add_argument("--why", help="optional: why this matters to you")
+    p_capture = sub.add_parser("capture", help="save something you just learned — one utterance now, filed into a campaign later")
+    p_capture.add_argument("text", help="the thing to remember, as text (agents: fetch/summarize links yourself)")
+    p_capture.add_argument("--why", help="optional: why this matters to you, in your words")
+    p_capture.add_argument("--locator", help="optional: where it came from (URL or file path), kept as provenance")
     p_capture.set_defaults(func=cmd_capture)
 
     p_inbox = sub.add_parser("inbox", help="captures awaiting a home; confirm or dismiss proposed routes")

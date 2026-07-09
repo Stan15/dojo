@@ -61,7 +61,10 @@ def seed_store(tmp_path: Path, seed: dict) -> DojoStore:
     for ex in seed.get("exercises", []):
         store.exercises.save(camp.id, Exercise(**ex))
     for att in seed.get("attempts", []):
-        store.attempts.save(camp.id, Attempt(**{"campaign_id": camp.id, **att}))
+        # Seeded history is GRADED history unless a scenario says otherwise —
+        # grader-less 0.0 rows would read as pending grades and be excluded
+        # from reflection evidence.
+        store.attempts.save(camp.id, Attempt(**{"campaign_id": camp.id, "grader": "exact", **att}))
     return store
 
 

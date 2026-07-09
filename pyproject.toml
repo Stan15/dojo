@@ -27,7 +27,7 @@ where = ["src"]
 [tool.setuptools.package-data]
 "dojo.prompts" = ["*.md", "fragments/*.md"]
 "dojo.evals" = ["judge_prompt.md", "corpus/*/*.yaml"]
-"dojo.skills" = ["SKILL.md"]
+"dojo.skills" = ["dojo/SKILL.md"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

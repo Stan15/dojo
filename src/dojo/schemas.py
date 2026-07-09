@@ -446,6 +446,7 @@ class Capture(StoredEntity):
     id: str
     status: str = "unrouted"
     why: Optional[str] = None  # the learner's own "because…" at capture time
+    locator: Optional[str] = None  # where it came from (URL/file) — the agent fetches, dojo never does
     proposal: Optional[Dict[str, Any]] = None  # validated RouteResult + task id
     source_id: Optional[str] = None  # set when filed
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())

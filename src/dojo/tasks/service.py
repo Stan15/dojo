@@ -226,6 +226,40 @@ def apply_generate(store, task: Task, result: GenerateResult) -> dict[str, Any]:
     if reasons:
         raise ApplyRejection(*reasons)
 
+    if ctx.get("auto_promote"):
+        # Daily replenishment (use-case audit J1): recorded auto-accept policy
+        # (I2) — otherwise skill stock lands as candidates nothing in the daily
+        # loop promotes, and the lane starves. The queue cap still holds.
+        from ..schemas import Exercise
+
+        active = [
+            ex for ex in store.exercises.list(campaign_id)
+            if ex.quality not in ("archived", "too_easy", "too_hard", "bad_quality", "spent")
+        ]
+        room = max(0, 20 - len(active))
+        ids, skipped = [], 0
+        for i, item in enumerate(result.items):
+            if i >= room:
+                skipped += 1
+                continue
+            ex_id = f"ex_{task.id[4:]}_{i}"  # task-derived: re-apply overwrites
+            store.exercises.save(campaign_id, Exercise(
+                id=ex_id,
+                topic_path=ctx["topic_path"],
+                difficulty=ctx.get("difficulty", "intermediate"),
+                kind="recall" if item.skill == "recall" else "skill",
+                generation_run=task.id,
+                quality="auto_accepted",
+                answer=item.answer,
+                rubric=item.rubric,
+                prompt=item.prompt,
+            ))
+            ids.append(ex_id)
+        applied: dict[str, Any] = {"exercises": ids, "note": result.note}
+        if skipped:
+            applied["skipped_queue_cap"] = skipped
+        return applied
+
     ids = []
     for i, item in enumerate(result.items):
         if diagnostic:
