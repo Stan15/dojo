@@ -997,6 +997,19 @@ def _materialize_core(api: DojoAPI, task_id: str, name: str | None) -> dict[str,
     for t in proposal["topics"]:
         lines.append(f"- `{t['path']}` ({t['kind']}): {t.get('summary', '')}")
     campaign.syllabus_markdown = "\n".join(lines)
+    # The learner just said yes to THIS plan — record it as the confirmed
+    # baseline change authority measures future revisions against.
+    from datetime import datetime, timezone
+    from .tasks import authority
+
+    campaign.pedagogical_journal.append({
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "action": authority.PLAN_CONFIRMED,
+        "trigger": "campaign create --from-task (learner approved the proposal)",
+        "hypothesis": "initial plan confirmed at creation",
+        "status": "applied",
+        "plan_snapshot": [p.model_dump() for p in campaign.attack_plan],
+    })
     api.store.campaigns.save(campaign)
     return {
         "campaign": api.store.campaigns.get(res["id"]).model_dump(),
@@ -1092,6 +1105,19 @@ def cmd_campaign_create(args: argparse.Namespace) -> int:
                     focus="Onboarding/Diagnostic calibration phase"
                 )
             ]
+            # This diagnostic plan is what the learner starts under — make it
+            # the confirmed baseline for change authority.
+            from datetime import datetime as _dt, timezone as _tz
+            from .tasks import authority as _authority
+
+            campaign.pedagogical_journal.append({
+                "timestamp": _dt.now(_tz.utc).isoformat(),
+                "action": _authority.PLAN_CONFIRMED,
+                "trigger": "campaign create (onboarding diagnostic plan)",
+                "hypothesis": "initial diagnostic plan confirmed at creation",
+                "status": "applied",
+                "plan_snapshot": [p.model_dump() for p in campaign.attack_plan],
+            })
             api.store.campaigns.save(campaign)
 
         # 5. Start practice session (onboarding questions JIT trigger)
@@ -1783,6 +1809,50 @@ def cmd_why(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_plan(args: argparse.Namespace) -> int:
+    """`dojo plan show|confirm|reject|revert`: the learner's authority over
+    AI-proposed plan restructures (show pending, accept, decline, or undo the
+    last auto-applied change)."""
+    api = DojoAPI(_db_path(args))
+    campaign = getattr(args, "campaign", None)
+    action = args.plan_command or "show"
+    try:
+        if action == "confirm":
+            res = api.plan_confirm(campaign)
+        elif action == "reject":
+            res = api.plan_reject(campaign)
+        elif action == "revert":
+            res = api.plan_revert(campaign)
+        else:
+            res = api.plan_status(campaign)
+    except ValueError as exc:
+        raise SystemExit(f"error: {exc}")
+
+    if _use_json(args):
+        _print_json({"ok": True, **res})
+        return 0
+    if action != "show":
+        console.print(f"[bold green]✓ plan {res['status']}[/bold green] "
+                      f"([cyan]{res['campaign_id']}[/cyan])")
+        return 0
+    for camp in res["campaigns"]:
+        console.print(f"\n[bold]{camp['campaign_id']}[/bold]")
+        for p in camp["current_plan"]:
+            console.print(f"  Phase {p['phase']}: {', '.join(p['topics'])}"
+                          + (f" [dim]— {p['focus']}[/dim]" if p.get("focus") else ""))
+        pending = camp["pending_proposal"]
+        if pending:
+            console.print(f"  [yellow]Proposed restructure[/yellow] — {pending['reason']}")
+            for p in pending["proposed_phases"] or []:
+                console.print(f"    Phase {p['phase']}: {', '.join(p['topics'])}")
+            console.print(f"  Accept: [bold]dojo plan confirm --campaign {camp['campaign_id']}[/bold]"
+                          f"  ·  Decline: [bold]dojo plan reject --campaign {camp['campaign_id']}[/bold]")
+        elif camp["revertable"]:
+            console.print(f"  [dim]last auto-applied change is undoable: "
+                          f"dojo plan revert --campaign {camp['campaign_id']}[/dim]")
+    return 0
+
+
 def cmd_campaign_boost(args: argparse.Namespace) -> int:
     """Cross-campaign surfacing: 'I want THIS CAMPAIGN to come up more/less'."""
     api = DojoAPI(_db_path(args))
@@ -2014,6 +2084,19 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_why = sub.add_parser("why", help="explain every scheduling choice behind the current packet")
     p_why.set_defaults(func=cmd_why)
+
+    p_plan = sub.add_parser("plan", help="your authority over AI-proposed plan changes: show, confirm, reject, revert")
+    p_plan_sub = p_plan.add_subparsers(dest="plan_command")
+    p_plan.set_defaults(func=cmd_plan)
+    for verb, blurb in (
+        ("show", "current plan + any pending proposed restructure"),
+        ("confirm", "accept the pending proposal (it becomes the confirmed baseline)"),
+        ("reject", "decline the pending proposal; nothing changes"),
+        ("revert", "undo the last auto-applied plan change"),
+    ):
+        p_verb = p_plan_sub.add_parser(verb, help=blurb)
+        p_verb.add_argument("--campaign", help="campaign id (optional when unambiguous)")
+        p_verb.set_defaults(func=cmd_plan)
 
     p_campaign = sub.add_parser("campaign")
     p_camp_sub = p_campaign.add_subparsers(dest="campaign_command", required=True)

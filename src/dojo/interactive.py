@@ -192,6 +192,13 @@ def daily_flow(api: DojoAPI, size: Optional[int] = None, reset: bool = False) ->
     diagnostic round), then hands off to `practice_loop`. Exits gracefully
     with printed task handles when no fulfiller is configured."""
     res = api.daily(size=size, reset=reset)
+    for change in res.get("plan_changes", []):
+        console.print(f"[yellow]Plan updated[/yellow] ([cyan]{change['campaign_id']}[/cyan]): "
+                      f"{change['reason']}  [dim]{change['undo']}[/dim]")
+    for prop in res.get("plan_proposals", []):
+        console.print(f"[yellow]Plan restructure proposed[/yellow] "
+                      f"([cyan]{prop['campaign_id']}[/cyan]): {prop['reason']} — "
+                      f"[bold]dojo plan show[/bold] to review")
     for _ in range(2):  # at most: drain → rebuild → drain (cold-start diagnostic round)
         if res.get("session") is not None:
             break

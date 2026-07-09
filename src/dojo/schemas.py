@@ -229,9 +229,14 @@ class StrategyChange(BaseModel):
 
 class PlanRevision(BaseModel):
     """Reflection's replacement attack plan (whole-plan swap, bounded phase
-    count) — the applier decides whether it's accepted."""
+    count). The applier decides its fate by change authority: `evidence`
+    cites attempt ids carrying the learner's OWN feedback that asked for the
+    change — with it (or for mechanically-minor edits) the revision applies;
+    without it, destructive revisions become a proposal awaiting
+    `dojo plan confirm`."""
 
     phases: List[AttackPlanPhase] = Field(min_length=1, max_length=_limits.PLAN_MAX_PHASES)
+    evidence: List[str] = Field(default_factory=list)
     reason: str = Field(min_length=1)
 
     _cap_reason = field_validator("reason")(_cap_words("reason", _limits.REFLECT_REASON_WORDS))
@@ -239,17 +244,30 @@ class PlanRevision(BaseModel):
 
 class ReflectResult(BaseModel):
     """Submission shape for `campaign.reflect`: bounded insight edits (new
-    creates capped per run), optional strategy change and plan revision, and
-    a mandatory journal line for the pedagogical record."""
+    creates capped per run), optional strategy change and plan revision, an
+    ask-don't-restructure `questions` channel (they become diagnostic items;
+    answers are citable evidence for a later revision), and a mandatory
+    journal line for the pedagogical record."""
 
     insight_updates: List[InsightUpdate] = Field(default_factory=list)
     strategy: Optional[StrategyChange] = None
     plan_revision: Optional[PlanRevision] = None
+    questions: List[str] = Field(default_factory=list, max_length=_limits.REFLECT_MAX_QUESTIONS)
     journal: str = Field(min_length=1)
 
     _cap_journal = field_validator("journal")(
         _cap_words("journal", _limits.REFLECT_JOURNAL_WORDS)
     )
+
+    @field_validator("questions")
+    @classmethod
+    def _cap_question_words(cls, v: List[str]) -> List[str]:
+        for q in v:
+            if _limits.word_count(q) > _limits.REFLECT_QUESTION_WORDS:
+                raise ValueError(
+                    f"question exceeds {_limits.REFLECT_QUESTION_WORDS} words: {q!r}"
+                )
+        return v
 
     @model_validator(mode="after")
     def _bounded_creates(self):

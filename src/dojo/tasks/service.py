@@ -353,13 +353,16 @@ def apply_grade(store, task: Task, result: GradeResult) -> dict[str, Any]:
 
 
 def apply_reflect(store, task: Task, result: ReflectResult) -> dict[str, Any]:
-    """Lands a reflection: insight creates/updates/resolves (every citation
-    must be an attempt id the model was shown; every touched insight must
-    exist), strategy-dial changes, plan revision, a journal entry, and marks
-    the consumed attempts reflected.
+    """Lands a reflection: insight creates/updates/resolves (every citation —
+    insight AND plan — must be an attempt id the model was shown; every
+    touched insight must exist), strategy-dial changes, a journal entry, and
+    marks the consumed attempts reflected.
 
-    Note: strategy and plan_revision currently apply WITHOUT a consent gate —
-    the tiered change-authority design in QUESTIONS.md addresses this."""
+    Plan revisions pass through change authority (`authority.py`): minor or
+    learner-asked-for changes apply with a revertable snapshot; major
+    inferred restructures become a pending proposal for `dojo plan confirm`.
+    `questions` become diagnostic exercises whose answers feed later
+    reflections as citable evidence."""
     ctx = task.context
     campaign_id = ctx["campaign_id"]
     campaign = store.campaigns.get(campaign_id)
@@ -378,6 +381,10 @@ def apply_reflect(store, task: Task, result: ReflectResult) -> dict[str, Any]:
                 reasons.append(f"insight_updates[{i}] cites unknown attempt id {ev!r}")
         if upd.op in ("update", "resolve") and upd.id not in existing:
             reasons.append(f"insight_updates[{i}] targets unknown insight id {upd.id!r}")
+    if result.plan_revision:
+        for ev in result.plan_revision.evidence:
+            if ev not in seen_attempts:
+                reasons.append(f"plan_revision cites unknown attempt id {ev!r}")
     if reasons:
         raise ApplyRejection(*reasons)
 
@@ -409,8 +416,62 @@ def apply_reflect(store, task: Task, result: ReflectResult) -> dict[str, Any]:
             campaign.strategy_profile["difficulty"] = result.strategy.difficulty
         if result.strategy.scaffolding:
             campaign.strategy_profile["scaffolding"] = result.strategy.scaffolding
+
+    # Plan changes go through change authority (authority.py): the learner's
+    # plan is a contract. Minor/asked-for → apply, journaled with a pre-change
+    # snapshot and announced by the next daily; major inferred → a PENDING
+    # proposal the learner resolves (dojo plan confirm|reject). The rest of
+    # the reflection is never held hostage by the gate.
+    plan_outcome = None
     if result.plan_revision:
-        campaign.attack_plan = result.plan_revision.phases
+        from . import authority
+
+        user_initiated = authority.revision_is_user_initiated(
+            store, campaign_id, result.plan_revision.evidence
+        )
+        baseline = authority.confirmed_plan_baseline(campaign) or campaign.attack_plan
+        delta = authority.classify_plan_delta(baseline, result.plan_revision.phases)
+        if user_initiated or delta == "minor":
+            campaign.pedagogical_journal.append(authority.journal_entry(
+                authority.PLAN_APPLIED,
+                reason=result.plan_revision.reason, task_id=task.id,
+                plan_snapshot=campaign.attack_plan,
+            ))
+            campaign.attack_plan = result.plan_revision.phases
+            plan_outcome = "applied"
+        else:
+            # One live proposal per campaign: a newer reflection's view
+            # supersedes an unresolved older one.
+            stale = authority.pending_proposal(campaign)
+            if stale is not None:
+                stale["status"] = "superseded"
+            campaign.pedagogical_journal.append(authority.journal_entry(
+                authority.PLAN_PROPOSED,
+                reason=result.plan_revision.reason, task_id=task.id,
+                plan_snapshot=campaign.attack_plan,
+                proposed=result.plan_revision.phases,
+            ))
+            plan_outcome = "proposed"
+
+    # Ask-don't-restructure: questions become diagnostic exercises in the
+    # normal loop (mirror of generation's intervention); the learner's answers
+    # are attempts a later reflection can cite as evidence for a revision.
+    question_ids = []
+    if result.questions:
+        from ..schemas import Exercise
+
+        topic = campaign.topic_path or "general"
+        for i, q in enumerate(result.questions):
+            ex_id = f"ex_{task.id[4:]}_rq{i}"  # task-derived: re-apply overwrites
+            store.exercises.save(campaign_id, Exercise(
+                id=ex_id,
+                topic_path=topic,
+                difficulty="intermediate",
+                generation_run=task.id,
+                quality="diagnostic",
+                prompt=q,
+            ))
+            question_ids.append(ex_id)
 
     campaign.pedagogical_journal.append({
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -431,8 +492,12 @@ def apply_reflect(store, task: Task, result: ReflectResult) -> dict[str, Any]:
     return {
         "created": created, "updated": updated, "resolved": resolved,
         "strategy_changed": result.strategy is not None,
-        "plan_revised": result.plan_revision is not None,
+        "plan_revised": plan_outcome == "applied",
+        "plan_proposed": plan_outcome == "proposed",
+        "questions_as_diagnostics": question_ids,
         "journal": result.journal,
+        **({"next": f"a plan restructure awaits the learner: dojo plan confirm --campaign {campaign_id} (or reject)"}
+           if plan_outcome == "proposed" else {}),
     }
 
 

@@ -32,6 +32,8 @@ REFLECT_MAX_NEW_INSIGHTS = 2
 REFLECT_INSIGHT_WORDS = 25
 REFLECT_REASON_WORDS = 20
 REFLECT_JOURNAL_WORDS = 30
+REFLECT_MAX_QUESTIONS = 2  # ask-don't-restructure channel (change authority)
+REFLECT_QUESTION_WORDS = 25
 
 # --- planning (campaign.plan) ---
 PLAN_MAX_TOPICS = 18

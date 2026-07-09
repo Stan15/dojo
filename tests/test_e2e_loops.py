@@ -98,6 +98,10 @@ def test_onboarding_diagnostic_and_reflection_loop(tmp_path: Path):
                  "criteria": {"min_attempts": 5, "min_accuracy": 0.6},
                  "focus": "guided conversation openers"},
             ],
+            # Change authority: the restructure cites the learner's own
+            # diagnostic answer ("TEF exam on October 12") — learner-voice
+            # evidence, so it applies instead of becoming a proposal.
+            "evidence": [attempt_ids[1]],
             "reason": "deadline Oct 12: start guided oral drills now",
         },
         "journal": "Calibrated to beginner with high scaffolding; oral drills first.",

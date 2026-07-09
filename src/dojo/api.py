@@ -85,13 +85,26 @@ class DojoAPI:
         from . import packet as packet_mod
         from .tasks import flows
 
+        # Plan-authority surfacing (QUESTIONS.md 2026-07-09): pending proposals
+        # repeat until resolved; auto-applied changes announce exactly once.
+        plan_proposals, plan_changes = self._plan_notices()
+        plan_keys = (
+            {"plan_proposals": plan_proposals} if plan_proposals else {}
+        ) | ({"plan_changes": plan_changes} if plan_changes else {})
+        proposal_hint = (
+            f" ({len(plan_proposals)} plan proposal(s) await you: dojo plan show)"
+            if plan_proposals else ""
+        )
+
         active = self.store.sessions.get_active()
         if active and active.status == "active" and not reset:
             return {
                 "is_new": False,
                 "session": active.model_dump(),
                 "why": active.packet_reasons,
-                "next": "resume: dojo ready reveals the next prompt (dojo daily --reset to rebuild)",
+                **plan_keys,
+                "next": "resume: dojo ready reveals the next prompt (dojo daily --reset to rebuild)"
+                        + proposal_hint,
             }
 
         now = datetime.now(timezone.utc)
@@ -157,11 +170,13 @@ class DojoAPI:
                 "stale_tasks": stale,
                 "skipped": pkt.skipped,
                 "campaign_reasons": pkt.campaign_reasons,
+                **plan_keys,
                 "next": (
                     "nothing is due right now"
                     + ("; fulfill the generation task(s) then re-run dojo daily" if tasks else
                        (" — but finish the pending task(s) below first" if stale else
                         " — enjoy the day off, the schedule is honest"))
+                    + proposal_hint
                 ),
             }
 
@@ -188,9 +203,11 @@ class DojoAPI:
             "tasks": tasks,
             "stale_tasks": stale,
             "inbox_waiting": waiting,
+            **plan_keys,
             "next": "dojo ready reveals the first prompt"
                     + (f" ({waiting} capture(s) awaiting a home: dojo inbox)" if waiting else "")
-                    + (f" ({len(stale)} unfinished task(s) from earlier — fulfill them too)" if stale else ""),
+                    + (f" ({len(stale)} unfinished task(s) from earlier — fulfill them too)" if stale else "")
+                    + proposal_hint,
         }
 
     def why(self) -> dict[str, Any]:
@@ -1545,6 +1562,170 @@ class DojoAPI:
             return lines
 
         return "\n".join(_render(tree))
+
+    # ==========================================
+    # Plan change authority (QUESTIONS.md 2026-07-09): the plan is a contract
+    # ==========================================
+    def _resolve_plan_campaign(self, campaign_id: str | None, *, having) -> Campaign:
+        """One campaign for a plan command: explicit id, or the single active
+        campaign satisfying `having` (a predicate). Ambiguity is an error that
+        lists the choices instead of guessing."""
+        if campaign_id:
+            camp = self.store.campaigns.get(campaign_id)
+            if camp is None:
+                raise ValueError(f"campaign {campaign_id} not found")
+            return camp
+        matches = [c for c in self.store.campaigns.list() if c.status == "active" and having(c)]
+        if len(matches) != 1:
+            raise ValueError(
+                "specify --campaign: "
+                + (", ".join(c.id for c in matches) if matches else "no campaign qualifies")
+            )
+        return matches[0]
+
+    def plan_status(self, campaign_id: str | None = None) -> dict[str, Any]:
+        """Each campaign's plan-authority state: the current plan, any pending
+        AI-proposed restructure, and whether an applied change can still be
+        reverted."""
+        from .tasks import authority
+
+        campaigns = (
+            [self.store.campaigns.get(campaign_id)] if campaign_id
+            else self.store.campaigns.list()
+        )
+        if campaigns and campaigns[0] is None:
+            raise ValueError(f"campaign {campaign_id} not found")
+        out = []
+        for camp in campaigns:
+            pending = authority.pending_proposal(camp)
+            out.append({
+                "campaign_id": camp.id,
+                "current_plan": [p.model_dump() for p in camp.attack_plan],
+                "pending_proposal": None if pending is None else {
+                    "reason": pending.get("hypothesis"),
+                    "proposed_phases": pending.get("proposed_phases"),
+                    "since": pending.get("timestamp"),
+                },
+                "revertable": authority.last_revertable(camp) is not None,
+            })
+        return {"campaigns": out}
+
+    def plan_confirm(self, campaign_id: str | None = None) -> dict[str, Any]:
+        """Accepts the pending AI-proposed plan: the proposal becomes the
+        attack plan AND the new confirmed baseline (anti-drip resets to the
+        learner's latest explicit yes).
+
+        Raises:
+            ValueError: no/ambiguous campaign, or nothing is pending.
+        """
+        from .tasks import authority
+
+        camp = self._resolve_plan_campaign(
+            campaign_id, having=lambda c: authority.pending_proposal(c) is not None
+        )
+        pending = authority.pending_proposal(camp)
+        if pending is None:
+            raise ValueError(f"campaign {camp.id} has no pending plan proposal")
+        now = datetime.now(timezone.utc).isoformat()
+        pending["status"] = "accepted"
+        camp.attack_plan = [AttackPlanPhase.model_validate(p) for p in pending["proposed_phases"]]
+        camp.pedagogical_journal.append({
+            "timestamp": now,
+            "action": authority.PLAN_CONFIRMED,
+            "trigger": "dojo plan confirm",
+            "hypothesis": pending.get("hypothesis"),
+            "status": "applied",
+            "plan_snapshot": [p.model_dump() for p in camp.attack_plan],
+        })
+        camp.updated_at = now
+        self.store.campaigns.save(camp)
+        self.log.info(f"Plan proposal accepted for campaign '{camp.id}'")
+        return {"campaign_id": camp.id, "status": "confirmed",
+                "plan": [p.model_dump() for p in camp.attack_plan]}
+
+    def plan_reject(self, campaign_id: str | None = None) -> dict[str, Any]:
+        """Declines the pending proposal; the plan and baseline stay exactly
+        as they were. The rejection stays in the journal as evidence.
+
+        Raises:
+            ValueError: no/ambiguous campaign, or nothing is pending.
+        """
+        from .tasks import authority
+
+        camp = self._resolve_plan_campaign(
+            campaign_id, having=lambda c: authority.pending_proposal(c) is not None
+        )
+        pending = authority.pending_proposal(camp)
+        if pending is None:
+            raise ValueError(f"campaign {camp.id} has no pending plan proposal")
+        pending["status"] = "rejected"
+        camp.updated_at = datetime.now(timezone.utc).isoformat()
+        self.store.campaigns.save(camp)
+        return {"campaign_id": camp.id, "status": "rejected"}
+
+    def plan_revert(self, campaign_id: str | None = None) -> dict[str, Any]:
+        """Undoes the most recent auto-applied plan change (Tier 1): restores
+        its pre-change snapshot, which also becomes the confirmed baseline.
+
+        Raises:
+            ValueError: no/ambiguous campaign, or nothing left to revert.
+        """
+        from .tasks import authority
+
+        camp = self._resolve_plan_campaign(
+            campaign_id, having=lambda c: authority.last_revertable(c) is not None
+        )
+        entry = authority.last_revertable(camp)
+        if entry is None:
+            raise ValueError(f"campaign {camp.id} has no revertable plan change")
+        now = datetime.now(timezone.utc).isoformat()
+        entry["status"] = "reverted"
+        camp.attack_plan = [AttackPlanPhase.model_validate(p) for p in entry["plan_snapshot"]]
+        camp.pedagogical_journal.append({
+            "timestamp": now,
+            "action": authority.PLAN_REVERTED,
+            "trigger": "dojo plan revert",
+            "hypothesis": f"learner reverted: {entry.get('hypothesis')}",
+            "status": "applied",
+            "plan_snapshot": [p.model_dump() for p in camp.attack_plan],
+        })
+        camp.updated_at = now
+        self.store.campaigns.save(camp)
+        return {"campaign_id": camp.id, "status": "reverted",
+                "plan": [p.model_dump() for p in camp.attack_plan]}
+
+    def _plan_notices(self) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        """(pending proposals, unannounced applied changes) across active
+        campaigns — daily's surfacing feed. Proposals repeat until resolved;
+        applied changes announce exactly once (flag flipped here)."""
+        from .tasks import authority
+
+        proposals, changes = [], []
+        for camp in self.store.campaigns.list():
+            if camp.status != "active":
+                continue
+            pending = authority.pending_proposal(camp)
+            if pending:
+                proposals.append({
+                    "campaign_id": camp.id,
+                    "reason": pending.get("hypothesis"),
+                    "phases": len(pending.get("proposed_phases") or []),
+                    "next": f"dojo plan show --campaign {camp.id}, then dojo plan confirm|reject",
+                })
+            dirty = False
+            for e in camp.pedagogical_journal:
+                if e.get("action") == authority.PLAN_APPLIED and not e.get("announced", True):
+                    changes.append({
+                        "campaign_id": camp.id,
+                        "reason": e.get("hypothesis"),
+                        "undo": f"dojo plan revert --campaign {camp.id}",
+                    })
+                    e["announced"] = True
+                    dirty = True
+            if dirty:
+                camp.updated_at = datetime.now(timezone.utc).isoformat()
+                self.store.campaigns.save(camp)
+        return proposals, changes
 
     # ==========================================
     # Campaign Management Operations
