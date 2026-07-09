@@ -372,6 +372,7 @@ RESULT_SCHEMAS: Dict[str, type[BaseModel]] = {
     "campaign.reflect": ReflectResult,
     "campaign.plan": PlanResult,
     "capture.route": RouteResult,
+    "goal.route": RouteResult,  # same contract; the applier differs (dojo learn)
 }
 
 
@@ -577,7 +578,7 @@ class Task(StoredEntity):
     _body_field: ClassVar[Optional[str]] = "prompt"
 
     id: str
-    kind: str  # exercise.generate | attempt.grade | campaign.reflect | campaign.plan | capture.route
+    kind: str  # exercise.generate | attempt.grade | campaign.reflect | campaign.plan | capture.route | goal.route
     status: str = "pending"  # pending | fulfilled | failed
     campaign_id: Optional[str] = None
     context: Dict[str, Any] = Field(default_factory=dict)  # applier inputs (session_id, n_items, …)

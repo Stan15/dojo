@@ -88,6 +88,13 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
 
 1. **Route-first entry for learning goals** (your 2026-07-09 question):
    → **Owner-approved 2026-07-09** ("i agree with everything") — directed work, STATE item 1.
+   → **Shipped 2026-07-09**: `dojo learn` (goal.route task kind, 3 KB
+   registry-validated payload; applier writes nothing on a near fit —
+   `dojo learn extend|new <task-id>` resolve the extend-or-start-fresh
+   question; extend = topic + appended phase journaled PLAN_APPLIED under
+   authority, announced by daily, revertable; propose_campaign auto-chains
+   a seeded campaign.plan task; `--new`/empty registry skip routing;
+   interactive `learn_flow` for the TTY audience).
    "I want to learn xyz" should hit the ROUTER first, not `campaign plan`.
    Close fit → harness relays "looks like <campaign> › <topic> — extend or
    start fresh?"; extend = new_topic + appended phase (a MINOR additive plan

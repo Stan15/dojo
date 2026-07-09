@@ -43,6 +43,7 @@ class TestAgentPathNeverBlocks:
         ["capture", "some fact", "--why", "reasons"],
         ["inbox"],
         ["campaign", "plan", "learn knots"],
+        ["learn", "tie", "better", "knots"],
         ["stats"],
     ])
     def test_json_mode_never_touches_input(self, tmp_path: Path, argv, capsys):
@@ -104,6 +105,23 @@ class TestHumanFlows:
         assert out.count("recorded — scoring at the end") == 2, "no mid-session stalls"
         assert "Scoring 2 answer(s)" in out
         assert all(a.grader == "ai" and a.score == 0.7 for a in api.store.attempts.list(cid))
+
+    def test_learn_flow_extends_on_a_confirmed_near_fit(self, tmp_path: Path, capsys):
+        api = DojoAPI(tmp_path)
+        cid = api.create_campaign(name="Fr", topic_path="fr", mission="Speak French.")["id"]
+        route = {"action": "new_topic", "campaign": cid, "topic_path": "fr.writing",
+                 "new_name": None, "new_mission": None, "confidence": "high",
+                 "reason": "fits the French campaign", "seed": False}
+        api.store.configs.set_value("fulfiller.command", scripted_fulfiller(tmp_path, route))
+        with patch.object(interactive, "_input", lambda prompt: "y"):
+            rc = interactive.learn_flow(
+                api, goal="write formal French emails",
+                plan_conversation=lambda **kw: pytest.fail("extend must not re-plan"),
+            )
+        assert rc == 0
+        assert "plan extended" in capsys.readouterr().out
+        camp = api.store.campaigns.get(cid)
+        assert camp.attack_plan[-1].topics == ["fr.writing"]
 
     def test_capture_flow_confirms_and_files(self, tmp_path: Path, capsys):
         api = DojoAPI(tmp_path)

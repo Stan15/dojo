@@ -41,12 +41,14 @@ Follow each envelope's `next` hint. `dojo <cmd> --help` is the manual.
 
 ## New learning goal ("I want to learn X")
 
-1. `dojo campaign plan "<their goal, verbatim, + any deadline/context THEY gave>"`
-   → fulfill the plan task
-2. Show the user the proposed mission/topics and ASK the refinement questions
-3. Answers change scope/level/deadline? Re-run `dojo campaign plan` with them as
+1. `dojo learn "<their goal, verbatim, + any deadline/context THEY gave>"`
+   → fulfill the emitted task, then follow its `next` hint:
+2. Near fit → ASK the user: extend that campaign, or start fresh? Then
+   `dojo learn extend <task-id>` or `dojo learn new <task-id>` (+ step 3).
+3. Plan proposal → show mission/topics, ASK the refinement questions; answers
+   change scope/level/deadline? Re-run `dojo campaign plan` with them as
    `--context "<their answers>"` and fulfill the NEW task; else keep the first.
-4. `dojo campaign create --from-task <that-task-id>` → `dojo daily`
+4. `dojo campaign create --from-task <plan-task-id>` → `dojo daily`
 
 ## Remember something ("TIL…", "remember this", "add this to my practice")
 

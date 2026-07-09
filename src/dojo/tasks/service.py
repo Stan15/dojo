@@ -513,39 +513,47 @@ def apply_plan(store, task: Task, result: PlanResult) -> dict[str, Any]:
     }
 
 
+def _check_route_target(store, result: RouteResult) -> None:
+    """Registry cross-check shared by both routers (ADR 013: weak models
+    cannot file into places that don't exist). attach must hit a listed
+    topic; a new_topic leaf must hang off a listed parent."""
+    from ..filing import known_topic_paths
+
+    if result.action not in ("attach", "new_topic"):
+        return
+    campaign = store.campaigns.get(result.campaign)
+    if campaign is None:
+        raise ApplyRejection(
+            f"campaign {result.campaign!r} is not in the registry — copy names exactly"
+        )
+    known = known_topic_paths(store, campaign)
+    if result.action == "attach" and result.topic_path not in known:
+        raise ApplyRejection(
+            f"topic {result.topic_path!r} does not exist in {result.campaign!r} — "
+            "attach only to listed topics, or use new_topic"
+        )
+    if result.action == "new_topic":
+        parent = ".".join(result.topic_path.split(".")[:-1])
+        if parent and parent not in known and not any(
+            p.startswith(parent) for p in known
+        ):
+            raise ApplyRejection(
+                f"new_topic parent {parent!r} does not exist in {result.campaign!r} — "
+                "hang the new leaf off a listed path"
+            )
+
+
 def apply_route(store, task: Task, result: RouteResult) -> dict[str, Any]:
-    """Validates a route against the real registry (ADR 013: weak models cannot
-    file into places that don't exist), stores it as a PROPOSAL awaiting
-    confirmation (Q6 default), and auto-files only when capture.autofile is on
-    and confidence is high."""
-    from ..filing import file_capture, known_topic_paths
+    """Validates a capture's route against the real registry, stores it as a
+    PROPOSAL awaiting confirmation (Q6 default), and auto-files only when
+    capture.autofile is on and confidence is high."""
+    from ..filing import file_capture
 
     capture = store.captures.get(task.context["capture_id"])
     if capture is None:
         raise ApplyRejection(f"capture {task.context['capture_id']!r} not found")
 
-    if result.action in ("attach", "new_topic"):
-        campaign = store.campaigns.get(result.campaign)
-        if campaign is None:
-            raise ApplyRejection(
-                f"campaign {result.campaign!r} is not in the registry — copy names exactly"
-            )
-        known = known_topic_paths(store, campaign)
-        if result.action == "attach" and result.topic_path not in known:
-            raise ApplyRejection(
-                f"topic {result.topic_path!r} does not exist in {result.campaign!r} — "
-                "attach only to listed topics, or use new_topic"
-            )
-        if result.action == "new_topic":
-            parent = ".".join(result.topic_path.split(".")[:-1])
-            if parent and parent not in known and not any(
-                p.startswith(parent) for p in known
-            ):
-                raise ApplyRejection(
-                    f"new_topic parent {parent!r} does not exist in {result.campaign!r} — "
-                    "hang the new leaf off a listed path"
-                )
-
+    _check_route_target(store, result)
     proposal = result.model_dump()
     capture.proposal = {**proposal, "task_id": task.id}
     capture.status = "unrouted" if result.action == "stay_inbox" else "proposed"
@@ -570,6 +578,52 @@ def apply_route(store, task: Task, result: RouteResult) -> dict[str, Any]:
     }
 
 
+def apply_goal_route(store, task: Task, result: RouteResult) -> dict[str, Any]:
+    """Lands a goal's route (route-first entry, QUESTIONS 2026-07-09) and
+    writes NO domain state on a near fit (review-before-trust, like
+    apply_plan): the validated proposal rides on the fulfilled task, and the
+    learner resolves it with `dojo learn extend|new <task-id>`.
+    propose_campaign hands off immediately by chaining a campaign.plan task
+    seeded with the goal and the router's name/mission hints — a goal is not
+    material, so filing's bare-campaign path is never used for it."""
+    if result.action == "stay_inbox":
+        raise ApplyRejection(
+            "a learning goal always has a disposition — attach, new_topic, or propose_campaign"
+        )
+    _check_route_target(store, result)
+    proposal = result.model_dump()
+
+    if result.action == "propose_campaign":
+        from . import flows
+
+        plan_task = flows.request_plan(
+            store, goal=task.context["goal"],
+            context_notes=(
+                f"router suggestion — name: {result.new_name}; "
+                f"mission: {result.new_mission}"
+            ),
+            existing_topics=flows.registry_topic_paths(store),
+        )
+        return {
+            "route": proposal,
+            "handoff": flows.task_ref(plan_task),
+            "next": (
+                "no existing campaign fits — fulfill the plan task, review the "
+                "proposal and its refinement_questions with the learner, then: "
+                f"dojo campaign create --from-task {plan_task.id}"
+            ),
+        }
+
+    return {
+        "route": proposal,
+        "next": (
+            f"ask the learner: this goal looks like {result.campaign} › "
+            f"{result.topic_path} — extend it (dojo learn extend {task.id}) "
+            f"or start fresh (dojo learn new {task.id})?"
+        ),
+    }
+
+
 APPLIERS: dict[str, Callable[..., dict[str, Any]]] = {
     "exercise.generate": apply_generate,
     "exercise.diagnostic": apply_generate,
@@ -577,4 +631,5 @@ APPLIERS: dict[str, Callable[..., dict[str, Any]]] = {
     "campaign.reflect": apply_reflect,
     "campaign.plan": apply_plan,
     "capture.route": apply_route,
+    "goal.route": apply_goal_route,
 }

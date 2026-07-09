@@ -15,7 +15,7 @@ next — can drive it safely.
 ```text
 you: "help me get conversational French before my October exam"
 
-agent:  dojo campaign plan "conversational French, TEF exam Oct 12"
+agent:  dojo learn "conversational French, TEF exam Oct 12"
         → drafts a mission, a lean topic plan, and asks you 2-3 sharp questions
 you:    confirm
 agent:  dojo campaign create --from-task tsk_a1b2c3d4
@@ -89,11 +89,17 @@ touched either way.
 With an agent, just say it — "I want to learn X" triggers the skill. Direct:
 
 ```bash
-dojo campaign plan "conversational Spanish, in-laws visit in December"
-#   → emits a planning task; your AI (or `dojo task run`) fulfills it
-dojo task show tsk_xxx           # review the proposed mission, topics, phases
-dojo campaign create --from-task tsk_xxx    # you approve; nothing is created before this
+dojo learn "conversational Spanish, in-laws visit in December"
+#   → routes the goal against your existing campaigns first (cheapest task):
+#     a near fit asks ONE question — extend that campaign, or start fresh?
+dojo learn extend tsk_xxx        # extend: adds the topic + a plan phase (undoable)
+dojo learn new tsk_xxx           # start fresh: full planning task instead
+dojo task show tsk_yyy           # review the proposed mission, topics, phases
+dojo campaign create --from-task tsk_yyy    # you approve; nothing is created before this
 ```
+
+(`dojo campaign plan "<goal>"` still plans directly, skipping the router —
+same as `dojo learn --new`.)
 
 One-off things you just learned go straight in, from anywhere:
 

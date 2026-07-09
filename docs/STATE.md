@@ -1,6 +1,6 @@
 # STATE
 
-_Last updated: 2026-07-09 (docs-system session). Trust this snapshot; git
+_Last updated: 2026-07-09 (learn session). Trust this snapshot; git
 history carries the detail._
 
 ## Phase
@@ -12,8 +12,10 @@ CLI, capture/inbox with `--locator`, export/uninstall, token-footprint gates,
 the use-case lifecycle audit with its 10 fixes, the **documentation
 system** (ProperDocs+Material+mkdocstrings site via `mise run docs`; 100%
 public-surface docstrings gated by tests/test_docs_coverage.py; README
-currency-audited), and **plan change authority** (tasks/authority.py; the
-plan is a consent-gated contract). **283 tests green** + 28 eval-marked.
+currency-audited), **plan change authority** (tasks/authority.py; the
+plan is a consent-gated contract), and **route-first entry** (`dojo learn`;
+a goal routes against the registry before any new campaign is planned).
+**306 tests green** + 28 eval-marked.
 Repo is PRIVATE (owner's choice) — install via checkout `sh install.sh`;
 owner's machine runs the current build.
 
@@ -52,12 +54,18 @@ raised). 283 tests green._
 
 _Items 1–3 are OWNER-APPROVED directives ("i agree with everything",
 2026-07-09) — execute them from their QUESTIONS.md designs; they are
-committed work, not proposals awaiting an answer._
+committed work, not proposals awaiting an answer. Item numbering is stable
+(QUESTIONS.md cross-references it)._
 
-1. **Route-first entry (`dojo learn`)** — owner-approved 2026-07-09, design
-   in QUESTIONS.md: goals route against the registry first (extend = minor
-   additive plan change under authority), propose_campaign/"no, new" hands
-   off to the full plan pipeline; skip when zero campaigns or explicit new.
+1. ✓ **DONE 2026-07-09 — Route-first entry (`dojo learn`) shipped**:
+   goal.route task kind (3 KB, registry-validated, RouteResult contract),
+   review-before-trust applier (near fit → extend-or-start-fresh question
+   resolved by `dojo learn extend|new <task-id>`; extend = deterministic
+   topic+phase append journaled PLAN_APPLIED under authority,
+   daily-announced, revertable; propose_campaign chains a seeded
+   campaign.plan task), `--new`/zero-campaign skip, interactive learn_flow,
+   SKILL.md goal section rewritten (footprint baseline 3735→3902,
+   deliberate). 306 tests green.
 2. **Capacity channel — owner-approved 2026-07-09** — QUESTIONS.md has the
    full interface spec: bounded acquisition top-up + global review-debt
    guard; honest refusal with projection; `start --topic` as the debt-free
@@ -121,3 +129,6 @@ committed work, not proposals awaiting an answer._
   283 tests); items 1–3 designs finalized with owner (at-request `more`,
   final completion-message copy, streak→stats, route-first, ownership
   block); delegation/model-economy rules added to the METHOD repo (§4).
+- 07-09 (learn session): route-first entry shipped (`dojo learn` +
+  goal.route kind + extend|new consent verbs + learn_flow; 306 tests);
+  STATE item 1 closed.

@@ -240,18 +240,20 @@ def _render_proposal(proposal: dict[str, Any]) -> None:
 
 
 def plan_flow(api: DojoAPI, *, goal: str, level: Optional[str], context: Optional[str],
-              emit_plan_task, materialize) -> int:
+              emit_plan_task, materialize, initial_task_ref: Optional[dict] = None) -> int:
     """Plan → refine → create as one conversation: renders the proposal,
     walks the model's refinement questions (answers trigger one re-plan),
     and only materializes a campaign on explicit confirmation. Declining
     keeps the fulfilled task as a proposal (`campaign create --from-task`).
     `emit_plan_task(goal, notes)` and `materialize(task_id)` are injected by
-    the CLI to avoid owning command wiring here."""
+    the CLI to avoid owning command wiring here; `initial_task_ref` continues
+    from an already-emitted plan task (the learn flow's handoffs) instead of
+    emitting a fresh one."""
     if not fulfiller_command(api):
         explain_no_fulfiller()
         return 1
     notes = "; ".join(filter(None, [f"level: {level}" if level else "", context or ""]))
-    task_ref = emit_plan_task(goal, notes)
+    task_ref = initial_task_ref or emit_plan_task(goal, notes)
     if not drain_tasks(api, [task_ref]):
         return 1
     task = api.store.tasks.get(task_ref["id"])
@@ -282,6 +284,56 @@ def plan_flow(api: DojoAPI, *, goal: str, level: Optional[str], context: Optiona
     if confirm("Start practicing now?"):
         return daily_flow(api)
     return 0
+
+
+# ------------------------------------------------------------------
+# Learn: goal → route → extend-or-fresh, one conversation
+# ------------------------------------------------------------------
+
+def learn_flow(api: DojoAPI, *, goal: str, plan_conversation) -> int:
+    """Route-first "I want to learn X" (QUESTIONS 2026-07-09) at a TTY:
+    routes the goal against the registry inline, asks the ONE consent
+    question a near fit earns (extend, or start fresh?), and applies the
+    choice — extend is deterministic (`learn_extend`); everything else falls
+    into `plan_conversation(context=…, task_ref=…)`, the CLI-injected full
+    plan → refine → create conversation."""
+    if not fulfiller_command(api):
+        explain_no_fulfiller()
+        return 1
+    res = api.learn(goal)
+    if not drain_tasks(api, res["tasks"]):
+        return 1
+    task = api.store.tasks.get(res["tasks"][0]["id"])
+    applied = task.context.get("_applied") or {}
+    route = applied.get("route") or {}
+
+    if route.get("action") in ("attach", "new_topic"):
+        where = f"[cyan]{route['campaign']}[/cyan] › [cyan]{route['topic_path']}[/cyan]"
+        console.print(f"\nThis looks like {where} [dim]({route.get('reason', '')})[/dim]")
+        if confirm("  Extend that campaign?"):
+            out = api.learn_extend(task.id)
+            if out.get("already_covered") or out.get("already_applied"):
+                console.print(f"  [green]✓[/green] {out['next']}")
+            else:
+                console.print(
+                    f"  [green]✓ plan extended[/green] — phase {out['phase_appended']}: "
+                    f"[cyan]{out['topic_path']}[/cyan] [dim](undo: {out['undo']})[/dim]"
+                )
+            return 0
+        console.print("  [dim]starting fresh instead[/dim]")
+        return plan_conversation(
+            context=(
+                f"the learner declined extending campaign {route['campaign']!r} — "
+                "scope this as a separate campaign, not a duplicate of it"
+            )
+        )
+
+    handoff = applied.get("handoff")
+    if handoff:  # propose_campaign chained the plan task already
+        console.print("[dim]No existing campaign fits — planning a new one…[/dim]")
+        return plan_conversation(task_ref=handoff)
+    console.print("[yellow]The route produced nothing actionable — try dojo learn --new.[/yellow]")
+    return 1
 
 
 # ------------------------------------------------------------------

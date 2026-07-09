@@ -378,6 +378,188 @@ class DojoAPI:
         return {"capture_id": capture_id, "status": "dismissed"}
 
     # ==========================================
+    # Route-first learning entry (dojo learn)
+    # ==========================================
+    def learn(self, goal: str, new: bool = False) -> dict[str, Any]:
+        """Route-first entry for a learning goal (QUESTIONS 2026-07-09): when
+        campaigns exist, the goal routes against the registry FIRST — the
+        cheapest task — so a near fit extends a campaign instead of spawning a
+        semantic duplicate (the sibling of use-case audit A2's id collisions).
+        `new=True` or an empty registry skips routing and emits the full
+        campaign.plan task directly.
+
+        Raises:
+            ValueError: empty goal.
+        """
+        from .tasks import compiler, flows
+        from .tasks import service as task_service
+
+        goal = goal.strip()
+        if not goal:
+            raise ValueError("the goal is empty")
+        campaigns = [c for c in self.store.campaigns.list() if c.status == "active"]
+        if new or not campaigns:
+            task = flows.request_plan(
+                self.store, goal=goal,
+                existing_topics=flows.registry_topic_paths(self.store),
+            )
+            return {
+                "mode": "plan",
+                "tasks": [flows.task_ref(task)],
+                "next": (
+                    "fulfill the plan task; review the proposal and its "
+                    "refinement_questions with the learner, then: "
+                    f"dojo campaign create --from-task {task.id}"
+                ),
+            }
+        compiled = compiler.compile_goal_route(self.store, goal=goal)
+        task = task_service.emit(self.store, compiled)
+        self.log.info(f"Goal routed against the registry; task {task.id} emitted")
+        return {
+            "mode": "route",
+            "tasks": [flows.task_ref(task)],
+            "next": (
+                "fulfill the route task; its result either asks the learner "
+                "extend-or-start-fresh (resolve with dojo learn extend|new "
+                f"{task.id}) or hands off to a chained plan task"
+            ),
+        }
+
+    def _fulfilled_goal_route(self, task_id: str) -> tuple[Any, dict[str, Any]]:
+        """The (task, route proposal) behind a `dojo learn extend|new` verb.
+
+        Raises:
+            ValueError: unknown task, wrong kind, not fulfilled yet, or no
+                route proposal on it.
+        """
+        task = self.store.tasks.get(task_id)
+        if task is None:
+            raise ValueError(f"task {task_id} not found")
+        if task.kind != "goal.route":
+            raise ValueError(f"{task_id} is a {task.kind} task, not goal.route")
+        if task.status != "fulfilled":
+            raise ValueError(f"task {task_id} is {task.status} — fulfill it first")
+        route = ((task.context or {}).get("_applied") or {}).get("route")
+        if not route:
+            raise ValueError(f"task {task_id} carries no route proposal")
+        return task, route
+
+    def learn_extend(self, task_id: str) -> dict[str, Any]:
+        """The learner's "extend" answer to a routed goal — deterministic, no
+        AI: registers the topic if new and appends a focused phase, journaled
+        as a minor additive plan change under change authority (PLAN_APPLIED
+        with a pre-change snapshot: the next daily announces it once and
+        `dojo plan revert` undoes it). Idempotent per task. When the current
+        or a future phase already covers the topic, nothing changes
+        (`already_covered`) — boosting, not restructuring, is the right tool.
+
+        Raises:
+            ValueError: bad/unfulfilled task, a propose_campaign route
+                (nothing to extend), or the campaign vanished since routing.
+        """
+        from .tasks import authority
+
+        task, route = self._fulfilled_goal_route(task_id)
+        if route.get("action") not in ("attach", "new_topic"):
+            raise ValueError(
+                f"task {task_id} proposed {route.get('action')!r} — nothing to "
+                "extend; its handoff plan task (or dojo learn new) covers it"
+            )
+        campaign = self.store.campaigns.get(route["campaign"])
+        if campaign is None:
+            raise ValueError(f"campaign {route['campaign']!r} no longer exists")
+        topic_path = route["topic_path"]
+        goal = task.context.get("goal", "")
+
+        trigger = f"dojo learn extend (task {task_id})"
+        if any(e.get("trigger") == trigger for e in campaign.pedagogical_journal):
+            return {
+                "campaign_id": campaign.id, "topic_path": topic_path,
+                "already_applied": True,
+                "next": "this extension was already applied — dojo daily practices it",
+            }
+        for i, phase in enumerate(campaign.attack_plan):
+            if i >= campaign.active_phase_index and topic_path in phase.topics:
+                return {
+                    "campaign_id": campaign.id, "topic_path": topic_path,
+                    "already_covered": True, "phase": phase.phase,
+                    "next": (
+                        f"already in the plan (phase {phase.phase}) — "
+                        f"dojo campaign topic-boost {campaign.id} {topic_path} 2.0 "
+                        "prioritizes it"
+                    ),
+                }
+
+        now = datetime.now(timezone.utc).isoformat()
+        if not any(t.get("path") == topic_path for t in campaign.topics):
+            # A goal is an ability to build, not a fact to keep: skill lane.
+            campaign.topics.append(
+                {"path": topic_path, "kind": "skill", "summary": route.get("reason", "")}
+            )
+        snapshot = [p.model_dump() for p in campaign.attack_plan]
+        next_phase = max((p.phase for p in campaign.attack_plan), default=0) + 1
+        campaign.attack_plan.append(AttackPlanPhase(
+            phase=next_phase,
+            topics=[topic_path],
+            criteria={"min_attempts": 3, "min_accuracy": 0.8},
+            focus=f"learner goal: {goal}",
+        ))
+        campaign.pedagogical_journal.append({
+            "timestamp": now,
+            "action": authority.PLAN_APPLIED,
+            "trigger": trigger,
+            "hypothesis": f"extended with {topic_path} for the learner's goal: {goal}",
+            "status": "applied",
+            "plan_snapshot": snapshot,
+            "announced": False,
+        })
+        campaign.updated_at = now
+        self.store.campaigns.save(campaign)
+        self.log.info(f"Campaign '{campaign.id}' extended with {topic_path} (learn)")
+        return {
+            "campaign_id": campaign.id, "topic_path": topic_path,
+            "phase_appended": next_phase, "plan_change": "minor_additive",
+            "undo": f"dojo plan revert --campaign {campaign.id}",
+            "next": "dojo daily picks the new phase up; generation targets it as stock runs low",
+        }
+
+    def learn_new(self, task_id: str) -> dict[str, Any]:
+        """The learner's "start fresh" answer to a routed goal: hands the goal
+        to the full campaign.plan pipeline, telling the planner about the
+        declined near fit so it scopes a SEPARATE campaign rather than a
+        duplicate.
+
+        Raises:
+            ValueError: bad/unfulfilled task or no route proposal on it.
+        """
+        from .tasks import flows
+
+        task, route = self._fulfilled_goal_route(task_id)
+        if route.get("action") in ("attach", "new_topic"):
+            notes = (
+                f"the learner declined extending campaign {route['campaign']!r} — "
+                "scope this as a separate campaign, not a duplicate of it"
+            )
+        else:
+            notes = (
+                f"router suggestion — name: {route.get('new_name')}; "
+                f"mission: {route.get('new_mission')}"
+            )
+        plan_task = flows.request_plan(
+            self.store, goal=task.context.get("goal", ""), context_notes=notes,
+            existing_topics=flows.registry_topic_paths(self.store),
+        )
+        return {
+            "mode": "plan",
+            "tasks": [flows.task_ref(plan_task)],
+            "next": (
+                "fulfill the plan task; review the proposal and its "
+                "refinement_questions with the learner, then: "
+                f"dojo campaign create --from-task {plan_task.id}"
+            ),
+        }
+
+    # ==========================================
     # Sources Operations
     # ==========================================
     def add_source(

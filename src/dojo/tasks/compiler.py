@@ -56,6 +56,10 @@ SECTION_BUDGETS: dict[str, dict[str, int]] = {
         "text_and_learner_note": 600,
         "campaign_lines_and_topic_paths": 1228,
     },
+    "goal.route": {
+        "goal_verbatim": 600,
+        "campaign_lines_and_topic_paths": 1228,
+    },
 }
 
 TOTAL_BUDGETS: dict[str, int] = {
@@ -65,6 +69,7 @@ TOTAL_BUDGETS: dict[str, int] = {
     "campaign.reflect": 6 * 1024,
     "campaign.plan": 4 * 1024,
     "capture.route": 3 * 1024,
+    "goal.route": 3 * 1024,
 }
 
 TEMPLATES: dict[str, str] = {
@@ -74,6 +79,7 @@ TEMPLATES: dict[str, str] = {
     "campaign.reflect": "campaign_reflect.md",
     "campaign.plan": "campaign_plan.md",
     "capture.route": "capture_route.md",
+    "goal.route": "goal_route.md",
 }
 
 
@@ -355,23 +361,40 @@ def compile_plan(store, *, goal: str, context_notes: str = "", existing_topics: 
     return _compile(store, "campaign.plan", values, {"goal": goal})
 
 
-def compile_route(store, *, capture_id: str, capture_text: str, learner_note: str = "") -> CompiledTask:
-    """Payload for `capture.route`: the capture text (+ learner note) and the
-    real campaign/topic registry (up to 20 topic paths per campaign) — the
-    router may only file into places that exist (ADR 013)."""
-    campaigns = store.campaigns.list()
-    registry_lines = []
-    for camp in campaigns:
-        registry_lines.append(f"campaign \"{camp.id}\": {camp.mission.splitlines()[0]}")
+def registry_digest(store) -> str:
+    """The real campaign/topic registry as compact lines (mission + up to 20
+    topic paths per campaign) — routers may only file into places that exist
+    (ADR 013)."""
+    lines = []
+    for camp in store.campaigns.list():
+        lines.append(f"campaign \"{camp.id}\": {camp.mission.splitlines()[0]}")
         topic_paths = sorted(
             {e.topic_path for e in store.exercises.list(camp.id)}
             | {t["path"] for t in (camp.topics or []) if t.get("path")}
         )
         for tp in topic_paths[:20]:
-            registry_lines.append(f"  {tp}")
+            lines.append(f"  {tp}")
+    return "\n".join(lines)
+
+
+def compile_route(store, *, capture_id: str, capture_text: str, learner_note: str = "") -> CompiledTask:
+    """Payload for `capture.route`: the capture text (+ learner note) and the
+    registry digest."""
     text = capture_text if not learner_note else f"{capture_text}\n(learner note: {learner_note})"
     values = {
         "text_and_learner_note": text,
-        "campaign_lines_and_topic_paths": "\n".join(registry_lines) or "(no campaigns yet)",
+        "campaign_lines_and_topic_paths": registry_digest(store) or "(no campaigns yet)",
     }
     return _compile(store, "capture.route", values, {"capture_id": capture_id})
+
+
+def compile_goal_route(store, *, goal: str) -> CompiledTask:
+    """Payload for `goal.route` (route-first entry, QUESTIONS 2026-07-09): the
+    learner's goal verbatim and the registry digest, so a near-fit goal extends
+    an existing campaign instead of spawning a semantic duplicate. Cheapest
+    task first: same 3 KB class as capture routing."""
+    values = {
+        "goal_verbatim": goal,
+        "campaign_lines_and_topic_paths": registry_digest(store) or "(no campaigns yet)",
+    }
+    return _compile(store, "goal.route", values, {"goal": goal})

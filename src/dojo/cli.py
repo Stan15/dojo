@@ -914,16 +914,9 @@ def cmd_config_show(args: argparse.Namespace) -> int:
 def _emit_plan_task(store, goal: str, context_notes: str) -> dict[str, Any]:
     from .tasks import flows
 
-    existing = sorted({
-        ex.topic_path
-        for camp in store.campaigns.list()
-        for ex in store.exercises.list(camp.id)
-    } | {
-        camp.topic_path for camp in store.campaigns.list() if camp.topic_path
-    })
     task = flows.request_plan(
         store, goal=goal, context_notes=context_notes,
-        existing_topics="\n".join(existing),
+        existing_topics=flows.registry_topic_paths(store),
     )
     return flows.task_ref(task)
 
@@ -1853,6 +1846,63 @@ def cmd_plan(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_learn(args: argparse.Namespace) -> int:
+    """`dojo learn "<goal>"`: route-first entry for a learning goal — the goal
+    routes against the campaign registry before any new campaign is planned
+    (`--new` skips routing). `dojo learn extend|new <task-id>` resolves the
+    router's extend-or-start-fresh question."""
+    api = DojoAPI(_db_path(args))
+    words = args.goal
+    verb = (
+        words[0]
+        if len(words) == 2 and words[0] in ("extend", "new") and words[1].startswith("tsk_")
+        else None
+    )
+    goal = " ".join(words)
+
+    if not _use_json(args):
+        from .interactive import learn_flow, plan_flow
+
+        def conversation(context: str | None = None, task_ref: dict | None = None,
+                         conv_goal: str = goal) -> int:
+            return plan_flow(
+                api, goal=conv_goal, level=None, context=context,
+                emit_plan_task=lambda g, n: _emit_plan_task(api.store, g, n),
+                materialize=lambda tid: _materialize_core(api, tid, None),
+                initial_task_ref=task_ref,
+            )
+
+        try:
+            if verb == "extend":
+                res = api.learn_extend(words[1])
+                console.print(f"[bold green]✓[/bold green] {res['next']}")
+                return 0
+            if verb == "new":
+                res = api.learn_new(words[1])
+                origin = api.store.tasks.get(words[1])
+                return conversation(task_ref=res["tasks"][0],
+                                    conv_goal=origin.context.get("goal", goal))
+        except ValueError as exc:
+            raise SystemExit(f"error: {exc}")
+        if args.new or not any(
+            c.status == "active" for c in api.store.campaigns.list()
+        ):
+            return conversation()
+        return learn_flow(api, goal=goal, plan_conversation=conversation)
+
+    try:
+        if verb == "extend":
+            res = api.learn_extend(words[1])
+        elif verb == "new":
+            res = api.learn_new(words[1])
+        else:
+            res = api.learn(goal, new=args.new)
+    except ValueError as exc:
+        raise SystemExit(f"error: {exc}")
+    _print_json({"ok": True, **res})
+    return 0
+
+
 def cmd_campaign_boost(args: argparse.Namespace) -> int:
     """Cross-campaign surfacing: 'I want THIS CAMPAIGN to come up more/less'."""
     api = DojoAPI(_db_path(args))
@@ -2084,6 +2134,20 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_why = sub.add_parser("why", help="explain every scheduling choice behind the current packet")
     p_why.set_defaults(func=cmd_why)
+
+    p_learn = sub.add_parser(
+        "learn",
+        help="'I want to learn X' — routes the goal against your campaigns first "
+             "(extend a near fit, or plan fresh); resolve a routed goal with "
+             "`learn extend <task-id>` / `learn new <task-id>`",
+    )
+    p_learn.add_argument(
+        "goal", nargs="+",
+        help="the goal, verbatim — or a verb (extend|new) followed by a goal-route task id",
+    )
+    p_learn.add_argument("--new", action="store_true",
+                         help="skip routing; plan a new campaign directly")
+    p_learn.set_defaults(func=cmd_learn)
 
     p_plan = sub.add_parser("plan", help="your authority over AI-proposed plan changes: show, confirm, reject, revert")
     p_plan_sub = p_plan.add_subparsers(dest="plan_command")

@@ -215,8 +215,9 @@ payloads asserting state-hash unchanged.
 | `exercise.generate` | Draft N candidates (grounded or synthetic) | retain-lane topic due with no stock; advance-lane frontier entry |
 | `attempt.grade` | Score free-form answer against rubric | answer submitted for rubric-bearing exercise |
 | `campaign.reflect` | Distill evidence → insights, strategy, plan revisions | periodic (attempt-count/staleness thresholds), or `dojo reflect` |
-| `campaign.plan` | Goal → syllabus + phases + refinement questions | `dojo campaign plan/create` |
+| `campaign.plan` | Goal → syllabus + phases + refinement questions | `dojo campaign plan/create`, `dojo learn` handoffs |
 | `capture.route` | File a capture into campaign/topic (or propose new) | `dojo capture` |
+| `goal.route` | Fit a learning goal against the registry: extend a campaign or plan fresh (post-v1, QUESTIONS 2026-07-09) | `dojo learn` |
 
 Prompts for all five are designed artifacts: `docs/design/prompts.md`.
 

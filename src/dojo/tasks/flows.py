@@ -97,6 +97,18 @@ def request_grade(store, campaign: Campaign, exercise: Exercise, attempt: Attemp
     return service.emit(store, compiled)
 
 
+def registry_topic_paths(store) -> str:
+    """Every topic path in the registry, one per line — planning context so a
+    new plan extends the namespace instead of duplicating it."""
+    paths: set[str] = set()
+    for camp in store.campaigns.list():
+        if camp.topic_path:
+            paths.add(camp.topic_path)
+        paths |= {t["path"] for t in (camp.topics or []) if t.get("path")}
+        paths |= {ex.topic_path for ex in store.exercises.list(camp.id)}
+    return "\n".join(sorted(paths))
+
+
 def request_plan(store, *, goal: str, context_notes: str = "", existing_topics: str = "") -> Task:
     """Emits a planning task for a learning goal. Its result is only a
     PROPOSAL — `dojo campaign create` materializes it after the learner
