@@ -1,6 +1,6 @@
 # STATE
 
-_Last updated: 2026-07-07 (session 3)_
+_Last updated: 2026-07-09_
 
 ## Phase
 
@@ -99,9 +99,34 @@ github.com/Stan15/dojo main (owner installs via curl).
 - One honest gate violation: pushed once with a red conformance test (birth-
   commit count); fixed in the next commit.
 
+## Session 2026-07-08/09 — human CLI + use-case audit (pushed @ 9025dbb)
+
+- **Interactive human CLI** (owner directive): daily/plan/capture/inbox flows on
+  the same api+task machinery — spinner-drained tasks via fulfiller.command,
+  one continuous practice loop with end-of-session batch grading, proposal
+  panels with inline refinements. Agents structurally cannot be blocked:
+  --json/--no-input/piped guard every entry + a no-TTY tripwire; tested.
+- **SKILL iron rules**: always --json; extract-never-enrich (agent adds NOTHING
+  the user didn't say); refinement answers re-plan via --context; capture
+  --locator (agent fetches links; dojo never networks). Skill packaged at
+  dojo/skills/dojo/.
+- **Use-case lifecycle audit** (docs/design/usecase-audit.md): 10 defects fixed;
+  root theme — daily is now the HEARTBEAT (phase advancement, auto-reflect at
+  ≥5 unreflected, stale-task resurfacing, auto-promoted+grounded replenishment).
+  add --generate links sources + never guesses; create_campaign never collides;
+  reflect payload integrity (ungraded labeled; only included rows marked).
+- Store bug caught by new tests: same-second attempt filenames overwrote each
+  other; uniqueness now id-based (conformance-pinned). 255 tests green.
+- Owner install refreshed; their reported plan-envelope crash verified dead.
+
 ## NEXT ACTIONS (in order)
 
-1. **Background eval run lands** → commit fresh (codex,codex) baselines incl.
+1. Full quality-eval re-baseline (prompt/payload changes since last run) +
+   corpus wave 4 + reflect-prompt improvements (measured conservative-
+   reflection weakness). Also add heartbeat-flow scenarios to the corpus.
+2. Backlog now ledgered in usecase-audit.md: maintenance phase (ADR 005),
+   task-file housekeeping, interleave tuning.
+3. (was) **Background eval run lands** → commit fresh (codex,codex) baselines incl.
    wave-3 scenarios; triage insight_targeting calibration if still failing.
 2. `dojo stats` (last M5 item): retention/atrophy + token telemetry surfaces.
 3. M6 — drive the real loop from a real harness session (capture → route →
