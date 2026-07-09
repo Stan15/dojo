@@ -9,7 +9,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-SKILL = Path(__file__).parent.parent / "src" / "dojo" / "skills" / "SKILL.md"
+SKILL = Path(__file__).parent.parent / "src" / "dojo" / "skills" / "dojo" / "SKILL.md"
 
 
 def body_lines() -> list[str]:

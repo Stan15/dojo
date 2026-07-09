@@ -26,7 +26,7 @@ def run(capsys, *argv: str) -> tuple[int, dict]:
 def test_uninstall_removes_dojo_owned_skill(tmp_path: Path, capsys):
     skill_dir = tmp_path / "skills" / "dojo"
     skill_dir.mkdir(parents=True)
-    real_skill = Path(__file__).parent.parent / "src" / "dojo" / "skills" / "SKILL.md"
+    real_skill = Path(__file__).parent.parent / "src" / "dojo" / "skills" / "dojo" / "SKILL.md"
     (skill_dir / "SKILL.md").write_text(real_skill.read_text(encoding="utf-8"), encoding="utf-8")
 
     rc, data = run(capsys, "--db", str(tmp_path / "store"), "uninstall", "--dest", str(skill_dir))
