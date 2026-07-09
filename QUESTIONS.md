@@ -140,29 +140,28 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
      exact copy, short, lesson implicit, concession last:
      Human (playful "touch grass" tone; `dojo more` styled as a COMMAND —
      bold/cyan via rich, backticks in plain text):
-       "✓ Done for today — 12-day streak.
+       "✓ Done for today.
         Coming back tomorrow is what makes it stick.
         Go touch grass. 🌱  (Genuinely still hungry? Run `dojo more` — it
         only says yes when your review budget agrees.)"
-     Day-1/post-gap variant of line 1: "✓ Done for today." (clean stop,
-     nothing to prove).
+     Line 1 is static — no variants.
      Agent (--json): {ok: true, session: null, status: "complete_for_today",
        next: "today's practice is complete — tell the learner it's done,
        playfully (go touch grass); tomorrow's session is what makes it stick
        (consistency beats volume); do not offer more practice unprompted; if
        the learner explicitly asks for more, run: dojo more --json"}
      (The agent line binds the HARNESS to the no-solicitation rule too.)
-     Dynamic values (owner asked 2026-07-09): the item count was CUT from
-     line 1 (at completion it is always N of N — filler that reads as a
-     score; the streak is the fact that honors consistency).
-     "N-day streak" = DERIVED consecutive practice days from attempt
-     timestamps (no stored counter exists or is needed). Owner ruling
-     2026-07-09: since the streak is a REAL derived fact, the word "streak"
-     stays — but it is only ever a reported observation, never a mechanic
-     (no freezes, no protection, no loss messaging). **No-guilt rule**: show
-     the clause only when N ≥ 2 and true; day-1/post-gap runs simply omit
-     it — a broken streak is NEVER mentioned (absence shows up as gentler
-     scheduling, not commentary).
+     Line 1 is fully static (owner rulings 2026-07-09): the item count was
+     cut (always N of N — filler that reads as a score) and the STREAK
+     COUNTER was cut too — a consecutive-days number directly above "come
+     back tomorrow" is don't-break-the-chain pressure however gently
+     worded; a no-guilt rule can't remove the loss-anticipation a live
+     counter creates. Line 2 carries consistency as a PRINCIPLE instead of
+     a score. **Push surfaces get principles; pull surfaces get numbers**:
+     the streak stays a real derived fact (consecutive practice days from
+     attempt timestamps, no stored counter) and lives in `dojo stats`,
+     which the user consults by choice. Broken streaks are never mentioned
+     anywhere, on any surface.
    - `dojo more --json` returns a normal session envelope with items
      origin:"extension", or the refusal block with ok:true (no is an answer,
      not an error): {extension_available: false, projected_due_7d,
