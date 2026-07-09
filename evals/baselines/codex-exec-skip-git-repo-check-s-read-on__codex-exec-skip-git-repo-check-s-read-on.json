@@ -263,7 +263,37 @@
         "c4": "pass"
       },
       "discarded": []
+    },
+    "route_reuse_over_create": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "route_new_leaf_when_warranted": {
+      "quality": 0.8,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "fail: Reason does not state no listed topic covers migration."
+      },
+      "discarded": []
+    },
+    "goal_route_extend_not_new": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
     }
   },
-  "mean_quality": 0.8232600732600732
+  "mean_quality": 0.8346469622331691
 }

@@ -105,9 +105,11 @@ committed work, not proposals awaiting an answer. Item numbering is stable
    cap (fix → 0.83). Same class found+fixed in both route prompts
    (reason ≤ 12 words). Rule for future prompt work: every `limits.py`
    validator a payload can trip must appear in its template's skeleton or
-   Check line. Remaining owed: reflect weak categories (resolve/patterns)
-   iteration; heartbeat-flow scenarios for wave 4; routing category floors
-   (3 scenarios added 2026-07-09, bootstrap pending).
+   Check line. Routing floors bootstrapped same day (reuse-over-create 1.0,
+   warranted-new-leaf 0.8, goal-extend-not-duplicate 1.0) — pair baseline
+   now 29 scenarios, mean **0.835**. Remaining owed: reflect weak
+   categories (resolve/patterns) iteration; heartbeat-flow scenarios for
+   wave 4.
 5. ✓ v0.2.0 tagged + pushed 2026-07-09 (owner's default at the pause);
    v1.0.0 decision still reserved for after the quality-iteration work.
 6. Backlog (ledgered in docs/design/usecase-audit.md + OPEN-PROBLEMS):
