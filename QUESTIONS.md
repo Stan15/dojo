@@ -42,6 +42,40 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
    and reserve `v1.0.0` for after that work, or hold tags entirely?
    **Default: tag v0.2.0 at the next natural pause.** ok
 
+1. **Plan/strategy change authority** (your 2026-07-09 question: "don't want
+   things changing under the user's feet"). Findings: strategy-dial restraint
+   is well-benchmarked (4 pattern-only reflect scenarios), but (a) the corpus
+   NEVER rewards a plan revision — every good reference has `plan_revision:
+   null`, an ossification bias; (b) `apply_reflect` applies whole-plan
+   replacements SILENTLY (service.py), unlike plan/route which use
+   review-before-trust; (c) reflection has no question channel — the
+   meta-learning escape hatch exists only in generation; (d) the syllabus is
+   never AI-rewritten at all (no field for it), so that surface is already safe.
+
+   Proposed: **tiered change authority.**
+   - Tier 0 (silent+journal): insights, difficulty/scaffolding dials — moving
+     these IS the product; already benchmarked.
+   - Tier 1 (apply+notify+undo): mechanically-minor plan edits — additive/
+     cosmetic only (append phase/topic, focus text, relaxed criteria); journal
+     stores plan_snapshot; next daily announces; revert command.
+   - Tier 2 (proposal, like routes): destructive/reordering revisions await
+     `dojo plan confirm`; rest of the reflection still applies. Fast path: if
+     evidence cites the user's OWN words (attempt.feedback / feedback.user.* /
+     an answered meta-question) it is user-initiated → Tier 1.
+   - Tier 3 (ask, don't propose): inferred structural need with no explicit
+     evidence → bounded `questions` channel on ReflectResult (mirror of
+     generation's Intervention); questions become diagnostic items; answers
+     become citable evidence for a later Tier-2/1 revision.
+   - Anti-drip rail: cumulative delta vs the last user-confirmed plan snapshot
+     escalates repeated "minor" edits to Tier 2. Deterministic, unit-tested.
+   - Corpus wave 4 additions: `legitimate_restructure` (explicit deadline
+     feedback → good output DOES revise, citing it), `inferred_restructure_probe`
+     (structural mis-fit pattern, zero feedback → good output asks a
+     meta-question; bad silently rewrites).
+
+   **Default: implement the tiered model with corpus wave 4 (STATE item 2) —
+   rails first (pure code+tests), then prompt + scenarios.**
+
 ## Answered (2026-07-07)
 
 - **Grading source of truth** — AI grades against rubric when a harness is
