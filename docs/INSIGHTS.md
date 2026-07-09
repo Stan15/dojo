@@ -64,3 +64,27 @@ of findings, and two of them were OURS, not the model's:
   changes (won't resolve mastered insights, hesitates to raise difficulty).
 Also: judges wrap verbatim quotes in ellipses — evidence matching needs
 edge-tolerant comparison or ~15% of honest passes get discarded.
+
+## 2026-07-09 — Docs system: tool choice, ecosystem shift, and the pass-as-audit
+- **pdoc was the easy reach, not the best fit.** Dojo's behavior lives in
+  docstrings AND ~10 authoritative prose docs; a docstrings-only site
+  structurally under-documents it. MkDocs+Material+mkdocstrings renders both
+  into one searchable site with zero custom UI. General rule: pdoc when
+  docstrings ARE the docs; MkDocs+mkdocstrings when docs = docstrings + prose.
+- **MkDocs is abandoned upstream (2026); ProperDocs is the maintained 1.x
+  continuation** the plugin ecosystem (gen-files/literate-nav/section-index)
+  migrated to; griffe split into griffe(CLI)+griffelib(lib). First contact
+  looked EXACTLY like a supply-chain attack: an unknown package advertising
+  itself in build output, already installed. The discriminator between
+  "typosquat" and "post-cutoff ecosystem event" is convergent evidence the
+  package can't control: other trusted packages' live PyPI metadata, upstream
+  issue trackers, independent news. Author-email fields prove nothing.
+- **A docstring pass is a disguised audit.** Forcing an honest one-sentence
+  description of each function surfaced a dead no-op loop (get_source_topics),
+  two functions whose source_id argument silently does nothing (candidates
+  carry no source provenance), and the apply_reflect consent gap. When you
+  can't write an honest docstring, the code is the problem.
+- **The coverage gate is what makes generated docs a system** rather than a
+  snapshot: tests/test_docs_coverage.py fails on any undocumented public
+  symbol AND on placeholder (<4 word) docstrings, so the reference site can't
+  silently rot.
