@@ -129,22 +129,32 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
      new items (no binge evidence floods), debt-gated generation (no churn),
      global guard (no Anki collapse).
    **Interface spec (owner asked for exact shape, 2026-07-09):**
-   - **Verb decision (owner asked 2026-07-09): three doors, one word.**
-     (1) Session-end offer in practice_loop (primary, zero commands,
-     default No); (2) re-running `dojo daily` after completion IS the
-     capacity moment (what a naive user does anyway — offer or honest
-     refusal instead of just "day off"); (3) explicit verb **`dojo more`**
-     — the word users guess; the superseded thing was the bonus-packet
-     MECHANISM, not the word; `more` is now simply the system's honest
-     answer to appetite. `daily --extend` is DROPPED; agents use
-     `dojo more --json`. One implementation, three doors.
-   - Agent: `capacity` block on `dojo answer --json` (when
-     is_session_completed) and `dojo daily --json` (packet done/empty):
-     {extension_available, cap, new_items_in_stock, projected_due_7d,
-     capacity_7d, next|reason+alternative}. `dojo more --json` returns a
-     normal session envelope with items origin:"extension", or the refusal
-     block with ok:true (no is an answer, not an error). `--force` overrides
-     but always emits the projection first.
+   - **AT-REQUEST ONLY (owner ruling 2026-07-09, agreed): the system never
+     SOLICITS extra practice — it only answers requests.** An offer
+     manufactures appetite; a request reveals it; closure is part of the
+     method; nudged extensions corrupt the origin marker. Therefore: NO
+     session-end [y/N] offer, NO proactive capacity block in answer/daily
+     envelopes. One verb, **`dojo more`**, discovered via a passive mention
+     (statement, never a question) in the daily-completion message.
+   - **Daily-completion message** (re-running `daily` when today is done) —
+     exact copy, short, lesson implicit, concession last:
+     Human:
+       "✓ Done for today — 5 of 5, streak intact.
+        The rep that makes this stick is tomorrow's, not an extra one tonight.
+        Go enjoy the day.  (Really want more? dojo more works within your
+        review budget.)"
+     Agent (--json): {ok: true, session: null, status: "complete_for_today",
+       next: "today's practice is complete — tell the learner it's done and
+       that tomorrow's session is what makes it stick (consistency beats
+       volume); do not offer more practice unprompted; if the learner
+       explicitly asks for more, run: dojo more --json"}
+     (The agent line binds the HARNESS to the no-solicitation rule too.)
+   - `dojo more --json` returns a normal session envelope with items
+     origin:"extension", or the refusal block with ok:true (no is an answer,
+     not an error): {extension_available: false, projected_due_7d,
+     capacity_7d, reason, alternative}. `--force` overrides but always emits
+     the projection first. Ships together with the completion message (a
+     message never names a command that doesn't exist).
    - Guard: projected_due_7d + K ≤ packet_size × 7 × pacing.headroom(0.8),
      global across campaigns, counting existing FSRS dues incl. overdue.
    - Sourcing order: unattempted → candidates → max ONE generation task on

@@ -57,10 +57,12 @@ committed work, not proposals awaiting an answer._
 2. **Capacity channel — owner-approved 2026-07-09** — QUESTIONS.md has the
    full interface spec: bounded acquisition top-up + global review-debt
    guard; honest refusal with projection; `start --topic` as the debt-free
-   alternative. Verb decision (owner asked): three doors — session-end
-   offer, capacity-aware `daily` re-run, and explicit **`dojo more`**
-   (`daily --extend` dropped; the superseded thing was the bonus-packet
-   mechanism, not the word). DO NOT lose this: it replaced the bonus-packet
+   alternative. **AT-REQUEST ONLY (owner ruling): the system never solicits
+   extra practice** — no session-end offer, no proactive capacity block;
+   one verb `dojo more`, discovered via the spec'd daily-completion message
+   (encouraging, consistency-beats-volume implicit, concession last; exact
+   copy in QUESTIONS.md; agent variant binds the harness to
+   no-unprompted-offers). DO NOT lose this: it replaced the bonus-packet
    idea after the owner's core-need analysis request.
 3. **Ownership/visibility block — owner-approved 2026-07-09** (QUESTIONS.md
    has both designs):
