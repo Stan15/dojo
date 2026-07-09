@@ -350,6 +350,12 @@ def compile_reflect(store, campaign: Campaign, *, window_n: int = 15) -> Compile
     row_budget = int(
         SECTION_BUDGETS["campaign.reflect"]["attempt_rows"] * _tier(store)
     )
+    # Rows must carry what patterns are MADE OF (eval finding 2026-07-09:
+    # latency and error tags were promised by design/prompts.md §5 but never
+    # compiled — overconfidence and plateau patterns were structurally
+    # invisible): topic (not opaque exercise ids), seconds taken, the
+    # grader's error tag, skip reason, and the appetite-mode label.
+    topic_of = {ex.id: ex.topic_path for ex in store.exercises.list(campaign.id)}
     rows: list[str] = []
     included_ids: list[str] = []
     used = 0
@@ -363,13 +369,22 @@ def compile_reflect(store, campaign: Campaign, *, window_n: int = 15) -> Compile
         # reflection can weigh fatigue/novelty effects instead of absorbing
         # them blind.
         signal = " · ".join(filter(None, [
+            a.error_tag or "",
             a.skip_reason or "",
             "extension (extra practice, learner-requested)" if a.origin == "extension" else "",
         ]))
+        # A short answer glimpse (never the full body, blueprint §9): patterns
+        # like "uses avoir for motion verbs" or "misreads the null" live in
+        # WHAT the learner wrote, not in scores alone.
+        glimpse = (a.user_answer or "").strip().replace("\n", " ")
+        if len(glimpse) > 48:
+            glimpse = glimpse[:47] + "…"
         row = (
-            f"{a.id} · {a.exercise_id} · "
+            f"{a.id} · {topic_of.get(a.exercise_id, a.exercise_id)} · "
             + ("(ungraded — ignore the score)" if pending else f"score {a.score}")
+            + f" · {a.latency_seconds:.0f}s"
             + (f" · {signal}" if signal else "")
+            + (f' · "{glimpse}"' if glimpse and not pending else "")
         )
         cost = len(row.encode("utf-8")) + 1
         if used + cost > row_budget:

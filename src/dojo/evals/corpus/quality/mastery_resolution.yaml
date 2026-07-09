@@ -22,6 +22,17 @@ seed:
       key: conditional.aux_choice
       description: Uses avoir instead of être for motion verbs in past conditional.
       topic_path: french.grammar.conditional
+  exercises:
+    - {id: ex_20, topic_path: french.grammar.conditional, difficulty: intermediate,
+       prompt: "Traduisez: She would have come earlier."}
+    - {id: ex_21, topic_path: french.grammar.conditional, difficulty: intermediate,
+       prompt: "Traduisez: We would have gone to the market."}
+    - {id: ex_22, topic_path: french.grammar.conditional, difficulty: intermediate,
+       prompt: "Traduisez: They would have left before midnight."}
+    - {id: ex_23, topic_path: french.vocab.housing, difficulty: intermediate,
+       prompt: "Comment dit-on 'lease' en français ?"}
+    - {id: ex_24, topic_path: french.grammar.conditional, difficulty: intermediate,
+       prompt: "Traduisez: You would have stayed if you could."}
   attempts:
     - {id: att_1, session_id: s4, exercise_id: ex_20, score: 1.0, latency_seconds: 12.0,
        user_answer: "Elle serait venue plus tôt."}

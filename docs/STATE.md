@@ -107,8 +107,16 @@ committed work, not proposals awaiting an answer. Item numbering is stable
    validator a payload can trip must appear in its template's skeleton or
    Check line. Routing floors bootstrapped same day (reuse-over-create 1.0,
    warranted-new-leaf 0.8, goal-extend-not-duplicate 1.0) — pair baseline
-   now 29 scenarios, mean **0.835**. Remaining owed: reflect weak
-   categories (resolve/patterns) iteration; heartbeat-flow scenarios for
+   now 29 scenarios, mean **0.835**. Reflect weak-category iteration DONE
+   same day (owner-authorized codex, spent sparingly: trace-driven analysis
+   first, 11 scenario-runs total): rows now compile topic · seconds ·
+   error_tag · 48-char answer glimpse (the doc promised them; patterns were
+   structurally invisible), per-insight adjudication, strategy enums stated,
+   rushing carve-out (fast-miss/slow-success ≠ difficulty problem). Floors:
+   mastery_resolution 0.38→1.00, too_hard 0.57→1.00, too_easy 0.56→1.00,
+   plateau 0.50→0.62, overconfident 0.50→0.62 — pair mean **0.895**.
+   Reflect payload 2523→4198B (deliberate: the rows now carry the evidence
+   reflection exists to read). Remaining owed: heartbeat-flow scenarios for
    wave 4.
 5. ✓ v0.2.0 tagged + pushed 2026-07-09 (owner's default at the pause);
    v1.0.0 decision still reserved for after the quality-iteration work.

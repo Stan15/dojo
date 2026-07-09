@@ -111,6 +111,11 @@ def test_pedagogical_quality_meets_baseline(scenario_path: Path, tmp_path: Path,
         "quality": result["score"],
         "verdicts": result["verdicts"],
         "discarded": result["discarded"],
+        # The full analysis bundle (owner directive 2026-07-09): what was
+        # asked (prompt, in driver_trace), what came back (raw), what the
+        # judge saw (judged_output), and the judge's own words (judge_trace).
+        "judged_output": output_text,
+        "judge_trace": result.get("raw"),
         "driver_trace": trace_log,
     }
 

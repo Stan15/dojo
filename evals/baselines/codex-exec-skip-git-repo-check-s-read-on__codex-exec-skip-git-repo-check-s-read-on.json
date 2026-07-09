@@ -123,12 +123,12 @@
       "discarded": []
     },
     "mastery_resolution": {
-      "quality": 0.375,
+      "quality": 1.0,
       "verdicts": {
-        "c1": "fail: No resolve operation for ins_aux.",
+        "c1": "pass",
         "c2": "pass",
-        "c3": "fail: No resolve reason cites correct productions.",
-        "c4": "fail: Journal records no change, not the required resolution."
+        "c3": "pass",
+        "c4": "pass"
       },
       "discarded": []
     },
@@ -143,11 +143,11 @@
       "discarded": []
     },
     "overconfident_fast_wrong": {
-      "quality": 0.5,
+      "quality": 0.625,
       "verdicts": {
-        "c1": "fail: Does not name fast-wrong and deliberate-correct latency pattern.",
+        "c1": "fail: Creates an extra carry-tracking insight beyond the speed-accuracy insight.",
         "c2": "pass",
-        "c3": "fail: Journal does not describe rushing or speed-accuracy behavior.",
+        "c3": "pass",
         "c4": "pass"
       },
       "discarded": []
@@ -163,12 +163,12 @@
       "discarded": []
     },
     "plateau_remediation": {
-      "quality": 0.5,
+      "quality": 0.625,
       "verdicts": {
-        "c1": "fail: Insight does not name null-hypothesis confusion.",
-        "c2": "pass",
+        "c1": "pass",
+        "c2": "fail: Scaffolding is medium, not high.",
         "c3": "pass",
-        "c4": "fail: Journal lacks flat scores or recurring null confusion."
+        "c4": "pass"
       },
       "discarded": []
     },
@@ -203,19 +203,19 @@
       "discarded": []
     },
     "too_easy_calibration": {
-      "quality": 0.5555555555555556,
+      "quality": 1.0,
       "verdicts": {
         "c1": "pass",
-        "c2": "fail: Creates an insight despite no recurring error pattern.",
+        "c2": "pass",
         "c3": "pass",
-        "c4": "fail: Journal omits high accuracy and explicit too_easy signal."
+        "c4": "pass"
       },
       "discarded": []
     },
     "too_hard_scaffolding_response": {
-      "quality": 0.5714285714285714,
+      "quality": 1.0,
       "verdicts": {
-        "c1": "fail: Scaffolding is medium, not high.",
+        "c1": "pass",
         "c2": "pass",
         "c3": "pass",
         "c4": "pass"
@@ -295,5 +295,5 @@
       "discarded": []
     }
   },
-  "mean_quality": 0.8346469622331691
+  "mean_quality": 0.8949233716475097
 }

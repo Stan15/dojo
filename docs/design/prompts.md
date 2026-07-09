@@ -93,8 +93,8 @@ band definitions are the only grading language every caliber executes identicall
 | `campaign.plan` | ≤ 280 words | GOAL 400 B · CONTEXT 400 B · EXISTING TOPICS 800 B | ≤ 4 KB |
 | `capture.route` | ≤ 160 words | CAPTURE 600 B · REGISTRY 1.2 KB | ≤ 3 KB |
 
-RECENT/ATTEMPTS are compact rows (`topic · score · error_tag · ago`), never full
-bodies. LEARNER is top-K active insights, one line each. These budgets are asserted
+RECENT/ATTEMPTS are compact rows (`topic · score · seconds · error_tag · skip ·
+≤48-char answer glimpse`), never full bodies. LEARNER is top-K active insights, one line each. These budgets are asserted
 by tests (I6).
 
 ---
@@ -225,15 +225,27 @@ TASK: Review ATTEMPTS against the campaign state; return insight updates, strate
 calibration, plan revisions (rare), and clarifying questions (rarer).
 
 RULES
-1. Insights — compare ATTEMPTS with INSIGHTS:
+1. Insights — adjudicate EVERY insight in INSIGHTS against ATTEMPTS, one
+   verdict each (an unexamined insight is a silent error):
    - pattern repeats → update that insight, appending the new attempt ids;
-   - pattern beaten (3+ recent successes where it used to bite) → mark "resolved";
+   - pattern beaten (3+ recent successes on the insight's own ground, no new
+     failures) → mark "resolved". An outdated belief mis-aims every future
+     exercise: resolution is a FINDING, not a change — the no-change bias
+     does not protect stale beliefs;
    - new pattern with 2+ supporting attempts → create it: ≤ 25 words, cite the
-     attempt ids. Max 2 new insights per run;
+     attempt ids. Max 2 new insights per run. An insight names something to
+     ACT on (misconception, preference, behavior — read the seconds:
+     fast+wrong is overconfidence, slow+right is effortful-but-solid). Doing
+     well is strategy's business, not an insight;
    - a single miss is a slip, not an insight.
 2. Strategy — change only if the last {{window_n}} attempts justify it:
-   accuracy > 0.85 → raise difficulty; accuracy < 0.50 → lower difficulty or raise
-   scaffolding; "too_easy"/"too_hard" skips count double. Otherwise null.
+   accuracy > 0.85 → raise difficulty; accuracy < 0.50 → lower difficulty —
+   UNLESS the misses are fast and the successes slow: that is rushing, a
+   process problem (insight + raise scaffolding, difficulty unchanged — the
+   slow successes prove the content is within reach). Floundering (too_hard
+   skips, "lost" feedback) also wants scaffolding RAISED over easier
+   content, plan untouched; "too_easy"/"too_hard" skips count double.
+   Otherwise null.
 3. Plan — revise PLAN's phases ONLY when: stuck (2 sessions, no criteria
    progress), a prerequisite gap is visible, a deadline in MISSION demands
    compression, or FEEDBACK asks. Otherwise null. Never rewrite phases marked
@@ -255,7 +267,7 @@ RULES
 ## INSIGHTS
 {{active_insights_with_ids}}
 ## ATTEMPTS
-{{attempt_rows}}          // id · topic · score · error_tag · skip · ago
+{{attempt_rows}}          // id · topic · score · seconds · error_tag · skip · [extension]
 ## FEEDBACK
 {{learner_feedback_or_none}}
 
@@ -264,7 +276,8 @@ OUTPUT — return only this JSON:
   "insight_updates": [
     {"op": "create|update|resolve", "id": null, "text": "...", "evidence": ["att_id"], "reason": "..."}
   ],
-  "strategy": null,        // or {"difficulty": "...", "scaffolding": "...", "reason": "..."}
+  "strategy": null,        // or {"difficulty": "beginner|intermediate|advanced",
+                           //     "scaffolding": "high|medium|low", "reason": "..."}
   "plan_revision": null,   // or the FULL phase list: {"phases": [{"phase": 1, "topics": ["a.b"],
                            //   "criteria": {"min_attempts": 5, "min_accuracy": 0.6}, "focus": "..."}],
                            //   "evidence": ["att_id"], "reason": "..."} — shape shown in the template

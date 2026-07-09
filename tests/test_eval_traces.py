@@ -62,6 +62,8 @@ def test_quality_scenario_fills_the_trace_log(tmp_path: Path):
     assert len(trace_log) == 1 and trace_log[0]["ok"] is True
     assert trace_log[0]["kind"] == "exercise.generate"
     assert "Thinking out loud" in trace_log[0]["raw"]
+    assert "drafting practice exercises" in trace_log[0]["prompt"], \
+        "the report snapshot carries what was ASKED, not just what came back"
 
 
 def test_rejected_step_raises_with_the_raw_attached(tmp_path: Path):
@@ -85,10 +87,13 @@ def test_lean_baseline_strips_traces_but_keeps_floors():
         "failures": {"broken_scenario": {"errors": ["boom"], "driver_trace": []}},
         "scenarios": {
             "s1": {"quality": 0.8, "verdicts": {"c1": "pass"},
+                   "judged_output": "{…}", "judge_trace": "judge prose",
                    "driver_trace": [{"ok": True, "raw": "huge model prose…"}]},
         },
     }
     lean = lean_baseline(card)
     assert lean["scenarios"]["s1"] == {"quality": 0.8, "verdicts": {"c1": "pass"}}
-    assert "failures" not in lean and "driver_trace" not in json.dumps(lean)
+    assert "failures" not in lean
+    for key in ("driver_trace", "judge_trace", "judged_output"):
+        assert key not in json.dumps(lean), key
     assert card["scenarios"]["s1"]["driver_trace"], "the report copy keeps the trace"

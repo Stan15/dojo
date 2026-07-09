@@ -179,7 +179,9 @@ def judge_output(
     judge_cmd: str, scenario_context: str, output_text: str,
     criteria: list[dict], timeout: int,
 ) -> dict[str, Any]:
-    """One judging pass → {"score", "verdicts", "discarded"}. Passes without a
+    """One judging pass → {"score", "verdicts", "discarded", "raw"} — the
+    judge's raw response rides along so reports can audit the GRADER too,
+    not just the driver (owner directive 2026-07-09). Passes without a
     verbatim quote from the judged output are discarded as judge failures."""
     prompt = render_judge_prompt(scenario_context, output_text, criteria)
     raw = run_command(judge_cmd, prompt, timeout)
@@ -215,7 +217,8 @@ def judge_output(
             verdicts[c["id"]] = f"fail: {v.get('why', '')}"
 
     score = earned / total_weight if total_weight else 0.0
-    return {"score": score, "verdicts": verdicts, "discarded": discarded}
+    return {"score": score, "verdicts": verdicts, "discarded": discarded,
+            "raw": service._trace_raw(raw)}
 
 
 def calibration_gate(
@@ -275,8 +278,12 @@ def execute_quality_scenario(
         else:
             outcome, extracted, counts, raw_trace = fulfill_step(store, compiled, driver, timeout)
             if trace_log is not None:
+                # Self-contained snapshot: prompts change between iterations
+                # (that is the point), so the report carries what was ASKED
+                # beside what came back.
                 trace_log.append({
                     "kind": compiled.kind,
+                    "prompt": compiled.prompt,
                     "ok": outcome.ok,
                     **({"errors": outcome.errors[:5]} if not outcome.ok else {}),
                     "raw": raw_trace,
@@ -302,11 +309,12 @@ class ComplianceFailure(Exception):
 
 def lean_baseline(card: dict) -> dict:
     """A committed-baseline copy of a scorecard: ratchet floors only — raw
-    driver traces and failure diagnostics stay in the local report (they are
-    analysis material, not commitments)."""
+    driver/judge traces, judged output, and failure diagnostics stay in the
+    local report (they are analysis material, not commitments)."""
+    _analysis_keys = {"driver_trace", "judge_trace", "judged_output"}
     lean = {k: v for k, v in card.items() if k != "failures"}
     lean["scenarios"] = {
-        name: {k: v for k, v in entry.items() if k != "driver_trace"}
+        name: {k: v for k, v in entry.items() if k not in _analysis_keys}
         for name, entry in card.get("scenarios", {}).items()
     }
     return lean

@@ -114,6 +114,7 @@ def test_scenario_compliance_meets_baseline(scenario_path: Path, tmp_path: Path,
         outcome = service.submit(store, task.id, raw)
         ok_count += outcome.ok
         trace_log.append({
+            "prompt": task.prompt,
             "ok": outcome.ok,
             **({"errors": outcome.errors[:5]} if not outcome.ok else {}),
             "raw": _trace_raw(raw),
