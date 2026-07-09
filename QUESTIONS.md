@@ -141,7 +141,7 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
      Human (playful "touch grass" tone; `dojo more` styled as a COMMAND —
      bold/cyan via rich, backticks in plain text):
        "✓ Done for today — 5 of 5, streak intact.
-        Tomorrow's rep is the one that makes this stick.
+        Coming back tomorrow is what makes it stick.
         Go touch grass. 🌱  (Genuinely still hungry? Run `dojo more` — it
         only says yes when your review budget agrees.)"
      Agent (--json): {ok: true, session: null, status: "complete_for_today",
