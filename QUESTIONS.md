@@ -35,7 +35,9 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
    **My recommendation & default: ship it in v1** — it is cheap against the new
    contract, it makes `dojo` complete without any agent, and it is the natural
    test harness for the task contract itself (we can drive it with a mock command
-   in CI). 
+   in CI). agree
+   → **Shipped**: `dojo task run` exists (cli.py, `--command/--limit/--timeout`,
+   falls back to `fulfiller.command` config). Moving to answered.
 
 1. **Version tag**: all planned milestones are delivered and verified; corpus
    wave 4 + reflect-prompt work remain from your directives. Tag `v0.2.0` now
@@ -75,6 +77,21 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
 
    **Default: implement the tiered model with corpus wave 4 (STATE item 2) —
    rails first (pure code+tests), then prompt + scenarios.**
+
+1. **Post-packet appetite: `dojo more`** (your 2026-07-09 question). Today:
+   re-running `dojo daily` drains due items the packet cap held back (works);
+   `dojo start` serves unattempted material + replenishment (undiscoverable);
+   when nothing is due there is NO sanctioned path — "the schedule is honest"
+   ends the day. Proposal: a `dojo more` bonus packet, explicitly labeled,
+   priority order: due-remainder → unattempted/candidates → fresh generation
+   on the weakest topic (max ONE task — token frugality) → soon-due
+   pull-forward (FSRS credits early reviews natively; no schedule
+   corruption). I9 reasons on every item ("ahead of schedule by 18h").
+   Never re-drills today's completed reviews (near-zero retention value;
+   protects the honest-schedule signal). `daily` stays the only ritual;
+   `more` is never suggested unsolicited.
+   **Default: build `dojo more` after the current docs/README directives,
+   before the eval re-baseline.**
 
 ## Answered (2026-07-07)
 
