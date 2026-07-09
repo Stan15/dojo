@@ -33,6 +33,7 @@ from dojo.evals.runner import (
     calibration_gate,
     execute_quality_scenario,
     judge_output,
+    lean_baseline,
     slug_for,
 )
 
@@ -76,7 +77,8 @@ def quality_card():
     baseline_file = EVALS_DIR / "baselines" / f"{pair_slug()}.json"
     if not baseline_file.exists():
         baseline_file.parent.mkdir(exist_ok=True)
-        baseline_file.write_text(json.dumps(card, indent=2), encoding="utf-8")
+        # Baselines commit floors, not traces (lean_baseline strips raw).
+        baseline_file.write_text(json.dumps(lean_baseline(card), indent=2), encoding="utf-8")
 
 
 
@@ -91,10 +93,17 @@ def test_pedagogical_quality_meets_baseline(scenario_path: Path, tmp_path: Path,
     if problem:
         pytest.fail(f"{scenario_path.stem}: {problem}")
 
-    # 2. Drive the system for real; judge the final output.
+    # 2. Drive the system for real; judge the final output. The driver's raw
+    # output (its thinking, not just its JSON) lands in the report beside the
+    # score — the material prompt iteration reads (owner directive 2026-07-09).
+    trace_log: list = []
     try:
-        output_text = execute_quality_scenario(scenario, tmp_path, DRIVER, TIMEOUT)
+        output_text = execute_quality_scenario(
+            scenario, tmp_path, DRIVER, TIMEOUT, trace_log=trace_log)
     except ComplianceFailure as e:
+        quality_card.setdefault("failures", {})[scenario_path.stem] = {
+            "errors": e.errors[:5], "driver_trace": trace_log,
+        }
         pytest.fail(f"driver failed compliance inside a quality scenario (fix Tier 2 first): {e.errors[:3]}")
     result = judge_output(JUDGE, context, output_text, criteria, TIMEOUT)
 
@@ -102,6 +111,7 @@ def test_pedagogical_quality_meets_baseline(scenario_path: Path, tmp_path: Path,
         "quality": result["score"],
         "verdicts": result["verdicts"],
         "discarded": result["discarded"],
+        "driver_trace": trace_log,
     }
 
     # 3. Ratchet against the committed (driver, judge) baseline.

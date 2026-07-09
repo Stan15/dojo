@@ -119,7 +119,10 @@ def run_command(command: str, prompt: str, timeout: int) -> str:
 
 def fulfill_step(store: DojoStore, compiled, fulfiller: str, timeout: int):
     """emit → fulfiller → submit: exactly the production path.
-    Returns (outcome, extracted_json_text, byte_counts)."""
+    Returns (outcome, extracted_json_text, byte_counts, raw_trace) — the
+    trace is the driver's FULL output (prose, partial work, JSON),
+    tail-clipped like production task traces: the material prompt
+    optimization reads (owner directive 2026-07-09)."""
     task = service.emit(store, compiled)
     raw = run_command(fulfiller, task.prompt, timeout)
     outcome = service.submit(store, task.id, raw)
@@ -131,7 +134,7 @@ def fulfill_step(store: DojoStore, compiled, fulfiller: str, timeout: int):
         "prompt_bytes": task.payload_bytes,
         "response_bytes": len(extracted.encode("utf-8")),
     }
-    return outcome, extracted, counts
+    return outcome, extracted, counts, service._trace_raw(raw)
 
 
 def submit_canned(store: DojoStore, compiled, payload: dict):
@@ -252,9 +255,12 @@ class ScenarioResult:
 def execute_quality_scenario(
     scenario: dict, tmp_path: Path, driver: str, timeout: int,
     byte_log: Optional[list] = None,
+    trace_log: Optional[list] = None,
 ) -> str:
     """Runs steps; returns the final step's extracted output (the thing on
-    trial). Scripted steps isolate the judged step from upstream variance."""
+    trial). Scripted steps isolate the judged step from upstream variance.
+    `trace_log` (when given) collects each DRIVEN step's raw driver output —
+    the model's thinking beside the ratchet score, for prompt iteration."""
     byte_log = byte_log if byte_log is not None else []
     store = seed_store(tmp_path, scenario["seed"])
     campaign_id = scenario["seed"]["campaign"]["id"]
@@ -267,9 +273,16 @@ def execute_quality_scenario(
                 raise RuntimeError(f"scripted step rejected: {outcome.errors}")
             final_output = json.dumps(step["respond_with"], indent=1, ensure_ascii=False)
         else:
-            outcome, extracted, counts = fulfill_step(store, compiled, driver, timeout)
+            outcome, extracted, counts, raw_trace = fulfill_step(store, compiled, driver, timeout)
+            if trace_log is not None:
+                trace_log.append({
+                    "kind": compiled.kind,
+                    "ok": outcome.ok,
+                    **({"errors": outcome.errors[:5]} if not outcome.ok else {}),
+                    "raw": raw_trace,
+                })
             if not outcome.ok:
-                raise ComplianceFailure(outcome.errors)
+                raise ComplianceFailure(outcome.errors, raw=raw_trace)
             final_output = extracted
             byte_log.append(counts)
     assert final_output is not None
@@ -278,11 +291,25 @@ def execute_quality_scenario(
 
 class ComplianceFailure(Exception):
     """The driver's output was rejected by the production validators —
-    a model failure (scored 0), distinct from infrastructure errors."""
+    a model failure (scored 0), distinct from infrastructure errors.
+    `raw` carries the rejected output so reports can show WHY."""
 
-    def __init__(self, errors: list[str]):
+    def __init__(self, errors: list[str], raw: Optional[str] = None):
         super().__init__("; ".join(errors[:3]))
         self.errors = errors
+        self.raw = raw
+
+
+def lean_baseline(card: dict) -> dict:
+    """A committed-baseline copy of a scorecard: ratchet floors only — raw
+    driver traces and failure diagnostics stay in the local report (they are
+    analysis material, not commitments)."""
+    lean = {k: v for k, v in card.items() if k != "failures"}
+    lean["scenarios"] = {
+        name: {k: v for k, v in entry.items() if k != "driver_trace"}
+        for name, entry in card.get("scenarios", {}).items()
+    }
+    return lean
 
 
 def run_benchmark(
@@ -306,12 +333,15 @@ def run_benchmark(
             try:
                 store = seed_store(workdir / f"c_{sc['name']}", sc["seed"])
                 compiled = compile_step(store, sc["seed"]["campaign"]["id"], sc["compile"])
-                outcome, _, counts = fulfill_step(store, compiled, driver, timeout)
+                outcome, _, counts, raw_trace = fulfill_step(store, compiled, driver, timeout)
                 byte_counts.append(counts)
                 results.append(ScenarioResult(
                     name=sc["name"], category=sc["category"], tier="compliance",
                     score=1.0 if outcome.ok else 0.0,
-                    detail={} if outcome.ok else {"errors": outcome.errors[:3]},
+                    # A failure without the model's words is undiagnosable —
+                    # rejected output rides along (successes stay lean).
+                    detail={} if outcome.ok else {"errors": outcome.errors[:3],
+                                                  "driver_trace": raw_trace},
                 ))
             except Exception as e:
                 results.append(ScenarioResult(
@@ -344,7 +374,9 @@ def run_benchmark(
             except ComplianceFailure as e:
                 results.append(ScenarioResult(
                     name=sc["name"], category=sc["category"], tier="quality",
-                    score=0.0, detail={"errors": e.errors[:3]},
+                    score=0.0,
+                    detail={"errors": e.errors[:3],
+                            **({"driver_trace": e.raw} if e.raw else {})},
                     error="driver output rejected by the contract (compliance failure)",
                 ))
             except Exception as e:

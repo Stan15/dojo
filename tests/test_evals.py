@@ -27,9 +27,10 @@ from pathlib import Path
 import pytest
 import yaml
 
-from dojo.evals.runner import CORPUS_DIR, compile_step, seed_store, slug_for
+from dojo.evals.runner import CORPUS_DIR, compile_step, lean_baseline, seed_store, slug_for
 from dojo.store import DojoStore
 from dojo.tasks import service
+from dojo.tasks.service import _trace_raw
 
 pytestmark = pytest.mark.eval
 
@@ -96,13 +97,15 @@ def scorecard():
     baseline_file = EVALS_DIR / "baselines" / f"{slug_for(FULFILLER)}.json"
     if not baseline_file.exists():
         baseline_file.parent.mkdir(exist_ok=True)
-        baseline_file.write_text(json.dumps(card, indent=2), encoding="utf-8")
+        # Baselines commit floors, not traces (lean_baseline strips raw).
+        baseline_file.write_text(json.dumps(lean_baseline(card), indent=2), encoding="utf-8")
 
 
 @pytest.mark.parametrize("scenario_path", SCENARIOS, ids=lambda p: p.stem)
 def test_scenario_compliance_meets_baseline(scenario_path: Path, tmp_path: Path, scorecard):
     scenario = yaml.safe_load(scenario_path.read_text(encoding="utf-8"))
     ok_count, errors, signals = 0, [], {}
+    trace_log: list = []
     for sample in range(SAMPLES):
         store = seed_store(tmp_path / f"s{sample}", scenario["seed"])
         compiled = compile_step(store, scenario['seed']['campaign']['id'], scenario['compile'])
@@ -110,6 +113,11 @@ def test_scenario_compliance_meets_baseline(scenario_path: Path, tmp_path: Path,
         raw = run_fulfiller(task.prompt)
         outcome = service.submit(store, task.id, raw)
         ok_count += outcome.ok
+        trace_log.append({
+            "ok": outcome.ok,
+            **({"errors": outcome.errors[:5]} if not outcome.ok else {}),
+            "raw": _trace_raw(raw),
+        })
         if not outcome.ok:
             errors.extend(outcome.errors[:3])
         else:
@@ -120,6 +128,7 @@ def test_scenario_compliance_meets_baseline(scenario_path: Path, tmp_path: Path,
         "compliance": compliance,
         "quality_signals": signals,
         "errors": errors[:6],
+        "driver_trace": trace_log,
     }
 
     baseline_file = EVALS_DIR / "baselines" / f"{slug_for(FULFILLER)}.json"
