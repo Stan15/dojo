@@ -78,6 +78,52 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
    **Default: implement the tiered model with corpus wave 4 (STATE item 2) —
    rails first (pure code+tests), then prompt + scenarios.**
 
+1. **Route-first entry for learning goals** (your 2026-07-09 question):
+   "I want to learn xyz" should hit the ROUTER first, not `campaign plan`.
+   Close fit → harness relays "looks like <campaign> › <topic> — extend or
+   start fresh?"; extend = new_topic + appended phase (a MINOR additive plan
+   change under change authority: auto-applies, announced, undoable); "no,
+   new" or router `propose_campaign` → hand off to the FULL campaign.plan
+   pipeline seeded with the goal + router's name/mission hints (never
+   filing's bare-campaign path — that stays for material captures only).
+   Skip routing when zero campaigns exist or the user explicitly says new.
+   Rationale: prevents semantic campaign sprawl (the sibling of audit A2's
+   id collisions), cheapest task first (3 KB, registry-validated), one
+   consent grammar with plan authority.
+   **Default: implement as `dojo learn` orchestration right after the
+   change-authority milestone (prompt+corpus) completes.**
+
+1. **Post-packet appetite — SUPERSEDES the `dojo more` bonus-packet design
+   below** (your 2026-07-09 "core need" question). The foundational need is
+   a CAPACITY CHANNEL: the learner's daily time/energy varies and the system
+   has no input for it ("more" and "too much" are the same missing channel).
+   Split the budgets: RETENTION (reviews due) is fixed by memory science —
+   appetite can't buy more and re-drilling today's items is worthless;
+   ACQUISITION (new material) is a real preference dial, and every unit is
+   review debt on days 3/7/21. Mechanism:
+   - Session-complete summary offers a bounded acquisition top-up: up to
+     `daily.extension_cap` (default 3) NEW items — unattempted stock →
+     candidates → at most ONE generation task.
+   - **Debt guard (the invariant)**: grant only if projected due-load over
+     the next ~7 days (computable from FSRS state) stays within packet
+     capacity × `pacing.headroom`. Otherwise refuse HONESTLY with the
+     projection, and offer the free alternative: `dojo start --topic`
+     (targeted retrieval costs no new debt). Guard is global — exactly where
+     the per-campaign caps have their hole. Override flag prints the debt
+     first (inform, don't infantilize).
+   - Pacing anxiety ("packet too slow for my deadline") routes to the PLAN
+     conversation (deadline feedback → reflection → consent-gated revision),
+     not to volume.
+   - This structurally answers all three ledgered `more` risks: bounded K of
+     new items (no binge evidence floods), debt-gated generation (no churn),
+     global guard (no Anki collapse).
+   **Default: build the capacity channel (extension + debt guard) INSTEAD of
+   `dojo more`, after route-first entry.**
+   Independent defect found during this analysis, ledgered in OPEN-PROBLEMS:
+   `_enforce_queue_limit` archives oldest-by-created_at regardless of FSRS
+   state — it can discard consolidated memories to make room for fresh
+   generations today, no appetite feature needed.
+
 1. **Post-packet appetite: `dojo more`** (your 2026-07-09 question). Today:
    re-running `dojo daily` drains due items the packet cap held back (works);
    `dojo start` serves unattempted material + replenishment (undiscoverable);
