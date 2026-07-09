@@ -221,6 +221,35 @@ class TestOncePerDayAndOriginMarking:
             "only the extension row carries the label"
 
 
+class TestQueueLimitProtectsConsolidation:
+    """OP #14 (found during the `more` risk analysis): the queue cap must
+    retire unpracticed novelty, never consolidated memories."""
+
+    def test_practiced_memories_survive_fresh_stock_floods(self, api):
+        now = datetime.now(timezone.utc)
+        add_exercise(api, "ex_old_memory", due=now + timedelta(days=3))  # oldest, but PRACTICED
+        for i in range(31):
+            add_exercise(api, f"ex_fresh_{i:02d}")  # newer unpracticed flood
+        api._enforce_queue_limit(CAMP_ID)
+        store_ex = {ex.id: ex for ex in api.store.exercises.list(CAMP_ID)}
+        assert store_ex["ex_old_memory"].quality != "archived", \
+            "consolidation never loses to novelty"
+        archived = [e for e in store_ex.values() if e.quality == "archived"]
+        assert len(archived) == 2 and all(e.sr is None for e in archived)
+        assert {e.id for e in archived} == {"ex_fresh_00", "ex_fresh_01"}, "oldest novelty first"
+
+    def test_already_archived_items_do_not_count_toward_the_limit(self, api):
+        for i in range(35):
+            add_exercise(api, f"ex_dead_{i}")
+            ex = api.store.exercises.get(CAMP_ID, f"ex_dead_{i}")
+            ex.quality = "archived"
+            api.store.exercises.save(CAMP_ID, ex)
+        add_exercise(api, "ex_live")
+        api._enforce_queue_limit(CAMP_ID)
+        assert api.store.exercises.get(CAMP_ID, "ex_live").quality != "archived", \
+            "dead files must not squeeze out live ones"
+
+
 class TestMoreCLI:
     def test_json_envelope_refusal_is_ok_true(self, api, capsys):
         from dojo.cli import main

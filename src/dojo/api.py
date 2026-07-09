@@ -1214,16 +1214,23 @@ class DojoAPI:
         raise ValueError(f"Candidate {candidate_id} not found")
 
     def _enforce_queue_limit(self, campaign_id: str, limit: int = 30):
-        """Archives excess reviews above limit based on oldest attempt/creation timestamp."""
-        exercises = self.store.exercises.list(campaign_id)
-        if len(exercises) <= limit:
+        """Keeps the LIVE queue at `limit` (OP #14): never-practiced stock
+        retires first (oldest first); an exercise carrying FSRS memory is
+        touched only when no unpracticed item is left — consolidation is
+        never discarded to make room for fresh generation. Already-retired
+        items don't count toward the limit (they used to, which re-archived
+        live items on every promotion past 30 total files)."""
+        from . import packet as packet_mod
+
+        live = [
+            ex for ex in self.store.exercises.list(campaign_id)
+            if ex.quality not in packet_mod.RETIRED_QUALITIES
+        ]
+        if len(live) <= limit:
             return
 
-        # Sort exercises by created_at asc (oldest first)
-        exercises = sorted(exercises, key=lambda x: x.created_at)
-        excess_count = len(exercises) - limit
-        for i in range(excess_count):
-            ex = exercises[i]
+        live.sort(key=lambda x: (x.sr is not None, x.created_at, x.id))
+        for ex in live[: len(live) - limit]:
             ex.archived = True
             ex.quality = "archived"
             self.store.exercises.save(campaign_id, ex)
