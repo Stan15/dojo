@@ -98,23 +98,48 @@ dojo campaign create --from-task tsk_xxx    # you approve; nothing is created be
 One-off things you just learned go straight in, from anywhere:
 
 ```bash
-dojo capture "git log -S counts occurrences, not diff lines" --why "archaeology"
+dojo capture "git log -S counts occurrences, not diff lines" \
+     --why "archaeology" --locator "https://git-scm.com/docs/git-log"
 dojo inbox                       # see where the AI proposes to file it
 dojo inbox confirm cap_xxxx      # you confirm; it becomes practice material
 ```
 
+The text is durably saved *before* any AI runs; `--why` keeps your own words
+as the reason it matters, `--locator` records where it came from. At a
+terminal, `dojo capture` routes and confirms in one breath — the proposal
+appears and files with a keypress.
+
 ## The daily loop
+
+One command is the heartbeat: `dojo daily` doesn't just pick exercises — it
+advances campaign phases, auto-triggers reflection once enough unreflected
+evidence accumulates, re-surfaces AI tasks left unfinished yesterday, and
+requests replenishment for topics running dry. Nothing the learning loop
+depends on waits for a command you might forget to run.
+
+**At a terminal, `dojo daily` is the whole ritual**: pending AI work drains
+inline with a spinner (via your configured fulfiller), the session runs as one
+continuous conversation — answer, `/skip too_easy`, `/quit` to pause — and
+free-form answers are graded in a single batch at the end so nothing stalls
+your flow. Then a one-screen stats summary.
+
+Agents (and scripts) drive the same loop stepwise:
 
 ```bash
 dojo daily                 # today's packet: small, interleaved, every pick explained
 dojo why                   # "weakest memory here (~38% recall odds) · French: 6 due…"
-dojo start                 # begins/resumes a session (replenishes itself)
+dojo start --topic french.oral   # targeted manual drill outside the ritual (replenishes itself)
 dojo ready                 # reveal the next prompt, timer starts
 dojo answer "il serait allé"
 dojo skip --reason too_easy --feedback "know this cold"   # calibration signal
+dojo stats                 # per-campaign retention estimates, due counts, AI token spend
 dojo progress              # accuracy, latency, recent history
 dojo reflect               # distill recent evidence into insights & strategy
 ```
+
+`dojo stats` is the honesty dashboard: estimated recall odds per campaign
+(tagged as estimates — scores and counts are records), days idle, and exactly
+how many tokens your AI tasks have consumed, by kind.
 
 Want something to show up more? Two honest knobs, not an algorithm guessing:
 
@@ -165,7 +190,7 @@ dojo benchmark -d "ollama run llama3" -j "codex exec" --detail
 ```
 
 ```text
-Overall  ████████░░ 0.84   (16 scenarios)
+Overall  ████████░░ 0.84   (28 scenarios)
 
 Category             Score            What it measures
 grading-integrity    ██████████ 1.00  grades content, immune to confident nonsense
@@ -184,11 +209,12 @@ can't silently regress.
 
 ## Status & roadmap
 
-Dojo is **v0.1 — a working core, moving fast**. What you read above exists and
-is tested (225 tests, plus live model evals). On the bench next, per the
-[blueprint](docs/design/blueprint.md): one-utterance capture with an inbox
-(`dojo capture "TIL…"`), a leaner agent skill, and a wider pedagogical
-benchmark corpus.
+Dojo is **a working v1 core, moving fast**. Everything you read above exists
+and is tested (257 tests, plus live model evals against ratcheted baselines).
+On the bench next: sharper reflection prompts against the measured weak spots,
+a wider benchmark corpus, consent rails for AI-proposed plan changes (nothing
+restructures under your feet), and a `dojo more` bonus packet for the days you
+finish and want extra.
 
 ## Going deeper
 
@@ -197,5 +223,7 @@ benchmark corpus.
 - [System blueprint](docs/design/blueprint.md) — invariants, architecture, milestones
 - [Prompt design](docs/design/prompts.md) — how unknown-caliber models are kept honest
 - [Decision records](docs/adr/) — every architectural "why"
+- **Full docs site** — prose docs + generated API reference, one search:
+  `pip install -e ".[docs]" && mise run docs-serve`
 
 *Local-first. Markdown-native. Model-agnostic. Yours.*
