@@ -247,3 +247,45 @@ class TestDailySurfacing:
         second = api.daily()
         assert "plan_changes" not in second, "applied changes announce exactly once"
         assert second["plan_proposals"], "proposals repeat until resolved"
+
+
+class TestRevisionTopicHygiene:
+    """A plan revision's topics (owner audit 2026-07-09): the model sees the
+    unscheduled registry, new paths must be clean and shallow, and whatever
+    an APPLIED revision schedules gets REGISTERED — no ghost topics that
+    generation never stocks."""
+
+    def test_reflect_payload_shows_unscheduled_registered_topics(self, store):
+        camp = store.campaigns.get(CAMP_ID)
+        camp.topics = [{"path": "french.listening", "kind": "skill", "summary": ""}]
+        store.campaigns.save(camp)
+        compiled = compiler.compile_reflect(store, camp)
+        assert "registered topics not yet in any phase: french.listening" in compiled.prompt
+
+    def test_new_phase_topic_shape_and_depth_rejected(self, store):
+        for bad, msg in [("french.Formal Letters", "lowercase"),
+                         ("french.a.b.c.d", "deeper than")]:
+            task_id = seed_reflect_task(store)
+            outcome = service.submit(store, task_id, reflect_payload(
+                plan=BASE_PLAN + [phase(3, [bad])]))
+            assert not outcome.ok and msg in "; ".join(outcome.errors), bad
+
+    def test_applied_revision_registers_its_new_topics(self, store):
+        task_id = seed_reflect_task(store)
+        outcome = service.submit(store, task_id, reflect_payload(
+            plan=BASE_PLAN + [phase(3, ["french.writing"])]))
+        assert outcome.ok and outcome.applied["plan_revised"]
+        camp = store.campaigns.get(CAMP_ID)
+        assert any(t["path"] == "french.writing" and t["kind"] == "skill"
+                   for t in camp.topics), "no ghost topics: scheduled ⇒ registered"
+
+    def test_confirmed_proposal_registers_its_new_topics(self, store):
+        task_id = seed_reflect_task(store)
+        prop = [phase(1, ["french.grammar"]), phase(2, ["french.oral"]),
+                phase(3, ["french.pronunciation"])]
+        outcome = service.submit(store, task_id, reflect_payload(plan=prop))
+        assert outcome.ok and outcome.applied["plan_proposed"]
+        api = DojoAPI(store.dojo_dir)
+        api.plan_confirm(CAMP_ID)
+        camp = store.campaigns.get(CAMP_ID)
+        assert any(t["path"] == "french.pronunciation" for t in camp.topics)

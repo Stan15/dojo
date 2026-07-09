@@ -2274,6 +2274,15 @@ class DojoAPI:
         now = datetime.now(timezone.utc).isoformat()
         pending["status"] = "accepted"
         camp.attack_plan = [AttackPlanPhase.model_validate(p) for p in pending["proposed_phases"]]
+        # A confirmed restructure may schedule topics the registry has never
+        # seen — register them (skill lane) or generation will never stock
+        # them and the phase stalls as a ghost (owner audit 2026-07-09).
+        from .tasks.service import register_phase_topics
+
+        register_phase_topics(
+            self.store, camp, camp.attack_plan,
+            reason=str(pending.get("hypothesis") or "confirmed plan restructure"),
+        )
         camp.pedagogical_journal.append({
             "timestamp": now,
             "action": authority.PLAN_CONFIRMED,

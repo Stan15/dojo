@@ -319,6 +319,16 @@ def compile_reflect(store, campaign: Campaign, *, window_n: int = 15) -> Compile
             f"{c.min_attempts}+ @ {c.min_accuracy:.0%}"
             + (f" · {p.focus}" if p.focus else "")
         )
+    # Topic hygiene (owner audit 2026-07-09): a revision that can't see the
+    # registered-but-unscheduled topics can only invent new ones — show them
+    # so reuse beats duplication here too.
+    scheduled = {t for p in campaign.attack_plan for t in p.topics}
+    unscheduled = sorted(
+        t["path"] for t in (campaign.topics or [])
+        if t.get("path") and t["path"] not in scheduled
+    )
+    if unscheduled:
+        plan_rows.append(f"registered topics not yet in any phase: {', '.join(unscheduled)}")
     active = store.insights.list(campaign.id, filters={"status": "active"})
     insight_lines = [
         f"- [{ins.id}] {ins.key}: {(ins.description or '').splitlines()[0]}"

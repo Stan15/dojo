@@ -352,6 +352,49 @@ def apply_grade(store, task: Task, result: GradeResult) -> dict[str, Any]:
     return {"attempt_id": attempt_id, "score": result.score, "error_tag": result.error_tag}
 
 
+def _check_new_phase_topics(store, campaign, phases) -> list[str]:
+    """Hygiene for topics a plan revision would introduce (owner audit
+    2026-07-09): a phase topic that is neither registered nor an ancestor of
+    a registered path must be a clean dotted-lowercase path within the depth
+    cap — the floor the reflect template states."""
+    from .. import limits
+    from ..filing import known_topic_paths
+
+    known = known_topic_paths(store, campaign)
+    reasons = []
+    for phase in phases:
+        for tp in phase.topics:
+            if tp in known or any(k == tp or k.startswith(tp + ".") for k in known):
+                continue  # registered, or an ancestor grouping registered paths
+            if tp.count(".") + 1 > limits.PLAN_MAX_TOPIC_DEPTH:
+                reasons.append(
+                    f"new phase topic {tp!r} is deeper than {limits.PLAN_MAX_TOPIC_DEPTH} levels"
+                )
+            elif not all(_TOPIC_LEAF.fullmatch(seg) for seg in tp.split(".")):
+                reasons.append(
+                    f"new phase topic {tp!r} must be a lowercase dotted path "
+                    "([a-z0-9_] segments) — topic paths are stable identifiers"
+                )
+    return reasons
+
+
+def register_phase_topics(store, campaign, phases, *, reason: str) -> list[str]:
+    """Registers any phase topics missing from the campaign's topic registry
+    (skill lane — plans schedule abilities) so an applied revision can never
+    strand a GHOST topic that no generation request will ever stock. Returns
+    the newly registered paths. Shared by apply_reflect and plan confirm."""
+    known = {t.get("path") for t in (campaign.topics or []) if t.get("path")}
+    added = []
+    for phase in phases:
+        for tp in phase.topics:
+            if tp in known or any(k == tp or (k and k.startswith(tp + ".")) for k in known):
+                continue
+            campaign.topics.append({"path": tp, "kind": "skill", "summary": reason})
+            known.add(tp)
+            added.append(tp)
+    return added
+
+
 def apply_reflect(store, task: Task, result: ReflectResult) -> dict[str, Any]:
     """Lands a reflection: insight creates/updates/resolves (every citation —
     insight AND plan — must be an attempt id the model was shown; every
@@ -385,6 +428,7 @@ def apply_reflect(store, task: Task, result: ReflectResult) -> dict[str, Any]:
         for ev in result.plan_revision.evidence:
             if ev not in seen_attempts:
                 reasons.append(f"plan_revision cites unknown attempt id {ev!r}")
+        reasons.extend(_check_new_phase_topics(store, campaign, result.plan_revision.phases))
     if reasons:
         raise ApplyRejection(*reasons)
 
@@ -438,6 +482,10 @@ def apply_reflect(store, task: Task, result: ReflectResult) -> dict[str, Any]:
                 plan_snapshot=campaign.attack_plan,
             ))
             campaign.attack_plan = result.plan_revision.phases
+            register_phase_topics(
+                store, campaign, result.plan_revision.phases,
+                reason=result.plan_revision.reason,
+            )
             plan_outcome = "applied"
         else:
             # One live proposal per campaign: a newer reflection's view

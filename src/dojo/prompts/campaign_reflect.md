@@ -54,5 +54,5 @@ A non-null plan_revision carries the FULL phase list, each phase shaped exactly:
 {"phases": [{"phase": 1, "topics": ["a.b"], "criteria": {"min_attempts": 5,
  "min_accuracy": 0.6}, "focus": "..."}], "evidence": ["att_id"], "reason": "..."}
 Check: nulls wherever nothing changed; ≤ 2 creates; ≤ 2 questions; creates carry
-a key; every cited attempt id (insights AND plan_revision.evidence) exists in
-ATTEMPTS.
+a key; every cited attempt id (insights AND plan) exists in ATTEMPTS; phase
+topics reuse PLAN's — a new one is a lowercase dotted path, ≤ 4 levels.

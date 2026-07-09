@@ -258,7 +258,9 @@ OUTPUT — return only this JSON:
   "journal": "..."         // ≤ 30 words: what changed and why, or "no change: <why>"
 }
 Check: nulls wherever nothing changed; ≤ 2 creates; ≤ 2 questions; every cited
-attempt id (insights AND plan_revision.evidence) exists in ATTEMPTS.
+attempt id (insights AND plan) exists in ATTEMPTS; phase topics reuse PLAN's —
+a new one is a lowercase dotted path, ≤ 4 levels (registered automatically on
+apply; the PLAN section lists registered-but-unscheduled topics for reuse).
 ```
 
 Why: the stability bias ("default is NO CHANGE", thresholds with numbers, no
