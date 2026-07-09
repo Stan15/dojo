@@ -72,3 +72,5 @@ Follow each envelope's `next` hint. `dojo <cmd> --help` is the manual.
 - If a task result asks clarifying questions (an intervention), relay them
   conversationally — the user's answers calibrate everything.
 - `dojo reflect` after meaty sessions distills evidence into their profile.
+- "Why does it think that about me?" → `dojo insights` / `dojo insights show <id>`
+  (receipts); they disagree → `dojo insights resolve <id> --because "<their words>"`

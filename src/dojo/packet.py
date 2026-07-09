@@ -106,8 +106,13 @@ def campaign_priority(
     store, campaign: Campaign, now: datetime
 ) -> tuple[float, str, list[Exercise]]:
     """Tier-1 score: campaigns don't forget, learners under-attend them —
-    urgency-weighted fairness, not memory math (ADR 012)."""
+    urgency-weighted fairness, not memory math (ADR 012). A campaign in
+    maintenance (ADR 005) competes only with its formed memories: reviews
+    keep coming due, but never-practiced stock is new material and stays
+    out."""
     due = _due_diagnostics(store, campaign) + _due_exercises(store, campaign, now)
+    if campaign.status == "maintenance":
+        due = [ex for ex in due if ex.sr is not None]
     days = _days_since_touch(campaign.id, store, now)
     due_pressure = min(len(due) / 5.0, 1.0)
     atrophy = min(days / 7.0, 1.0)
@@ -254,13 +259,16 @@ def build_packet(
     packet = Packet()
     ranked = []
     for campaign in store.campaigns.list():
-        if campaign.status != "active":
+        if campaign.status not in ("active", "maintenance"):
             continue
         score, reason, due = campaign_priority(store, campaign, now)
         ranked.append((score, campaign.id, reason, campaign, due))
-        packet.needs_generation.extend(
-            _stock_requests(store, campaign, due, now)
-        )
+        if campaign.status == "active":
+            # Maintenance campaigns request nothing (ADR 005): reviews
+            # trickle; generation would be new material nobody asked for.
+            packet.needs_generation.extend(
+                _stock_requests(store, campaign, due, now)
+            )
     ranked.sort(key=lambda t: (-t[0], t[1]))
 
     with_due = [r for r in ranked if r[4]]

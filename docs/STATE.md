@@ -15,8 +15,10 @@ public-surface docstrings gated by tests/test_docs_coverage.py; README
 currency-audited), **plan change authority** (tasks/authority.py; the
 plan is a consent-gated contract), **route-first entry** (`dojo learn`;
 a goal routes against the registry before any new campaign is planned), and
-the **capacity channel** (`dojo more`; at-request-only, debt-guarded).
-**325 tests green** + 28 eval-marked.
+the **capacity channel** (`dojo more`; at-request-only, debt-guarded), and
+the **ownership block** (`dojo insights` with receipts; campaign lifecycle
+with deterministic completion → ADR 005 maintenance).
+**344 tests green** + 28 eval-marked.
 Repo is PRIVATE (owner's choice) — install via checkout `sh install.sh`;
 owner's machine runs the current build.
 
@@ -78,15 +80,21 @@ committed work, not proposals awaiting an answer. Item numbering is stable
    (status `complete_for_today`; plan-proposal hints still append — consent
    ≠ solicitation). **The system never solicits extra practice** — still
    binding for all future surfaces. 325 tests green.
-3. **Ownership/visibility block — owner-approved 2026-07-09** (QUESTIONS.md
-   has both designs):
-   a. **Insight visibility with provenance**: `dojo insights` (see) /
-      `insights show` (receipts: verbatim answers behind every belief) /
-      `insights resolve --because` (contest, learner-voice) / announce-once
-      in daily + generation stamping targeted insight keys (effect).
-   b. **Campaign lifecycle**: list/show/archive, deterministic completion
-      detection with maintain/archive/extend choice, windowed phase
-      criteria (end state must be reachable), ADR 005 maintenance status.
+3. ✓ **DONE 2026-07-09 — Ownership/visibility block shipped** (both halves,
+   details in QUESTIONS.md):
+   a. Insights: `dojo insights [--all]` / `show` (verbatim receipts + grader
+      + forward-effect counts) / `resolve --because` (stored verbatim in
+      `Insight.resolution`, round-trip pinned; feeds the next reflection as
+      learner-voice, timestamp-gated); Tier-0 changes announce once in
+      daily; generation stamps `targeted_insights` (selection upgraded:
+      topic affinity → updated_at, replacing created_at-tail — owner probe).
+   b. Lifecycle: `campaign list` / `archive` (+TTY confirm); deterministic
+      completion → **maintenance** (ADR 005: reviews trickle, no new
+      material/generation; dues still count in `more`'s debt guard); daily
+      announces the three doors once; `learn extend` reopens a maintained
+      campaign; windowed criteria (last 2×min_attempts graded, provisional
+      excluded); neutral idle notices (`campaign.idle_days`=14).
+   344 tests green.
 4. **Fresh full eval re-baseline** — prompts/payloads changed again (reflect
    +PLAN section): delete the (codex,codex) pair baseline, run
    `DOJO_EVAL_DRIVER="codex exec --skip-git-repo-check -s read-only" python -m pytest -m eval -q`
@@ -96,10 +104,11 @@ committed work, not proposals awaiting an answer. Item numbering is stable
    still owed for wave 4.
 5. **Owner decision pending** (QUESTIONS.md): version tag — default v0.2.0 at
    next pause (owner: "ok"), v1.0.0 after item 4.
-6. Backlog (ledgered in docs/design/usecase-audit.md + OPEN-PROBLEMS): ADR 005
-   maintenance phase; OP #14 queue-limit archives consolidated memories;
-   fulfilled-task housekeeping (tasks/ grows forever); interleave share
-   tuning (wants real usage data); OP #13 snapshot-undo.
+6. Backlog (ledgered in docs/design/usecase-audit.md + OPEN-PROBLEMS):
+   OP #14 queue-limit archives consolidated memories; fulfilled-task
+   housekeeping (tasks/ grows forever); interleave share tuning (wants real
+   usage data); OP #13 snapshot-undo. (ADR 005 maintenance: shipped in
+   item 3b.)
 
 ## Standing owner directives (must survive every session)
 
@@ -135,4 +144,6 @@ committed work, not proposals awaiting an answer. Item numbering is stable
   goal.route kind + extend|new consent verbs + learn_flow; 306 tests);
   STATE item 1 closed. Same session: capacity channel shipped (`dojo more`
   + debt guard + origin markers + spec'd completion copy; 325 tests);
-  STATE item 2 closed.
+  STATE item 2 closed. Same session: ownership block shipped (insights
+  see/trace/contest + stamping; campaign list/archive, completion →
+  maintenance, windowed criteria, idle notices; 344 tests); item 3 closed.

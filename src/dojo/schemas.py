@@ -532,7 +532,9 @@ class Insight(StoredEntity):
     """One hypothesis about the learner (ADR 004): a stable dotted `key`
     ("conditional.aux_choice", "feedback.user.…"), the description as body,
     and `sources` citing the attempt ids that evidence it. Reflection
-    creates, updates, and resolves these."""
+    creates, updates, and resolves these; the learner can resolve directly
+    (`dojo insights resolve --because`) — their reason lands in `resolution`
+    verbatim and is the highest authority."""
 
     _body_field: ClassVar[Optional[str]] = "description"
 
@@ -541,6 +543,7 @@ class Insight(StoredEntity):
     sources: List[str] = Field(default_factory=list)
     generation_run: Optional[str] = None
     status: str = "active"
+    resolution: Optional[str] = None  # learner's own words when THEY resolved it
     topic_path: Optional[str] = None
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())

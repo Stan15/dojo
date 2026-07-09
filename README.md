@@ -160,6 +160,25 @@ capacity; otherwise it refuses with the numbers and points you at
 `dojo start --topic` (re-drilling costs no new debt). It's never offered,
 only answered — dojo doesn't manufacture appetite.
 
+## Your learner model, with receipts
+
+Everything that personalizes your practice is inspectable, traceable, and
+contestable — your word always outranks the machine's hypothesis:
+
+```bash
+dojo insights                      # every belief the system holds about you
+dojo insights show ins_xxx         # the receipts: your verbatim answers behind it,
+                                   #   who graded them, and how many exercises target it
+dojo insights resolve ins_xxx --because "I know this — I was rushing"
+                                   # your words, stored verbatim, outrank the evidence
+dojo campaign list                 # status, phase, retention, dues, idle days
+dojo campaign archive french       # done with it? out of rotation; git remembers
+```
+
+When a campaign's last phase is passed, dojo says so and switches it to
+**maintenance**: reviews keep coming (memories are kept warm), but no new
+material is generated — until you extend it with a new goal or archive it.
+
 Under the hood: FSRS-6 spaced repetition (the algorithm behind Anki, via
 py-fsrs) for facts; skills schedule on their topic and always get *novel*
 exercises so you learn the skill, not the question. The scheduler is pure,

@@ -145,6 +145,7 @@ def make_insight() -> Insight:
         key="conditional.past.aux_choice",
         sources=["att_e5f6"],
         topic_path="french.oral.part_a",
+        resolution="I actually know this — I was typing fast.",  # learner's verbatim contest must round-trip
         description="Learner picks *avoir* over *être* for motion verbs in past conditional.",
     )
 

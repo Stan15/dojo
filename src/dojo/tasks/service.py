@@ -473,13 +473,21 @@ def apply_reflect(store, task: Task, result: ReflectResult) -> dict[str, Any]:
             ))
             question_ids.append(ex_id)
 
-    campaign.pedagogical_journal.append({
+    entry: dict[str, Any] = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "action": "REFLECT",
         "trigger": f"reflection over {len(seen_attempts)} attempts (task {task.id})",
         "status": "applied",
         "hypothesis": result.journal,
-    })
+    }
+    if created or updated or resolved:
+        # Silent ≠ invisible (ownership block): Tier-0 changes apply without
+        # a gate, but the next daily announces them exactly once.
+        entry["insights_changed"] = {
+            "created": len(created), "updated": len(updated), "resolved": len(resolved),
+        }
+        entry["announced"] = False
+    campaign.pedagogical_journal.append(entry)
     campaign.updated_at = datetime.now(timezone.utc).isoformat()
     store.campaigns.save(campaign)
 

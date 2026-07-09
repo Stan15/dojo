@@ -163,11 +163,33 @@ def strategy_line(campaign: Campaign) -> str:
     )
 
 
-def insights_digest(store, campaign_id: str, k: int = 5) -> str:
-    """Top-K active insights, one line each — the personalization loop's feed."""
+def targeted_insights(store, campaign_id: str, k: int = 5,
+                      topic_path: Optional[str] = None):
+    """The top-K active insights a payload will carry — one selection, used
+    both for the digest text and for stamping their keys onto the task
+    (`insights show` traces which exercises targeted a belief).
+
+    Ranking: topic affinity first (an insight sharing a dotted segment with
+    the generation target outranks unrelated ones), then `updated_at` —
+    evidence freshness, not creation order, since reflection re-confirms
+    long-standing beliefs by updating them."""
     active = store.insights.list(campaign_id, filters={"status": "active"})
+
+    def rank(ins) -> tuple[int, str, str]:
+        segments = set(ins.key.split(".")) | (
+            set(ins.topic_path.split(".")) if ins.topic_path else set()
+        )
+        affinity = 1 if topic_path and segments & set(topic_path.split(".")) else 0
+        return (affinity, ins.updated_at, ins.id)
+
+    return sorted(active, key=rank)[-k:]
+
+
+def insights_digest(store, campaign_id: str, k: int = 5,
+                    topic_path: Optional[str] = None) -> str:
+    """Top-K active insights, one line each — the personalization loop's feed."""
     lines = []
-    for ins in active[-k:]:
+    for ins in targeted_insights(store, campaign_id, k, topic_path=topic_path):
         first_line = (ins.description or "").splitlines()[0] if ins.description else ""
         lines.append(f"- {ins.key}: {first_line}")
     return "\n".join(lines) if lines else "(no insights yet — first sessions)"
@@ -219,7 +241,7 @@ def compile_generate(
         "grounding_rule": grounding_rule,
         "mission": campaign.mission,
         "strategy_line": strategy_line(campaign),
-        "insights_digest": insights_digest(store, campaign.id),
+        "insights_digest": insights_digest(store, campaign.id, topic_path=topic_path),
         "recent_rows": recent_rows(store, campaign.id),
         "source_section": source_section(source_slice),
     }
@@ -229,6 +251,11 @@ def compile_generate(
         "n_items": n_items,
         "difficulty": difficulty,
         "mode": mode,
+        # Forward tracing (ownership block): which beliefs this generation
+        # was steered by — `dojo insights show` counts the exercises back.
+        "targeted_insights": [
+            ins.key for ins in targeted_insights(store, campaign.id, topic_path=topic_path)
+        ],
     }
     return _compile(store, "exercise.generate", values, context)
 
@@ -339,6 +366,19 @@ def compile_reflect(store, campaign: Campaign, *, window_n: int = 15) -> Compile
     feedback_lines = [
         f"- {a.feedback}" for a in window if a.feedback
     ]
+    # A learner-resolved insight is the loudest feedback there is (contest =
+    # highest authority): their verbatim reason rides along until the next
+    # reflection has consumed it (timestamp-gated — no extra state).
+    last_reflect = max(
+        (e.get("timestamp", "") for e in campaign.pedagogical_journal
+         if e.get("action") == "REFLECT"),
+        default="",
+    )
+    for ins in store.insights.list(campaign.id, filters={"status": "resolved"}):
+        if ins.resolution and ins.updated_at > last_reflect:
+            feedback_lines.append(
+                f'- [learner resolved insight {ins.key}] "{ins.resolution}"'
+            )
     values = {
         "window_n": window_n,
         "mission": campaign.mission,

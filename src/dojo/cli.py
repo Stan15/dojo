@@ -1917,6 +1917,118 @@ def cmd_learn(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_insights(args: argparse.Namespace) -> int:
+    """`dojo insights [show <id> | resolve <id> --because]`: the learner model
+    with receipts — see every belief, trace it to your verbatim answers,
+    contest it with your own words (ownership block, QUESTIONS 2026-07-09)."""
+    api = DojoAPI(_db_path(args))
+    action = getattr(args, "insights_command", None)
+    try:
+        if action == "show":
+            res = api.insight_show(args.insight_id)
+        elif action == "resolve":
+            res = api.insight_resolve(args.insight_id, getattr(args, "because", None) or "")
+        else:
+            res = api.insights_list(
+                campaign_id=getattr(args, "campaign", None),
+                include_resolved=bool(getattr(args, "all", False)),
+            )
+    except ValueError as exc:
+        raise SystemExit(f"error: {exc}")
+
+    if _use_json(args):
+        _print_json({"ok": True, **res})
+        return 0
+    if action == "show":
+        console.print(f"\n[bold]{res['key']}[/bold] [dim]({res['id']}, {res['status']})[/dim]")
+        console.print(f"{res['description']}\n")
+        if res.get("resolution"):
+            console.print(f"[green]resolved by you:[/green] “{res['resolution']}”\n")
+        console.print("[bold]Why we believe this[/bold] — your own answers:")
+        for r in res["receipts"]:
+            if r.get("note"):
+                console.print(f"  [dim]{r['attempt_id']}: {r['note']}[/dim]")
+                continue
+            console.print(f"  [dim]{r['date']}[/dim] · {r['prompt'][:60]}")
+            console.print(f"    [cyan]›[/cyan] “{r['your_answer'][:80]}” — score {r['score']}"
+                          f" [dim](graded by {r['grader'] or 'nobody yet'}"
+                          + (f", {r['error_tag']}" if r.get("error_tag") else "") + ")[/dim]")
+        eff = res["effect"]
+        console.print(f"\n[bold]Effect[/bold]: {eff['exercises_targeting']} exercise(s) generated "
+                      f"to target this ({eff['last_7_days']} in the last 7 days)")
+        console.print(f"[dim]{res['next']}[/dim]")
+    elif action == "resolve":
+        console.print(f"[green]✓ resolved[/green] — {res['next']}")
+    else:
+        for camp in res["campaigns"]:
+            if not camp["insights"]:
+                continue
+            console.print(f"\n[bold]{camp['campaign_id']}[/bold]")
+            topic = None
+            for ins in camp["insights"]:
+                if ins["topic"] != topic:
+                    topic = ins["topic"]
+                    console.print(f"  [bold cyan]{topic}[/bold cyan]")
+                mark = "[green]✓[/green] " if ins["status"] == "resolved" else ""
+                console.print(f"    {mark}[cyan]{ins['id']}[/cyan] {ins['key']} — {ins['description']}")
+                console.print(f"      [dim]{ins['evidence_count']} answer(s) behind it · "
+                              f"{ins['age_days']:.0f}d old · updated {ins['last_updated']}[/dim]")
+        console.print(f"\n[dim]{res['note']}[/dim]")
+        console.print(f"[dim]{res['next']}[/dim]")
+    return 0
+
+
+def cmd_campaign_list(args: argparse.Namespace) -> int:
+    """`dojo campaign list`: every campaign — status, plan position, retention
+    estimate, dues, idle days (the maintain/archive/extend dashboard)."""
+    api = DojoAPI(_db_path(args))
+    res = api.campaign_list()
+    if _use_json(args):
+        _print_json({"ok": True, **res})
+        return 0
+    from rich.table import Table
+
+    table = Table(show_header=True, header_style="bold", box=None, pad_edge=False)
+    for col in ("Campaign", "Status", "Phase", "Retention*", "Due", "Idle"):
+        table.add_column(col)
+    for c in res["campaigns"]:
+        ret = "—" if c["estimated_retention"] is None else f"{c['estimated_retention']:.0%}"
+        idle = "—" if c["days_idle"] is None else f"{c['days_idle']:.0f}d"
+        status = c["status"] + (" ✓" if c["complete"] else "")
+        table.add_row(c["campaign_id"], status, c["phase"], ret, str(c["due_now"]), idle)
+    console.print(table)
+    console.print(f"  [dim]*estimates · {res['next']}[/dim]")
+    return 0
+
+
+def cmd_campaign_archive(args: argparse.Namespace) -> int:
+    """`dojo campaign archive <id>`: leave rotation, accept forgetting — a
+    human decision (TTY confirms; --json is the agent relaying the learner's
+    explicit ask). Git keeps the history either way."""
+    api = DojoAPI(_db_path(args))
+    if not _use_json(args):
+        from .interactive import confirm
+
+        camp = api.store.campaigns.get(args.campaign_id)
+        if camp is None:
+            raise SystemExit(f"error: campaign {args.campaign_id} not found")
+        if not confirm(
+            f"Archive [cyan]{camp.name}[/cyan]? Reviews stop; forgetting begins. ",
+            default=False,
+        ):
+            console.print("[dim]kept — nothing changed[/dim]")
+            return 0
+    try:
+        res = api.campaign_archive(args.campaign_id)
+    except ValueError as exc:
+        raise SystemExit(f"error: {exc}")
+    if _use_json(args):
+        _print_json({"ok": True, **res})
+    else:
+        console.print(f"[green]✓ archived[/green] — {res['next']}")
+    return 0
+
+
 def cmd_campaign_boost(args: argparse.Namespace) -> int:
     """Cross-campaign surfacing: 'I want THIS CAMPAIGN to come up more/less'."""
     api = DojoAPI(_db_path(args))
@@ -2185,8 +2297,33 @@ def build_parser() -> argparse.ArgumentParser:
         p_verb.add_argument("--campaign", help="campaign id (optional when unambiguous)")
         p_verb.set_defaults(func=cmd_plan)
 
+    p_insights = sub.add_parser(
+        "insights",
+        help="the learner model, with receipts: see every belief, trace it to "
+             "your verbatim answers, contest it in your own words",
+    )
+    p_insights.add_argument("--campaign", help="limit to one campaign")
+    p_insights.add_argument("--all", action="store_true",
+                            help="include resolved insights (what you overcame)")
+    p_insights_sub = p_insights.add_subparsers(dest="insights_command")
+    p_insights.set_defaults(func=cmd_insights)
+    p_ins_show = p_insights_sub.add_parser("show", help="the receipts card: every answer behind a belief + its effect")
+    p_ins_show.add_argument("insight_id")
+    p_ins_show.set_defaults(func=cmd_insights)
+    p_ins_resolve = p_insights_sub.add_parser("resolve", help="contest a belief — your words outrank the evidence")
+    p_ins_resolve.add_argument("insight_id")
+    p_ins_resolve.add_argument("--because", required=True, help="your reason, verbatim — it feeds the next reflection")
+    p_ins_resolve.set_defaults(func=cmd_insights)
+
     p_campaign = sub.add_parser("campaign")
     p_camp_sub = p_campaign.add_subparsers(dest="campaign_command", required=True)
+
+    p_camp_list = p_camp_sub.add_parser("list", help="every campaign: status, phase, retention, dues, idle days")
+    p_camp_list.set_defaults(func=cmd_campaign_list)
+
+    p_camp_archive = p_camp_sub.add_parser("archive", help="leave rotation, accept forgetting (git keeps history)")
+    p_camp_archive.add_argument("campaign_id")
+    p_camp_archive.set_defaults(func=cmd_campaign_archive)
 
     p_camp_boost = p_camp_sub.add_parser("boost", help="surface this CAMPAIGN more (or less) in daily packets")
     p_camp_boost.add_argument("campaign_id")

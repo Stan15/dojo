@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -85,12 +85,34 @@ class DojoAPI:
         from . import packet as packet_mod
         from .tasks import flows
 
+        now = datetime.now(timezone.utc)
+
+        # daily is the ritual's HEARTBEAT (use-case audit 2026-07-08): every
+        # step the learning loop depends on either happens here deterministically
+        # or is re-surfaced here — never parked in commands nobody must run.
+
+        # 1. Phase advancement is pure math; it must not wait for a reflect
+        # call — and it runs BEFORE the notice scan so a completion detected
+        # right now is announced right now, not tomorrow.
+        for campaign in self.store.campaigns.list():
+            if campaign.status == "active":
+                self._evaluate_campaign_phase_advancement(campaign)
+
         # Plan-authority surfacing (QUESTIONS.md 2026-07-09): pending proposals
         # repeat until resolved; auto-applied changes announce exactly once.
+        # Ownership surfacing rides the same machinery: insight changes and
+        # campaign completions announce once; idle campaigns are stated as a
+        # neutral fact with doors.
         plan_proposals, plan_changes = self._plan_notices()
+        insight_notes, completions = self._ownership_notices()
+        idle = self._idle_campaigns(now)
         plan_keys = (
-            {"plan_proposals": plan_proposals} if plan_proposals else {}
-        ) | ({"plan_changes": plan_changes} if plan_changes else {})
+            ({"plan_proposals": plan_proposals} if plan_proposals else {})
+            | ({"plan_changes": plan_changes} if plan_changes else {})
+            | ({"insight_notices": insight_notes} if insight_notes else {})
+            | ({"campaign_completions": completions} if completions else {})
+            | ({"idle_campaigns": idle} if idle else {})
+        )
         proposal_hint = (
             f" ({len(plan_proposals)} plan proposal(s) await you: dojo plan show)"
             if plan_proposals else ""
@@ -106,17 +128,6 @@ class DojoAPI:
                 "next": "resume: dojo ready reveals the next prompt (dojo daily --reset to rebuild)"
                         + proposal_hint,
             }
-
-        now = datetime.now(timezone.utc)
-
-        # daily is the ritual's HEARTBEAT (use-case audit 2026-07-08): every
-        # step the learning loop depends on either happens here deterministically
-        # or is re-surfaced here — never parked in commands nobody must run.
-
-        # 1. Phase advancement is pure math; it must not wait for a reflect call.
-        for campaign in self.store.campaigns.list():
-            if campaign.status == "active":
-                self._evaluate_campaign_phase_advancement(campaign)
 
         pkt = packet_mod.build_packet(self.store, now, size=size)
 
@@ -263,14 +274,14 @@ class DojoAPI:
         TOPICS (each due topic demands one novel exercise). Never-practiced
         stock is acquisition, not review debt, so it does not count. Capacity
         is packet_size × 7 × `pacing.headroom` (default 0.8)."""
-        from datetime import timedelta
-
         from . import packet as packet_mod
 
         horizon = now + timedelta(days=7)
         projected = 0
         for camp in self.store.campaigns.list():
-            if camp.status != "active":
+            # Maintenance reviews are review load too (ADR 005): they share
+            # the same daily packets the guard is protecting.
+            if camp.status not in ("active", "maintenance"):
                 continue
             for ex in self.store.exercises.list(camp.id):
                 if ex.quality in packet_mod.EXCLUDED_QUALITIES or not ex.sr:
@@ -594,6 +605,198 @@ class DojoAPI:
         return {"capture_id": capture_id, "status": "dismissed"}
 
     # ==========================================
+    # Ownership: the learner model, inspectable / traceable / contestable
+    # ==========================================
+    def insights_list(self, campaign_id: str | None = None,
+                      include_resolved: bool = False) -> dict[str, Any]:
+        """The learner model, visible (ownership block, QUESTIONS 2026-07-09):
+        every belief the system holds, in the model's recorded words, with
+        age, evidence count and last update. Resolved insights appear under
+        `include_resolved` — what you overcame is part of ownership. These
+        are plain markdown files; editing them directly is first-class."""
+        now = datetime.now(timezone.utc)
+        campaigns = (
+            [self.store.campaigns.get(campaign_id)] if campaign_id
+            else self.store.campaigns.list()
+        )
+        if campaigns and campaigns[0] is None:
+            raise ValueError(f"campaign {campaign_id} not found")
+        out = []
+        for camp in campaigns:
+            rows = []
+            for ins in self.store.insights.list(camp.id):
+                if ins.status != "active" and not include_resolved:
+                    continue
+                rows.append({
+                    "id": ins.id,
+                    "key": ins.key,
+                    "topic": ins.key.split(".")[0],
+                    "description": (ins.description or "").splitlines()[0],
+                    "status": ins.status,
+                    "resolution": ins.resolution,
+                    "age_days": round((now - datetime.fromisoformat(ins.created_at)).total_seconds() / 86400, 1),
+                    "evidence_count": len(ins.sources),
+                    "last_updated": ins.updated_at[:10],
+                })
+            rows.sort(key=lambda r: (r["topic"], r["key"]))
+            out.append({"campaign_id": camp.id, "insights": rows})
+        return {
+            "campaigns": out,
+            "note": "these are plain markdown files under campaigns/*/insights/ — editing them directly is first-class",
+            "next": "receipts behind a belief: dojo insights show <id>; disagree: dojo insights resolve <id> --because \"...\"",
+        }
+
+    def _find_insight(self, insight_id: str):
+        """(campaign_id, insight) for an insight id, scanning campaigns.
+
+        Raises:
+            ValueError: no campaign holds this insight id.
+        """
+        for camp in self.store.campaigns.list():
+            ins = self.store.insights.get(camp.id, insight_id)
+            if ins is not None:
+                return camp.id, ins
+        raise ValueError(f"insight {insight_id} not found")
+
+    def insight_show(self, insight_id: str) -> dict[str, Any]:
+        """The receipts card: every evidence attempt behind a belief — date,
+        the prompt, the learner's VERBATIM answer, score, grader (I10) and
+        error tag — plus its forward effect: how many exercises generation
+        aimed at it. "We believe this because on these occasions you wrote
+        this."
+
+        Raises:
+            ValueError: unknown insight id.
+        """
+        campaign_id, ins = self._find_insight(insight_id)
+        receipts = []
+        for att_id in ins.sources:
+            att = self.store.attempts.get(campaign_id, att_id)
+            if att is None:
+                receipts.append({"attempt_id": att_id, "note": "attempt file no longer in the store"})
+                continue
+            receipts.append({
+                "attempt_id": att_id,
+                "date": att.created_at[:10],
+                "prompt": att.prompt,
+                "your_answer": att.user_answer,
+                "score": att.score,
+                "grader": att.grader,
+                "error_tag": att.error_tag,
+            })
+        # Forward tracing: generation tasks stamp the insight keys they were
+        # steered by; exercises carry their generation task id.
+        targeting_tasks = {
+            t.id for t in self.store.tasks.list()
+            if t.kind == "exercise.generate"
+            and t.campaign_id == campaign_id
+            and ins.key in (t.context or {}).get("targeted_insights", [])
+        }
+        targeted = [
+            ex for ex in self.store.exercises.list(campaign_id)
+            if ex.generation_run in targeting_tasks
+        ]
+        week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+        return {
+            "id": ins.id,
+            "campaign_id": campaign_id,
+            "key": ins.key,
+            "status": ins.status,
+            "description": ins.description,
+            "resolution": ins.resolution,
+            "receipts": receipts,
+            "effect": {
+                "exercises_targeting": len(targeted),
+                "last_7_days": sum(1 for ex in targeted if ex.created_at >= week_ago),
+            },
+            "next": "disagree with this belief? dojo insights resolve "
+                    f"{ins.id} --because \"<your words>\" — your reason outranks the evidence",
+        }
+
+    def insight_resolve(self, insight_id: str, because: str) -> dict[str, Any]:
+        """Learner override — the highest authority in the system: resolves
+        the belief and stores the reason VERBATIM; the next reflection reads
+        it as learner-voice feedback (extract-never-enrich).
+
+        Raises:
+            ValueError: unknown insight, already resolved, or empty reason.
+        """
+        because = (because or "").strip()
+        if not because:
+            raise ValueError("give the reason in your own words: --because \"...\"")
+        campaign_id, ins = self._find_insight(insight_id)
+        if ins.status == "resolved":
+            raise ValueError(f"insight {insight_id} is already resolved")
+        ins.status = "resolved"
+        ins.resolution = because
+        ins.updated_at = datetime.now(timezone.utc).isoformat()
+        self.store.insights.save(campaign_id, ins)
+        self.log.info(f"Insight {insight_id} resolved by the learner")
+        return {
+            "id": ins.id, "campaign_id": campaign_id, "status": "resolved",
+            "resolution": because,
+            "next": "your reason feeds the next reflection as its loudest feedback",
+        }
+
+    def campaign_list(self) -> dict[str, Any]:
+        """Every campaign at a glance (ownership block): status, plan
+        position, retention estimate (tagged estimate, I10), due count and
+        idle days — the view that makes maintain/archive/extend decisions
+        possible."""
+        from . import packet as packet_mod
+
+        now = datetime.now(timezone.utc)
+        rows = []
+        for camp in self.store.campaigns.list():
+            exercises = [
+                ex for ex in self.store.exercises.list(camp.id)
+                if ex.quality not in packet_mod.EXCLUDED_QUALITIES
+            ]
+            tracked = [ex for ex in exercises if ex.kind == "recall" and ex.sr]
+            retention = (
+                sum(scheduling.retrievability(ex.sr, now) for ex in tracked) / len(tracked)
+                if tracked else None
+            )
+            attempts = self.store.attempts.list(camp.id)
+            last_touch = max((a.created_at for a in attempts), default=None)
+            plan_len = len(camp.attack_plan)
+            rows.append({
+                "campaign_id": camp.id,
+                "name": camp.name,
+                "status": camp.status,
+                "phase": f"{min(camp.active_phase_index + 1, plan_len)}/{plan_len}" if plan_len else "—",
+                "complete": plan_len > 0 and camp.active_phase_index >= plan_len,
+                "estimated_retention": None if retention is None else round(retention, 3),
+                "due_now": sum(1 for ex in exercises if scheduling.is_due(ex.sr, now)),
+                "days_idle": None if last_touch is None else round(
+                    (now - datetime.fromisoformat(last_touch)).total_seconds() / 86400, 1),
+            })
+        return {
+            "campaigns": rows,
+            "next": "dojo campaign archive <id> leaves rotation (git keeps history); "
+                    "extend one via dojo learn; retention figures are estimates",
+        }
+
+    def campaign_archive(self, campaign_id: str) -> dict[str, Any]:
+        """Archives a campaign — "I accept forgetting": it leaves every
+        rotation; the files move to archive/ and git keeps the history.
+        Always a human decision relayed as a command; reflection can only
+        ever suggest it (authority grammar).
+
+        Raises:
+            ValueError: unknown campaign.
+        """
+        camp = self.store.campaigns.get(campaign_id)
+        if camp is None:
+            raise ValueError(f"campaign {campaign_id} not found")
+        self.store.campaigns.archive(campaign_id)
+        self.log.info(f"Campaign '{campaign_id}' archived by the learner")
+        return {
+            "campaign_id": campaign_id, "status": "archived",
+            "next": "it is out of rotation; the files live under archive/campaigns/ and git remembers",
+        }
+
+    # ==========================================
     # Route-first learning entry (dojo learn)
     # ==========================================
     def learn(self, goal: str, new: bool = False) -> dict[str, Any]:
@@ -613,7 +816,12 @@ class DojoAPI:
         goal = goal.strip()
         if not goal:
             raise ValueError("the goal is empty")
-        campaigns = [c for c in self.store.campaigns.list() if c.status == "active"]
+        # Maintenance campaigns stay routable — extending one is exactly the
+        # lifecycle's "extend" door (it reopens execution).
+        campaigns = [
+            c for c in self.store.campaigns.list()
+            if c.status in ("active", "maintenance")
+        ]
         if new or not campaigns:
             task = flows.request_plan(
                 self.store, goal=goal,
@@ -707,6 +915,9 @@ class DojoAPI:
                 }
 
         now = datetime.now(timezone.utc).isoformat()
+        if campaign.status == "maintenance":
+            # The lifecycle's "extend" door: a new goal reopens execution.
+            campaign.status = "active"
         if not any(t.get("path") == topic_path for t in campaign.topics):
             # A goal is an ability to build, not a fact to keep: skill lane.
             campaign.topics.append(
@@ -1863,6 +2074,8 @@ class DojoAPI:
             for a in attempts:
                 if a.skip_reason and a.skip_reason != "forgot":
                     continue
+                if a.grader is None and a.score == 0.0 and not a.skip_reason:
+                    continue  # provisional (grade pending) — not evidence yet
                 # Load corresponding exercise
                 ex = self.store.exercises.get(campaign.id, a.exercise_id)
                 if ex:
@@ -1875,8 +2088,12 @@ class DojoAPI:
             if attempts_count < min_attempts:
                 break
 
-            total_score = sum(a.score for a in phase_attempts)
-            average_score = total_score / attempts_count if attempts_count > 0 else 0.0
+            # Windowed criteria (owner question 2026-07-09, ADR 008 style):
+            # accuracy is measured over the most recent 2×min_attempts phase
+            # attempts, not the lifetime mean — a rough start ages out, so the
+            # end state is reachable in time proportional to CURRENT ability.
+            window = phase_attempts[-(2 * min_attempts):]
+            average_score = sum(a.score for a in window) / len(window)
 
             if average_score < min_accuracy:
                 break
@@ -1908,7 +2125,28 @@ class DojoAPI:
             }
             campaign.pedagogical_journal.append(journal_entry)
 
-        if advanced:
+        # Completion is deterministic and must be OBSERVED (owner question
+        # 2026-07-09: before this, a finished campaign silently kept
+        # practicing/replenishing forever). Default door: maintenance
+        # (ADR 005 — no new material, retention trickle only); daily
+        # announces once with the other doors (archive / extend).
+        completed = (
+            campaign.active_phase_index >= len(attack_plan)
+            and campaign.status == "active"
+        )
+        if completed:
+            campaign.status = "maintenance"
+            campaign.pedagogical_journal.append({
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "action": "CAMPAIGN_COMPLETE",
+                "trigger": "all plan phases passed (deterministic: active_phase_index ≥ plan length)",
+                "hypothesis": "campaign complete — maintenance by default (reviews keep coming, no new material); archive or extend are the other doors",
+                "status": "applied",
+                "announced": False,
+            })
+            self.log.info(f"Campaign '{campaign.id}' complete → maintenance")
+
+        if advanced or completed:
             campaign.updated_at = datetime.now(timezone.utc).isoformat()
             self.store.campaigns.save(campaign)
 
@@ -2126,6 +2364,68 @@ class DojoAPI:
                 camp.updated_at = datetime.now(timezone.utc).isoformat()
                 self.store.campaigns.save(camp)
         return proposals, changes
+
+    def _ownership_notices(self) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        """(insight notices, campaign completions) — announce-once feeds for
+        daily (ownership block): Tier-0 insight changes apply silently but
+        never invisibly, and a finished campaign's three doors (maintain /
+        archive / extend) are stated exactly once."""
+        insight_notes, completions = [], []
+        for camp in self.store.campaigns.list():
+            dirty = False
+            for e in camp.pedagogical_journal:
+                if e.get("announced", True):
+                    continue
+                if e.get("action") == "REFLECT" and e.get("insights_changed"):
+                    ch = e["insights_changed"]
+                    insight_notes.append({
+                        "campaign_id": camp.id,
+                        **ch,
+                        "next": "reflection updated beliefs about you — dojo insights shows them, with receipts",
+                    })
+                    e["announced"] = True
+                    dirty = True
+                elif e.get("action") == "CAMPAIGN_COMPLETE":
+                    completions.append({
+                        "campaign_id": camp.id,
+                        "status": camp.status,
+                        "next": (
+                            f"{camp.name} is complete — it is now in maintenance "
+                            "(reviews continue, no new material). Other doors: "
+                            f"dojo campaign archive {camp.id} (accept forgetting) "
+                            "or extend it with a new goal via dojo learn"
+                        ),
+                    })
+                    e["announced"] = True
+                    dirty = True
+            if dirty:
+                camp.updated_at = datetime.now(timezone.utc).isoformat()
+                self.store.campaigns.save(camp)
+        return insight_notes, completions
+
+    def _idle_campaigns(self, now: datetime) -> list[dict[str, Any]]:
+        """Active campaigns with practice history that have sat untouched
+        past `campaign.idle_days` (default 14) — a neutral observation with
+        doors, never guilt: no counters, no streaks, just the fact and the
+        two honest exits."""
+        from . import packet as packet_mod
+
+        threshold = float(self.store.configs.get_value("campaign.idle_days", 14))
+        idle = []
+        for camp in self.store.campaigns.list():
+            if camp.status != "active":
+                continue
+            attempts = self.store.attempts.list(camp.id)
+            if not attempts:
+                continue  # never practiced is "new", not "idle"
+            days = packet_mod._days_since_touch(camp.id, self.store, now)
+            if days >= threshold:
+                idle.append({
+                    "campaign_id": camp.id,
+                    "days_idle": round(days, 1),
+                    "next": f"still relevant? dojo learn extends it; done with it? dojo campaign archive {camp.id}",
+                })
+        return idle
 
     # ==========================================
     # Campaign Management Operations

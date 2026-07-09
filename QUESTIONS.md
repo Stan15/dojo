@@ -229,6 +229,17 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
      this" (the visible-work moment).
    **Default: implement alongside campaign lifecycle (both are the
    ownership/visibility block, STATE item 3).**
+   → **Shipped 2026-07-09**: `dojo insights [--all] [--campaign]` /
+   `insights show <id>` (receipts verbatim + grader + effect counts) /
+   `insights resolve <id> --because` (stored verbatim in a new
+   `Insight.resolution` field, round-trip pinned; fed to the next
+   reflection as `[learner resolved insight <key>]` feedback,
+   timestamp-gated against the last REFLECT). Announce-once via
+   `insights_changed` on REFLECT journal entries. Generation stamps
+   `targeted_insights` keys in task context — and the selection was
+   UPGRADED (owner probe 2026-07-09): top-K now ranks by topic affinity to
+   the generation target, then `updated_at` (evidence freshness), replacing
+   the old created_at-order tail.
 
 1. **Campaign lifecycle: view, complete, archive** (your 2026-07-09 question).
    → **Owner-approved 2026-07-09** — directed work, STATE item 3.
@@ -261,6 +272,17 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
      makes the end state real.
    **Default: implement after route-first entry and the capacity channel —
    it composes with both.**
+   → **Shipped 2026-07-09**: `dojo campaign list` (status/phase/retention/
+   due/idle dashboard) + `campaign archive <id>` (TTY confirms; agents relay
+   the learner's explicit ask). Completion is deterministic and OBSERVED:
+   all-phases-passed flips status → "maintenance" (ADR 005: reviews trickle,
+   never-practiced stock and generation excluded; maintenance dues still
+   count as review debt for `dojo more`'s guard) and daily announces the
+   three doors once. `dojo learn extend` on a maintained campaign reopens it
+   (the extend door). Windowed-criteria fix: phase accuracy over the last
+   2×min_attempts graded attempts (provisional grades excluded) — a rough
+   start ages out. Idle notices (≥`campaign.idle_days`, default 14) are
+   neutral facts with doors, no guilt vocabulary.
 
 1. **Post-packet appetite: `dojo more`** (your 2026-07-09 question). Today:
    re-running `dojo daily` drains due items the packet cap held back (works);

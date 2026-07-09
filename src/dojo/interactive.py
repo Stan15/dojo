@@ -199,6 +199,14 @@ def daily_flow(api: DojoAPI, size: Optional[int] = None, reset: bool = False) ->
         console.print(f"[yellow]Plan restructure proposed[/yellow] "
                       f"([cyan]{prop['campaign_id']}[/cyan]): {prop['reason']} — "
                       f"[bold]dojo plan show[/bold] to review")
+    for note in res.get("insight_notices", []):
+        counts = " · ".join(f"{note[k]} {k}" for k in ("created", "updated", "resolved") if note.get(k))
+        console.print(f"[yellow]Beliefs updated[/yellow] ([cyan]{note['campaign_id']}[/cyan]): "
+                      f"{counts} — [bold]dojo insights[/bold] shows them, with receipts")
+    for done in res.get("campaign_completions", []):
+        console.print(f"[bold green]Campaign complete[/bold green] — {done['next']}")
+    for idle in res.get("idle_campaigns", []):
+        console.print(f"[dim]{idle['campaign_id']} untouched {idle['days_idle']:.0f}d — {idle['next']}[/dim]")
     for _ in range(2):  # at most: drain → rebuild → drain (cold-start diagnostic round)
         if res.get("session") is not None:
             break
