@@ -248,17 +248,35 @@ class PlanRevision(BaseModel):
     _cap_reason = field_validator("reason")(_cap_words("reason", _limits.REFLECT_REASON_WORDS))
 
 
+class TopicRetirement(BaseModel):
+    """Reflection's care-exit call (ADR 017 §6): stop reviewing a topic the
+    learner no longer cares about. Applied through the minor authority lane
+    (announced once, revivable via `dojo topic revive`); `evidence` cites
+    learner-voice attempt ids when the learner asked — trend-based calls may
+    leave it empty (the reason carries the trend)."""
+
+    path: str = Field(min_length=1)
+    reason: str = Field(min_length=1)
+    evidence: List[str] = Field(default_factory=list)
+
+    _cap_reason = field_validator("reason")(_cap_words("reason", _limits.REFLECT_REASON_WORDS))
+
+
 class ReflectResult(BaseModel):
     """Submission shape for `campaign.reflect`: bounded insight edits (new
     creates capped per run), optional strategy change and plan revision, an
     ask-don't-restructure `questions` channel (they become diagnostic items;
-    answers are citable evidence for a later revision), and a mandatory
-    journal line for the pedagogical record."""
+    answers are citable evidence for a later revision), bounded topic
+    retirements (the care-exit), and a mandatory journal line for the
+    pedagogical record."""
 
     insight_updates: List[InsightUpdate] = Field(default_factory=list)
     strategy: Optional[StrategyChange] = None
     plan_revision: Optional[PlanRevision] = None
     questions: List[str] = Field(default_factory=list, max_length=_limits.REFLECT_MAX_QUESTIONS)
+    topic_retirements: List[TopicRetirement] = Field(
+        default_factory=list, max_length=_limits.REFLECT_MAX_RETIREMENTS
+    )
     journal: str = Field(min_length=1)
 
     _cap_journal = field_validator("journal")(

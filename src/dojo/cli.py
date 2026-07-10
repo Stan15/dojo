@@ -2196,6 +2196,30 @@ def cmd_campaign_list(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_topic_retire(args: argparse.Namespace) -> int:
+    """`dojo topic retire <path>`: the care-exit (ADR 017 §6) — reviews for
+    this topic stop now; always reversible with `dojo topic revive`."""
+    api = DojoAPI(_db_path(args))
+    res = api.topic_retire(args.path, because=args.because or "", campaign_id=args.campaign)
+    if _use_json(args):
+        _print_json(res)
+    else:
+        console.print(f"[green]✓[/green] {res.get('note') or res['next']}")
+    return 0
+
+
+def cmd_topic_revive(args: argparse.Namespace) -> int:
+    """`dojo topic revive <path>`: reopen a retired topic — its memories
+    resume the honest schedule where they left off."""
+    api = DojoAPI(_db_path(args))
+    res = api.topic_revive(args.path, campaign_id=args.campaign)
+    if _use_json(args):
+        _print_json(res)
+    else:
+        console.print(f"[green]✓[/green] {res.get('note') or res['next']}")
+    return 0
+
+
 def cmd_campaign_archive(args: argparse.Namespace) -> int:
     """`dojo campaign archive <id>`: leave rotation, accept forgetting — a
     human decision (TTY confirms; --json is the agent relaying the learner's
@@ -2516,6 +2540,22 @@ def build_parser() -> argparse.ArgumentParser:
     p_ins_resolve.add_argument("insight_id")
     p_ins_resolve.add_argument("--because", required=True, help="your reason, verbatim — it feeds the next reflection")
     p_ins_resolve.set_defaults(func=cmd_insights)
+
+    p_topic = sub.add_parser(
+        "topic",
+        help="care-exit for single topics: retire stops its reviews (noise, "
+             "not diligence, once you stop caring); revive resumes them",
+    )
+    p_topic_sub = p_topic.add_subparsers(dest="topic_command", required=True)
+    p_topic_retire = p_topic_sub.add_parser("retire", help="stop this topic's reviews (reversible)")
+    p_topic_retire.add_argument("path")
+    p_topic_retire.add_argument("--because", default="", help="your reason, kept verbatim")
+    p_topic_retire.add_argument("--campaign", default=None)
+    p_topic_retire.set_defaults(func=cmd_topic_retire)
+    p_topic_revive = p_topic_sub.add_parser("revive", help="resume a retired topic's reviews")
+    p_topic_revive.add_argument("path")
+    p_topic_revive.add_argument("--campaign", default=None)
+    p_topic_revive.set_defaults(func=cmd_topic_revive)
 
     p_campaign = sub.add_parser("campaign")
     p_camp_sub = p_campaign.add_subparsers(dest="campaign_command", required=True)

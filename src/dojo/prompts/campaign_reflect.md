@@ -35,12 +35,21 @@ RULES
 4. Questions — the pattern hints the plan is mis-scoped but no FEEDBACK confirms
    it → ask instead of restructuring: max {{ max_questions }} questions, each
    ≤ {{ question_words }} words. They reach the learner as diagnostic prompts;
-   the answers return to you as citable evidence.
-5. Every change carries a `reason` ≤ {{ reason_words }} words — it becomes the
+   the answers return to you as citable evidence. Ask ONLY for information,
+   or consent to an action listed here (plan change, topic retirement) —
+   never offer content or actions the system cannot deliver.
+5. Retirement — TRENDS shows each topic's whole life (your attempt window
+   cannot). Retire a topic ONLY when the learner's own voice asked for it
+   (FEEDBACK / resolved insight — cite the ids), or TRENDS shows sustained
+   over-mastery with the learner's interest gone (a months-scale pattern,
+   never a two-session one). Max {{ max_retirements }} per run. Reviews
+   stop; the learner can always `dojo topic revive`. Passing a phase is
+   NEVER a reason — old strengths are maintained by design.
+6. Every change carries a `reason` ≤ {{ reason_words }} words — it becomes the
    audit journal. `journal` (≤ {{ journal_words }} words) names the EVIDENCE —
    the accuracy, the seconds, the repeated tag — not just the verdict, and
    says "no change: <why>" when holding still.
-6. Write insight text, questions, and journal in the learner's language
+7. Write insight text, questions, and journal in the learner's language
    (the language of their answers/FEEDBACK); keys stay lowercase English.
 
 ## MISSION
@@ -51,6 +60,8 @@ RULES
 {{ plan_lines }}
 ## INSIGHTS
 {{ active_insights_with_ids }}
+## TRENDS (lifetime per topic — graded evidence only)
+{{ trend_rows }}
 ## ATTEMPTS
 {{ attempt_rows }}
 ## FEEDBACK
@@ -66,6 +77,7 @@ OUTPUT — return only this JSON:
                          //     "scaffolding": "high|medium|low", "reason": "..."}
   "plan_revision": null,
   "questions": [],
+  "topic_retirements": [],  // rule 5 only: [{"path": "a.b", "reason": "...", "evidence": []}]
   "journal": "..."
 }
 A non-null plan_revision carries the FULL phase list, each phase shaped exactly:

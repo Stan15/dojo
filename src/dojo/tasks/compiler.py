@@ -44,6 +44,7 @@ SECTION_BUDGETS: dict[str, dict[str, int]] = {
         "strategy_line": 120,
         "plan_lines": 400,
         "active_insights_with_ids": 800,
+        "trend_rows": 640,  # lifetime per-topic digest (ADR 017 §6)
         "attempt_rows": 2560,
         "learner_feedback_or_none": 400,
     },
@@ -264,6 +265,58 @@ def recent_rows(store, campaign_id: str, topic_path: str = "", n: int = 8) -> st
     return "\n".join(rows) if rows else "(no practice on this topic yet)"
 
 
+def trend_rows(store, campaign: Campaign) -> str:
+    """Lifetime per-topic digest (ADR 017 §6): reflection's sliding window
+    is ~15 attempts, so months-scale patterns — over-mastery, staleness,
+    fading interest — are structurally invisible to it. The core computes
+    them deterministically; the model judges. Graded evidence only:
+    exposure and knowledge-gap events never count toward mastery trends
+    (a topic can never look 'mastered' off encodings). Day counts anchor
+    to the campaign's newest attempt (determinism for goldens)."""
+    from datetime import datetime
+
+    attempts = store.attempts.list(campaign.id)
+    topic_of = {ex.id: ex.topic_path for ex in store.exercises.list(campaign.id)}
+    per: dict[str, list] = {}
+    for a in attempts:
+        if a.skip_reason or a.grader in (None, "exposure"):
+            continue
+        t = topic_of.get(a.exercise_id)
+        if t:
+            per.setdefault(t, []).append(a)
+    anchor = (
+        max(datetime.fromisoformat(a.created_at) for a in attempts)
+        if attempts else None
+    )
+    rows: list[str] = []
+    for t in (campaign.topics or [])[:12]:
+        path = t.get("path")
+        if not path:
+            continue
+        if t.get("retired"):
+            rows.append(f"{path} · RETIRED ({t.get('retired_reason', 'learner request')})")
+            continue
+        atts = per.get(path, [])
+        if not atts:
+            rows.append(f"{path} · no graded practice yet")
+            continue
+        half = max(1, len(atts) // 2)
+        early = sum(a.score for a in atts[:half]) / half
+        late_n = len(atts) - half
+        late = sum(a.score for a in atts[half:]) / late_n if late_n else early
+        last_seen = (anchor - datetime.fromisoformat(atts[-1].created_at)).days
+        last_miss = next((a for a in reversed(atts) if a.score < 0.7), None)
+        miss_bit = (
+            f"last miss {(anchor - datetime.fromisoformat(last_miss.created_at)).days}d ago"
+            if last_miss else "never missed"
+        )
+        rows.append(
+            f"{path} · {len(atts)} graded · acc {early:.2f}→{late:.2f} · "
+            f"{miss_bit} · practiced {last_seen}d ago"
+        )
+    return "\n".join(rows) if rows else "(no topics registered)"
+
+
 def source_section(source_slice: Optional[str]) -> str:
     """Wraps a grounding slice under a `## SOURCE` heading; empty when
     generation is synthetic."""
@@ -475,6 +528,7 @@ def compile_reflect(store, campaign: Campaign, *, window_n: int = 15) -> Compile
         "strategy_line": strategy_line(campaign),
         "plan_lines": "\n".join(plan_rows) or "(no plan yet)",
         "active_insights_with_ids": "\n".join(insight_lines) or "(none)",
+        "trend_rows": trend_rows(store, campaign),
         "attempt_rows": "\n".join(rows) or "(none)",
         "learner_feedback_or_none": "\n".join(feedback_lines) or "(none)",
     }

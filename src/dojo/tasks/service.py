@@ -491,6 +491,16 @@ def apply_reflect(store, task: Task, result: ReflectResult) -> dict[str, Any]:
             if ev not in seen_attempts:
                 reasons.append(f"plan_revision cites unknown attempt id {ev!r}")
         reasons.extend(_check_new_phase_topics(store, campaign, result.plan_revision.phases))
+    registry = {t.get("path"): t for t in (campaign.topics or []) if t.get("path")}
+    for i, ret in enumerate(result.topic_retirements):
+        entry = registry.get(ret.path)
+        if entry is None:
+            reasons.append(f"topic_retirements[{i}] names unregistered topic {ret.path!r}")
+        elif entry.get("retired"):
+            reasons.append(f"topic_retirements[{i}]: {ret.path!r} is already retired")
+        for ev in ret.evidence:
+            if ev not in seen_attempts:
+                reasons.append(f"topic_retirements[{i}] cites unknown attempt id {ev!r}")
     if reasons:
         raise ApplyRejection(*reasons)
 
@@ -583,6 +593,26 @@ def apply_reflect(store, task: Task, result: ReflectResult) -> dict[str, Any]:
             ))
             question_ids.append(ex_id)
 
+    # Care-exit (ADR 017 §6): retirement rides the minor authority lane —
+    # applied now, announced exactly once by the next daily, always
+    # revivable (`dojo topic revive`). Reviews stop the moment it lands.
+    retired_paths = []
+    for ret in result.topic_retirements:
+        t = registry[ret.path]
+        t["retired"] = True
+        t["retired_reason"] = ret.reason
+        t["retired_at"] = datetime.now(timezone.utc).isoformat()
+        campaign.pedagogical_journal.append({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "action": "TOPIC_RETIRED",
+            "trigger": f"reflection task {task.id}",
+            "hypothesis": f"{ret.path}: {ret.reason}",
+            "topic_path": ret.path,
+            "status": "applied",
+            "announced": False,
+        })
+        retired_paths.append(ret.path)
+
     entry: dict[str, Any] = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "action": "REFLECT",
@@ -613,6 +643,7 @@ def apply_reflect(store, task: Task, result: ReflectResult) -> dict[str, Any]:
         "plan_revised": plan_outcome == "applied",
         "plan_proposed": plan_outcome == "proposed",
         "questions_as_diagnostics": question_ids,
+        "topics_retired": retired_paths,
         "journal": result.journal,
         **({"next": f"a plan restructure awaits the learner: dojo plan confirm --campaign {campaign_id} (or reject)"}
            if plan_outcome == "proposed" else {}),

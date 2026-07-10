@@ -322,14 +322,17 @@ class DojoAPI:
             # the same daily packets the guard is protecting.
             if camp.status not in ("active", "maintenance"):
                 continue
+            retired = packet_mod.retired_paths(camp)
             for ex in self.store.exercises.list(camp.id):
                 if ex.quality in packet_mod.EXCLUDED_QUALITIES or not ex.sr:
                     continue
+                if packet_mod._on_retired(ex.topic_path, retired):
+                    continue  # retired dues never serve — not debt (ADR 017 §6)
                 due = scheduling.due_at(ex.sr)
                 if due is not None and due <= horizon:
                     projected += 1
             for topic in camp.topics or []:
-                if topic.get("kind") != "skill" or not topic.get("sr"):
+                if topic.get("kind") != "skill" or not topic.get("sr") or topic.get("retired"):
                     continue
                 due = scheduling.due_at(topic["sr"])
                 if due is not None and due <= horizon:
@@ -345,14 +348,19 @@ class DojoAPI:
         where one extension generation buys the most; None without scored
         evidence anywhere (generating hard content blind is how day-one
         bombardment happened)."""
+        from . import packet as packet_mod
+
         means: dict[tuple[str, str], list[float]] = {}
         for camp in self.store.campaigns.list():
             if camp.status != "active":
                 continue
+            retired = packet_mod.retired_paths(camp)
             topic_of = {ex.id: ex.topic_path for ex in self.store.exercises.list(camp.id)}
             for a in self.store.attempts.list(camp.id):
                 topic = topic_of.get(a.exercise_id)
-                if topic and not a.skip_reason and a.grader not in (None, "exposure"):
+                if (topic and not a.skip_reason
+                        and a.grader not in (None, "exposure")
+                        and not packet_mod._on_retired(topic, retired)):
                     means.setdefault((camp.id, topic), []).append(a.score)
         if not means:
             return None
@@ -535,6 +543,9 @@ class DojoAPI:
                 "active_insights": len(
                     self.store.insights.list(camp.id, filters={"status": "active"})
                 ),
+                # Care-exit honesty (ADR 017 §6): stopped reviews are a fact
+                # the learner asked for, not a silent disappearance.
+                "retired_topics": len(packet_mod.retired_paths(camp)),
             })
 
         by_kind: dict[str, dict[str, Any]] = {}
@@ -826,6 +837,78 @@ class DojoAPI:
             "next": "dojo campaign archive <id> leaves rotation (git keeps history); "
                     "extend one via dojo learn; retention figures are estimates",
         }
+
+    def _find_topic(self, path: str, campaign_id: str | None) -> tuple[Campaign, dict[str, Any]]:
+        """The (campaign, registry entry) for a topic path; campaign_id
+        disambiguates when the same path exists in several campaigns."""
+        hits = []
+        for camp in self.store.campaigns.list():
+            if campaign_id and camp.id != campaign_id:
+                continue
+            for t in camp.topics or []:
+                if t.get("path") == path:
+                    hits.append((camp, t))
+        if not hits:
+            raise ValueError(f"topic {path!r} is not registered"
+                             + (f" in campaign {campaign_id!r}" if campaign_id else ""))
+        if len(hits) > 1:
+            raise ValueError(
+                f"topic {path!r} exists in {len(hits)} campaigns — pass --campaign "
+                f"({', '.join(c.id for c, _ in hits)})"
+            )
+        return hits[0]
+
+    def topic_retire(self, path: str, because: str = "", campaign_id: str | None = None) -> dict[str, Any]:
+        """The learner's care-exit (ADR 017 §6): reviews for this topic stop
+        immediately — retention of what you no longer care about is noise,
+        not diligence. Always reversible (`dojo topic revive`). Learner-
+        initiated, so it applies without a gate and self-announces."""
+        camp, entry = self._find_topic(path, campaign_id)
+        if entry.get("retired"):
+            return {"ok": True, "note": f"{path} is already retired", "campaign_id": camp.id}
+        now = datetime.now(timezone.utc).isoformat()
+        entry["retired"] = True
+        entry["retired_reason"] = because or "learner request"
+        entry["retired_at"] = now
+        camp.pedagogical_journal.append({
+            "timestamp": now,
+            "action": "TOPIC_RETIRED",
+            "trigger": "dojo topic retire (learner)",
+            "hypothesis": f"{path}: {because or 'learner request'}",
+            "topic_path": path,
+            "status": "applied",
+            "announced": True,  # the learner did it themselves — nothing to announce
+        })
+        camp.updated_at = now
+        self.store.campaigns.save(camp)
+        return {
+            "ok": True, "campaign_id": camp.id, "topic_path": path,
+            "next": f"reviews stopped; dojo topic revive {path} undoes this anytime",
+        }
+
+    def topic_revive(self, path: str, campaign_id: str | None = None) -> dict[str, Any]:
+        """Reopens a retired topic: its memories resume their schedule where
+        FSRS left them (overdue reviews surface honestly, debt-guarded as
+        ever)."""
+        camp, entry = self._find_topic(path, campaign_id)
+        if not entry.get("retired"):
+            return {"ok": True, "note": f"{path} is not retired", "campaign_id": camp.id}
+        now = datetime.now(timezone.utc).isoformat()
+        for key in ("retired", "retired_reason", "retired_at"):
+            entry.pop(key, None)
+        camp.pedagogical_journal.append({
+            "timestamp": now,
+            "action": "TOPIC_REVIVED",
+            "trigger": "dojo topic revive (learner)",
+            "hypothesis": f"{path}: reviews resume",
+            "topic_path": path,
+            "status": "applied",
+            "announced": True,
+        })
+        camp.updated_at = now
+        self.store.campaigns.save(camp)
+        return {"ok": True, "campaign_id": camp.id, "topic_path": path,
+                "next": "reviews resume on the honest schedule"}
 
     def campaign_archive(self, campaign_id: str) -> dict[str, Any]:
         """Archives a campaign — "I accept forgetting": it leaves every
@@ -2527,6 +2610,18 @@ class DojoAPI:
                         "campaign_id": camp.id,
                         **ch,
                         "next": "reflection updated beliefs about you — dojo insights shows them, with receipts",
+                    })
+                    e["announced"] = True
+                    dirty = True
+                elif e.get("action") == "TOPIC_RETIRED":
+                    insight_notes.append({
+                        "campaign_id": camp.id,
+                        "topic_retired": e.get("topic_path"),
+                        "reason": e.get("hypothesis"),
+                        "next": (
+                            f"reviews for {e.get('topic_path')} stopped — "
+                            f"dojo topic revive {e.get('topic_path')} brings them back"
+                        ),
                     })
                     e["announced"] = True
                     dirty = True

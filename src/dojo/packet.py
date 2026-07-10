@@ -96,11 +96,27 @@ def _due_diagnostics(store, campaign: Campaign) -> list[Exercise]:
     )
 
 
+def retired_paths(campaign: Campaign) -> set[str]:
+    """Topics the learner (or reflection, consented) closed the book on —
+    the care-exit (ADR 017 §6). Their dues stop until `dojo topic revive`."""
+    return {
+        t["path"] for t in (campaign.topics or [])
+        if t.get("path") and t.get("retired")
+    }
+
+
+def _on_retired(topic_path: str, retired: set[str]) -> bool:
+    return any(topic_path == r or topic_path.startswith(r + ".") for r in retired)
+
+
 def _due_exercises(store, campaign: Campaign, now: datetime) -> list[Exercise]:
     emphasis = _topic_emphasis(campaign)
+    retired = retired_paths(campaign)
     due = []
     for ex in store.exercises.list(campaign.id):
         if ex.quality in EXCLUDED_QUALITIES:
+            continue
+        if _on_retired(ex.topic_path, retired):
             continue
         if _emphasized_due(ex.sr, emphasis.get(ex.topic_path, 1.0), now):
             due.append(ex)
@@ -243,6 +259,8 @@ def _stock_requests(store, campaign: Campaign, due: list[Exercise], now: datetim
         path = topic.get("path")
         if not path or path in seen or not _in_phase(path, phase):
             continue
+        if topic.get("retired"):
+            continue  # care-exit: no dues, no replenishment (ADR 017 §6)
         if (
             topic.get("kind") == "skill"
             and _emphasized_due(topic.get("sr"), float(topic.get("emphasis", 1.0)), now)

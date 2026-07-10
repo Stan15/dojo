@@ -34,6 +34,7 @@ REFLECT_REASON_WORDS = 20
 REFLECT_JOURNAL_WORDS = 30
 REFLECT_MAX_QUESTIONS = 2  # ask-don't-restructure channel (change authority)
 REFLECT_QUESTION_WORDS = 25
+REFLECT_MAX_RETIREMENTS = 2  # care-exit channel (ADR 017 §6)
 
 # --- planning (campaign.plan) ---
 PLAN_MAX_TOPICS = 18
@@ -92,6 +93,7 @@ TEMPLATE_CAPS: dict[str, dict[str, int]] = {
         "journal_words": REFLECT_JOURNAL_WORDS,
         "max_questions": REFLECT_MAX_QUESTIONS,
         "question_words": REFLECT_QUESTION_WORDS,
+        "max_retirements": REFLECT_MAX_RETIREMENTS,
         "topic_depth": PLAN_MAX_TOPIC_DEPTH,  # new phase topics (apply_reflect hygiene)
     },
     "campaign.plan": {
