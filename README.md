@@ -46,7 +46,10 @@ back into a learner profile that sharpens the next session.
   review gate. Sustainable beats impressive.
 - **You can read your entire learning life.** Everything is markdown + YAML in
   `~/.local/share/dojo/`, versioned by git — every session, every insight,
-  every decision, one `git log` away.
+  every decision, one `git log` away. The layout is vault-grade: open it as
+  an Obsidian vault and each campaign reads as a clean note (mission +
+  syllabus), a prose journal, and a hand-editable plan — machine bookkeeping
+  stays in dot-files out of sight.
 
 ## Get started in 60 seconds
 
@@ -129,6 +132,14 @@ continuous conversation — answer, `/skip too_easy`, `/quit` to pause — and
 free-form answers are graded in a single batch at the end so nothing stalls
 your flow. Then a one-screen stats summary.
 
+**You're never graded on material nobody taught you.** Genuinely new
+material arrives as a ☆ study card (read it, own it, Enter — recall practice
+follows in later sessions, at most two new things per packet), and a miss on
+something you were never shown is recorded as a first encounter, not a
+failure: the schedule starts instead of punishing, and the full answer
+appears on the spot. Real forgetting of things you *were* taught still
+counts — that's the scheduler doing its job.
+
 Agents (and scripts) drive the same loop stepwise:
 
 ```bash
@@ -173,6 +184,10 @@ dojo insights resolve ins_xxx --because "I know this — I was rushing"
                                    # your words, stored verbatim, outrank the evidence
 dojo campaign list                 # status, phase, retention, dues, idle days
 dojo campaign archive french       # done with it? out of rotation; git remembers
+dojo topic retire aviation.phonetic_alphabet --because "use it daily now"
+                                   # reviews for ONE topic stop — retention you
+                                   #   no longer care about is noise, not diligence
+dojo topic revive aviation.phonetic_alphabet   # changed your mind? they resume
 ```
 
 When a campaign's last phase is passed, dojo says so and switches it to
