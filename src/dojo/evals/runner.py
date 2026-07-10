@@ -399,6 +399,60 @@ def run_benchmark(
     return summarize(driver, judge, results, byte_counts)
 
 
+def run_holdout_gate(
+    *,
+    driver: str,
+    judge: Optional[str],
+    workdir: Path,
+    timeout: int = 300,
+    progress: Callable[[str], None] = lambda msg: None,
+) -> dict[str, Any]:
+    """The release-gate holdout run — STRUCTURALLY aggregate-only (owner
+    ruling 2026-07-09: holdout data must never optimize prompts). Every
+    per-scenario result is computed in locals and DISCARDED; the returned
+    report contains counts and the mean, nothing else. Compare the mean to
+    the visible corpus's committed mean: a large gap says the prompts
+    overfit — the remedy is broadening the VISIBLE corpus, never reading
+    holdout contents. Progress lines show only an opaque index."""
+    judge = judge or driver
+    scenarios = load_corpus("holdout")
+    scores: list[float] = []
+    compliance_failures = 0
+    judge_problems = 0
+    for i, sc in enumerate(scenarios, 1):
+        progress(f"holdout · scenario {i}/{len(scenarios)}")
+        context = sc["scenario_context"].strip()
+        criteria = sc["judge_rubric"]
+        try:
+            problem = calibration_gate(judge, context, sc["references"], criteria, timeout)
+            if problem:
+                judge_problems += 1
+                continue
+            output_text = execute_quality_scenario(
+                sc, workdir / f"h_{i}", driver, timeout,
+            )
+            judged = judge_output(judge, context, output_text, criteria, timeout)
+            scores.append(judged["score"])
+        except ComplianceFailure:
+            compliance_failures += 1
+        except Exception:
+            judge_problems += 1
+    return {
+        "tier": "holdout",
+        "pair": f"{slug_for(driver)}__{slug_for(judge)}",
+        "scenarios": len(scenarios),
+        "scored": len(scores),
+        "compliance_failures": compliance_failures,
+        "infrastructure_or_judge_errors": judge_problems,
+        "mean_quality": (sum(scores) / len(scores)) if scores else None,
+        "note": (
+            "aggregate only, by design: holdout yields ONE consumable bit "
+            "(the gap vs the visible mean); per-scenario data is never "
+            "surfaced (owner ruling 2026-07-09)"
+        ),
+    }
+
+
 def summarize(
     driver: str, judge: str, results: list[ScenarioResult],
     byte_counts: Optional[list[dict[str, int]]] = None,

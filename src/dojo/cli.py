@@ -1611,10 +1611,42 @@ def cmd_benchmark(args: argparse.Namespace) -> int:
     import tempfile
     from datetime import datetime, timezone
 
-    from .evals.runner import run_benchmark
+    from .evals.runner import run_benchmark, run_holdout_gate
 
     driver = args.driver
     judge = args.judge or driver
+
+    if getattr(args, "holdout", False):
+        # Release gate: structurally aggregate-only (owner ruling — holdout
+        # data must never optimize prompts; the tool can't show what the
+        # runner never returns).
+        def hprogress(msg: str) -> None:
+            if not _use_json(args):
+                console.print(f"  [dim]·[/dim] {msg}")
+
+        with tempfile.TemporaryDirectory(prefix="dojo-holdout-") as workdir:
+            gate = run_holdout_gate(
+                driver=driver, judge=judge, workdir=Path(workdir),
+                timeout=args.timeout, progress=hprogress,
+            )
+        if _use_json(args):
+            _print_json({"ok": True, **gate})
+            return 0
+        console.print("\n[bold]🥋 Holdout gate[/bold] [dim](aggregate only, by design)[/dim]")
+        mean = gate["mean_quality"]
+        console.print(
+            f"  scored {gate['scored']}/{gate['scenarios']} · "
+            f"compliance failures {gate['compliance_failures']} · "
+            f"judge/infra errors {gate['infrastructure_or_judge_errors']}"
+        )
+        if mean is None:
+            console.print("  [red]no scoreable result[/red]")
+        else:
+            console.print(f"  [bold]holdout mean {mean:.3f}[/bold] — compare to the visible "
+                          "pair baseline's mean; a large gap = the prompts overfit. "
+                          "Remedy: broaden the VISIBLE corpus. Never read holdout contents.")
+        return 0
+
     tiers = ("compliance",) if args.tier == "compliance" else (
         ("quality",) if args.tier == "quality" else ("compliance", "quality")
     )
@@ -2114,6 +2146,9 @@ def build_parser() -> argparse.ArgumentParser:
         help="evaluator command grading output quality (default: same as --driver)",
     )
     p_bench.add_argument("--tier", choices=["all", "compliance", "quality"], default="all")
+    p_bench.add_argument("--holdout", action="store_true",
+                         help="release gate: run the HOLDOUT corpus and print the aggregate "
+                              "only — per-scenario data is never surfaced (anti-reward-hacking)")
     p_bench.add_argument("--detail", action="store_true", help="show per-scenario criterion verdicts")
     p_bench.add_argument("--timeout", type=int, default=300)
     p_bench.add_argument("--output", "-o", help="report JSON path (default: ./dojo-benchmark-<pair>-<ts>.json)")

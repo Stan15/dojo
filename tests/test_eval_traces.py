@@ -97,3 +97,32 @@ def test_lean_baseline_strips_traces_but_keeps_floors():
     for key in ("driver_trace", "judge_trace", "judged_output"):
         assert key not in json.dumps(lean), key
     assert card["scenarios"]["s1"]["driver_trace"], "the report copy keeps the trace"
+
+
+class TestHoldoutStructuralIsolation:
+    """Owner ruling (2026-07-09): holdout data must never optimize prompts —
+    enforced STRUCTURALLY: normal benchmark tiers never load the holdout
+    corpus, and the holdout gate's report physically contains nothing but
+    aggregates."""
+
+    def test_normal_benchmark_never_loads_holdout(self, tmp_path, monkeypatch):
+        from dojo.evals import runner
+        loaded: list[str] = []
+        real = runner.load_corpus
+        monkeypatch.setattr(runner, "load_corpus", lambda tier: (loaded.append(tier), real(tier))[1])
+        runner.run_benchmark(
+            driver="false", judge="false", workdir=tmp_path,
+            tiers=("compliance", "quality"),
+        )
+        assert "holdout" not in loaded, "the iteration workflow must be blind to holdout"
+
+    def test_holdout_gate_report_is_aggregate_only(self, tmp_path):
+        from dojo.evals.runner import run_holdout_gate
+        gate = run_holdout_gate(driver="false", judge="false", workdir=tmp_path, timeout=5)
+        dumped = json.dumps(gate)
+        assert "scenarios" in gate and isinstance(gate["scenarios"], int), \
+            "scenario COUNT only — never a list"
+        for forbidden in ("verdicts", "driver_trace", "judge_trace", "judged_output",
+                          "raw", "prompt"):
+            assert forbidden not in dumped, forbidden
+        assert "holdout_" not in dumped, "no scenario names in the report"
