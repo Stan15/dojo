@@ -118,6 +118,24 @@ committed work, not proposals awaiting an answer. Item numbering is stable
    Reflect payload 2523→4198B (deliberate: the rows now carry the evidence
    reflection exists to read). Remaining owed: heartbeat-flow scenarios for
    wave 4.
+6b. ✓ **DONE 2026-07-09 (late session) — anti-reward-hacking program**
+   (owner directives, all shipped): HOLDOUT tier final at 19 skill-named
+   scenarios (capped < visible per owner; authored BLIND via a codex
+   pipeline + failure-mode audit; lead never read them), structural
+   isolation (aggregate-only runner + benchmark --holdout with computed
+   gap verdict; forbidden data never persisted; commands in CLAUDE_START),
+   holdout floor bootstrap DEFERRED to the v1.0.0 release gate (first run
+   = bootstrap + gate, one spend). Visible corpus enriched to 41 (12
+   robustness scenarios incl. grading manipulation/verbosity/unicode,
+   mixed signals, language policy) with 10/12 bootstrapped at 1.00; +12
+   more visible scenarios in flight (diagnostic-kind first coverage,
+   pending-grade integrity, band discipline, learner-language probes,
+   change-authority voice, multicampaign registry, crosslang routing,
+   downward calibration). Learner-language policy shipped (identifiers/
+   templates English; learner-facing text follows the learner). Task
+   housekeeping shipped (spent unreferenced tasks age out via daily;
+   provenance untouchable). Codex spend policy + holdout-never-optimizes
+   rulings in memory + CLAUDE_START + here (standing directives).
 5. ✓ v0.2.0 tagged + pushed 2026-07-09 (owner's default at the pause);
    v1.0.0 decision still reserved for after the quality-iteration work.
 5b. ✓ **DONE 2026-07-09 — provenance traces** (owner-directed, design in
