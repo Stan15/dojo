@@ -138,9 +138,20 @@ class DojoAPI:
 
         pkt = packet_mod.build_packet(self.store, now, size=size)
 
+        # Acquisition discipline (owner field report 2026-07-09): once today's
+        # practice happened, daily STOPS being an acquisition surface — no new
+        # generation, and freshly-minted stock waits for tomorrow. `dojo more`
+        # is the only post-completion acquisition door (debt-guarded there).
+        today = now.date().isoformat()
+        practiced_today = any(
+            a.created_at[:10] == today
+            for c in self.store.campaigns.list() if c.status == "active"
+            for a in self.store.attempts.list(c.id)
+        )
+
         # 2. Token frugality: at most 2 generation tasks per daily run; the rest
         # wait and are counted honestly (E2E finding: a fresh plan emitted 5 at once).
-        MAX_DAILY_TASKS = 2
+        MAX_DAILY_TASKS = 0 if practiced_today else 2
         tasks = []
         for need in pkt.needs_generation[:MAX_DAILY_TASKS]:
             campaign = self.store.campaigns.get(need["campaign_id"])
@@ -156,7 +167,22 @@ class DojoAPI:
             tasks.append(flows.task_ref(task))
         deferred = len(pkt.needs_generation) - min(len(pkt.needs_generation), MAX_DAILY_TASKS)
         if deferred:
-            pkt.skipped["generation_deferred"] = deferred
+            key = "generation_waits_for_tomorrow" if practiced_today else "generation_deferred"
+            pkt.skipped[key] = deferred
+
+        # Fresh stock minted after today's practice (e.g. a morning
+        # replenishment task fulfilled late) is TOMORROW's material: a packet
+        # that would consist purely of never-practiced items after completion
+        # is acquisition creep, not a session.
+        if practiced_today and pkt.items:
+            fresh_only = all(
+                (ex := self.store.exercises.get(item.campaign_id, item.exercise_id)) is not None
+                and ex.sr is None
+                for item in pkt.items
+            )
+            if fresh_only:
+                pkt.skipped["new_stock_held_for_tomorrow"] = len(pkt.items)
+                pkt.items = []
 
         # 3. Reflection fires by evidence threshold, not by hoping someone runs
         # `dojo reflect` — the personalization loop must close mechanically.
@@ -186,12 +212,6 @@ class DojoAPI:
             # DONE. Push surfaces get principles, not counters; `dojo more` is
             # mentioned as the ANSWER to a request, never as an offer, and the
             # copy binds the harness to the same no-solicitation rule.
-            today = now.date().isoformat()
-            practiced_today = any(
-                a.created_at[:10] == today
-                for c in self.store.campaigns.list() if c.status == "active"
-                for a in self.store.attempts.list(c.id)
-            )
             if practiced_today:
                 return {
                     "is_new": False,

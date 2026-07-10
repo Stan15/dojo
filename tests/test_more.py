@@ -330,3 +330,64 @@ class TestTaskHousekeeping:
         tid = self.emit(api)
         self.age(api, tid, days=999)
         assert api._task_housekeeping(datetime.now(timezone.utc)) == 0
+
+
+class TestDailyAcquisitionDiscipline:
+    """Owner field report (2026-07-09): re-running daily after completion was
+    minting AND serving new material — acquisition creep around the capacity
+    channel. The contract: once today's practice happened, daily emits no
+    generation and holds freshly-minted stock for tomorrow; `dojo more` is
+    the only post-completion acquisition door."""
+
+    def practice_today(self, api):
+        now = datetime.now(timezone.utc)
+        add_exercise(api, "ex_done", due=now + timedelta(days=2))
+        add_attempt(api, "att_today", "ex_done", when=now)
+
+    def test_completed_day_emits_no_generation_tasks(self, api):
+        self.practice_today(api)
+        camp = api.store.campaigns.get(CAMP_ID)
+        camp.topics.append({"path": "fr.cold", "kind": "recall", "summary": ""})
+        camp.attack_plan = []  # no phase gate; fr.cold is a cold frontier topic
+        api.store.campaigns.save(camp)
+        res = api.daily()
+        assert res["status"] == "complete_for_today"
+        gen = [t for t in res["tasks"] if t["kind"].startswith("exercise.")]
+        assert gen == [], "post-completion daily never requests new material"
+        assert res["skipped"].get("generation_waits_for_tomorrow", 0) >= 1
+
+    def test_reflection_still_fires_after_completion(self, api):
+        self.practice_today(api)
+        for i in range(5):
+            add_attempt(api, f"att_r{i}", "ex_done")
+        res = api.daily()
+        assert res["status"] == "complete_for_today"
+        assert any(t["kind"] == "campaign.reflect" for t in res["tasks"]), \
+            "settled-evidence reflection is welcome at day end"
+
+    def test_fresh_stock_minted_after_completion_waits_for_tomorrow(self, api):
+        self.practice_today(api)
+        add_exercise(api, "ex_new_late")  # e.g. a replenishment task fulfilled late
+        res = api.daily()
+        assert res["session"] is None and res["status"] == "complete_for_today"
+        assert res["skipped"]["new_stock_held_for_tomorrow"] == 1
+
+    def test_due_reviews_still_serve_after_practice(self, api):
+        """Real dues are retention, not acquisition — a second session over a
+        genuinely due review stays legitimate."""
+        self.practice_today(api)
+        add_exercise(api, "ex_due_rev", due=datetime.now(timezone.utc) - timedelta(hours=1))
+        res = api.daily()
+        assert res["session"] is not None
+        assert "ex_due_rev" in res["session"]["exercise_ids"]
+
+    def test_first_daily_of_the_day_still_replenishes(self, api):
+        camp = api.store.campaigns.get(CAMP_ID)
+        camp.topics.append({"path": "fr.cold", "kind": "recall", "summary": ""})
+        camp.attack_plan = []
+        api.store.campaigns.save(camp)
+        add_attempt(api, "att_yesterday", "ex_x",
+                    when=datetime.now(timezone.utc) - timedelta(days=1))
+        res = api.daily()
+        assert any(t["kind"].startswith("exercise.") for t in res.get("tasks", [])), \
+            "morning replenishment is unchanged"

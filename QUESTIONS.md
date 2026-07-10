@@ -55,6 +55,19 @@ share tuning and OP #13 exact-undo — both wait for real usage data._
 
 ## Decided & shipped — 2026-07-09 ledger (detail preserved)
 
+0. **Daily acquisition discipline** (your field report: second daily run was
+   generating AND serving new material). Ruling implemented: reflection
+   fires at daily START on settled evidence (grades land async, so
+   end-of-session reflection would read pending rows — start-of-next-daily
+   is the robust point; it also still fires in the complete_for_today
+   state). Once today's practice happened: daily emits NO generation
+   (replenishment waits for tomorrow's first run), and a would-be packet of
+   purely never-practiced stock is held ("new_stock_held_for_tomorrow") —
+   genuinely due reviews still serve (retention ≠ acquisition). `dojo more`
+   stays the only post-completion acquisition door, with its own sourcing
+   kept deliberately distinct from daily (never serves reviews,
+   debt-guarded, once/day, origin-marked) rather than wrapping daily.
+
 1. **Anti-reward-hacking: holdout evals + corpus enrichment** (owner
    directive 2026-07-09: "the prompts shouldn't reward hack; create a
    holdout set; highly enrich the evals"). The risk is real and this
