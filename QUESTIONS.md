@@ -49,6 +49,15 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
    suite), the app, dojo-side PDF/EPUB ingestion (agents already cover it by
    reading + capturing). All owner-gated.
    **Default: none started without your call.**
+7. **Growth strategy sign-off** — full researched strategy delivered at your
+   direction: `docs/growth-strategy.md`. Headline: retention is already the
+   product (the SRS community's documented abandonment causes map 1:1 onto
+   shipped design decisions); distribution rides AI-harness marketplaces
+   first, the Anki community second (needs interop A1 → interacts with
+   decision #2), launch pulse deliberately LAST. Phase-0 prerequisites are
+   concrete: holdout gate + v1.0.0 (decision #1), repo public (decision #3),
+   docs site, demo GIF, packs. **Default: no public move until you approve
+   the doc and its prerequisites.**
 
 _Parked by your explicit rule (not decisions, just recorded): interleave
 share tuning and OP #13 exact-undo — both wait for real usage data._
