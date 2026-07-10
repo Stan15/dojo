@@ -280,12 +280,24 @@ class DojoAPI:
         }
 
     def why(self) -> dict[str, Any]:
-        """Replays the scheduling decisions behind the current packet (I9)."""
+        """Replays the scheduling decisions behind the current packet (I9) —
+        and when no session is live, behind the MOST RECENT completed one:
+        curiosity peaks right after finishing, and the interactive daily has
+        already consumed the session by then (owner field report
+        2026-07-09). Archived sessions keep their reasons, so `why` always
+        has an answer once you've ever practiced."""
         session = self.store.sessions.get_active()
+        status = "active"
         if session is None:
-            return {"session": None, "note": "no active session — run dojo daily first"}
+            archived = self.store.sessions.list_archived()
+            if not archived:
+                return {"session": None, "note": "no session yet — dojo daily starts one"}
+            session = max(archived, key=lambda s: s.created_at)
+            status = "completed"
         return {
             "session": session.id,
+            "session_status": status,
+            **({"note": "your most recent completed session"} if status == "completed" else {}),
             "items": [
                 {"exercise_id": ex_id, "reason": session.packet_reasons.get(ex_id, "(built before reasons were recorded)")}
                 for ex_id in session.exercise_ids

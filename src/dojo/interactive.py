@@ -192,7 +192,7 @@ def practice_loop(api: DojoAPI, session: dict[str, Any]) -> None:
     total = len(session["exercise_ids"])
     done = session.get("current_index", 0)
     console.print(f"\n[bold]Session[/bold] — {total - done} prompt(s) to go. "
-                  "[dim](/skip too_easy|too_hard|forgot|bad_quality, /quit)[/dim]\n")
+                  "[dim](/why, /skip too_easy|too_hard|forgot|bad_quality, /quit)[/dim]\n")
     # Free-form answers grade at the END, in one batch: a model call between
     # every question stalls the human's flow, and scores never gated
     # progression anyway (use-case audit D1).
@@ -206,8 +206,15 @@ def practice_loop(api: DojoAPI, session: dict[str, Any]) -> None:
         console.print(Panel(info["prompt"], title=f"[bold]{done} of {total}[/bold]",
                             border_style="cyan"))
         answer = ""
-        while not answer.strip():
-            answer = _input("[bold cyan]›[/bold cyan] ")
+        while not answer.strip() or answer.strip() == "/why":
+            if answer.strip() == "/why":
+                # Curiosity strikes mid-question (owner field report
+                # 2026-07-09): answer it inline, then keep waiting.
+                reason = (session.get("packet_reasons") or {}).get(
+                    info["exercise_id"], "(built before reasons were recorded)")
+                console.print(f"  [dim]{reason}[/dim]")
+                answer = ""
+            answer = answer or _input("[bold cyan]›[/bold cyan] ")
         if answer.strip() == "/quit":
             console.print("[dim]Paused — dojo daily resumes right here.[/dim]")
             _settle_grades(api, pending_grades)
