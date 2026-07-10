@@ -203,6 +203,21 @@ def practice_loop(api: DojoAPI, session: dict[str, Any]) -> None:
         except ValueError:
             break
         done += 1
+        if info.get("present"):
+            # Deliberate encoding event (ADR 017): show the material, plain
+            # Enter confirms — the ONE place empty input is a real action
+            # (nothing is answered, so nothing can be lost by accident).
+            console.print(Panel(
+                f"{info['prompt']}\n\n[bold]{info['material']}[/bold]",
+                title=f"[bold]{done} of {total}[/bold] · [cyan]☆ new material[/cyan]",
+                border_style="cyan",
+            ))
+            _input("[dim]read it, own it — Enter to continue[/dim] ")
+            res = api.submit_answer(user_answer="", session_id=session["id"])
+            console.print("  [cyan]✓ encoded — recall practice follows in coming sessions[/cyan]\n")
+            if res.get("is_session_completed"):
+                break
+            continue
         console.print(Panel(info["prompt"], title=f"[bold]{done} of {total}[/bold]",
                             border_style="cyan"))
         answer = ""

@@ -27,6 +27,8 @@ def first_encounter(campaign, ex) -> bool:
     it cannot serve as an encoding event either."""
     if ex is None or ex.quality == "diagnostic" or not ex.answer:
         return False
+    if ex.kind == "present":
+        return True  # a presentation is BY DEFINITION an encoding event
     if getattr(ex, "provenance", "synthetic") == "grounded":
         return False
     if ex.kind == "skill":
@@ -51,7 +53,7 @@ def land_exposure(
     if ex is None or ex.quality == "diagnostic":
         return
     stamp = datetime.now(timezone.utc).isoformat()
-    if ex.kind == "skill":
+    if ex.kind in ("skill", "present"):
         campaign = store.campaigns.get(campaign_id)
         if campaign is None:
             return
@@ -95,7 +97,10 @@ def land_score(
         store.exercises.save(campaign_id, ex)
         return
 
-    if ex.kind == "skill":
+    if ex.kind in ("skill", "present"):
+        # present rides the skill lane (topic-scheduled, disposable) — a
+        # skip verdict on one ("too_easy" = already knows it) is real
+        # evidence and lands like any skill outcome (ADR 017).
         campaign = store.campaigns.get(campaign_id)
         if campaign is not None:
             entry = next(

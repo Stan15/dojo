@@ -8,6 +8,13 @@ intervention instead of exercises.
 RULES
 1. Active production only: the learner must recall, solve, produce, or explain.
    Never yes/no questions, never "did you know".
+1b. Exception — `skill: "present"` is a study card: `answer` IS the material
+   (shown to the learner at once, never graded; rubric null). Introduce
+   genuinely new material this way instead of quizzing it cold. Max ONE per
+   run; none while RECENT shows a presentation "awaiting first recall".
+1c. Probes on presented material test THAT content — vary the cue direction
+   (whole / part / reverse / what's-missing). Prefer probing what RECENT
+   shows the learner met over assuming unseen exposure.
 2. Self-contained: answerable from the prompt text alone. No references to files,
    worksheets, links, or earlier exercises.
 3. Calibrate: at "{{ difficulty }}" the learner should succeed with real effort —
@@ -36,7 +43,7 @@ RULES
 {{ strategy_line }}
 ## LEARNER
 {{ insights_digest }}
-## RECENT
+## RECENT (this topic — a window, not the whole record)
 {{ recent_rows }}
 {{ source_section }}
 
@@ -46,8 +53,8 @@ OUTPUT — return only this JSON:
     {
       "prompt": "...",       // the exercise, ≤ {{ prompt_words }} words, markdown allowed
       "answer": "...",       // ideal answer, ≤ {{ answer_words }} words
-      "rubric": "- ...",     // 1-3 scoring criteria
-      "skill": "recall|explain|apply|produce|critique"
+      "rubric": "- ...",     // 1-3 scoring criteria (null for skill "present")
+      "skill": "recall|explain|apply|produce|critique|present"
     }
   ],
   "note": null,              // ≤ {{ note_words }} words, only if you had to deviate (e.g. source too thin)

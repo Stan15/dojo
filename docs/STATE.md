@@ -188,20 +188,17 @@ committed work, not proposals awaiting an answer. Item numbering is stable
    Owner rulings binding here: noise is the test at every juncture; every
    pedagogy surface benchmarked; task contract stays single-shot (tool-call
    enrichment REJECTED — see ADR 017); prompt sections stable-prefix-first.
-8. **DIRECTED 2026-07-10 (owner, ledgered same session; design proposal owed
-   BEFORE implementation — public contract change):** the markdown store must
-   be **user-readable, Obsidian-vault quality** — "massive frontmatter values
-   are EXTREMELY inelegant." Known offenders (from the owner's live store):
-   `pedagogical_journal` entries embedding full plan/syllabus/hypotheses
-   snapshots in campaign.md frontmatter; sr dicts inline in the topics list;
-   raw task traces. Note: blueprint §5 already prescribes plan.yaml /
-   topics.yaml / journal.md as separate projections — implementation drifted.
-   Direction to explore: minimal campaign.md frontmatter; journal as
-   append-only prose (journal.md); snapshots replaced by git refs
-   (delete-over-retain: git IS the archive); Obsidian conventions
-   (wikilinks between exercise/attempt/insight files). Requires: ADR,
-   fixture round-trip + blueprint update same commit, migration for live
-   stores (owner installs from checkout).
+8. ✓ **DONE 2026-07-10 — vault-grade store layout (ADR 018, commit 0ab991f)**:
+   investigation first (owner precondition) — no surface reads the journal's
+   full-text snapshots; only plan-authority snapshots are functional. Campaign
+   aggregate → five files (campaign.md scalars+syllabus · plan.yaml ·
+   topics.yaml · .journal.yaml machine log · journal.md prose projection);
+   dead snapshot fields stripped at writers + historically on save; doctor
+   migrates legacy stores in one pass (verified against a copy of the
+   owner's live store: campaign.md 12.4KB → 2.1KB, 87% → ~15% frontmatter).
+   Owner's real store migrates on his next doctor/install run.
+   DEFERRED phase 2 (ledgered): Obsidian wikilinks between entity files
+   (needs id↔filename harmonization).
 6. Backlog (ledgered in docs/design/usecase-audit.md + OPEN-PROBLEMS):
    fulfilled-task housekeeping (tasks/ grows forever — now including
    submission traces, so the cleanup pays for provenance too); interleave

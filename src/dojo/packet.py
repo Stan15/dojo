@@ -21,6 +21,11 @@ from .schemas import Campaign, Exercise
 
 DEFAULT_PACKET_SIZE = 5
 HARD_MAX_PACKET_SIZE = 8
+# ADR 017: encoding is a promise of future reviews — at most this many
+# encoding-stage items (presentations + first encounters of never-encoded
+# synthetic material) per packet. Remaining slots serve due reviews only;
+# a short packet is correct, never backfilled.
+DEFAULT_ENCODING_CAP = 2
 
 # Tier-1 weights (blueprint §7): visible, deterministic, configurable later.
 W_DUE = 1.0
@@ -129,39 +134,57 @@ def campaign_priority(
 
 
 def _compose_for_campaign(
-    due: list[Exercise], slots: int, now: datetime, rng: random.Random
-) -> list[tuple[Exercise, str]]:
+    campaign: Campaign, due: list[Exercise], slots: int, now: datetime, rng: random.Random
+) -> list[tuple[Exercise, str, bool]]:
     """Tier-2 mix per pedagogy-foundation: weakest memory first, one easy
-    maintenance win, one never-practiced frontier item when available."""
+    maintenance win, one never-practiced frontier item when available.
+    Each pick carries its encoding-stage flag (ADR 017) so build_packet can
+    enforce the global encoding cap; presentations lead the fresh picks —
+    material the model chose to TEACH beats material it chose to probe."""
+    from .outcomes import first_encounter
+
     if not due or slots <= 0:
         return []
+
+    def encoding(e: Exercise) -> bool:
+        return first_encounter(campaign, e)
+
     picks_first = [
-        (e, "calibration question — your answer sets the baseline")
+        (e, "calibration question — your answer sets the baseline", False)
         for e in due if e.quality == "diagnostic"
     ][:slots]
     due = [e for e in due if e.quality != "diagnostic"]
-    fresh = [e for e in due if e.sr is None]
-    seen = [e for e in due if e.sr is not None]
+    fresh = [e for e in due if e.sr is None and e.kind != "present"]
+    presents = [e for e in due if e.kind == "present"]
+    seen = [e for e in due if e.sr is not None and e.kind != "present"]
     by_weakness = sorted(
         seen, key=lambda e: (scheduling.retrievability(e.sr, now), e.id)
     )
 
-    picks: list[tuple[Exercise, str]] = list(picks_first)
+    picks: list[tuple[Exercise, str, bool]] = list(picks_first)
     if by_weakness:
         weakest = by_weakness.pop(0)
         r = scheduling.retrievability(weakest.sr, now)
-        picks.append((weakest, f"weakest memory here (~{r:.0%} recall odds)"))
+        picks.append((weakest, f"weakest memory here (~{r:.0%} recall odds)", False))
     if by_weakness and len(picks) < slots:
         strongest = by_weakness.pop(-1)
-        picks.append((strongest, "an easy maintenance win to keep it warm"))
+        picks.append((strongest, "an easy maintenance win to keep it warm", False))
+    if presents and len(picks) < slots:
+        picks.append((presents.pop(0),
+                      "new material to encode — study it, recall comes later", True))
     if fresh and len(picks) < slots:
         frontier = fresh.pop(rng.randrange(len(fresh)))
-        picks.append((frontier, "new ground: never practiced yet"))
-    pool = by_weakness + fresh
+        picks.append((frontier, "new ground: never practiced yet", encoding(frontier)))
+    pool = by_weakness + presents + fresh
     while pool and len(picks) < slots:
         nxt = pool.pop(0)
-        why = "due for review" if nxt.sr is not None else "new ground: never practiced yet"
-        picks.append((nxt, why))
+        if nxt.kind == "present":
+            why, enc = "new material to encode — study it, recall comes later", True
+        elif nxt.sr is not None:
+            why, enc = "due for review", False
+        else:
+            why, enc = "new ground: never practiced yet", encoding(nxt)
+        picks.append((nxt, why, enc))
     return picks[:slots]
 
 
@@ -275,18 +298,34 @@ def build_packet(
     for _, _, reason, campaign, _ in ranked:
         packet.campaign_reasons[campaign.id] = reason
 
+    encoding_cap = max(0, int(store.configs.get_value(
+        "daily.encoding_cap", DEFAULT_ENCODING_CAP)))
+    encoding_used = 0
     if with_due:
         # Interleave: top campaign gets the larger share, every due campaign
         # gets at least one slot while slots last (desirable difficulty).
         shares = _allocate_slots(cap, len(with_due))
         for (share, (_, _, _, campaign, due)) in zip(shares, with_due):
-            for ex, why in _compose_for_campaign(due, share, now, rng):
+            for ex, why, is_encoding in _compose_for_campaign(campaign, due, share, now, rng):
+                if is_encoding:
+                    if encoding_used >= encoding_cap:
+                        # ADR 017: encoding debt is capped per packet; the
+                        # slot stays empty rather than backfilled — a short
+                        # packet is correct. Counted honestly (I10).
+                        packet.skipped["encoding_beyond_cap"] = (
+                            packet.skipped.get("encoding_beyond_cap", 0) + 1
+                        )
+                        continue
+                    encoding_used += 1
                 packet.items.append(PacketItem(
                     campaign_id=campaign.id, exercise_id=ex.id,
                     reason=f"{why} · {packet.campaign_reasons[campaign.id]}",
                 ))
 
-    overflow = sum(len(r[4]) for r in with_due) - len(packet.items)
+    overflow = (
+        sum(len(r[4]) for r in with_due) - len(packet.items)
+        - packet.skipped.get("encoding_beyond_cap", 0)  # already counted (I10)
+    )
     if overflow > 0:
         packet.skipped["due_beyond_cap"] = overflow
 

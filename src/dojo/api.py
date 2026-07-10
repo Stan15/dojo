@@ -1629,7 +1629,7 @@ class DojoAPI:
         else:
             self.store.sessions.save_archived(target_session)
 
-        return {
+        out = {
             "session_id": target_session.id,
             "exercise_id": exercise_id,
             "index": idx,
@@ -1639,6 +1639,16 @@ class DojoAPI:
             "difficulty": ex.difficulty,
             "started_at": started_at,
         }
+        if ex.kind == "present":
+            # A deliberate encoding event (ADR 017): the material IS the
+            # answer — show it now; the learner confirms, nothing is graded.
+            out["present"] = True
+            out["material"] = ex.answer
+            out["next"] = (
+                "show the learner the prompt AND material together — this is "
+                "study material, not a question; any acknowledgment submits it"
+            )
+        return out
 
     def submit_answer(self, user_answer: str, session_id: str | None = None) -> dict[str, Any]:
         """Records an attempt for the current exercise and advances the
@@ -1714,7 +1724,12 @@ class DojoAPI:
 
         # Deterministic scoring floor (I4); AI grading is an emitted task, never a block.
         pending_grade_task = None
-        if ex.quality == "diagnostic":
+        if ex.kind == "present":
+            # Encoding confirmation (ADR 017): never graded, excluded from
+            # accuracy (grader="exposure", pre-reflected), lands a fixed Good
+            # on the topic memory, and the presentation is spent.
+            score, grader = 1.0, "exposure"
+        elif ex.quality == "diagnostic":
             score, grader = 1.0, "auto"  # calibration answers are information, not tests
         elif correct_ans and user_ans.lower() == correct_ans.strip().lower():
             score, grader = 1.0, "exact"
@@ -1732,6 +1747,7 @@ class DojoAPI:
             campaign_id=campaign_id,
             score=score,
             grader=grader,
+            reflected=(grader == "exposure"),  # information, never reflection evidence
             latency_seconds=latency,
             origin="extension" if target_session.origin == "extension" else None,
             user_answer=user_ans,
@@ -1746,6 +1762,16 @@ class DojoAPI:
             task = flows.request_grade(self.store, campaign, ex, attempt)
             pending_grade_task = flows.task_ref(task)
             self.log.info(f"Emitted grade task {task.id} for attempt {attempt_id}")
+        elif grader == "exposure":
+            # Presentation confirmed: initialize the topic memory (fixed
+            # Good — never rate_for, which would read fast+1.0 as Easy and
+            # overshoot the first retrieval), then spend the presentation.
+            from .outcomes import land_exposure
+
+            land_exposure(self.store, campaign_id, exercise_id)
+            ex.quality = "spent"
+            ex.updated_at = now.isoformat()
+            self.store.exercises.save(campaign_id, ex)
         else:
             self._land_score(campaign_id, exercise_id, score=score, latency_seconds=latency)
 

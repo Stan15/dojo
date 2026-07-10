@@ -27,7 +27,7 @@ SECTION_BUDGETS: dict[str, dict[str, int]] = {
         "strategy_line": 120,
         "mission": 200,
         "insights_digest": 600,
-        "recent_rows": 500,
+        "recent_rows": 768,  # presentations ride near-verbatim (ADR 017)
         "source_section": 4096,
     },
     "exercise.diagnostic": {
@@ -63,7 +63,10 @@ SECTION_BUDGETS: dict[str, dict[str, int]] = {
 }
 
 TOTAL_BUDGETS: dict[str, int] = {
-    "exercise.generate": 7 * 1024,
+    # 8 KB since ADR 017: the present/probe rules + the practice-history
+    # window grew the skeleton ~0.7 KB; the 4 KB source slice still
+    # dominates the grounded worst case. Typical payloads stay ~3 KB.
+    "exercise.generate": 8 * 1024,
     "exercise.diagnostic": 3 * 1024,
     "attempt.grade": 5 * 1024,
     "campaign.reflect": 6 * 1024,
@@ -201,14 +204,64 @@ def insights_digest(store, campaign_id: str, k: int = 5,
     return "\n".join(lines) if lines else "(no insights yet — first sessions)"
 
 
-def recent_rows(store, campaign_id: str, n: int = 10) -> str:
-    """Compact evidence rows: topic · score · signal. Never full bodies."""
+def recent_rows(store, campaign_id: str, topic_path: str = "", n: int = 8) -> str:
+    """The topic's recent practice ARC (ADR 017 practice-history window):
+    presentations near-verbatim — they are the content anchors later probes
+    build on — probes and attempts as prompt glimpses with scores, relative
+    days (anchored to the newest row, so goldens stay deterministic), plus
+    one cross-topic calibration line. A WINDOW, not the whole record: wrong
+    assumptions are structurally cheap (a probe on unseen material is just
+    a free first-encounter miss), so this section informs, never gates."""
+    from datetime import datetime
+
     attempts = store.attempts.list(campaign_id)
-    rows = []
-    for a in attempts[-n:]:
-        signal = a.skip_reason or (a.feedback.splitlines()[0][:40] if a.feedback else "")
-        rows.append(f"{a.exercise_id} · score {a.score} · {signal}".rstrip(" ·"))
-    return "\n".join(rows) if rows else "(no attempts yet)"
+    exercises = {ex.id: ex for ex in store.exercises.list(campaign_id)}
+
+    def on_topic(a) -> bool:
+        ex = exercises.get(a.exercise_id)
+        t = ex.topic_path if ex else None
+        return bool(t) and (
+            t == topic_path
+            or t.startswith(topic_path + ".")
+            or topic_path.startswith(t + ".")
+        )
+
+    topical = [a for a in attempts if on_topic(a)] if topic_path else list(attempts)
+    window = topical[-n:]
+    rows: list[str] = []
+    if window:
+        anchor = max(datetime.fromisoformat(a.created_at) for a in window)
+        last_graded_at = max(
+            (a.created_at for a in topical if a.grader not in (None, "exposure")),
+            default="",
+        )
+        for a in window:
+            ex = exercises.get(a.exercise_id)
+            days = (anchor - datetime.fromisoformat(a.created_at)).days
+            when = f"{days}d ago" if days else "recent"
+            glimpse = (a.prompt or "").replace("\n", " ")[:40]
+            if ex is not None and ex.kind == "present":
+                material = (ex.answer or "").replace("\n", " ")[:90]
+                tail = "" if last_graded_at > a.created_at else " (awaiting first recall)"
+                rows.append(f'{when} · presented: "{material}"{tail}')
+            elif a.grader == "exposure":
+                rows.append(f'{when} · first contact, unscored · "{glimpse}"')
+            elif a.skip_reason:
+                rows.append(f"{when} · skipped ({a.skip_reason})")
+            elif a.grader is None and a.score == 0.0:
+                rows.append(f'{when} · ungraded · "{glimpse}"')
+            else:
+                rows.append(f'{when} · score {a.score} · "{glimpse}"')
+    if topic_path:
+        others = [
+            a for a in attempts[-10:]
+            if not on_topic(a) and not a.skip_reason
+            and a.grader not in (None, "exposure")
+        ]
+        if others:
+            mean = sum(a.score for a in others) / len(others)
+            rows.append(f"other topics, last {len(others)} graded: mean {mean:.2f}")
+    return "\n".join(rows) if rows else "(no practice on this topic yet)"
 
 
 def source_section(source_slice: Optional[str]) -> str:
@@ -248,7 +301,7 @@ def compile_generate(
         "mission": campaign.mission,
         "strategy_line": strategy_line(campaign),
         "insights_digest": insights_digest(store, campaign.id, topic_path=topic_path),
-        "recent_rows": recent_rows(store, campaign.id),
+        "recent_rows": recent_rows(store, campaign.id, topic_path=topic_path),
         "source_section": source_section(source_slice),
     }
     context = {

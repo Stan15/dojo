@@ -8,6 +8,13 @@ intervention instead of exercises.
 RULES
 1. Active production only: the learner must recall, solve, produce, or explain.
    Never yes/no questions, never "did you know".
+1b. Exception — `skill: "present"` is a study card: `answer` IS the material
+   (shown to the learner at once, never graded; rubric null). Introduce
+   genuinely new material this way instead of quizzing it cold. Max ONE per
+   run; none while RECENT shows a presentation "awaiting first recall".
+1c. Probes on presented material test THAT content — vary the cue direction
+   (whole / part / reverse / what's-missing). Prefer probing what RECENT
+   shows the learner met over assuming unseen exposure.
 2. Self-contained: answerable from the prompt text alone. No references to files,
    worksheets, links, or earlier exercises.
 3. Calibrate: at "intermediate" the learner should succeed with real effort —
@@ -37,8 +44,8 @@ Reach NCLC 7 oral French by October for the TEF exam.
 difficulty=intermediate, scaffolding=medium, mode=practice
 ## LEARNER
 - conditional.aux_choice: Picks avoir over être for motion verbs in past conditional.
-## RECENT
-ex_1 · score 0.3
+## RECENT (this topic — a window, not the whole record)
+(no practice on this topic yet)
 ## SOURCE
 Le conditionnel passé se forme avec l'auxiliaire au conditionnel présent suivi du participe passé.
 
@@ -48,8 +55,8 @@ OUTPUT — return only this JSON:
     {
       "prompt": "...",       // the exercise, ≤ 120 words, markdown allowed
       "answer": "...",       // ideal answer, ≤ 80 words
-      "rubric": "- ...",     // 1-3 scoring criteria
-      "skill": "recall|explain|apply|produce|critique"
+      "rubric": "- ...",     // 1-3 scoring criteria (null for skill "present")
+      "skill": "recall|explain|apply|produce|critique|present"
     }
   ],
   "note": null,              // ≤ 25 words, only if you had to deviate (e.g. source too thin)

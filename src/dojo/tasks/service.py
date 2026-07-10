@@ -260,7 +260,12 @@ def apply_generate(store, task: Task, result: GenerateResult) -> dict[str, Any]:
         else:
             if item.skill == "diagnostic":
                 reasons.append(f"items[{i}].skill 'diagnostic' not valid for practice generation")
-            if not item.answer or not item.rubric:
+            if item.skill == "present":
+                # A presentation IS its answer (ADR 017); it is never graded,
+                # so a rubric is meaningless.
+                if not item.answer:
+                    reasons.append(f"items[{i}] is a presentation and needs `answer` (the material)")
+            elif not item.answer or not item.rubric:
                 reasons.append(f"items[{i}] needs both answer and rubric")
     if reasons:
         raise ApplyRejection(*reasons)
@@ -286,7 +291,7 @@ def apply_generate(store, task: Task, result: GenerateResult) -> dict[str, Any]:
                 id=ex_id,
                 topic_path=ctx["topic_path"],
                 difficulty=ctx.get("difficulty", "intermediate"),
-                kind="recall" if item.skill == "recall" else "skill",
+                kind="recall" if item.skill == "recall" else ("present" if item.skill == "present" else "skill"),
                 generation_run=task.id,
                 quality="auto_accepted",
                 provenance="grounded" if ctx.get("mode") == "grounded" else "synthetic",
@@ -323,7 +328,7 @@ def apply_generate(store, task: Task, result: GenerateResult) -> dict[str, Any]:
                 id=cand_id,
                 topic_path=ctx["topic_path"],
                 difficulty=ctx.get("difficulty", "intermediate"),
-                kind="recall" if item.skill == "recall" else "skill",
+                kind="recall" if item.skill == "recall" else ("present" if item.skill == "present" else "skill"),
                 generation_run=task.id,
                 quality="candidate",
                 provenance="grounded" if ctx.get("mode") == "grounded" else "synthetic",

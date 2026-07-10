@@ -87,13 +87,15 @@ def _cap_words(field_name: str, cap: int):
 class GeneratedItem(BaseModel):
     """One exercise a generation fulfiller proposes. `skill` classifies the
     cognitive act (recall repeats verbatim under FSRS; the rest are
-    disposable, topic-scheduled — ADR 012). Prompt/answer word caps stop
+    disposable, topic-scheduled — ADR 012). `present` is a deliberate
+    encoding event (ADR 017): `answer` is the material to study, shown on
+    serving, confirmed, never graded. Prompt/answer word caps stop
     weak-model rambling at the boundary."""
 
     prompt: str = Field(min_length=1)
     answer: Optional[str] = None
     rubric: Optional[str] = None
-    skill: Literal["recall", "explain", "apply", "produce", "critique", "diagnostic"]
+    skill: Literal["recall", "explain", "apply", "produce", "critique", "diagnostic", "present"]
 
     _cap_prompt = field_validator("prompt")(
         _cap_words("prompt", _limits.GENERATE_PROMPT_WORDS)
