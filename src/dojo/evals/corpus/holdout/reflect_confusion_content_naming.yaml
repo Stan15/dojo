@@ -1,0 +1,123 @@
+# Skill: reflection must name the content of a recurring confusion, not merely record struggle.
+# Failure mode: score-only genericization.
+category: calibration
+domain: meteorology
+scenario_context: |
+  Weather-safety learner. No error tags are present, and the attempt scores are all
+  partial, so a shallow reflection can only say "struggles with alerts." The answer
+  texts show a tighter recurring confusion: the learner reverses weather watch and
+  weather warning. Strong output creates one insight naming that conflation and cites
+  the answer-text evidence. Weak output creates a generic alert-terminology insight,
+  changes strategy from flat scores, or invents a broader severe-weather weakness.
+seed:
+  campaign:
+    id: storm-safety
+    name: Storm Safety
+    mission: Learn practical severe-weather decisions for community volunteer briefings.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  insights: []
+  exercises:
+    - id: ex_1
+      topic_path: meteorology.alerts.watch_warning
+      difficulty: intermediate
+      prompt: "A tornado watch is issued for your county. What does it mean, and what should residents do now?"
+      answer: "Conditions are favorable; stay alert, review shelter plans, and monitor updates."
+      rubric: "Credit if the answer distinguishes watch as possible/favorable conditions, not confirmed danger."
+    - id: ex_2
+      topic_path: meteorology.alerts.watch_warning
+      difficulty: intermediate
+      prompt: "A tornado warning is issued for your town. What does it mean, and what immediate action is appropriate?"
+      answer: "A tornado is indicated or occurring; take shelter immediately."
+      rubric: "Credit if the answer identifies warning as immediate confirmed or indicated danger requiring shelter."
+    - id: ex_3
+      topic_path: meteorology.alerts.watch_warning
+      difficulty: intermediate
+      prompt: "Compare a severe thunderstorm watch with a severe thunderstorm warning in one sentence."
+      answer: "A watch means storms are possible; a warning means a storm is occurring or imminent."
+      rubric: "Credit if watch means possible and warning means occurring, imminent, or observed."
+    - id: ex_4
+      topic_path: meteorology.alerts.response
+      difficulty: intermediate
+      prompt: "Why should a family identify an interior room before storm season?"
+      answer: "They can move quickly to a safer shelter location when a warning is issued."
+      rubric: "Credit if the answer links prior planning to faster sheltering during imminent danger."
+    - id: ex_5
+      topic_path: meteorology.alerts.watch_warning
+      difficulty: intermediate
+      prompt: "Your phone says 'flash flood watch.' Should you evacuate immediately or monitor conditions? Explain."
+      answer: "Monitor conditions and prepare; a watch means flooding is possible, not necessarily happening."
+      rubric: "Credit if the answer treats watch as prepare and monitor, not automatic evacuation."
+  attempts:
+    - id: att_1
+      session_id: s1
+      exercise_id: ex_1
+      score: 0.7
+      latency_seconds: 24.0
+      user_answer: "A watch means a tornado has been spotted, so people should go to shelter immediately."
+    - id: att_2
+      session_id: s1
+      exercise_id: ex_2
+      score: 0.7
+      latency_seconds: 21.0
+      user_answer: "A warning means conditions might produce a tornado, so keep checking the radar."
+    - id: att_3
+      session_id: s2
+      exercise_id: ex_3
+      score: 0.7
+      latency_seconds: 28.0
+      user_answer: "A watch is the dangerous one, and a warning is more like a heads-up to be ready."
+    - id: att_4
+      session_id: s2
+      exercise_id: ex_4
+      score: 1.0
+      latency_seconds: 18.0
+      user_answer: "So they can get to the safest interior space quickly when danger is immediate."
+    - id: att_5
+      session_id: s3
+      exercise_id: ex_5
+      score: 0.7
+      latency_seconds: 26.0
+      user_answer: "Evacuate immediately because a watch means the flood is already happening nearby."
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - id: c1
+    weight: 4
+    question: "Does the output create an insight that explicitly names the watch-versus-warning conflation?"
+  - id: c2
+    weight: 3
+    question: "Does the output base the insight on the answer texts rather than merely the repeated partial scores?"
+  - id: c3
+    weight: 2
+    question: "Does the output avoid a generic severe-weather or alert-terminology struggle that fails to name the conflated concepts?"
+  - id: c4
+    weight: 1
+    question: "Does the output avoid changing strategy or plan from this narrow concept confusion alone?"
+references:
+  good:
+    insight_updates:
+      - op: create
+        id: null
+        key: meteorology.alerts.watch_warning
+        text: "Conflates weather watch with warning, reversing possible conditions and immediate confirmed danger."
+        evidence: [att_1, att_2, att_3, att_5]
+        reason: "answer texts repeatedly reverse watch and warning meanings"
+    strategy: null
+    plan_revision: null
+    questions: []
+    journal: "Created watch-warning conflation insight from repeated answer-text reversals."
+  bad:
+    insight_updates:
+      - op: create
+        id: null
+        key: meteorology.alerts.terminology
+        text: "Learner struggles with severe-weather alert terminology."
+        evidence: [att_1, att_2, att_3, att_5]
+        reason: "multiple alert items received partial scores"
+    strategy:
+      difficulty: beginner
+      scaffolding: high
+      reason: "repeated partial scores suggest broad alert weakness"
+    plan_revision: null
+    questions: []
+    journal: "Added general alert terminology weakness and lowered difficulty."

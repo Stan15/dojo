@@ -1,0 +1,142 @@
+# Skill: localized latency-pattern reflection from mixed timing evidence.
+# Failure mode: global pacing overcorrection.
+category: calibration
+domain: pharmacy
+scenario_context: |
+  Pharmacy technician trainee practicing vaccine handling. Recent evidence is not
+  globally fast-wrong: cold-chain excursion triage is fast and wrong, while VIS
+  timing items are slower and correct. Strong reflection localizes the rushing
+  to cold-chain triage and does not lower overall difficulty or scaffolding.
+  Weak reflection treats the mixed window as a global pacing problem and moves
+  strategy dials for all vaccine handling.
+seed:
+  campaign:
+    id: vaccine-tech
+    name: Vaccine Handling
+    mission: Prepare for safe vaccine storage, documentation, and patient handoff tasks.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  insights:
+    - id: ins_cold_chain_rush
+      key: pharmacy.vaccines.cold_chain.rush
+      description: Answers cold-chain excursion triage too quickly and misses quarantine/escalation steps.
+      topic_path: pharmacy.vaccines.cold_chain
+  exercises:
+    - id: ex_61
+      topic_path: pharmacy.vaccines.cold_chain
+      difficulty: intermediate
+      prompt: "A refrigerated vaccine box reads 10 C for 35 minutes. What is the first handling step?"
+      answer: "Quarantine the vaccines, label do not use, keep them stored appropriately, and notify the responsible pharmacist or manufacturer guidance process."
+      rubric: "Credit quarantine/do-not-use plus escalation; no credit for immediate use."
+    - id: ex_62
+      topic_path: pharmacy.vaccines.vis_timing
+      difficulty: intermediate
+      prompt: "When should a patient receive the Vaccine Information Statement for an inactivated influenza vaccine?"
+      answer: "Before administration, with the current VIS edition documented according to site policy."
+      rubric: "Credit before administration and documentation; partial for timing alone."
+    - id: ex_63
+      topic_path: pharmacy.vaccines.cold_chain
+      difficulty: intermediate
+      prompt: "A staff member finds frozen vials labeled refrigerate only. What should the technician do?"
+      answer: "Separate and label them do not use, maintain required storage if possible, and escalate for viability guidance."
+      rubric: "Credit hold/separate and escalation; no credit for thawing and using."
+    - id: ex_64
+      topic_path: pharmacy.vaccines.vis_timing
+      difficulty: intermediate
+      prompt: "A parent asks for the VIS after the injection. What should have happened?"
+      answer: "The VIS should have been provided before vaccination, with the edition date recorded."
+      rubric: "Credit before vaccination plus documentation; partial for before vaccination alone."
+    - id: ex_65
+      topic_path: pharmacy.vaccines.cold_chain
+      difficulty: intermediate
+      prompt: "Temperature log shows unknown overnight refrigerator outage. What is the safest next action?"
+      answer: "Do not administer affected vaccines; quarantine them and escalate using storage incident procedure."
+      rubric: "Credit do-not-administer, quarantine, and escalation; no credit for using if now in range."
+    - id: ex_66
+      topic_path: pharmacy.vaccines.vis_timing
+      difficulty: intermediate
+      prompt: "For a multi-dose vaccine series, when is VIS review required?"
+      answer: "Before each dose when vaccination is given, using the current statement."
+      rubric: "Credit before each administered dose; partial for current statement alone."
+  attempts:
+    - id: att_61
+      session_id: s12
+      exercise_id: ex_61
+      score: 0.0
+      latency_seconds: 5.0
+      error_tag: skipped quarantine
+      user_answer: "Use it if the temperature is back in range."
+    - id: att_62
+      session_id: s12
+      exercise_id: ex_62
+      score: 1.0
+      latency_seconds: 38.0
+      user_answer: "Give the VIS before administration and document the edition date."
+    - id: att_63
+      session_id: s13
+      exercise_id: ex_63
+      score: 0.3
+      latency_seconds: 6.0
+      error_tag: unsafe release
+      user_answer: "Let them thaw, then ask the pharmacist if they are okay."
+    - id: att_64
+      session_id: s13
+      exercise_id: ex_64
+      score: 1.0
+      latency_seconds: 41.0
+      user_answer: "The VIS should have been given before the shot and recorded."
+    - id: att_65
+      session_id: s14
+      exercise_id: ex_65
+      score: 0.0
+      latency_seconds: 4.0
+      error_tag: used stock
+      user_answer: "If the fridge is cold now, keep using the stock."
+    - id: att_66
+      session_id: s14
+      exercise_id: ex_66
+      score: 1.0
+      latency_seconds: 36.0
+      user_answer: "Review the current VIS before each dose that is administered."
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - id: c1
+    weight: 3
+    question: "Does the output localize the latency problem to pharmacy.vaccines.cold_chain rather than all vaccine handling?"
+  - id: c2
+    weight: 3
+    question: "Does the output avoid global strategy changes when VIS timing shows deliberate correct work?"
+  - id: c3
+    weight: 2
+    question: "Does the insight update cite the fast wrong cold-chain attempts as evidence?"
+  - id: c4
+    weight: 1
+    question: "Does the journal faithfully summarize the localized reflection without inventing broad pacing trouble?"
+references:
+  good:
+    insight_updates:
+      - op: update
+        id: ins_cold_chain_rush
+        key: pharmacy.vaccines.cold_chain.rush
+        text: "Rushing cold-chain incident triage leads to unsafe release before quarantine and escalation."
+        evidence: [att_61, att_63, att_65]
+        reason: "three fast cold-chain misses"
+    strategy: null
+    plan_revision: null
+    questions: []
+    journal: "Updated cold-chain rushing insight; VIS timing remains accurate with deliberate pacing."
+  bad:
+    insight_updates:
+      - op: update
+        id: ins_cold_chain_rush
+        key: pharmacy.vaccines.pacing
+        text: "Learner rushes vaccine handling decisions and needs slower pacing across the unit."
+        evidence: [att_61, att_62, att_63, att_64, att_65, att_66]
+        reason: "mixed vaccine timing window"
+    strategy:
+      difficulty: beginner
+      scaffolding: high
+      reason: "slow down all vaccine handling decisions"
+    plan_revision: null
+    questions: []
+    journal: "Lowered vaccine handling difficulty because rushing appears broadly across recent practice."
