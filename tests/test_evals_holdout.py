@@ -44,7 +44,7 @@ from dojo.evals.runner import (
     calibration_gate,
     execute_quality_scenario,
     judge_output,
-    lean_baseline,
+    merge_holdout_baseline,
     slug_for,
 )
 
@@ -98,10 +98,10 @@ def holdout_card():
     (reports / f"holdout-{pair_slug()}-{stamp}.json").write_text(
         json.dumps(card, indent=2), encoding="utf-8"
     )
-    baseline_file = EVALS_DIR / "baselines" / f"{pair_slug()}__holdout.json"
-    if not baseline_file.exists():
-        baseline_file.parent.mkdir(exist_ok=True)
-        baseline_file.write_text(json.dumps(lean_baseline(card), indent=2), encoding="utf-8")
+    # Ratchet-safe write: refused zeros never become floors; scenarios the
+    # baseline doesn't know yet (burnt-and-replaced, or refused last gate)
+    # bootstrap into it; existing floors are never touched here.
+    merge_holdout_baseline(card, EVALS_DIR / "baselines" / f"{pair_slug()}__holdout.json")
 
 
 @pytest.mark.parametrize("scenario_path", SCENARIOS, ids=lambda p: p.stem)

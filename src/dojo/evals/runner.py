@@ -323,6 +323,39 @@ def lean_baseline(card: dict) -> dict:
     return lean
 
 
+def merge_holdout_baseline(card: dict, baseline_file) -> str:
+    """Ratchet-safe holdout-baseline write at gate teardown. Returns what
+    happened ("bootstrapped" | "merged <n>" | "unchanged").
+
+    Two rules learned at the first live gate (2026-07-09):
+    - a ZERO score never becomes a floor — the per-scenario bootstrap assert
+      refused it, and persisting it anyway would let every future run pass
+      that scenario trivially (a broken ratchet is worse than none);
+    - an existing baseline gains floors for scenarios it doesn't know yet
+      (a burnt-and-replaced or flaked scenario bootstraps at the next gate),
+      but existing floors are NEVER rewritten here — ratchets only ratchet.
+    """
+    baseline_file = Path(baseline_file)
+    accepted = {name: entry for name, entry in card.get("scenarios", {}).items()
+                if entry.get("quality", 0.0) > 0.0}
+    if not accepted:
+        return "unchanged"
+    if not baseline_file.exists():
+        baseline_file.parent.mkdir(exist_ok=True)
+        lean = lean_baseline(card)
+        lean["scenarios"] = {k: lean["scenarios"][k] for k in accepted}
+        baseline_file.write_text(json.dumps(lean, indent=2), encoding="utf-8")
+        return "bootstrapped"
+    baseline = json.loads(baseline_file.read_text(encoding="utf-8"))
+    missing = {k: {"quality": v["quality"]} for k, v in accepted.items()
+               if k not in baseline.get("scenarios", {})}
+    if not missing:
+        return "unchanged"
+    baseline["scenarios"].update(missing)
+    baseline_file.write_text(json.dumps(baseline, indent=2), encoding="utf-8")
+    return f"merged {len(missing)}"
+
+
 def run_benchmark(
     *,
     driver: str,

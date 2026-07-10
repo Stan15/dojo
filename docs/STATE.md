@@ -1,7 +1,7 @@
 # STATE
 
-_Last updated: 2026-07-09 (route-first → capacity → ownership → traces →
-eval-program session). Trust this snapshot; git history carries the detail._
+_Last updated: 2026-07-09 late (field-bug + first-holdout-gate + Anki-investigation
+session). Trust this snapshot; git history carries the detail._
 
 ## Phase
 
@@ -41,6 +41,23 @@ questions channel). Quality is guarded by ratcheted per-(driver,judge)
 baselines over a 55-scenario judged corpus + compliance corpus + golden
 payload/footprint pins, with a 19-scenario BLIND holdout (aggregate-gap-only,
 release gates) guarding against prompt overfitting.
+
+## HOLDOUT GATE — first live run (2026-07-09, owner-authorized)
+
+**Verdict: gap 0.184 (visible 0.833 over 55 · holdout 0.649 over 19) — above
+the ≤ 0.1 healthy line, below the 0.2 overfit line. v1.0.0 NOT tagged.**
+18/19 scenarios bootstrapped floors; `beaten_insight_resolution` scored 0.0
+TWICE (bootstrap + one flake-check re-run) — a real failure, not noise. It
+stays floorless until the insight-resolution skill improves on the VISIBLE
+corpus (its name is the only signal consumed; content unread, protocol
+intact). Floors-only holdout mean 0.685 → gap 0.148; including the zero,
+0.649 → gap 0.184. Either reading: above 0.1, below 0.2. Gate mechanics hardened same day: refused zeros can never
+persist as floors, later gates bootstrap unknown scenarios into an existing
+baseline (burn-and-replace now works), floors never rewritten
+(`merge_holdout_baseline`, unit-tested free-tier).
+**Path to v1.0.0: the Q4 weak-floor iteration session (visible corpus only)
+— language floors, diagnostic-kind prompt (never iterated), insight-
+resolution reflect skill — then re-run the gate.**
 
 ## NEXT ACTIONS (in order)
 
@@ -199,3 +216,16 @@ committed work, not proposals awaiting an answer. Item numbering is stable
   STATE item 2 closed. Same session: ownership block shipped (insights
   see/trace/contest + stamping; campaign list/archive, completion →
   maintenance, windowed criteria, idle notices; 344 tests); item 3 closed.
+- 07-09 (field-bug/gate session): owner live-drove `dojo learn` — five field
+  fixes shipped: store index skipped the ENTIRE store when its path holds a
+  hidden component (~/.local/share default was 100% invisible; every get →
+  None; 3999d2d), `uninstall --self` now truly removes venv/launcher with
+  plan/execute split + human confirm flow (b189d42), readline line editing
+  + refinement-question separation (044546b), doctor advisory-vs-structural
+  split (a mid-command dirty store no longer aborts+ROLLS BACK installs) +
+  new Installation integrity category + in-process template snapshot
+  (conversations survive install replacement) (db666ba). First holdout gate
+  run (see section above): gap 0.184, no v1.0.0, ratchet writer hardened.
+  Anki interop investigation delivered (docs/design/anki-interop.md; PM +
+  engineering; QUESTIONS Q2 updated) — headline: scoped import/export ideal,
+  FSRS-native transfer is the differentiator, sync stays rejected.

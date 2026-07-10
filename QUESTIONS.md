@@ -10,10 +10,16 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
    verdict, ~76 codex calls), and if the gap is healthy (≤ 0.1), tag.
    **Default: run the gate + tag v1.0.0 at your go-signal; I don't trigger
    this spend unprompted.**
-2. **Anki import (+ one-way export)** — you backlogged it (ADR 015); it is
-   the highest-adoption feature on the ledger (learners arrive with decks).
-   Promote it above the parked items, or leave parked?
-   **Default: parked until you promote it.**
+2. **Anki interop** — full PM + engineering investigation delivered at your
+   direction (2026-07-09): `docs/design/anki-interop.md`. Headline: possible
+   (apkg = zip+SQLite, stdlib parser); feasible (2-3 sessions for import,
+   1 for export); ideal **as a scoped acquisition adapter, not a sync
+   surface** — and modern Anki now runs FSRS natively, so dojo (py-fsrs,
+   same model family) can honor a deck's memory state near-losslessly:
+   "your memories transfer intact" is a pitch no non-FSRS competitor can
+   make. Bulk collection import is explicitly rejected (would break packet/
+   debt-guard honesty); import is deck→campaign scoped. Four sub-decisions
+   listed in the doc §8. **Default: parked until you promote it.**
 3. **Repo visibility** — the repo is private by your choice; the README's
    curl one-liner activates only when public. Any timeline?
    **Default: stays private; no action.**

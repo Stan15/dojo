@@ -15,6 +15,7 @@ from dojo.evals.runner import (
     execute_quality_scenario,
     fulfill_step,
     lean_baseline,
+    merge_holdout_baseline,
     seed_store,
 )
 from dojo.tasks import compiler
@@ -97,6 +98,36 @@ def test_lean_baseline_strips_traces_but_keeps_floors():
     for key in ("driver_trace", "judge_trace", "judged_output"):
         assert key not in json.dumps(lean), key
     assert card["scenarios"]["s1"]["driver_trace"], "the report copy keeps the trace"
+
+
+class TestMergeHoldoutBaseline:
+    """The holdout ratchet's write rules, learned at the first live gate
+    (2026-07-09): a refused zero must never become a floor, later gates
+    bootstrap scenarios the baseline doesn't know, and existing floors are
+    never rewritten."""
+
+    CARD = {"driver": "d", "judge": "j", "tier": "holdout", "margin": 0.1,
+            "scenarios": {"good": {"quality": 0.8}, "refused": {"quality": 0.0}}}
+
+    def test_bootstrap_excludes_refused_zeros(self, tmp_path: Path):
+        f = tmp_path / "b.json"
+        assert merge_holdout_baseline(self.CARD, f) == "bootstrapped"
+        floors = json.loads(f.read_text())["scenarios"]
+        assert floors == {"good": {"quality": 0.8}}, "a zero floor breaks the ratchet forever"
+
+    def test_later_gate_bootstraps_only_unknown_scenarios(self, tmp_path: Path):
+        f = tmp_path / "b.json"
+        f.write_text(json.dumps({"scenarios": {"good": {"quality": 0.9}}}))
+        card = {"scenarios": {"good": {"quality": 0.2}, "replacement": {"quality": 0.7}}}
+        assert merge_holdout_baseline(card, f) == "merged 1"
+        floors = json.loads(f.read_text())["scenarios"]
+        assert floors["good"] == {"quality": 0.9}, "existing floors are never rewritten"
+        assert floors["replacement"] == {"quality": 0.7}
+
+    def test_all_zero_card_changes_nothing(self, tmp_path: Path):
+        f = tmp_path / "b.json"
+        assert merge_holdout_baseline({"scenarios": {"r": {"quality": 0.0}}}, f) == "unchanged"
+        assert not f.exists()
 
 
 class TestHoldoutStructuralIsolation:

@@ -114,3 +114,34 @@ edge-tolerant comparison or ~15% of honest passes get discarded.
   worded — while `dojo stats` (consulted by choice) keeps the derived facts.
   The same shape generalizes: announce-once notices state facts with doors
   (maintain/archive/extend), never scores.
+
+## 2026-07-09 (field-bug session)
+
+- **A path filter must test paths relative to the root it guards, never the
+  absolute string.** `sync_index`'s hidden-dir skip (`"/." in root`) matched
+  the store's OWN prefix (`~/.local/share` → `.local`), making the entire
+  default-location store invisible: every `get()` → None, everything
+  downstream of it lying. Tests missed it because pytest tmp dirs contain no
+  dot-component — conformance now pins a store rooted under `.local/…`.
+  The general form: os.walk filters belong on `dirs[:]` (names inside the
+  tree), not on `root` (which embeds where the tree lives).
+- **A gate that can destroy working state must separate structural findings
+  from advisory ones.** install.sh's doctor gate read a mid-command dirty
+  store (a NORMAL awaiting-audit state) as non-compliance and rolled back
+  the owner's install — while the owner was mid-`dojo learn`. Doctor now
+  exits non-zero only on structural categories; recoverable states render
+  as ⚠ advisories. Corollary the same evening: long-lived processes must
+  not depend on their install staying on disk — templates now snapshot
+  in-process at first render, so an upgrade/uninstall under a running
+  conversation can't kill it.
+- **"Not found" and "already done" are different facts; a loop that
+  `continue`s over both reports success it can't prove.** drain_tasks
+  skipped unresolvable task refs silently and returned ok — the crash
+  surfaced two frames later as `NoneType.context`. Every honest-degradation
+  path needs the distinction pinned.
+- **The ratchet writer runs at teardown and believes the card, not the
+  asserts.** The first live holdout gate persisted the very 0.0 floor its
+  own bootstrap assert refused (session-scoped fixture teardown sees all
+  collected scores). Ratchet writers must re-apply acceptance rules at
+  write time (`merge_holdout_baseline`: zeros never floor, unknown scenarios
+  merge in, existing floors immutable).
