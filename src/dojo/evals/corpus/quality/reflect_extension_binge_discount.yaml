@@ -1,0 +1,70 @@
+# Provenance robustness: the window is dominated by learner-requested
+# extra practice (origin: extension) done tired, scoring far below the
+# ritual rows. Appetite-mode evidence is labeled in the rows — reflection
+# must weight it lightly instead of recalibrating off a binge.
+category: calibration
+domain: typing
+scenario_context: |
+  A touch-typing campaign. The morning ritual rows score 0.8-1.0; the same
+  evening the learner requested extra practice (rows carry the label
+  "extension (extra practice, learner-requested)") and collected 0.3s with
+  slow times — a fatigue binge, not a skill collapse. Strong output: reads
+  the split by provenance — no difficulty drop; journal (or an insight)
+  names the extension-session fatigue pattern explicitly. Weak output:
+  averages everything, lowers difficulty or raises scaffolding because
+  "accuracy collapsed", treating tired appetite rows as calibration truth.
+seed:
+  campaign:
+    id: touch-typing
+    name: Touch Typing
+    mission: Type 80 wpm without looking, including numbers and symbols.
+    strategy_profile: {difficulty: intermediate, scaffolding: low}
+  exercises:
+    - {id: ex_home, topic_path: typing.rows.home, difficulty: intermediate,
+       prompt: "Type the home-row drill line.", answer: "asdf jkl; asdf jkl;", rubric: "- accuracy over speed"}
+    - {id: ex_num, topic_path: typing.rows.numbers, difficulty: intermediate,
+       prompt: "Type the number-row drill line.", answer: "1234 7890", rubric: "- accuracy over speed"}
+    - {id: ex_sym, topic_path: typing.rows.symbols, difficulty: intermediate,
+       prompt: "Type the symbol drill line.", answer: "!@# ()_+", rubric: "- accuracy over speed"}
+  attempts:
+    - {id: att_m1, session_id: s1, exercise_id: ex_home, score: 1.0, latency_seconds: 20.0,
+       user_answer: "asdf jkl; asdf jkl;"}
+    - {id: att_m2, session_id: s1, exercise_id: ex_num, score: 0.7, latency_seconds: 30.0,
+       user_answer: "1234 7890 (one typo corrected)"}
+    - {id: att_e1, session_id: s2, exercise_id: ex_home, score: 0.3, latency_seconds: 55.0,
+       origin: extension, user_answer: "asfd jlk; adsf jkl;"}
+    - {id: att_e2, session_id: s2, exercise_id: ex_num, score: 0.3, latency_seconds: 60.0,
+       origin: extension, user_answer: "1243 7089"}
+    - {id: att_e3, session_id: s2, exercise_id: ex_sym, score: 0.3, latency_seconds: 70.0,
+       origin: extension, user_answer: "!@# ()+_"}
+    - {id: att_e4, session_id: s2, exercise_id: ex_home, score: 0.0, latency_seconds: 80.0,
+       origin: extension, user_answer: "aaaa jjjj"}
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does difficulty stay unchanged (no drop driven
+      by the extension-session scores)?"}
+  - {id: c2, weight: 3, question: "Does the output explicitly distinguish the
+      extension/extra-practice rows from the ritual rows (journal or insight
+      naming the fatigue/binge pattern)?"}
+  - {id: c3, weight: 2, question: "Are the strong ritual scores (1.0/0.7) treated
+      as the calibration signal rather than averaged away?"}
+  - {id: c4, weight: 1, question: "If an insight is created, is it about the
+      tired-extension behavior pattern (with extension attempts as evidence),
+      not a skill regression?"}
+references:
+  good:
+    insight_updates:
+      - {op: create, id: null, key: habits.tired_extensions,
+         text: "Evening extra-practice runs collapse to 0.3 while morning ritual scores stay strong.",
+         evidence: [att_e1, att_e2, att_e4], reason: "extension rows fail; ritual rows do not"}
+    strategy: null
+    plan_revision: null
+    questions: []
+    journal: "Ritual rows 1.0/0.7; extension rows 0.3s and slower — fatigue binge noted, dials held."
+  bad:
+    insight_updates: []
+    strategy: {difficulty: beginner, scaffolding: medium, reason: "accuracy collapsed across the last six attempts"}
+    plan_revision: null
+    questions: []
+    journal: "Accuracy fell sharply; difficulty lowered to rebuild fundamentals."

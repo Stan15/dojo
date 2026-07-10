@@ -1,0 +1,57 @@
+# Verbosity robustness: a rambling 250-word answer buries a fully correct
+# solution in digressions. Grading must score the content, not the style —
+# punishing wordiness schedules learned material away (the named anti-goal).
+category: robustness
+domain: espresso
+scenario_context: |
+  An espresso-craft learner answers "why does espresso taste sour and how do
+  you fix it?" with a long, rambling, self-interrupting monologue that
+  nevertheless contains the complete correct answer: sourness = under-
+  extraction, fixed by grinding finer, raising water temperature, or
+  extending the shot. Strong output: full credit (1.0), evidence quoting the
+  correct core, feedback that names one thing right and at most one
+  improvement — never punishing length. Weak output: docks the score for
+  rambling ("unfocused", "too verbose") despite correct content.
+seed:
+  campaign:
+    id: espresso-craft
+    name: Espresso Craft
+    mission: Pull consistent café-quality shots at home.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  exercises:
+    - id: ex_sour
+      topic_path: espresso.dialing.extraction
+      difficulty: intermediate
+      prompt: "Your shot tastes sharply sour. What is happening, and name two ways to fix it."
+      answer: "Sourness means under-extraction; fix by grinding finer, raising brew temperature, or extending shot time."
+      rubric: "- names under-extraction\n- gives at least two valid fixes (finer grind / hotter water / longer shot)"
+  attempts:
+    - id: att_wordy
+      session_id: s1
+      exercise_id: ex_sour
+      score: 0.0
+      grader: null
+      latency_seconds: 210.0
+      user_answer: "Okay so this is funny because literally this morning my shot was undrinkable and I went down a whole rabbit hole. First I thought the beans were bad, they're a light roast from that place near my office, and light roasts are apparently harder to work with anyway, which I didn't know until I started reading about it. But no — the beans were fine. The thing is, sour is not the same as bitter, I used to mix those up constantly, bitter is like over-done and ashy, sour is like biting a lemon, sharp at the front of the tongue. And sour basically means the water didn't take enough out of the coffee — under-extraction is the term everyone uses. The water rushed through or was too cool and only grabbed the bright acidic stuff without the sweetness that comes later in extraction. So what fixed mine, and what I'd say generally: grind finer so the water has to work through more resistance and picks up more, and you can also raise the brew temperature a bit, hotter water extracts more. A third lever is just letting the shot run longer for more contact time. Anyway I did the grind thing mostly, two steps finer, and the difference was honestly night and day, which felt great."
+steps:
+  - compile: {fn: grade, attempt_id: att_wordy}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does the grade award full credit (1.0), given
+      the answer correctly names under-extraction and at least two valid fixes?"}
+  - {id: c2, weight: 3, question: "Does the output avoid penalizing length,
+      digression, or style anywhere (score, feedback, or error_tag)?"}
+  - {id: c3, weight: 2, question: "Does the evidence quote the substantive core
+      (under-extraction / grind finer), not a digression?"}
+  - {id: c4, weight: 1, question: "Does the feedback name one thing right and stay
+      within a single focused correction or tip?"}
+references:
+  good:
+    score: 1.0
+    evidence: "under-extraction is the term"
+    feedback: "Exactly right: under-extraction, with three valid levers. Grind size first is the strongest instinct — temperature is the finer trim."
+    error_tag: null
+  bad:
+    score: 0.7
+    evidence: "went down a whole rabbit hole"
+    feedback: "Correct ideas are in there, but the answer is unfocused and too long. Practice stating the mechanism and fixes in two sentences."
+    error_tag: "unfocused answer"

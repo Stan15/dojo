@@ -1,0 +1,70 @@
+# Script robustness: the campaign's subject IS a non-Latin writing system.
+# Generation must produce real Japanese text (kana/kanji) in prompts and
+# answers — retreating to romaji-only exercises fails the mission.
+category: robustness
+domain: japanese
+scenario_context: |
+  A Japanese-vocabulary campaign (mission: read izakaya menus). The learner's
+  insight says they avoid kana by relying on romaji. Generation is asked for
+  two beginner recall items grounded in a source listing menu vocabulary in
+  kana with meanings. Strong output: exercise prompts and answers carry real
+  Japanese script (かな/漢字), e.g. asking meaning of 焼き鳥 or the kana for
+  "beer", targeting the romaji-avoidance insight. Weak output: romaji-only
+  items (yakitori → chicken skewer) that never show the learner a single
+  Japanese character, or garbled/escaped text instead of script.
+seed:
+  campaign:
+    id: izakaya-japanese
+    name: Izakaya Japanese
+    mission: Read an izakaya menu in Japanese and order without the English page.
+    strategy_profile: {difficulty: beginner, scaffolding: medium}
+  insights:
+    - id: ins_romaji
+      key: script.romaji_crutch
+      description: Reads romaji fluently but skips practicing the kana forms.
+      topic_path: japanese.menu.vocab
+steps:
+  - compile:
+      fn: generate
+      topic_path: japanese.menu.vocab
+      n_items: 2
+      difficulty: beginner
+      source_slice: |
+        Menu vocabulary: 焼き鳥 (yakitori) — grilled chicken skewers.
+        ビール (bīru) — beer. 枝豆 (edamame) — boiled soybeans.
+        お通し (otōshi) — the small compulsory appetizer.
+        生 (nama) — draft, as in 生ビール draft beer.
+judge_rubric:
+  - {id: c1, weight: 3, question: "Do the exercise prompts and/or answers contain
+      actual Japanese script (kana or kanji) from the source, not romaji only?"}
+  - {id: c2, weight: 3, question: "Does at least one item force the learner to
+      read or produce the Japanese form (targeting the romaji-crutch insight)?"}
+  - {id: c3, weight: 2, question: "Are the items grounded in the source vocabulary
+      (yakitori, beer, edamame, otōshi, nama) rather than invented words?"}
+  - {id: c4, weight: 1, question: "Is the Japanese text clean and readable (no
+      mojibake, no escaped code points)?"}
+references:
+  good:
+    items:
+      - prompt: "メニューに「焼き鳥」とあります。What is it, in English?"
+        answer: "Grilled chicken skewers (yakitori)."
+        rubric: "- grilled chicken skewers / chicken on a skewer"
+        skill: recall
+      - prompt: "Write the Japanese (kana or kanji) you would look for on the menu to order a draft beer."
+        answer: "生ビール (nama bīru)."
+        rubric: "- 生ビール, or 生 + ビール separately"
+        skill: produce
+    note: null
+    intervention: null
+  bad:
+    items:
+      - prompt: "What does 'yakitori' mean?"
+        answer: "Grilled chicken skewers."
+        rubric: "- grilled chicken skewers"
+        skill: recall
+      - prompt: "What is the romaji word for draft beer?"
+        answer: "Nama biru."
+        rubric: "- nama biru"
+        skill: recall
+    note: "Kept everything in romaji for accessibility."
+    intervention: null

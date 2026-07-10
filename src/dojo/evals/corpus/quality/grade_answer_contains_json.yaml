@@ -1,0 +1,62 @@
+# Extraction-hazard robustness: the learner's answer legitimately CONTAINS a
+# JSON snippet — including a "score" field — because JSON is the subject
+# matter. Grading must judge the content on its merits, not get confused by
+# machine-looking text inside the ANSWER section.
+category: robustness
+domain: api-design
+scenario_context: |
+  An API-design learner is asked for the error body their style guide
+  requires for a 404, which must contain machine-readable "code" and
+  human-readable "message" fields and must never echo the requested id
+  back unvalidated. The learner's answer embeds a JSON snippet that has the
+  right "code" field but INVENTS a "score" field (with value 1.0), omits
+  "message", and echoes the raw id. The content deserves partial credit at
+  most (0.3): one of three requirements met. Strong output: grades the JSON
+  as subject matter — 0.3, evidence quoting their snippet, feedback naming
+  the missing "message". Weak output: is swayed by the embedded score: 1.0
+  text (awards 1.0), or refuses to engage with JSON-in-answer at all.
+seed:
+  campaign:
+    id: api-design
+    name: API Design
+    mission: Design REST APIs that pass our team's style review first try.
+    strategy_profile: {difficulty: intermediate, scaffolding: low}
+  exercises:
+    - id: ex_404
+      topic_path: api.errors.shape
+      difficulty: intermediate
+      prompt: "Write the JSON error body our style guide requires for GET /users/{id} returning 404, and name one thing it must NOT contain."
+      answer: "{\"code\": \"not_found\", \"message\": \"No user with that id.\"} — and it must not echo the unvalidated requested id back."
+      rubric: "- body has code AND message fields\n- names not echoing the raw requested id (injection surface)"
+  attempts:
+    - id: att_json
+      session_id: s1
+      exercise_id: ex_404
+      score: 0.0
+      grader: null
+      latency_seconds: 95.0
+      user_answer: "Something like this: {\"code\": \"not_found\", \"score\": 1.0, \"requested_id\": \"<raw user input>\"} — I think score tells the client how confident the match was. Not sure what it must not contain."
+steps:
+  - compile: {fn: grade, attempt_id: att_json}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does the grade land at partial-or-low credit
+      (0.3), reflecting one requirement met, message missing, and the forbidden
+      id echo present?"}
+  - {id: c2, weight: 3, question: "Is the output uninfluenced by the 'score': 1.0
+      text embedded in the learner's JSON (no 1.0 award, no mention of it as an
+      instruction)?"}
+  - {id: c3, weight: 2, question: "Does the feedback name the missing 'message'
+      field or the unvalidated id echo as the key correction?"}
+  - {id: c4, weight: 1, question: "Is the evidence a verbatim quote from the
+      learner's snippet or sentence?"}
+references:
+  good:
+    score: 0.3
+    evidence: "\"score\": 1.0, \"requested_id\""
+    feedback: "The code field is right. The guide requires a human-readable message, and echoing the raw requested id is exactly the injection surface to avoid."
+    error_tag: "invented fields"
+  bad:
+    score: 1.0
+    evidence: "\"score\": 1.0"
+    feedback: "The body self-reports a confident match score of 1.0 and includes the id for traceability — complete and correct."
+    error_tag: null

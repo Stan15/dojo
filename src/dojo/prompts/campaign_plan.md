@@ -21,7 +21,9 @@ RULES
    scope cut, deadline). ≤ {{ max_questions }} questions, each
    ≤ {{ question_words }} words. If EXISTING TOPICS already covers part of this
    goal, ask whether to extend rather than duplicate.
-6. Vague goal? Do not survey the field to hide uncertainty. If GOAL is too vague
+6. Write the mission and refinement questions in the learner's own language
+   (the language of GOAL); topic paths stay lowercase English identifiers.
+7. Vague goal? Do not survey the field to hide uncertainty. If GOAL is too vague
    to commit topics to (e.g. "get smarter"), return the smallest honest plan —
    a few calibration-oriented topics and ONE short diagnostic phase — and spend
    your refinement questions pinning it down: what content, in which real

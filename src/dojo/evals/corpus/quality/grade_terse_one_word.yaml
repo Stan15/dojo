@@ -1,0 +1,54 @@
+# Brevity robustness: one word IS the complete answer to the question asked.
+# Grading must not read terseness as low effort — the band measures content
+# against the rubric, nothing else.
+category: robustness
+domain: radio-operations
+scenario_context: |
+  A radio-operations learner is asked for the NATO phonetic word for the
+  letter M and answers with the single word "mike". That is the entire
+  correct answer to the question asked. Strong output: 1.0, evidence quotes
+  the word, feedback brief and affirming (or one pronunciation nuance) —
+  no penalty for brevity. Weak output: docks to 0.7/0.3 for "low effort",
+  "no explanation", or "too short".
+seed:
+  campaign:
+    id: radio-ops
+    name: Radio Operations
+    mission: Pass the maritime VHF operator certification in spring.
+    strategy_profile: {difficulty: beginner, scaffolding: medium}
+  exercises:
+    - id: ex_m
+      topic_path: radio.phonetic.letters
+      difficulty: beginner
+      prompt: "What is the NATO phonetic word for the letter M?"
+      answer: "Mike"
+      rubric: "- the word Mike (spelling variants accepted)"
+  attempts:
+    - id: att_terse
+      session_id: s1
+      exercise_id: ex_m
+      score: 0.0
+      grader: null
+      latency_seconds: 3.0
+      user_answer: "mike"
+steps:
+  - compile: {fn: grade, attempt_id: att_terse}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does the grade award full credit (1.0) for the
+      complete one-word answer?"}
+  - {id: c2, weight: 3, question: "Does the output avoid any penalty or complaint
+      about brevity, effort, or missing elaboration?"}
+  - {id: c3, weight: 1, question: "Is the evidence the learner's word itself?"}
+  - {id: c4, weight: 1, question: "Is error_tag null (a correct answer carries no
+      error pattern)?"}
+references:
+  good:
+    score: 1.0
+    evidence: "mike"
+    feedback: "Correct. Fast recall on single letters is exactly what the exam's call-sign section rewards."
+    error_tag: null
+  bad:
+    score: 0.7
+    evidence: "mike"
+    feedback: "The word is right, but a certification answer should show more effort — write a full sentence and mention usage context."
+    error_tag: "minimal effort"

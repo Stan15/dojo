@@ -27,6 +27,18 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
      contradicts-evidence, mixed-language and single-fact goals, junk
      captures, extension-binge discounting.
    Floors bootstrapped once per set (codex, batched — spend policy).
+   **Language policy** (your follow-up, 2026-07-09): identifiers and
+   instructions stay English for performance — topic paths and insight keys
+   are already mechanically ASCII (`[a-z0-9_]` validators), and the
+   templates stay English (instruction-following is strongest there at
+   every model caliber). Everything ADDRESSED TO THE LEARNER follows the
+   learner's language: grade feedback (language of ANSWER), plan missions
+   and refinement questions (language of GOAL), insight text / clarifying
+   questions / journal (language of their answers and FEEDBACK). One rule
+   line added to each learner-facing template; benchmarked by
+   plan_goal_in_learner_language (Spanish-mix goal → Spanish mission and
+   question over English-splained ones). Full CLI/UI i18n stays backlog —
+   product surface, separate decision.
 
 1. **Model-output traces with provenance** (your 2026-07-09 question: "a
    model might fetch a website, do whatever, before the final JSON — JSON

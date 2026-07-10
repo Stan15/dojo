@@ -1,0 +1,66 @@
+# Voice-vs-evidence robustness: the learner SAYS "too easy, bored" while
+# scoring ~0.35 on that very topic. Neither blind obedience (raise
+# difficulty) nor dismissal (ignore the feedback) is right: the mismatch
+# itself is the finding, and the questions channel exists for exactly this.
+category: robustness
+domain: music-theory
+scenario_context: |
+  A music-theory learner leaves feedback "honestly this is way too easy,
+  I'm bored" on a session where their interval-identification attempts
+  scored 0.3, 0.3, and 0.7 (slow). Strong output: surfaces the mismatch —
+  an insight naming the confidence/performance gap (citing the attempts
+  with the feedback) and/or a clarifying question through the questions
+  channel; difficulty unchanged (raising it onto 0.35 accuracy manufactures
+  failure; the learner's boredom may be disengagement, not mastery). Weak
+  output: obeys the words (difficulty → advanced) or silently ignores the
+  learner's voice entirely (no insight, no question, nothing).
+seed:
+  campaign:
+    id: music-theory
+    name: Music Theory
+    mission: Hear and name what chords and intervals are doing in real songs.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  exercises:
+    - {id: ex_int1, topic_path: theory.intervals.identify, difficulty: intermediate,
+       prompt: "C up to A: what interval?", answer: "Major sixth", rubric: "- major sixth"}
+    - {id: ex_int2, topic_path: theory.intervals.identify, difficulty: intermediate,
+       prompt: "E up to B flat: what interval?", answer: "Diminished fifth (tritone)", rubric: "- tritone/diminished fifth"}
+    - {id: ex_int3, topic_path: theory.intervals.identify, difficulty: intermediate,
+       prompt: "G down to D: what interval?", answer: "Perfect fourth (descending)", rubric: "- perfect fourth"}
+  attempts:
+    - {id: att_i1, session_id: s1, exercise_id: ex_int1, score: 0.3, latency_seconds: 45.0,
+       user_answer: "Sixth of some kind, minor?", feedback: "honestly this is way too easy, I'm bored"}
+    - {id: att_i2, session_id: s1, exercise_id: ex_int2, score: 0.3, latency_seconds: 60.0,
+       user_answer: "Perfect fifth."}
+    - {id: att_i3, session_id: s1, exercise_id: ex_int3, score: 0.7, latency_seconds: 75.0,
+       user_answer: "A fourth, going down. Perfect I think."}
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does the output surface the mismatch between
+      the learner's 'too easy' feedback and their 0.3-0.7 scores (as an insight
+      citing attempts, a clarifying question, or both)?"}
+  - {id: c2, weight: 3, question: "Does difficulty stay unchanged (neither raised
+      to obey the feedback nor lowered off the scores while the mismatch is
+      unresolved)?"}
+  - {id: c3, weight: 2, question: "Is the learner's voice engaged rather than
+      ignored (the feedback is acknowledged somewhere: insight, question, or
+      journal)?"}
+  - {id: c4, weight: 1, question: "Does the journal name both facts (said bored,
+      scored low) rather than picking one?"}
+references:
+  good:
+    insight_updates:
+      - {op: create, id: null, key: engagement.confidence_gap,
+         text: "Reports interval work as boringly easy while scoring 0.3-0.7 on it.",
+         evidence: [att_i1, att_i2], reason: "stated boredom against failing scores"}
+    strategy: null
+    plan_revision: null
+    questions: ["You called intervals too easy — do the drills feel pointless, or do the wrong answers surprise you?"]
+    journal: "Learner says intervals bore them; scores say 0.3-0.7. Mismatch flagged, question asked, dials held."
+  bad:
+    insight_updates: []
+    strategy: {difficulty: advanced, scaffolding: low, reason: "learner reports the material is far too easy"}
+    plan_revision: null
+    questions: []
+    journal: "Learner is bored; raised difficulty to advanced to restore challenge."

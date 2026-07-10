@@ -1,0 +1,57 @@
+# Language robustness: the GOAL arrives half in Spanish. The subject is
+# contract law — not Spanish. Planning must read through the language,
+# keep the learner's framing, and never mistake the medium for the mission.
+category: planning
+domain: law
+scenario_context: |
+  The learner writes their goal in mixed Spanish/English: "quiero aprender
+  contract law basics para mi trabajo — mostly NDAs y employment offers".
+  Strong output: a lean CONTRACT LAW plan (NDAs, employment offers front and
+  center), mission reflecting the work context; topics are normal dotted
+  English paths; optionally one refinement question about jurisdiction.
+  Weak output: plans a Spanish-language-learning curriculum, refuses the
+  mixed input, or ignores the NDA/employment emphasis for a generic law
+  survey.
+seed:
+  campaign:
+    id: placeholder
+    name: placeholder
+    mission: placeholder
+steps:
+  - compile:
+      fn: plan
+      goal: "quiero aprender contract law basics para mi trabajo — mostly NDAs y employment offers"
+judge_rubric:
+  - {id: c1, weight: 3, question: "Is the plan about CONTRACT LAW (NDAs,
+      employment offers), not about learning Spanish or English?"}
+  - {id: c2, weight: 3, question: "Do the topics center the learner's stated
+      emphasis (NDAs, employment offers) rather than a generic survey of all
+      contract doctrine?"}
+  - {id: c3, weight: 2, question: "Does the mission reflect the for-work framing
+      in the learner's own terms?"}
+  - {id: c4, weight: 2, question: "Are the mission/refinement questions written
+      in the learner's own language or register (Spanish or their mix), while topic
+      paths stay English identifiers?"}
+references:
+  good:
+    mission: "Leer y señalar NDAs y employment offers en el trabajo con confianza, sabiendo qué cláusulas muerden."
+    topics:
+      - {path: law.contracts.formation, kind: recall, summary: "offer, acceptance, consideration"}
+      - {path: law.contracts.ndas, kind: skill, summary: "scope, term, carve-outs, red flags"}
+      - {path: law.contracts.employment, kind: skill, summary: "offers: compensation, IP assignment, termination"}
+      - {path: law.contracts.remedies, kind: recall, summary: "what breach actually costs"}
+    phases:
+      - {phase: 1, topics: [law.contracts.formation], criteria: {min_attempts: 5, min_accuracy: 0.6}, focus: "calibration"}
+      - {phase: 2, topics: [law.contracts.ndas, law.contracts.employment], criteria: {min_attempts: 10, min_accuracy: 0.7}, focus: "the documents they actually see at work"}
+      - {phase: 3, topics: [law.contracts.remedies], criteria: {min_attempts: 6, min_accuracy: 0.7}, focus: "consequences and leverage"}
+    refinement_questions: ["¿Bajo qué jurisdicción están los contratos que revisas?"]
+  bad:
+    mission: "Become conversational in Spanish for professional legal settings."
+    topics:
+      - {path: spanish.legal.vocabulary, kind: recall, summary: "legal terms in Spanish"}
+      - {path: spanish.grammar.subjunctive, kind: recall, summary: "formal register"}
+      - {path: spanish.business.smalltalk, kind: skill, summary: "office conversation"}
+    phases:
+      - {phase: 1, topics: [spanish.legal.vocabulary], criteria: {min_attempts: 5, min_accuracy: 0.6}, focus: "calibration"}
+      - {phase: 2, topics: [spanish.grammar.subjunctive, spanish.business.smalltalk], criteria: {min_attempts: 10, min_accuracy: 0.7}, focus: "professional fluency"}
+    refinement_questions: ["Do you prefer Latin American or European Spanish?"]

@@ -40,6 +40,8 @@ RULES
    audit journal. `journal` (≤ {{ journal_words }} words) names the EVIDENCE —
    the accuracy, the seconds, the repeated tag — not just the verdict, and
    says "no change: <why>" when holding still.
+6. Write insight text, questions, and journal in the learner's language
+   (the language of their answers/FEEDBACK); keys stay lowercase English.
 
 ## MISSION
 {{ mission }}

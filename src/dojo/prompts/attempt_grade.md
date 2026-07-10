@@ -17,6 +17,7 @@ RULES
    important correction. ≤ {{ feedback_words }} words, no greeting.
 5. If the mistake looks like a pattern (not a slip), name it in `error_tag`
    (2-{{ error_tag_words }} words, reusable as a label); else null.
+6. Write `feedback` in the learner's language (the language of ANSWER).
 
 ## EXERCISE
 {{ exercise_prompt }}

@@ -1,0 +1,72 @@
+# Signal-resolution robustness: one topic is thriving while another drowns,
+# in the same window. A single global dial move destroys one side or the
+# other — the correct read is per-topic (insight naming the split), leaving
+# global dials alone.
+category: robustness
+domain: climbing
+scenario_context: |
+  An indoor-climbing campaign. The window shows footwork attempts at 1.0
+  (fast) while crimp-strength attempts collect 0.3s and two too_hard skips.
+  Global accuracy lands mid — neither dial threshold is truly met by the
+  MIXTURE. Strong output: names the split (an insight about crimp-specific
+  struggle citing those attempts) and leaves difficulty unchanged (or
+  raises scaffolding with the reason naming crimps specifically); journal
+  names both signals. Weak output: one global dial move — raising
+  difficulty off footwork, or lowering it off crimps — flattening the
+  per-topic truth.
+seed:
+  campaign:
+    id: indoor-climbing
+    name: Indoor Climbing
+    mission: Climb V4 routes clean by summer.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  exercises:
+    - {id: ex_foot1, topic_path: climbing.footwork.silent_feet, difficulty: intermediate,
+       prompt: "Describe the silent-feet drill focus.", answer: "Precise, quiet foot placement", rubric: "- precision focus"}
+    - {id: ex_foot2, topic_path: climbing.footwork.silent_feet, difficulty: intermediate,
+       prompt: "When do you look at your foot during placement?", answer: "Until it is set", rubric: "- watch until set"}
+    - {id: ex_crimp1, topic_path: climbing.grip.crimps, difficulty: intermediate,
+       prompt: "Open-hand vs full crimp: when is each safer?", answer: "Open-hand default; full crimp sparingly", rubric: "- injury trade-off"}
+    - {id: ex_crimp2, topic_path: climbing.grip.crimps, difficulty: intermediate,
+       prompt: "Why do crimpy routes pump your forearms faster?", answer: "Sustained isometric load", rubric: "- isometric load"}
+    - {id: ex_crimp3, topic_path: climbing.grip.crimps, difficulty: intermediate,
+       prompt: "Name one way to train half-crimp strength safely.", answer: "Hangboard repeaters, submaximal", rubric: "- submaximal hangboard"}
+  attempts:
+    - {id: att_f1, session_id: s1, exercise_id: ex_foot1, score: 1.0, latency_seconds: 9.0,
+       user_answer: "Place each foot precisely and silently, no readjusting."}
+    - {id: att_f2, session_id: s1, exercise_id: ex_foot2, score: 1.0, latency_seconds: 8.0,
+       user_answer: "Watch the foot until it's fully set on the hold."}
+    - {id: att_c1, session_id: s1, exercise_id: ex_crimp1, score: 0.3, latency_seconds: 80.0,
+       user_answer: "Full crimp always, it's stronger?"}
+    - {id: att_c2, session_id: s2, exercise_id: ex_crimp2, score: 0.3, latency_seconds: 95.0,
+       user_answer: "Because your fingers are weak I guess."}
+    - {id: att_c3, session_id: s2, exercise_id: ex_crimp3, score: 0.0, latency_seconds: 60.0,
+       skip_reason: too_hard, user_answer: ""}
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does the output create an insight naming the
+      crimp/grip-specific struggle (citing crimp attempts), rather than a global
+      ability judgment?"}
+  - {id: c2, weight: 3, question: "Does it avoid a single global difficulty move
+      in either direction (difficulty stays unchanged/null)?"}
+  - {id: c3, weight: 2, question: "Does the journal name BOTH signals (footwork
+      strong, crimps failing), not an average?"}
+  - {id: c4, weight: 1, question: "If scaffolding changes, does the reason name
+      the struggling area specifically?"}
+references:
+  good:
+    insight_updates:
+      - {op: create, id: null, key: grip.crimp_struggle,
+         text: "Crimp-strength questions fail or get skipped; footwork is solid.",
+         evidence: [att_c1, att_c2, att_c3], reason: "three crimp failures beside perfect footwork"}
+    strategy: null
+    plan_revision: null
+    questions: []
+    journal: "Footwork strong (two fast 1.0s); crimps failing with a too_hard skip — split named, dials held."
+  bad:
+    insight_updates: []
+    strategy: {difficulty: beginner, scaffolding: medium, reason: "accuracy fell below half in recent window"}
+    plan_revision: null
+    questions: []
+    journal: "Accuracy dropped, so difficulty lowered to rebuild confidence."

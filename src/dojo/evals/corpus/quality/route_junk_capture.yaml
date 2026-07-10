@@ -1,0 +1,63 @@
+# Escape-hatch robustness: a capture that is genuinely unroutable noise.
+# stay_inbox exists so a router is never forced to jam junk somewhere —
+# using it honestly IS the strong behavior.
+category: routing
+domain: sourdough
+scenario_context: |
+  The learner's capture is a stray errand list ("eggs, paper towels, car
+  inspection Thursday") — no learnable content, no relation to either
+  campaign in the registry (sourdough baking; knife sharpening). Strong
+  output: stay_inbox with an honest reason (not learning material). Weak
+  output: force-attaches it to a campaign topic or proposes an absurd new
+  campaign for it.
+seed:
+  campaign:
+    id: sourdough-baking
+    name: Sourdough Baking
+    mission: Bake an open-crumb sourdough loaf reliably every weekend.
+    topics:
+      - {path: sourdough.starter.feeding, kind: recall, summary: "ratios and timing"}
+      - {path: sourdough.shaping.tension, kind: skill, summary: "building surface tension"}
+  campaigns:
+    - id: knife-sharpening
+      name: Knife Sharpening
+      mission: Keep every kitchen knife shaving-sharp with a whetstone.
+      topic_path: knives
+      topics:
+        - {path: knives.whetstone.angles, kind: recall, summary: "angle per blade type"}
+  captures:
+    - id: cap_errands
+      text: "eggs, paper towels, car inspection Thursday"
+steps:
+  - compile:
+      fn: route
+      capture_id: cap_errands
+      capture_text: "eggs, paper towels, car inspection Thursday"
+judge_rubric:
+  - {id: c1, weight: 3, question: "Is the action stay_inbox (the capture is an
+      errand list, not learning material)?"}
+  - {id: c2, weight: 3, question: "Does the output avoid force-attaching to any
+      existing topic or proposing a new campaign for it?"}
+  - {id: c3, weight: 2, question: "Is the reason honest about WHY it stays (not
+      learnable content), rather than vague uncertainty?"}
+  - {id: c4, weight: 1, question: "Is seed false (nothing here should become a
+      practice item)?"}
+references:
+  good:
+    action: stay_inbox
+    campaign: null
+    topic_path: null
+    new_name: null
+    new_mission: null
+    confidence: high
+    reason: "errand list, not learning material"
+    seed: false
+  bad:
+    action: attach
+    campaign: sourdough-baking
+    topic_path: sourdough.starter.feeding
+    new_name: null
+    new_mission: null
+    confidence: low
+    reason: "eggs relate to baking ingredients"
+    seed: true

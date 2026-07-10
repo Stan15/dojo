@@ -1,0 +1,56 @@
+# Method-tolerance robustness: the rubric demonstrates one method; the
+# learner reaches the correct result by a different valid one. The rubric is
+# a scoring aid, not a straitjacket — correctness of content wins.
+category: robustness
+domain: personal-finance
+scenario_context: |
+  A mental-arithmetic-for-finance learner computes an 18% tip on $60. The
+  exercise's rubric demonstrates the benchmark method (10% + half of 10%,
+  minus 2%… i.e. anchor-and-adjust), but the learner simply multiplies
+  60 × 0.18 = 10.80 directly and is exactly right. Strong output: full
+  credit, feedback may note the benchmark method as a speed tool but treats
+  the direct method as fully valid. Weak output: docks for not using the
+  demonstrated method ("didn't anchor on 10%").
+seed:
+  campaign:
+    id: money-math
+    name: Money Math
+    mission: Handle tips, splits, and interest in my head at the table.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  exercises:
+    - id: ex_tip
+      topic_path: money.percent.tips
+      difficulty: intermediate
+      prompt: "Compute an 18% tip on a $60 bill. Show your approach."
+      answer: "$10.80 — e.g. 10% is $6, half again is $3, minus 2% ($1.20) gives $10.80."
+      rubric: "- correct amount ($10.80)\n- a coherent approach shown"
+  attempts:
+    - id: att_direct
+      session_id: s1
+      exercise_id: ex_tip
+      score: 0.0
+      grader: null
+      latency_seconds: 28.0
+      user_answer: "60 times 0.18 is 10.80, so $10.80. I just multiplied directly."
+steps:
+  - compile: {fn: grade, attempt_id: att_direct}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does the grade award full credit (1.0) for the
+      correct amount reached by a valid direct method?"}
+  - {id: c2, weight: 3, question: "Does the output avoid penalizing the method
+      mismatch (no deduction or error_tag for skipping the benchmark approach)?"}
+  - {id: c3, weight: 1, question: "Does the evidence quote the learner's correct
+      computation?"}
+  - {id: c4, weight: 1, question: "If feedback mentions the benchmark method at
+      all, is it framed as an optional speed tool rather than a requirement?"}
+references:
+  good:
+    score: 1.0
+    evidence: "60 times 0.18 is 10.80"
+    feedback: "Correct, and the direct multiplication is perfectly valid. The 10%-anchor trick is only worth adopting when you want it faster than working a decimal."
+    error_tag: null
+  bad:
+    score: 0.7
+    evidence: "I just multiplied directly"
+    feedback: "Right amount, but the exercise practices the benchmark method — anchor on 10% first next time, since direct multiplication won't scale mentally."
+    error_tag: "method mismatch"
