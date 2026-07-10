@@ -41,17 +41,17 @@ class TestCorpusCoverage:
     breadth is a ratcheted invariant, not an aspiration. These floors may only
     ever go UP; raising them is how the corpus grows deliberately."""
 
-    MIN_TOTAL = 41
+    MIN_TOTAL = 55
     MIN_PER_CATEGORY = {
-        "personalization": 3,
-        "calibration": 6,
-        "planning": 6,
-        "grading-integrity": 4,
+        "personalization": 5,
+        "calibration": 12,
+        "planning": 7,
+        "grading-integrity": 6,
         "meta-learning": 3,
         "domain-breadth": 4,
-        "change-authority": 2,
-        "routing": 4,
-        "robustness": 7,
+        "change-authority": 3,
+        "routing": 5,
+        "robustness": 10,
     }
     MIN_DISTINCT_DOMAINS = 14
 

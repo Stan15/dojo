@@ -1,0 +1,117 @@
+# Skill: change-authority via learner-voice plan revision.
+# Failure mode: pattern paternalism.
+category: change-authority
+domain: sewing
+scenario_context: |
+  Sewing learner preparing for practical clothing repairs while traveling. The
+  current plan includes hand-stitch basics, then machine setup, then garment
+  fitting. Three recent practice attempts show weak machine-control and seam
+  accuracy, which makes it tempting to infer "machine fundamentals first." But
+  the learner then answered a diagnostic scope question: they need hand repairs
+  while traveling and explicitly ask to drop machine sewing and fitting. Strong
+  reflection revises the plan around portable hand mending and cites att_4, the
+  diagnostic answer, as the authority. Weak reflection restructures from the
+  error pattern alone or ignores the learner's stated structural need.
+seed:
+  campaign:
+    id: travel-mending
+    name: Travel Clothing Repair
+    mission: Repair everyday clothing reliably during long trips with a small kit.
+    topic_path: sewing
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+    active_phase_index: 1
+    attack_plan:
+      - {phase: 1, topics: [sewing.hand_stitches], criteria: {min_attempts: 5, min_accuracy: 0.7}, focus: secure hand-stitch basics}
+      - {phase: 2, topics: [sewing.machine_basics], criteria: {min_attempts: 8, min_accuracy: 0.7}, focus: machine threading, tension, and straight seams}
+      - {phase: 3, topics: [sewing.garment_fit], criteria: {min_attempts: 8, min_accuracy: 0.7}, focus: simple fit adjustments}
+    topics:
+      - {path: sewing.hand_stitches, kind: skill, summary: Sew secure running, back, and whip stitches by hand.}
+      - {path: sewing.machine_basics, kind: skill, summary: Set up a sewing machine and sew stable seams.}
+      - {path: sewing.garment_fit, kind: skill, summary: Diagnose and adjust basic garment fit issues.}
+  exercises:
+    - id: ex_1
+      topic_path: sewing.machine_basics
+      difficulty: intermediate
+      prompt: "A machine seam has loops on the underside after a tension change. What should you check first?"
+      answer: "Check that the top thread is seated correctly in the tension discs and rethread with the presser foot raised."
+      rubric: "Credit rethreading through the tension path; partial for mentioning top tension; no credit for changing fabric."
+    - id: ex_2
+      topic_path: sewing.machine_basics
+      difficulty: intermediate
+      prompt: "You need a straight 1 cm seam allowance on cotton. What setup helps keep the seam consistent?"
+      answer: "Use a seam guide or marked throat-plate line, keep fabric flat, and guide without pulling."
+      rubric: "Credit guide/marking plus gentle fabric handling; partial for either; no credit for speed alone."
+    - id: ex_3
+      topic_path: sewing.garment_fit
+      difficulty: intermediate
+      prompt: "A shirt pulls diagonally from armpit to chest. What does that fit symptom usually suggest?"
+      answer: "The chest or armhole area needs more room; diagnose before taking in any side seams."
+      rubric: "Credit identifying insufficient room around chest/armhole; partial for noting strain; no credit for shortening sleeves."
+    - id: ex_4
+      topic_path: sewing.plan_diagnostic
+      difficulty: intermediate
+      quality: diagnostic
+      prompt: "Before revising the next phase, what sewing situations do you actually need this campaign to support?"
+      answer: "A clear scope preference naming the sewing context and any topics to add or drop."
+      rubric: "Credit explicit constraints or desired scope; no credit for vague preference only."
+  attempts:
+    - id: att_1
+      session_id: s8
+      exercise_id: ex_1
+      score: 0.3
+      latency_seconds: 70.0
+      error_tag: tension path
+      user_answer: "I would loosen the bobbin screw and test again."
+    - id: att_2
+      session_id: s8
+      exercise_id: ex_2
+      score: 0.3
+      latency_seconds: 85.0
+      error_tag: seam control
+      user_answer: "Go slowly and watch the needle instead of the edge."
+    - id: att_3
+      session_id: s9
+      exercise_id: ex_3
+      score: 0.0
+      latency_seconds: 95.0
+      error_tag: fit diagnosis
+      user_answer: "Take in the side seam so the shirt hangs straighter."
+    - id: att_4
+      session_id: s9
+      exercise_id: ex_4
+      score: 1.0
+      latency_seconds: 42.0
+      user_answer: "Hand repairs while traveling; please drop machine sewing and fitting, focus on patches, buttons, and field hems."
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does the output include a non-null plan_revision that replaces machine sewing and garment fitting with portable hand-mending work?"}
+  - {id: c2, weight: 3, question: "Does the plan_revision evidence cite att_4, the answered diagnostic attempt containing the learner's stated structural need?"}
+  - {id: c3, weight: 2, question: "Does the revised plan honor the learner's requested scope: patches, buttons, and field hems rather than machine fundamentals?"}
+  - {id: c4, weight: 1, question: "Does the journal attribute the revision to the learner's diagnostic answer without inventing unrelated changes?"}
+references:
+  good:
+    insight_updates: []
+    strategy: null
+    plan_revision:
+      phases:
+        - {phase: 1, topics: [sewing.hand_stitches], criteria: {min_attempts: 5, min_accuracy: 0.7}, focus: secure hand-stitch basics}
+        - {phase: 2, topics: [sewing.hand_mending], criteria: {min_attempts: 8, min_accuracy: 0.7}, focus: patches and field hems}
+        - {phase: 3, topics: [sewing.fasteners], criteria: {min_attempts: 8, min_accuracy: 0.7}, focus: buttons, snaps, and small closures}
+      evidence: [att_4]
+      reason: "diagnostic answer requests travel hand-mending scope"
+    questions: []
+    journal: "Revised plan from att_4: travel hand repairs replace machine and fitting phases."
+  bad:
+    insight_updates:
+      - {op: create, id: null, key: sewing.machine_control_gap, text: "Learner needs machine-control fundamentals before moving to repairs.", evidence: [att_1, att_2], reason: "recent machine attempts were weak"}
+    strategy: null
+    plan_revision:
+      phases:
+        - {phase: 1, topics: [sewing.hand_stitches], criteria: {min_attempts: 5, min_accuracy: 0.7}, focus: secure hand-stitch basics}
+        - {phase: 2, topics: [sewing.machine_basics], criteria: {min_attempts: 10, min_accuracy: 0.75}, focus: machine threading, tension, and seam guides}
+        - {phase: 3, topics: [sewing.garment_fit], criteria: {min_attempts: 10, min_accuracy: 0.75}, focus: fit diagnosis before repair work}
+      evidence: [att_1, att_2, att_3]
+      reason: "pattern shows fundamentals should come first"
+    questions: []
+    journal: "Restructured around machine and fit fundamentals based on recent misses."

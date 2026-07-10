@@ -1,0 +1,64 @@
+# Diagnostic calibration axis coverage. Failure mode: axis collapse.
+category: calibration
+domain: team_facilitation
+scenario_context: |
+  New campaign for learning team facilitation. There is no prior attempt evidence,
+  so the diagnostic should calibrate gently before practice. Strong output asks
+  short, low-pressure questions across distinct axes: current ability, prior
+  exposure, concrete goals, and preferred practice. Weak output sounds like a
+  graded quiz and only tests whether the learner already knows facilitation
+  terminology or procedures.
+seed:
+  campaign:
+    id: team-facilitation
+    name: Team Facilitation
+    mission: Lead structured team discussions that surface concerns, align decisions, and produce clear next actions.
+    strategy_profile: {difficulty: beginner, scaffolding: high}
+steps:
+  - compile: {fn: diagnostic, topic_path: team_facilitation.diagnostic, n_items: 4}
+judge_rubric:
+  - {id: c1, weight: 4, question: "Do the diagnostic questions span at least three distinct calibration axes, including ability, prior exposure, goals, or preferred practice?"}
+  - {id: c2, weight: 3, question: "Does the output avoid graded-quiz wording that pressures the learner to prove knowledge before calibration?"}
+  - {id: c3, weight: 2, question: "Are all prompts short learner-facing diagnostic questions with skill diagnostic and null answer/rubric?"}
+  - {id: c4, weight: 1, question: "Are the questions specific to team facilitation without turning into a broad survey?"}
+references:
+  good:
+    items:
+      - prompt: "What kinds of team discussions can you already lead comfortably, if any?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "Have you used any facilitation formats before, such as retrospectives, decision meetings, or brainstorming sessions?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "What facilitation situation do you most want to handle better in the next month?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "Would you rather practice with scripts, scenario decisions, or short reflection prompts first?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+    note: null
+    intervention: null
+  bad:
+    items:
+      - prompt: "Define psychological safety and explain why it matters in facilitation."
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "List the correct steps for running a retrospective."
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "Identify three common facilitation anti-patterns from memory."
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "Explain the difference between consensus and consent decision-making."
+        answer: null
+        rubric: null
+        skill: diagnostic
+    note: null
+    intervention: null

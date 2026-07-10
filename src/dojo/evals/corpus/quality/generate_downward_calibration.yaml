@@ -1,0 +1,123 @@
+# Skill under test: downward difficulty calibration; failure mode: nominal-difficulty anchoring after recent struggle.
+category: personalization
+domain: home_horticulture
+scenario_context: |
+  Home horticulture learner preparing to prune backyard fruit trees. The campaign's
+  strategy dial is set to intermediate with medium scaffolding, but the recent
+  attempt rows show repeated real struggle on intermediate pruning decisions:
+  scores of 0.3 with slow latencies and confused answers. Generation should land
+  one notch gentler than the dial: scaffolded entry items that rebuild the decision
+  rule before asking for application. It should not patronize the learner or ignore
+  the recent evidence by generating full intermediate pruning scenarios.
+seed:
+  campaign:
+    id: orchard-care
+    name: Backyard Orchard Care
+    mission: Learn to prune and maintain backyard fruit trees confidently before winter.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  exercises:
+    - id: ex_01
+      topic_path: horticulture.pruning.fruit_trees
+      difficulty: intermediate
+      prompt: "A young apple tree has one central leader and two branches crossing inward. Which cut should you prioritize and why?"
+      answer: "Remove one crossing inward branch to reduce rubbing and open the canopy while preserving the central leader."
+      rubric: "Credit answers that identify the crossing inward branch and explain light, airflow, or rubbing prevention."
+    - id: ex_02
+      topic_path: horticulture.pruning.fruit_trees
+      difficulty: intermediate
+      prompt: "On a pear tree, rank these pruning goals: remove dead wood, thin crowded shoots, shorten every branch by one third."
+      answer: "Remove dead wood first, thin crowded shoots second, and avoid blanket shortening."
+      rubric: "Credit correct priority and rejection of indiscriminate heading cuts."
+    - id: ex_03
+      topic_path: horticulture.pruning.fruit_trees
+      difficulty: intermediate
+      prompt: "A branch grows at a narrow angle from the trunk but has fruiting spurs. Should it stay, be headed, or be removed?"
+      answer: "Usually remove it because narrow angles are weak, despite existing fruiting spurs."
+      rubric: "Credit recognizing narrow crotch weakness and choosing removal unless context strongly justifies retention."
+    - id: ex_04
+      topic_path: horticulture.pruning.fruit_trees
+      difficulty: intermediate
+      prompt: "You see several water sprouts on a mature plum tree. What should you do with them during dormant pruning?"
+      answer: "Remove most vertical water sprouts, keeping only a well-placed one if needed for future structure."
+      rubric: "Credit removing most water sprouts and noting that rare structural exceptions may remain."
+  attempts:
+    - id: att_01
+      session_id: s_recent_1
+      exercise_id: ex_01
+      score: 0.3
+      latency_seconds: 92.0
+      error_tag: cut_priority
+      user_answer: "I would cut the leader back so the crossing branches can spread outward."
+    - id: att_02
+      session_id: s_recent_1
+      exercise_id: ex_02
+      score: 0.3
+      latency_seconds: 84.0
+      error_tag: over_heading
+      user_answer: "Shorten every branch first, then remove dead wood if it still looks crowded."
+    - id: att_03
+      session_id: s_recent_2
+      exercise_id: ex_03
+      score: 0.3
+      latency_seconds: 101.0
+      error_tag: weak_angle
+      user_answer: "I would keep it because fruiting spurs matter more than the branch angle."
+    - id: att_04
+      session_id: s_recent_2
+      exercise_id: ex_04
+      score: 0.3
+      latency_seconds: 88.0
+      error_tag: water_sprouts
+      user_answer: "Leave the water sprouts because vertical growth seems strongest."
+steps:
+  - compile:
+      fn: generate
+      topic_path: horticulture.pruning.fruit_trees
+      n_items: 3
+      difficulty: intermediate
+judge_rubric:
+  - id: c1
+    weight: 4
+    question: "Do the generated items land one notch gentler than intermediate by using scaffolded entry prompts instead of full nominal pruning scenarios?"
+  - id: c2
+    weight: 3
+    question: "Does the output clearly respond to the recent 0.3 slow attempts rather than following the campaign difficulty dial at face value?"
+  - id: c3
+    weight: 2
+    question: "Do the items rebuild core pruning decision rules without sounding patronizing or childish?"
+  - id: c4
+    weight: 1
+    question: "Are the items on the requested fruit-tree pruning topic with no intervention questions?"
+references:
+  good:
+    items:
+      - prompt: "Look at one branch first: it crosses inward and rubs another branch. What is the main reason to remove it?"
+        answer: "It can rub, crowd the canopy, and reduce light or airflow, so it is usually a priority cut."
+        rubric: "Full credit for naming rubbing, crowding, light, or airflow as the reason; partial for simply saying it should be removed."
+        skill: explain
+      - prompt: "Choose the better first cut: dead wood or shortening every healthy branch. Explain in one sentence."
+        answer: "Dead wood comes first because it is unproductive and can harbor problems; avoid shortening every branch by default."
+        rubric: "Full credit for prioritizing dead wood and rejecting blanket heading cuts."
+        skill: apply
+      - prompt: "A vertical water sprout grows straight up from a main limb. What is the usual pruning choice, and what is one exception?"
+        answer: "Remove most water sprouts; keep one only if it is well placed for future structure."
+        rubric: "Full credit for removing most water sprouts and naming a structural exception."
+        skill: produce
+    note: "Recent slow 0.3 attempts justify scaffolded entry below the dial."
+    intervention: null
+  bad:
+    items:
+      - prompt: "Design a dormant pruning plan for a neglected five-year apple tree with crossing limbs, water sprouts, weak crotch angles, and uneven scaffold spacing. Justify cut order."
+        answer: "Prioritize dead and damaged wood, remove weak-angle limbs, thin crossing growth, reduce water sprouts, and preserve balanced scaffold structure."
+        rubric: "Credit a complete ordered plan using structural pruning principles across all listed issues."
+        skill: produce
+      - prompt: "Compare central-leader and open-center pruning for mixed apple, pear, and plum plantings, then decide which structural cuts to make in year three."
+        answer: "Apples and pears usually favor central leader; plums may use open center. Cuts depend on species, vigor, and scaffold placement."
+        rubric: "Credit species-aware comparison and justified year-three structural decisions."
+        skill: critique
+      - prompt: "Given a mature pear with spur-bearing laterals, competing leaders, and vigorous upright regrowth, identify renewal cuts, thinning cuts, and heading cuts."
+        answer: "Use thinning cuts for crowding and competing leaders, renewal cuts for aging laterals, and limited heading for controlled regrowth."
+        rubric: "Credit accurate classification of cut types and appropriate use in a mature pear scenario."
+        skill: apply
+    note: "Generated at the strategy profile's intermediate level."
+    intervention: null

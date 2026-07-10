@@ -1,0 +1,118 @@
+# Skill under test: learner-language fidelity in reflection; failure mode: default-language reversion.
+domain: urban_gardening
+category: robustness
+scenario_context: |
+  Learner practices balcony vegetable gardening. The platform shell and campaign metadata are in English,
+  but every learner answer and grader feedback in the reflection window is Spanish. Strong reflection keeps
+  learner-facing insight text, questions, and journal in Spanish while retaining lowercase English keys.
+  Weak output reverts reflection prose to English because the surrounding product metadata is English.
+seed:
+  campaign:
+    id: balcony-garden
+    name: Balcony Garden
+    mission: Grow reliable herbs and salad greens on a small apartment balcony.
+    strategy_profile: {difficulty: beginner, scaffolding: medium}
+  insights:
+    - id: ins_riego
+      key: watering.drainage_check
+      description: Olvida comprobar el drenaje antes de regar macetas pequeñas.
+      topic_path: gardening.container_care.watering
+  exercises:
+    - id: ex_1
+      topic_path: gardening.container_care.watering
+      difficulty: beginner
+      prompt: "Antes de regar una albahaca en maceta, ¿qué debes comprobar?"
+      answer: "Que la tierra esté seca arriba y que la maceta drene bien."
+      rubric: "Crédito completo si menciona sequedad superficial y drenaje."
+    - id: ex_2
+      topic_path: gardening.container_care.watering
+      difficulty: beginner
+      prompt: "Tu menta tiene hojas caídas pero la tierra está húmeda. ¿Qué haces primero?"
+      answer: "Revisar drenaje y esperar antes de añadir más agua."
+      rubric: "Crédito completo si evita regar más y revisa drenaje."
+    - id: ex_3
+      topic_path: gardening.container_care.light
+      difficulty: beginner
+      prompt: "Si la lechuga recibe sol fuerte toda la tarde, ¿qué ajuste ayuda?"
+      answer: "Moverla a luz de mañana o darle sombra parcial."
+      rubric: "Crédito completo si reduce el sol fuerte de tarde."
+    - id: ex_4
+      topic_path: gardening.container_care.watering
+      difficulty: beginner
+      prompt: "¿Por qué una maceta sin agujeros es riesgosa para el perejil?"
+      answer: "Porque acumula agua y puede pudrir raíces."
+      rubric: "Crédito completo si menciona acumulación de agua y raíces."
+  attempts:
+    - id: att_1
+      session_id: s1
+      exercise_id: ex_1
+      score: 0.7
+      latency_seconds: 18.0
+      user_answer: "Miro si la tierra de arriba está seca, pero no siempre reviso los agujeros."
+      feedback: "Bien por tocar la tierra; falta confirmar que el agua pueda salir."
+      error_tag: drenaje omitido
+    - id: att_2
+      session_id: s1
+      exercise_id: ex_2
+      score: 0.3
+      latency_seconds: 24.0
+      user_answer: "Le pondría un poco más de agua porque se ve triste."
+      feedback: "Si la tierra ya está húmeda, primero revisa drenaje y espera."
+      error_tag: riego excesivo
+    - id: att_3
+      session_id: s2
+      exercise_id: ex_3
+      score: 1.0
+      latency_seconds: 13.0
+      user_answer: "La movería a un lugar con sol de mañana y sombra por la tarde."
+      feedback: "Correcto: la sombra parcial reduce el estrés por calor."
+    - id: att_4
+      session_id: s2
+      exercise_id: ex_4
+      score: 0.7
+      latency_seconds: 16.0
+      user_answer: "Se queda el agua abajo y eso puede dañar las raíces."
+      feedback: "Casi completo: di también que el drenaje evita pudrición."
+      error_tag: drenaje impreciso
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - id: c1
+    weight: 4
+    question: "Are all learner-facing reflection fields, including insight text, questions, and journal, written in Spanish rather than English?"
+  - id: c2
+    weight: 3
+    question: "Does the output keep structural keys in lowercase English while using Spanish only for learner-facing prose?"
+  - id: c3
+    weight: 2
+    question: "Does the reflection preserve the real evidence pattern about drainage and overwatering without inventing unrelated issues?"
+  - id: c4
+    weight: 1
+    question: "Does any created or updated insight cite only seeded graded attempt ids as evidence?"
+references:
+  good:
+    insight_updates:
+      - op: update
+        id: ins_riego
+        key: watering.drainage_check
+        text: "Necesita comprobar drenaje antes de decidir regar cuando la tierra ya está húmeda."
+        evidence: [att_1, att_2, att_4]
+        reason: "omisiones repetidas sobre drenaje"
+    strategy: null
+    plan_revision: null
+    questions:
+      - "¿Qué señal revisarás antes de añadir más agua?"
+    journal: "Actualizado drenaje: el patrón aparece en tres intentos recientes."
+  bad:
+    insight_updates:
+      - op: update
+        id: ins_riego
+        key: watering.drainage_check
+        text: "Learner needs to check drainage before watering when soil is already wet."
+        evidence: [att_1, att_2, att_4]
+        reason: "repeated drainage omissions"
+    strategy: null
+    plan_revision: null
+    questions:
+      - "What signal will you check before adding more water?"
+    journal: "Updated drainage insight: pattern appears in three recent attempts."

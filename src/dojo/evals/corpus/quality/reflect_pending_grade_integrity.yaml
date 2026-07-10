@@ -1,0 +1,138 @@
+# Skill: calibration evidence integrity. Failure mode: pending-grade contamination.
+category: calibration
+domain: first_aid
+scenario_context: |
+  First-aid learner. Reflection is reviewing the latest window for airway and bleeding-response practice. The window contains four graded attempts with strong scores, plus two imported practice rows whose user answers explicitly say "(ungraded — ignore the score)". Those pending rows carry placeholder score 0.0 only because grading has not run yet. Strong reflection uses only graded evidence, resolves the old airway-sequencing hesitation, and does not lower difficulty from pending placeholders. Weak reflection treats the ungraded 0.0 rows as failures and backs the learner down.
+seed:
+  campaign:
+    id: first-aid-cert
+    name: First Aid Certification
+    mission: Pass a community first-aid practical exam with calm, evidence-based response choices.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  insights:
+    - id: ins_airway_order
+      key: assessment.airway_sequence
+      description: Hesitates on opening the airway before checking breathing in unconscious-casualty scenarios.
+      topic_path: first_aid.assessment.primary_survey
+  exercises:
+    - id: ex_31
+      topic_path: first_aid.assessment.primary_survey
+      difficulty: intermediate
+      prompt: "An adult is unconscious and not responding. What is your next assessment action before deciding whether rescue breaths are needed?"
+      answer: "Open the airway, then check breathing."
+      rubric: "Full credit for opening airway before checking breathing; partial for checking breathing without airway positioning."
+    - id: ex_32
+      topic_path: first_aid.assessment.primary_survey
+      difficulty: intermediate
+      prompt: "During a primary survey, where does airway positioning belong relative to breathing assessment?"
+      answer: "Airway is opened or positioned before assessing breathing."
+      rubric: "Full credit for explicit airway-before-breathing sequence."
+    - id: ex_33
+      topic_path: first_aid.bleeding.direct_pressure
+      difficulty: intermediate
+      prompt: "A cut forearm is bleeding steadily. What first action controls the bleeding while help is arranged?"
+      answer: "Apply firm direct pressure with a dressing or clean cloth."
+      rubric: "Full credit for firm direct pressure; no credit for washing first or applying a tourniquet first."
+    - id: ex_34
+      topic_path: first_aid.assessment.primary_survey
+      difficulty: intermediate
+      prompt: "In a practice case, a casualty is unresponsive after a fall. State the airway and breathing sequence."
+      answer: "Open the airway, then look, listen, and feel for breathing."
+      rubric: "Full credit for airway positioning followed by breathing check."
+    - id: ex_35
+      topic_path: first_aid.burns.cooling
+      difficulty: intermediate
+      prompt: "Pending import: explain immediate care for a small thermal burn."
+      answer: "Cool under running water for 20 minutes."
+      rubric: "Pending manual grading; do not infer score until graded."
+    - id: ex_36
+      topic_path: first_aid.assessment.primary_survey
+      difficulty: intermediate
+      prompt: "Pending import: describe the primary survey order for an unresponsive adult."
+      answer: "Danger, response, airway, breathing, circulation."
+      rubric: "Pending manual grading; do not infer score until graded."
+  attempts:
+    - id: att_31
+      session_id: s8
+      exercise_id: ex_31
+      score: 1.0
+      latency_seconds: 14.0
+      user_answer: "Open the airway, then check breathing."
+    - id: att_32
+      session_id: s8
+      exercise_id: ex_32
+      score: 1.0
+      latency_seconds: 11.0
+      user_answer: "Airway first, then assess breathing."
+    - id: att_33
+      session_id: s9
+      exercise_id: ex_33
+      score: 0.7
+      latency_seconds: 18.0
+      user_answer: "Apply direct pressure and raise the arm if possible."
+      feedback: "Direct pressure is the key action; elevation is secondary."
+    - id: att_34
+      session_id: s9
+      exercise_id: ex_34
+      score: 1.0
+      latency_seconds: 13.0
+      user_answer: "Open the airway, then look, listen, and feel for breathing."
+    - id: att_35
+      session_id: s9
+      exercise_id: ex_35
+      score: 0.0
+      latency_seconds: 0.0
+      user_answer: "(ungraded — ignore the score) Cool the burn under running water."
+      skip_reason: "pending manual grade"
+      origin: extension
+    - id: att_36
+      session_id: s9
+      exercise_id: ex_36
+      score: 0.0
+      latency_seconds: 0.0
+      user_answer: "(ungraded — ignore the score) Danger, response, airway, breathing, circulation."
+      skip_reason: "pending manual grade"
+      origin: extension
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - id: c1
+    weight: 4
+    question: "Does the output ignore att_35 and att_36 when drawing performance conclusions because they are explicitly ungraded?"
+  - id: c2
+    weight: 3
+    question: "Does the output RESOLVE ins_airway_order using only graded airway evidence from att_31, att_32, and att_34?"
+  - id: c3
+    weight: 3
+    question: "Does the output avoid lowering difficulty or raising scaffolding based on placeholder 0.0 scores from pending rows?"
+  - id: c4
+    weight: 1
+    question: "Is the journal faithful to the graded-evidence decision without inventing failures from pending imports?"
+references:
+  good:
+    insight_updates:
+      - op: resolve
+        id: ins_airway_order
+        key: assessment.airway_sequence
+        text: "Airway-before-breathing sequence is now reliable in graded practice."
+        evidence: [att_31, att_32, att_34]
+        reason: "three graded airway items correct and prompt"
+    strategy: null
+    plan_revision: null
+    questions: []
+    journal: "Resolved airway sequencing using graded evidence; pending imports ignored."
+  bad:
+    insight_updates:
+      - op: update
+        id: ins_airway_order
+        key: assessment.airway_sequence
+        text: "Airway sequencing remains unreliable after recent failed primary-survey practice."
+        evidence: [att_31, att_32, att_34, att_36]
+        reason: "recent zero score suggests regression"
+    strategy:
+      difficulty: beginner
+      scaffolding: high
+      reason: "ungraded zero scores show the learner is struggling"
+    plan_revision: null
+    questions: []
+    journal: "Kept airway insight active and lowered difficulty after recent zero-score attempts."

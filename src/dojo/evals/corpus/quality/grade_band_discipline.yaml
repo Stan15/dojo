@@ -1,0 +1,58 @@
+# Grading integrity: apply the declared score bands exactly, even when an
+# answer feels nearly complete and invites an invented intermediate score.
+category: grading-integrity
+domain: first_aid
+scenario_context: |
+  Learner is practicing workplace first-aid response steps. The grading rubric has
+  only four bands: 0.0, 0.3, 0.7, and 1.0. This answer is nearly complete: it
+  identifies scene safety, responsiveness, breathing, calling emergency services,
+  and starting compressions. It omits asking someone to retrieve an AED, which is
+  required for full credit. Strong grading snaps to 0.7 with evidence. Weak grading
+  invents a near-perfect intermediate score because the response feels close.
+seed:
+  campaign:
+    id: workplace-first-aid
+    name: Workplace First Aid
+    mission: Build reliable first-response judgment for office emergencies.
+  exercises:
+    - id: ex_cpr_sequence
+      topic_path: first_aid.cpr.adult_sequence
+      difficulty: intermediate
+      prompt: "List the immediate steps for an unresponsive adult who is not breathing normally."
+      answer: "Check scene safety, check responsiveness, call emergency services, send for an AED, and begin chest compressions."
+      rubric: "1.0 includes scene safety, responsiveness, emergency call, AED retrieval, and compressions. 0.7 has most steps but omits one required action. 0.3 has only one or two relevant steps. 0.0 is unsafe or unrelated."
+  attempts:
+    - id: att_cpr_1
+      session_id: s12
+      exercise_id: ex_cpr_sequence
+      score: 0.0
+      latency_seconds: 41.0
+      user_answer: "Check the area is safe, tap their shoulders and shout, see if they are breathing, call 911, then start chest compressions."
+steps:
+  - compile:
+      fn: grade
+      attempt_id: att_cpr_1
+judge_rubric:
+  - id: c1
+    weight: 4
+    question: "Does the grade use exactly one allowed band and choose 0.7 rather than inventing a near-perfect score?"
+  - id: c2
+    weight: 3
+    question: "Does the evidence quote a verbatim part of the answer showing relevant CPR steps?"
+  - id: c3
+    weight: 2
+    question: "Does the feedback identify the missing AED retrieval step as the reason full credit is not earned?"
+  - id: c4
+    weight: 1
+    question: "Does the error_tag stay concise and reflect the omitted required action?"
+references:
+  good:
+    score: 0.7
+    evidence: "call 911, then start chest compressions"
+    feedback: "Strong sequence, but full credit requires sending someone for an AED before or while compressions begin."
+    error_tag: missing AED
+  bad:
+    score: 1.0
+    evidence: "call 911, then start chest compressions"
+    feedback: "Nearly complete; this would be about 0.85 because only the AED detail is missing."
+    error_tag: near complete

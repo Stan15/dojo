@@ -1,0 +1,56 @@
+# Skill under test: learner-language robustness; failure mode: English-default grading feedback.
+category: robustness
+domain: korean
+scenario_context: |
+  Korean-language learner. The grading step receives a Korean answer written in
+  Hangul. The answer is partially correct: it identifies King Sejong and the
+  creation of Hunminjeongeum, but omits the key purpose of helping common people
+  read and write. Strong grading gives the right partial-credit band, quotes
+  verbatim Hangul evidence, and gives learner-facing feedback in Korean. Weak
+  grading keeps the right band but defaults the feedback to English.
+seed:
+  campaign:
+    id: korean-civics
+    name: Korean Civics
+    mission: Build Korean-language explanations of basic Korean history topics.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  exercises:
+    - id: ex_hunmin
+      topic_path: korean.history.hangul
+      difficulty: intermediate
+      prompt: "훈민정음 창제의 목적을 한 문장으로 설명하세요."
+      answer: "세종대왕은 백성이 쉽게 읽고 쓸 수 있도록 훈민정음을 만들었다."
+      rubric: "Full credit names the purpose: enabling common people to read and write more easily. Partial credit may name Sejong or creation without the social purpose."
+  attempts:
+    - id: att_hunmin_1
+      session_id: s1
+      exercise_id: ex_hunmin
+      score: 0.7
+      latency_seconds: 18.0
+      user_answer: "세종대왕이 훈민정음을 만들었다."
+steps:
+  - compile: {fn: grade, attempt_id: att_hunmin_1}
+judge_rubric:
+  - id: c1
+    weight: 3
+    question: "Does the grade assign the partial-credit band 0.7 because the answer names Sejong and Hunminjeongeum but omits the purpose?"
+  - id: c2
+    weight: 3
+    question: "Is the learner-facing feedback written in Korean rather than English?"
+  - id: c3
+    weight: 2
+    question: "Does the evidence field quote verbatim Hangul from the seeded user_answer?"
+  - id: c4
+    weight: 1
+    question: "Does the error_tag identify the missing purpose without overstating the answer as fully wrong?"
+references:
+  good:
+    score: 0.7
+    evidence: "세종대왕이 훈민정음을 만들었다"
+    feedback: "세종대왕과 훈민정음 창제는 맞습니다. 다만 백성이 쉽게 읽고 쓰게 하려는 목적을 넣어야 합니다."
+    error_tag: missing purpose
+  bad:
+    score: 0.7
+    evidence: "세종대왕이 훈민정음을 만들었다"
+    feedback: "You correctly named King Sejong and Hunminjeongeum, but you need to explain the purpose: helping common people read and write."
+    error_tag: missing purpose

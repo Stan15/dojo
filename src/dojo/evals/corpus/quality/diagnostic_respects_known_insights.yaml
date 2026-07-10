@@ -1,0 +1,81 @@
+# Skill: diagnostic restraint from established learner insights. Failure mode: known-insight amnesia.
+category: calibration
+domain: botanical_field_sketching
+scenario_context: |
+  Botanical field sketching learner. Existing insights already establish the
+  learner's goal, prior drawing exposure, tools, and preferred practice format.
+  Strong diagnostic output respects those known facts and asks only about
+  unresolved calibration gaps: specific breakdown points, field constraints,
+  labeling needs, and confidence under time pressure. Weak output follows a
+  generic onboarding script and re-asks the already-known facts.
+seed:
+  campaign:
+    id: botanical-sketching
+    name: Botanical Field Sketching
+    mission: Create quick, accurate urban plant sketches that support field identification notes.
+    strategy_profile: {difficulty: beginner, scaffolding: medium}
+  insights:
+    - id: ins_goal
+      key: goals.field_notes
+      description: Wants ten-minute botanical sketches for urban plant identification notes, not gallery art.
+      topic_path: botanical_field_sketching.goals
+    - id: ins_background
+      key: background.observational_drawing
+      description: Completed one community drawing class and can copy simple leaf outlines accurately.
+      topic_path: botanical_field_sketching.basics
+    - id: ins_tools
+      key: constraints.tools
+      description: Uses a pocket notebook, mechanical pencil, phone camera, and no watercolor materials.
+      topic_path: botanical_field_sketching.fieldwork
+    - id: ins_preference
+      key: practice.preference
+      description: Prefers short timed drills with concrete examples over open-ended sketchbook prompts.
+      topic_path: botanical_field_sketching.practice
+steps:
+  - compile: {fn: diagnostic, topic_path: botanical_field_sketching.diagnostic, n_items: 4}
+judge_rubric:
+  - {id: c1, weight: 4, question: "Does the diagnostic avoid re-asking known facts from seeded insights, including goal, prior exposure, tools, and practice preference?"}
+  - {id: c2, weight: 4, question: "Do the questions target unresolved calibration gaps that would change near-term practice selection or scaffolding?"}
+  - {id: c3, weight: 2, question: "Are all prompts short learner-facing diagnostic questions with skill diagnostic and null answer/rubric?"}
+  - {id: c4, weight: 1, question: "Is the domain framing specific to botanical field sketching without becoming a generic art survey?"}
+references:
+  good:
+    items:
+      - prompt: "When sketching a real plant quickly, where do proportions usually break down first?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "Which details do your field notes currently miss: leaf arrangement, veins, margins, stems, or scale?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "How confident are you sketching from a live plant before taking a phone photo?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "What field condition most disrupts your sketching: standing, wind, low light, crowds, or time pressure?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+    note: null
+    intervention: null
+  bad:
+    items:
+      - prompt: "What is your main goal for learning botanical field sketching?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "How much drawing experience do you already have?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "What sketching tools and materials do you plan to use?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "Would you prefer timed drills or open-ended sketchbook prompts?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+    note: null
+    intervention: null

@@ -1,0 +1,64 @@
+category: routing
+domain: hypertension
+scenario_context: |
+  A learner keeps one English-labeled health campaign. The existing registry
+  already has a topic for home blood-pressure logging. A new capture arrives
+  in Spanish and asks for practice remembering when and how to record blood
+  pressure at home. Strong routing attaches it to the existing monitoring
+  topic despite the language boundary. Weak routing treats Spanish as the
+  subject and proposes a separate language campaign.
+seed:
+  campaign:
+    id: heart-health
+    name: Heart Health
+    mission: Build reliable habits for understanding and tracking hypertension care.
+    topics:
+      - path: hypertension.basics
+        kind: recall
+        summary: Core terms for blood pressure, systolic and diastolic readings, and risk factors.
+      - path: hypertension.home_monitoring
+        kind: skill
+        summary: Correct home cuff use, timing, logging, and recognizing when readings need follow-up.
+      - path: hypertension.medication_adherence
+        kind: skill
+        summary: Remembering medication routines, missed-dose rules, and side-effect notes.
+  captures:
+    - id: cap_bp_es
+      text: "Necesito practicar cómo tomarme la presión en casa: sentarme, esperar cinco minutos, usar el brazalete y anotar la lectura de la mañana y la noche."
+steps:
+  - compile:
+      fn: route
+      capture_id: cap_bp_es
+      capture_text: "Necesito practicar cómo tomarme la presión en casa: sentarme, esperar cinco minutos, usar el brazalete y anotar la lectura de la mañana y la noche."
+judge_rubric:
+  - id: c1
+    weight: 4
+    question: "Does the output attach to heart-health at hypertension.home_monitoring rather than create a language-based destination?"
+  - id: c2
+    weight: 3
+    question: "Does the reason use the capture's subject matter, home blood-pressure measuring and logging, as the routing evidence?"
+  - id: c3
+    weight: 2
+    question: "Does the output avoid proposing a new Spanish campaign or Spanish practice topic?"
+  - id: c4
+    weight: 1
+    question: "Does the output keep seed false and avoid inventing new topic metadata?"
+references:
+  good:
+    action: attach
+    campaign: heart-health
+    topic_path: hypertension.home_monitoring
+    new_name: null
+    new_mission: null
+    confidence: high
+    reason: "Spanish capture matches home monitoring practice"
+    seed: false
+  bad:
+    action: propose_campaign
+    campaign: null
+    topic_path: null
+    new_name: "Spanish Health"
+    new_mission: "Practice health vocabulary in Spanish"
+    confidence: high
+    reason: "capture is written in Spanish"
+    seed: false

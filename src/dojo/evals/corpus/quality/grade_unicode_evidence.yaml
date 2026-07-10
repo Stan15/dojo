@@ -1,0 +1,56 @@
+# Robust evidence verbatimness: grading must preserve non-ASCII evidence exactly,
+# avoiding ASCII normalization when quoting a correct learner answer.
+category: robustness
+domain: greek_epic
+scenario_context: |
+  A learner is practicing source-backed identification of short Greek epic excerpts.
+  The target attempt is correct: the learner names the opening invocation and includes
+  the exact Greek phrase from the source. The grading output should award full credit
+  and quote the learner's evidence verbatim, including accents and Greek characters.
+  A weak grader keeps the meaning but normalizes the quote into ASCII transliteration.
+seed:
+  campaign:
+    id: homer-openings
+    name: Homer Openings
+    mission: Recognize and cite opening formulae from Greek epic passages.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  exercises:
+    - id: ex_iliad_opening
+      topic_path: greek_epic.openings.invocation
+      difficulty: intermediate
+      prompt: "Identify the epic opening phrase and explain what it signals."
+      answer: "The answer should identify the Iliad's opening invocation and cite the Greek phrase exactly."
+      rubric: "Full credit requires correct identification plus exact quoted evidence from the learner answer."
+  attempts:
+    - id: att_unicode_quote
+      session_id: s1
+      exercise_id: ex_iliad_opening
+      score: 1.0
+      latency_seconds: 18.0
+      user_answer: "This is the Iliad's opening invocation: «Μῆνιν ἄειδε, θεά» signals the poet's appeal to the Muse."
+steps:
+  - compile: {fn: grade, attempt_id: att_unicode_quote}
+judge_rubric:
+  - id: c1
+    weight: 3
+    question: "Does the grade award 1.0 because the answer correctly identifies the Iliad opening invocation?"
+  - id: c2
+    weight: 4
+    question: "Does the evidence quote preserve the exact non-ASCII text «Μῆνιν ἄειδε, θεά» from the learner answer?"
+  - id: c3
+    weight: 2
+    question: "Does the output avoid transliterating, accent-stripping, or otherwise normalizing the quoted evidence?"
+  - id: c4
+    weight: 1
+    question: "Is the feedback concise and aligned with the cited evidence?"
+references:
+  good:
+    score: 1.0
+    evidence: "«Μῆνιν ἄειδε, θεά»"
+    feedback: "Correct identification, with exact Greek evidence preserved."
+    error_tag: null
+  bad:
+    score: 1.0
+    evidence: "«Menin aeide, thea»"
+    feedback: "Correct identification, but the quoted evidence was transliterated."
+    error_tag: null

@@ -1,0 +1,117 @@
+# Skill under test: calibration handoff from reflection to generation; failure mode: stale-dial generation.
+category: calibration
+domain: urban_gardening
+scenario_context: |
+  Balcony gardening learner practicing nutrient-amendment choices for container vegetables. The campaign profile starts at intermediate difficulty with medium scaffolding. Recent attempts show seeded struggle: when asked to choose an amendment from symptoms in unsupported prompts, the learner gives plausible but wrong nutrient choices, hesitates, and says they need the decision steps separated. Step 1 is scripted reflection and raises scaffolding to high while keeping difficulty intermediate. Step 2 must generate new practice that honors the freshly raised scaffolding dial: structured entry items with hints, decomposition, or guided symptom-to-choice steps. Weak output reuses the stale medium-scaffold style and emits bare diagnosis prompts.
+seed:
+  campaign:
+    id: balcony-veg
+    name: Balcony Vegetables
+    mission: Keep tomato and herb containers healthy through a full summer season.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  insights: []
+  exercises:
+    - id: ex_1
+      topic_path: urban_gardening.soil_amendments.npk_choices
+      difficulty: intermediate
+      prompt: "A tomato plant has pale older leaves and slow growth. Choose an amendment and explain the nutrient target."
+      answer: "Use a nitrogen-focused amendment because pale older leaves and slow growth point to nitrogen shortage."
+      rubric: "Full credit chooses nitrogen and links it to pale older leaves and weak vegetative growth."
+    - id: ex_2
+      topic_path: urban_gardening.soil_amendments.npk_choices
+      difficulty: intermediate
+      prompt: "A basil plant has dark green leaves but weak roots after transplanting. Choose whether nitrogen, phosphorus, or potassium is the best focus."
+      answer: "Phosphorus is the best focus because it supports root establishment after transplanting."
+      rubric: "Full credit chooses phosphorus and connects it to root development rather than leafy growth."
+    - id: ex_3
+      topic_path: urban_gardening.soil_amendments.npk_choices
+      difficulty: intermediate
+      prompt: "A pepper plant flowers but sets little fruit, with leaf edges browning. Pick the nutrient focus and justify it."
+      answer: "Potassium is the best focus because it supports flowering, fruiting, and stress tolerance."
+      rubric: "Full credit chooses potassium and links it to fruiting and edge-browning stress signs."
+  attempts:
+    - id: att_1
+      session_id: s1
+      exercise_id: ex_1
+      score: 0.3
+      latency_seconds: 72.0
+      error_tag: nutrient mismatch
+      user_answer: "Maybe phosphorus because the whole plant looks weak; I am guessing."
+    - id: att_2
+      session_id: s1
+      exercise_id: ex_2
+      score: 0.3
+      latency_seconds: 81.0
+      error_tag: nutrient mismatch
+      user_answer: "Nitrogen, since green leaves mean it is using lots of leaf food."
+    - id: att_3
+      session_id: s2
+      exercise_id: ex_3
+      score: 0.3
+      latency_seconds: 89.0
+      error_tag: nutrient mismatch
+      user_answer: "I need the steps separated; I would pick nitrogen because fruiting seems like growth."
+steps:
+  - compile: {fn: reflect, window_n: 15}
+    respond_with:
+      insight_updates:
+        - op: create
+          id: null
+          key: soil.npk_selection_steps
+          text: "Learner guesses nutrient amendments unless symptom cues and selection steps are separated."
+          evidence: [att_1, att_2, att_3]
+          reason: "three slow unsupported misses plus request for steps"
+      strategy:
+        difficulty: intermediate
+        scaffolding: high
+        reason: "seeded struggle on unsupported amendment choices needs guided steps"
+      plan_revision: null
+      questions: []
+      journal: "Raised scaffolding for nutrient-choice practice; keep intermediate cases."
+  - compile: {fn: generate, topic_path: urban_gardening.soil_amendments.npk_choices, n_items: 3, difficulty: intermediate}
+judge_rubric:
+  - id: c1
+    weight: 4
+    question: "Do the generated items visibly honor high scaffolding with hints, decomposed steps, or guided symptom-to-nutrient structure?"
+  - id: c2
+    weight: 3
+    question: "Does the output avoid stale medium-scaffold generation such as bare diagnosis prompts with no support?"
+  - id: c3
+    weight: 2
+    question: "Are the items still intermediate nutrient-amendment choices for container vegetables rather than lowering content difficulty or drifting topics?"
+  - id: c4
+    weight: 1
+    question: "Do the answers and rubrics make the supported reasoning path explicit enough to grade?"
+references:
+  good:
+    items:
+      - prompt: "Use the steps: symptom -> likely nutrient -> amendment focus. Tomato has pale older leaves and slow growth. Hint: older-leaf yellowing plus weak leaf growth points to N. Choose N, P, or K and explain."
+        answer: "Choose nitrogen. Pale older leaves and slow vegetative growth point to nitrogen shortage, so use a nitrogen-focused amendment."
+        rubric: "Must choose nitrogen and cite older-leaf yellowing or slow leafy growth as the cue."
+        skill: apply
+      - prompt: "Fill the decision table: root establishment after transplanting = __ focus; leafy growth = __ focus. Then choose for basil with weak roots but healthy dark leaves. Hint: separate roots from leaves."
+        answer: "Root establishment is phosphorus; leafy growth is nitrogen. Choose phosphorus for the basil because roots are the issue."
+        rubric: "Must map roots to phosphorus, leaves to nitrogen, and choose phosphorus for this case."
+        skill: produce
+      - prompt: "Guided choice: 1) Is the main problem fruiting/stress or leafy growth? 2) Which N-P-K letter supports that? Pepper flowers but sets little fruit and has browning leaf edges."
+        answer: "The problem is fruiting and stress, so choose potassium, K."
+        rubric: "Must identify fruiting or stress as the cue and choose potassium/K."
+        skill: apply
+    note: "Uses high scaffolding from the scripted reflection."
+    intervention: null
+  bad:
+    items:
+      - prompt: "Diagnose the nutrient deficiency in a tomato plant with pale leaves and slow growth, then recommend an amendment."
+        answer: "Nitrogen deficiency; use a nitrogen-focused amendment."
+        rubric: "Correctly diagnoses nitrogen deficiency and recommends an appropriate amendment."
+        skill: apply
+      - prompt: "Explain when to use nitrogen, phosphorus, and potassium amendments in container vegetables."
+        answer: "Nitrogen supports leafy growth, phosphorus supports roots, and potassium supports fruiting and stress tolerance."
+        rubric: "Accurately explains all three macronutrient roles."
+        skill: explain
+      - prompt: "Choose the correct amendment for a pepper plant with poor fruit set and browning leaf edges."
+        answer: "Use a potassium-focused amendment."
+        rubric: "Chooses potassium for fruiting and stress symptoms."
+        skill: apply
+    note: "Bare prompts reuse the stale medium-scaffold style."
+    intervention: null

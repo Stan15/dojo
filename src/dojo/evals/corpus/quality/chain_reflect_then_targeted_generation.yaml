@@ -1,0 +1,125 @@
+# Personalization chain memory: generation must use the freshly reflected insight, trapping loop amnesia.
+category: personalization
+domain: chemistry
+scenario_context: |
+  Chemistry learner preparing for an introductory exam. Recent graded attempts show a specific misconception: the learner can name redox vocabulary but repeatedly says the species gaining electrons is oxidized, often anchoring on visible charge change instead of electron loss. Step 1 is scripted reflection and creates that insight from seeded attempts. Step 2 must generate practice on the same topic that visibly targets this just-created misconception, not generic redox review.
+seed:
+  campaign:
+    id: intro-chem-redox
+    name: Intro Chemistry Redox
+    mission: Master electron-transfer redox reasoning for the unit exam.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  insights: []
+  exercises:
+    - id: ex_1
+      topic_path: chemistry.redox.electron_transfer
+      difficulty: intermediate
+      prompt: "In Zn + Cu2+ -> Zn2+ + Cu, which species is oxidized? Explain using electrons."
+      answer: "Zn is oxidized because it loses electrons to become Zn2+."
+      rubric: "Correctly identifies Zn and explains oxidation as electron loss."
+    - id: ex_2
+      topic_path: chemistry.redox.electron_transfer
+      difficulty: intermediate
+      prompt: "Fe3+ + e- -> Fe2+. Is iron oxidized or reduced? Explain."
+      answer: "Iron is reduced because Fe3+ gains an electron to become Fe2+."
+      rubric: "Correctly identifies reduction and connects it to electron gain."
+    - id: ex_3
+      topic_path: chemistry.redox.electron_transfer
+      difficulty: intermediate
+      prompt: "In Mg -> Mg2+ + 2e-, is magnesium oxidized or reduced? Explain."
+      answer: "Magnesium is oxidized because it loses two electrons."
+      rubric: "Correctly identifies oxidation and cites electron loss."
+    - id: ex_4
+      topic_path: chemistry.redox.vocabulary
+      difficulty: intermediate
+      prompt: "Define oxidizing agent in a redox reaction."
+      answer: "An oxidizing agent causes another species to lose electrons and is itself reduced."
+      rubric: "States that the oxidizing agent is reduced while causing oxidation."
+  attempts:
+    - id: att_1
+      session_id: s1
+      exercise_id: ex_1
+      score: 0.3
+      latency_seconds: 34.0
+      user_answer: "Cu2+ is oxidized because it gains electrons and becomes copper."
+      error_tag: reverses oxidation
+    - id: att_2
+      session_id: s1
+      exercise_id: ex_2
+      score: 0.3
+      latency_seconds: 28.0
+      user_answer: "Iron is oxidized because it gains an electron and the charge changes."
+      error_tag: reverses oxidation
+    - id: att_3
+      session_id: s2
+      exercise_id: ex_3
+      score: 0.7
+      latency_seconds: 31.0
+      user_answer: "Magnesium is oxidized because electrons appear on the product side."
+    - id: att_4
+      session_id: s2
+      exercise_id: ex_4
+      score: 0.7
+      latency_seconds: 24.0
+      user_answer: "An oxidizing agent makes oxidation happen, but it gets reduced."
+steps:
+  - compile: {fn: reflect, window_n: 15}
+    respond_with:
+      insight_updates:
+        - op: create
+          id: null
+          key: chemistry.redox.electron_direction
+          text: "Learner reverses oxidation and reduction, calling electron gain oxidation despite correct vocabulary recall."
+          evidence: [att_1, att_2]
+          reason: "two explanations define electron gain as oxidation"
+      strategy: null
+      plan_revision: null
+      questions: []
+      journal: "Created redox insight: learner reverses electron-transfer direction."
+  - compile: {fn: generate, topic_path: chemistry.redox.electron_transfer, n_items: 3, difficulty: intermediate}
+judge_rubric:
+  - id: c1
+    weight: 4
+    question: "Does at least one generated item directly target the reflected misconception that electron gain is reduction, not oxidation?"
+  - id: c2
+    weight: 3
+    question: "Do the items require reasoning from electron loss or gain rather than only asking generic redox definitions?"
+  - id: c3
+    weight: 2
+    question: "Does the generation avoid drifting to unrelated chemistry topics or broad exam review?"
+  - id: c4
+    weight: 1
+    question: "Are the prompts and expected answers clear, graded, and appropriate for intermediate chemistry practice?"
+references:
+  good:
+    items:
+      - prompt: "In Ag+ + e- -> Ag, a learner says Ag+ is oxidized because it gains an electron. Identify the error and give the correct redox label."
+        answer: "Ag+ is reduced, not oxidized, because gaining electrons is reduction."
+        rubric: "Must reject the stated misconception and connect electron gain to reduction."
+        skill: critique
+      - prompt: "For Al -> Al3+ + 3e-, decide whether aluminum is oxidized or reduced and justify using electron movement."
+        answer: "Aluminum is oxidized because it loses three electrons."
+        rubric: "Correctly identifies oxidation and cites electron loss."
+        skill: apply
+      - prompt: "Complete the rule: oxidation is electron ____, while reduction is electron ____. Then classify Fe2+ -> Fe3+ + e-."
+        answer: "Oxidation is loss; reduction is gain. Fe2+ is oxidized because it loses an electron."
+        rubric: "Supplies loss/gain correctly and classifies Fe2+ oxidation."
+        skill: produce
+    note: "Targets the new electron-direction misconception."
+    intervention: null
+  bad:
+    items:
+      - prompt: "Define oxidation and reduction in a chemical reaction."
+        answer: "Oxidation is loss of electrons, and reduction is gain of electrons."
+        rubric: "States both definitions correctly."
+        skill: recall
+      - prompt: "What is an oxidizing agent?"
+        answer: "An oxidizing agent causes another substance to be oxidized and is itself reduced."
+        rubric: "Defines oxidizing agent accurately."
+        skill: recall
+      - prompt: "Give one everyday example of a redox reaction."
+        answer: "Rusting iron is a redox reaction involving oxidation of iron."
+        rubric: "Provides a valid redox example."
+        skill: recall
+    note: "Generic redox review ignores the new insight."
+    intervention: null

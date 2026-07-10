@@ -1,0 +1,183 @@
+category: planning
+domain: urban_horticulture
+scenario_context: |
+  Learner already has two local-first campaigns with established topic trees:
+  one for rooftop vegetable production and one for municipal compost operations.
+  A new goal asks for a plan to use compost on rooftop beds without nutrient
+  burn, pest issues, or leachate problems. The goal overlaps both trees. Strong
+  planning should extend the existing soil-amendment and curing/quality branches
+  coherently, using a refinement question to ask whether the learner wants the
+  new bridge practiced under the rooftop campaign, the compost campaign, or both.
+  Weak planning mints a separate compost-rooftop root that duplicates both
+  established namespaces.
+seed:
+  campaign:
+    id: roof-grow
+    name: Rooftop Vegetable Production
+    mission: Grow safe, productive rooftop vegetables using lightweight beds and climate-aware maintenance.
+  campaigns:
+    - id: roof-grow
+      name: Rooftop Vegetable Production
+      mission: Grow safe, productive rooftop vegetables using lightweight beds and climate-aware maintenance.
+    - id: civic-compost
+      name: Municipal Compost Operations
+      mission: Operate reliable neighborhood compost systems with clean inputs, stable curing, and safe distribution.
+  existing_topics:
+    - campaign: roof-grow
+      path: rooftops.beds.substrate
+      kind: recall
+      summary: Lightweight growing media, drainage balance, and organic matter limits for rooftop beds.
+    - campaign: roof-grow
+      path: rooftops.beds.nutrients
+      kind: skill
+      summary: Adjust nitrogen, salinity, and amendment rates for containerized rooftop vegetables.
+    - campaign: roof-grow
+      path: rooftops.pests.prevention
+      kind: skill
+      summary: Prevent pest pressure through sanitation, monitoring, and exclusion in rooftop gardens.
+    - campaign: civic-compost
+      path: compost.inputs.sorting
+      kind: recall
+      summary: Identify acceptable feedstocks and contamination risks before composting.
+    - campaign: civic-compost
+      path: compost.process.curing
+      kind: skill
+      summary: Judge curing completeness using time, smell, temperature, texture, and plant-safe indicators.
+    - campaign: civic-compost
+      path: compost.quality.testing
+      kind: skill
+      summary: Interpret maturity, salinity, and contamination checks before distributing finished compost.
+  exercises:
+    - id: ex_roof_1
+      topic_path: rooftops.beds.nutrients
+      difficulty: intermediate
+      prompt: "A tomato bed has lush leaves but little fruit after heavy amendment. What nutrient issue is likely?"
+      answer: "Excess nitrogen is likely driving vegetative growth over fruiting."
+      rubric: "Credit answers that identify excess nitrogen and link it to leafy growth."
+    - id: ex_comp_1
+      topic_path: compost.process.curing
+      difficulty: intermediate
+      prompt: "Name two signs that compost may not be fully cured."
+      answer: "Heat, ammonia smell, recognizable scraps, or slimy texture can indicate unfinished compost."
+      rubric: "Credit any two valid unfinished-compost indicators."
+  attempts:
+    - id: att_roof_1
+      session_id: s1
+      exercise_id: ex_roof_1
+      score: 0.7
+      latency_seconds: 24.0
+      user_answer: "Probably too much nitrogen, causing leaves instead of fruit."
+    - id: att_comp_1
+      session_id: s2
+      exercise_id: ex_comp_1
+      score: 0.7
+      latency_seconds: 31.0
+      user_answer: "It may still be warm or smell like ammonia."
+steps:
+  - compile:
+      fn: plan
+      goal: "Learn how to safely apply neighborhood compost to rooftop vegetable beds without nutrient burn, pest attraction, salinity buildup, or leachate problems."
+      context_notes: "The learner maintains both rooftop-growing and civic-compost campaigns. Reuse existing topic paths where they already cover the work."
+      existing_topics:
+        - rooftops.beds.substrate
+        - rooftops.beds.nutrients
+        - rooftops.pests.prevention
+        - compost.process.curing
+        - compost.quality.testing
+judge_rubric:
+  - id: c1
+    weight: 4
+    question: "Does the plan extend both existing namespaces instead of creating a new parallel root for compost-rooftop work?"
+  - id: c2
+    weight: 3
+    question: "Do declared topics preserve the existing rooftop nutrient and compost quality branches with coherent new leaf extensions?"
+  - id: c3
+    weight: 2
+    question: "Does the first phase perform calibration across both prior trees with at least five attempts?"
+  - id: c4
+    weight: 1
+    question: "Does the plan ask a concise refinement question about campaign ownership or emphasis for the cross-tree bridge?"
+references:
+  good:
+    mission: "Safely apply finished neighborhood compost to rooftop vegetable beds while controlling nutrients, pests, salinity, and leachate."
+    topics:
+      - path: rooftops.beds.substrate
+        kind: recall
+        summary: Lightweight media, drainage, and organic matter constraints for rooftop beds.
+      - path: rooftops.beds.nutrients
+        kind: skill
+        summary: Set amendment rates that avoid nitrogen excess and salinity buildup.
+      - path: rooftops.beds.compost_use
+        kind: skill
+        summary: Apply finished compost to rooftop containers at safe rates and timings.
+      - path: rooftops.pests.prevention
+        kind: skill
+        summary: Prevent pest attraction through sanitation, covered storage, and monitoring.
+      - path: compost.process.curing
+        kind: skill
+        summary: Verify curing before compost is used near active crops.
+      - path: compost.quality.testing
+        kind: skill
+        summary: Interpret maturity, salinity, and contamination checks before rooftop use.
+      - path: compost.quality.rooftop_use
+        kind: skill
+        summary: Decide whether finished compost is suitable for rooftop vegetable beds.
+    phases:
+      - phase: 1
+        topics:
+          - rooftops.beds.nutrients
+          - rooftops.beds.compost_use
+          - compost.process.curing
+          - compost.quality.testing
+        criteria:
+          min_attempts: 5
+          min_accuracy: 0.7
+        focus: "Measure current gaps across nutrient-rate decisions and compost maturity checks."
+      - phase: 2
+        topics:
+          - rooftops.beds.compost_use
+          - compost.quality.rooftop_use
+          - rooftops.pests.prevention
+        criteria:
+          min_attempts: 8
+          min_accuracy: 0.8
+        focus: "Practice deciding when compost is ready, how much to apply, and what prevention steps are needed."
+    refinement_questions:
+      - "Practice this bridge under which campaign?"
+  bad:
+    mission: "Master rooftop compost gardening from scratch as a new standalone subject."
+    topics:
+      - path: rooftop_compost.basics.materials
+        kind: recall
+        summary: Learn what compost and rooftop beds are.
+      - path: rooftop_compost.basics.safety
+        kind: recall
+        summary: Review general safety concerns for using compost on roofs.
+      - path: rooftop_compost.nutrients.application
+        kind: skill
+        summary: Apply compost to rooftop beds without overfeeding plants.
+      - path: rooftop_compost.pests.control
+        kind: skill
+        summary: Avoid pests when compost is stored or applied.
+      - path: rooftop_compost.testing.quality
+        kind: skill
+        summary: Check whether compost is ready for rooftop vegetables.
+    phases:
+      - phase: 1
+        topics:
+          - rooftop_compost.basics.materials
+          - rooftop_compost.basics.safety
+        criteria:
+          min_attempts: 5
+          min_accuracy: 0.7
+        focus: "Start a separate baseline for the new rooftop compost topic."
+      - phase: 2
+        topics:
+          - rooftop_compost.nutrients.application
+          - rooftop_compost.pests.control
+          - rooftop_compost.testing.quality
+        criteria:
+          min_attempts: 8
+          min_accuracy: 0.8
+        focus: "Practice the new standalone rooftop compost sequence."
+    refinement_questions: []
