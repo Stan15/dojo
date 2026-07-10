@@ -41,6 +41,14 @@ Ratcheted baselines live in `evals/baselines/` (per driver__judge pair); a
 prompt change that moves scores updates the baseline in the SAME commit.
 Never pipe eval runs through `tail` — it masks the exit code.
 
+**HOLDOUT (absolute owner ruling): NEVER optimize prompts on holdout-set
+data** — no verdicts, no traces, no per-scenario peeking, ever. The holdout
+(`corpus/holdout/`, `-m eval_holdout`) yields ONE consumable bit: the
+aggregate gap vs the visible mean. Bad gap → broaden the VISIBLE corpus and
+iterate there. Full protocol: tests/test_evals_holdout.py (its report
+mechanically withholds everything but bare scores). Holdout scenarios are
+authored by subagents and never read by whoever tunes prompts.
+
 ## Ground rules specific to this repo
 
 - Commit every completed logical unit immediately; conventional messages; never batch.

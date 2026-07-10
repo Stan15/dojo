@@ -12,12 +12,19 @@ THE PROTOCOL (breaking it silently voids what this tier measures):
 2. Run at RELEASE GATES only (before a version tag, after an iteration
    series):
        DOJO_EVAL_DRIVER="codex exec ..." python -m pytest -m eval_holdout -q
-3. A large gap between visible mean and holdout mean = the prompts overfit
-   the visible corpus. Diagnose by GENERALIZING the failing skill, not by
-   fixing the named scenario.
-4. If a holdout scenario's verdicts ever DO drive a prompt fix, it is burnt:
-   move it to corpus/quality/ and author a fresh replacement into holdout.
-5. Holdout scenarios are authored by a subagent and committed unread by the
+3. A holdout run yields ONE consumable bit: the aggregate gap vs the
+   visible mean. It may tell you THAT the prompts overfit — NEVER what to
+   change (owner ruling, absolute). Bad gap → return to the VISIBLE corpus,
+   broaden it with new visible scenarios authored without holdout
+   knowledge, iterate there, re-run holdout later.
+4. MECHANICAL ENFORCEMENT: this module strips verdicts, judge output, and
+   all traces before anything touches disk — per-scenario floors (bare
+   scores) are the only detail persisted, because the ratchet needs them.
+   The data you must never optimize on is never written.
+5. If a holdout scenario's data is ever consumed anyway, it is burnt:
+   move it to corpus/quality/ and have a SUBAGENT author a fresh blind
+   replacement.
+6. Holdout scenarios are authored by a subagent and committed unread by the
    prompt author; the shape suite (tests/test_quality_corpus.py) and the
    judge calibration gate are their mechanical QA.
 """
@@ -100,19 +107,20 @@ def test_holdout_quality_meets_baseline(scenario_path: Path, tmp_path: Path, hol
         output_text = execute_quality_scenario(
             scenario, tmp_path, DRIVER, TIMEOUT, trace_log=trace_log)
     except ComplianceFailure as e:
+        # Error strings only — no traces (protocol rule 4). A failing holdout
+        # scenario gets burnt (migrated to visible) before anyone triages it.
         holdout_card.setdefault("failures", {})[scenario_path.stem] = {
-            "errors": e.errors[:5], "driver_trace": trace_log,
+            "errors": e.errors[:3],
         }
-        pytest.fail(f"holdout: driver failed compliance: {e.errors[:3]}")
+        pytest.fail("holdout: driver failed compliance (details withheld — "
+                    "burn the scenario per protocol rule 5 before triaging)")
     result = judge_output(JUDGE, context, output_text, criteria, TIMEOUT)
 
+    # Bare score only (protocol rule 4): verdicts, judge output, and traces
+    # are deliberately NOT persisted for holdout — optimizing on them would
+    # void the tier, so they never reach disk.
     holdout_card["scenarios"][scenario_path.stem] = {
         "quality": result["score"],
-        "verdicts": result["verdicts"],
-        "discarded": result["discarded"],
-        "judged_output": output_text,
-        "judge_trace": result.get("raw"),
-        "driver_trace": trace_log,
     }
 
     baseline_file = EVALS_DIR / "baselines" / f"{pair_slug()}__holdout.json"
@@ -123,7 +131,8 @@ def test_holdout_quality_meets_baseline(scenario_path: Path, tmp_path: Path, hol
         assert result["score"] >= floor - margin, (
             f"{scenario_path.stem}: holdout quality {result['score']:.2f} fell below "
             f"baseline {floor:.2f} − margin {margin:.2f} — the prompts may have "
-            "overfit the visible corpus. Generalize the skill; do not fix the scenario."
+            "overfit the visible corpus. Do NOT read this scenario's data: return "
+            "to the visible corpus, broaden it, iterate there (owner ruling)."
         )
     else:
         assert result["score"] > 0.0, (

@@ -148,6 +148,9 @@ committed work, not proposals awaiting an answer. Item numbering is stable
 - Eval/benchmark: fulfiller-agnostic, per-(driver,judge) baselines, reproducible;
   codex is locally available for real runs — never hardcoded.
 - Serious, VARIED corpus; benchmark results grouped by category for users.
+- **NEVER optimize prompts on holdout-set data** (absolute, 2026-07-09):
+  one consumable bit per holdout run (aggregate gap); bad gap → broaden the
+  visible corpus, iterate there. Applies to every contributor, human or AI.
 
 ## Session changelog (compressed; git log has the story)
 
