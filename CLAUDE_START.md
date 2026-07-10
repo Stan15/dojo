@@ -63,7 +63,20 @@ dojo benchmark "codex exec --skip-git-repo-check -s read-only" --holdout
 ```
 
 Both print: holdout mean · visible mean · gap. Gap ≤ 0.1 = prompts
-generalize; > 0.2 = overfit (broaden the visible corpus).
+generalize (v1.0.0 tag bar: ≤ 0.1 STRICT — owner ruling 2026-07-10);
+> 0.2 = overfit (broaden the visible corpus).
+
+**Holdout AUTHORING protocol (owner ruling 2026-07-10):** enrichment for new
+feature surfaces is allowed, with strict ordering — ALL prompt work first,
+then holdout, never back with holdout in context. Author via a COLD-context
+subagent (or a dedicated fresh session — equivalent isolation; the brief
+discipline is what protects, not the vehicle). The brief may contain ONLY:
+category/skill names + pointers to public contracts (ADRs, schemas.py,
+limits.py, prompt templates, existing holdout dir for FORMAT). It must bar
+the author from reading `src/dojo/evals/corpus/quality/` (else holdout
+mirrors the visible set). The author reports back ONLY filenames, counts,
+and shape-suite results — scenario content never enters a prompt-tuning
+context. Holdout stays smaller than visible; floors bootstrap at gates.
 
 ## Ground rules specific to this repo
 
