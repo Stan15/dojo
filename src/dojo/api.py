@@ -2163,28 +2163,17 @@ class DojoAPI:
             advanced = True
             self.log.info(f"Campaign '{campaign.id}' ('{campaign.name}') advanced to phase {campaign.active_phase_index} (mastered phase {phase_idx})")
 
-            performance_snapshot = {
-                "attempts": attempts_count,
-                "accuracy": average_score,
-                "average_latency_seconds": sum(a.latency_seconds for a in phase_attempts) / attempts_count if attempts_count > 0 else 0.0
-            }
-
-            active_insights = self.store.insights.list(campaign.id, filters={"status": "active"})
-            insights_snapshot = [{"key": i.key, "description": i.description} for i in active_insights]
-
-            journal_entry = {
+            # Lean entry (ADR 018): the trigger line carries the numbers; no
+            # surface ever read the plan/syllabus/hypotheses snapshots that
+            # used to be embedded here — git history is the archive.
+            campaign.pedagogical_journal.append({
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "active_phase_index": phase_idx,
                 "action": "PHASE_ADVANCE",
                 "trigger": f"Passed Phase {phase_idx} criteria ({attempts_count} attempts, {average_score*100:.1f}% accuracy)",
                 "hypothesis": f"User demonstrated mastery of topics: {', '.join(phase_topics)}",
                 "status": "resolved",
-                "performance_snapshot": performance_snapshot,
-                "plan_snapshot": [p.model_dump() for p in attack_plan],
-                "syllabus_snapshot": campaign.syllabus_markdown,
-                "hypotheses_snapshot": insights_snapshot
-            }
-            campaign.pedagogical_journal.append(journal_entry)
+            })
 
         # Completion is deterministic and must be OBSERVED (owner question
         # 2026-07-09: before this, a finished campaign silently kept
@@ -2630,9 +2619,9 @@ class DojoAPI:
                 "trigger": "Campaign creation command",
                 "hypothesis": f"Initialized study plan for goal: {mission}",
                 "status": "resolved",
+                # plan_snapshot stays: CREATE is a change-authority baseline
+                # action (ADR 018 — the only functional snapshot family).
                 "plan_snapshot": [p.model_dump() for p in plan],
-                "syllabus_snapshot": syllabus_markdown,
-                "hypotheses_snapshot": []
             }],
             syllabus_markdown=syllabus_markdown or f"# {name}\n\nInitialized study program for {topic_path}.",
         )

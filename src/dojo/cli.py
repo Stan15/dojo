@@ -721,6 +721,12 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     """`dojo doctor`: run every store health check; exit 1 only on structural
     findings — advisory categories report but never fail the command."""
     store = DojoStore(_db_path(args))
+
+    # ADR 018: doctor is the one-pass layout migrator — legacy campaigns
+    # (journal/plan/topics in frontmatter, changelog.md) re-save into the
+    # vault layout. Idempotent; counted honestly below.
+    migrated = store.campaigns.migrate_layout()
+
     results = store.doctor.run()
 
     structural = [err for cat, errs in results.items()
@@ -734,10 +740,13 @@ def cmd_doctor(args: argparse.Namespace) -> int:
             "results": results,
             "errors": structural,
             **({"advisories": advisories} if advisories else {}),
+            **({"migrated_campaigns": migrated} if migrated else {}),
         })
     else:
         console.print("[bold cyan]Dojo Doctor Diagnostics[/bold cyan]")
         console.print("=======================")
+        if migrated:
+            console.print(f"[cyan]↻ migrated {migrated} campaign(s) to the vault layout (ADR 018)[/cyan]")
         for category, errors in results.items():
             if not errors:
                 console.print(f"[green]✓[/green] [bold]{category}[/bold]")

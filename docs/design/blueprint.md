@@ -145,11 +145,15 @@ its good bones — frontmatter + body, mtime index, atomic writes, file lock):
   inbox/cap_<id>.md                    # unrouted captures (§8)
   sources/src_<id>.md                  # frontmatter: provenance; body: content
   campaigns/camp_<id>/
-    campaign.md                        # frontmatter: mission/strategy/status; body: syllabus
-    plan.yaml                          # phases, criteria
+    campaign.md                        # frontmatter: SCALARS ONLY (mission/strategy/status,
+                                       #   ~10 lines — vault-grade, ADR 018); body: syllabus
+    plan.yaml                          # phases, criteria (hand-edits win)
     topics.yaml                        # per-topic mastery + due state (§7) — ONE file
+    .journal.yaml                      # machine event log (lean entries; plan-authority
+                                       #   state machine walks it; dot-hidden from vaults)
+    journal.md                         # prose journal, newest-first — a regenerated
+                                       #   PROJECTION of .journal.yaml, never parsed back
     exercises/…  attempts/…  insights/…
-    journal.md                         # pedagogical journal (append-only)
   tasks/tsk_<id>.md                    # pending/failed task envelopes + run traces
   archive/…
 ```

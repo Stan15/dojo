@@ -267,10 +267,19 @@ class StorageEngine:
         # Clean relative Markdown links pointing back to absolute entity references
         return schema_cls.model_validate(data)
 
-    def write_markdown_file(self, rel_path: str, obj: BaseModel, body_field: str):
-        """Serializes a Pydantic model into a Markdown file with frontmatter."""
+    def write_markdown_file(
+        self, rel_path: str, obj: BaseModel, body_field: str,
+        exclude: tuple[str, ...] = (),
+    ):
+        """Serializes a Pydantic model into a Markdown file with frontmatter.
+
+        `exclude` names fields projected into sibling files (ADR 018: a
+        campaign's plan/topics/journal live in plan.yaml / topics.yaml /
+        .journal.yaml) — they never enter frontmatter."""
         data = obj.model_dump(mode="json")
         body = data.pop(body_field, "") or ""
+        for field in exclude:
+            data.pop(field, None)
         # Store entity type as temporary serializing context parameter
         data["_type"] = self._detect_entity_type(rel_path)
         content = serialize_markdown(data, body)

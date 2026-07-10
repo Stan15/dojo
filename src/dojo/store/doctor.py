@@ -202,7 +202,12 @@ class DoctorService(BaseRepository):
         camp_id = camp_dir.name[5:]
         rel_prefix = f"archive/campaigns/{camp_dir.name}" if is_archived else f"campaigns/{camp_dir.name}"
 
-        allowed_camp_files = {"campaign.md", "plan.yaml", "changelog.md"}
+        # changelog.md is the legacy (pre-ADR 018) journal projection —
+        # tolerated until doctor's migration pass rewrites the campaign.
+        allowed_camp_files = {
+            "campaign.md", "plan.yaml", "topics.yaml",
+            ".journal.yaml", "journal.md", "changelog.md",
+        }
         allowed_camp_dirs = {"exercises", "candidates", "attempts", "insights"}
 
         for p in camp_dir.iterdir():
@@ -227,11 +232,18 @@ class DoctorService(BaseRepository):
                             AttackPlanPhase.model_validate(phase)
                     except Exception as e:
                         errors.append(f"Invalid plan file '{rel_prefix}/plan.yaml': {e}")
-                elif name == "changelog.md":
+                elif name in ("topics.yaml", ".journal.yaml"):
+                    try:
+                        loaded = yaml.safe_load(p.read_text(encoding="utf-8"))
+                        if loaded is not None and not isinstance(loaded, list):
+                            errors.append(f"'{rel_prefix}/{name}' must be a YAML list")
+                    except Exception as e:
+                        errors.append(f"Invalid file '{rel_prefix}/{name}': {e}")
+                elif name in ("changelog.md", "journal.md"):
                     try:
                         meta, _ = parse_markdown(p.read_text(encoding="utf-8"))
                     except Exception as e:
-                        errors.append(f"Invalid changelog file '{rel_prefix}/changelog.md': {e}")
+                        errors.append(f"Invalid journal file '{rel_prefix}/{name}': {e}")
 
         if not (camp_dir / "campaign.md").exists():
             errors.append(f"Missing required 'campaign.md' in {rel_prefix}/")
