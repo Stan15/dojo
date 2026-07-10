@@ -53,12 +53,67 @@ def test_uninstall_missing_target_is_honest_noop(tmp_path: Path, capsys):
     assert rc == 0 and data["removed"] == []
 
 
-def test_self_uninstall_reports_method_without_deleting_anything(tmp_path: Path, capsys):
-    rc, data = run(capsys, "--db", str(tmp_path / "store"), "uninstall", "--self")
-    assert rc == 0
+def test_self_uninstall_executes_the_plan(tmp_path: Path, capsys):
+    """--self performs the removal (owner directive 2026-07-09: leave NO
+    traces but the data) — the executor runs; learning data is never in
+    any plan action."""
+    with patch("dojo.cli._execute_uninstall_plan",
+               return_value=(["/fake/.dojo"], [])) as ex:
+        rc, data = run(capsys, "--db", str(tmp_path / "store"), "uninstall", "--self")
+    assert rc == 0 and data["ok"]
+    ex.assert_called_once()
+    plan = ex.call_args.args[0]
+    assert plan, "an install method must always yield a removal plan"
+    assert all("share/dojo" not in act["target"] for act in plan), "learning data must never be planned"
     assert data["install_method"] in ("pipx", "venv", "binary", "pip")
-    assert "uninstall" in data["run_this"] or "rm" in data["run_this"]
+    assert data["removed"] == ["/fake/.dojo"]
     assert "learning data" in data["note"]
+
+
+def test_self_uninstall_reports_errors_honestly(tmp_path: Path, capsys):
+    with patch("dojo.cli._execute_uninstall_plan",
+               return_value=([], ["/fake/.dojo: permission denied"])):
+        rc, data = run(capsys, "--db", str(tmp_path / "store"), "uninstall", "--self")
+    assert rc == 1 and not data["ok"]
+    assert data["errors"] and data["manual_fallback"]
+
+
+class TestSelfUninstallPlan:
+    """Pure-function pins for the removal plan builder."""
+
+    def _plan(self, method: str, home: Path):
+        from dojo.cli import _self_uninstall_plan
+        return _self_uninstall_plan(
+            method, home=home, argv0=Path("/usr/local/bin/dojo"),
+            executable=Path("/opt/python/bin/python3"),
+        )
+
+    def test_venv_plan_removes_venv_and_owned_launcher(self, tmp_path: Path):
+        (tmp_path / ".dojo" / "venv" / "bin").mkdir(parents=True)
+        launcher = tmp_path / ".local" / "bin" / "dojo"
+        launcher.parent.mkdir(parents=True)
+        launcher.symlink_to(tmp_path / ".dojo" / "venv" / "bin" / "dojo")
+        plan = self._plan("venv", tmp_path)
+        assert {a["do"] for a in plan} == {"rmtree", "unlink"}
+        assert plan[0]["target"] == str(tmp_path / ".dojo")
+        assert plan[1]["target"] == str(launcher)
+
+    def test_venv_plan_leaves_foreign_launcher_alone(self, tmp_path: Path):
+        launcher = tmp_path / ".local" / "bin" / "dojo"
+        launcher.parent.mkdir(parents=True)
+        launcher.symlink_to("/usr/bin/true")  # someone else's dojo
+        plan = self._plan("venv", tmp_path)
+        skip = [a for a in plan if a["do"] == "skip"]
+        assert len(skip) == 1 and skip[0]["target"] == str(launcher)
+
+    def test_pip_plan_uninstalls_via_the_running_interpreter(self, tmp_path: Path):
+        plan = self._plan("pip", tmp_path)
+        assert plan == [{"do": "run",
+                         "target": "/opt/python/bin/python3 -m pip uninstall -y dojo"}]
+
+    def test_binary_plan_unlinks_argv0(self, tmp_path: Path):
+        plan = self._plan("binary", tmp_path)
+        assert plan == [{"do": "unlink", "target": "/usr/local/bin/dojo"}]
 
 
 class TestInstallMethodDetection:

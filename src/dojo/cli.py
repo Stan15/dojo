@@ -1527,6 +1527,67 @@ def _detect_install_method(
     return ("pip", f"{executable} -m pip uninstall dojo")
 
 
+def _self_uninstall_plan(method: str, *, home: Path, argv0: Path,
+                         executable: Path) -> list[dict[str, str]]:
+    """What removing THIS install means, as inspectable actions the executor
+    performs (and the human flow renders before confirming). Uninstall
+    reverses install and nothing else: learning data is never in the plan,
+    and a launcher that doesn't point into ~/.dojo is not ours to delete."""
+    if method == "venv":
+        plan = [{"do": "rmtree", "target": str(home / ".dojo")}]
+        launcher = home / ".local" / "bin" / "dojo"
+        if launcher.is_symlink() or launcher.exists():
+            try:
+                if launcher.is_symlink():
+                    owned = str(launcher.readlink()).startswith(str(home / ".dojo"))
+                else:  # a copied console script: its shebang names our venv python
+                    first = launcher.read_text(encoding="utf-8", errors="ignore").split("\n", 1)[0]
+                    owned = str(home / ".dojo" / "venv") in first
+            except OSError:
+                owned = False
+            plan.append(
+                {"do": "unlink", "target": str(launcher)} if owned else
+                {"do": "skip", "target": str(launcher),
+                 "reason": "exists but does not point at ~/.dojo — not ours, left alone"}
+            )
+        return plan
+    if method == "binary":
+        return [{"do": "unlink", "target": str(argv0)}]
+    if method == "pipx":
+        return [{"do": "run", "target": "pipx uninstall dojo"}]
+    return [{"do": "run", "target": f"{executable} -m pip uninstall -y dojo"}]
+
+
+def _execute_uninstall_plan(plan: list[dict[str, str]]) -> tuple[list[str], list[str]]:
+    """Performs the plan; returns (removed, errors). Deleting our own venv
+    while running is safe on POSIX — open files keep their inodes until the
+    process exits — so act first, report after."""
+    import shlex as _shlex
+    import shutil as _shutil
+    import subprocess as _subprocess
+
+    removed: list[str] = []
+    errors: list[str] = []
+    for act in plan:
+        try:
+            if act["do"] == "rmtree":
+                _shutil.rmtree(act["target"])
+            elif act["do"] == "unlink":
+                Path(act["target"]).unlink()
+            elif act["do"] == "run":
+                proc = _subprocess.run(_shlex.split(act["target"]),
+                                       capture_output=True, text=True)
+                if proc.returncode != 0:
+                    errors.append(f"{act['target']}: {proc.stderr.strip()[:160]}")
+                    continue
+            else:  # "skip" — rendered, never executed
+                continue
+            removed.append(act["target"])
+        except OSError as exc:
+            errors.append(f"{act['target']}: {exc}")
+    return removed, errors
+
+
 def cmd_export(args: argparse.Namespace) -> int:
     """`dojo export`: write the whole store as a fresh markdown store at an empty destination."""
     from .export import export_store
@@ -1552,22 +1613,52 @@ def cmd_uninstall(args: argparse.Namespace) -> int:
     removed = []
 
     if getattr(args, "self_uninstall", False):
-        method = _detect_install_method(
+        method, manual_cmd = _detect_install_method(
             executable=Path(sys.executable),
             prefix=Path(sys.prefix),
             frozen=bool(getattr(sys, "frozen", False)),
             home=Path.home(),
             argv0=Path(sys.argv[0]),
         )
+        plan = _self_uninstall_plan(method, home=Path.home(),
+                                    argv0=Path(sys.argv[0]),
+                                    executable=Path(sys.executable))
+        note = ("your learning data is untouched; delete it manually only if you "
+                "are sure — it is your entire practice history")
+        human = not _use_json(args)
+        if human:
+            console.print(f"[bold]Uninstalling dojo[/bold] [dim]({method} install)[/dim] — removing:")
+            for act in plan:
+                if act["do"] == "skip":
+                    console.print(f"  [dim]leaving {act['target']} — {act['reason']}[/dim]")
+                else:
+                    console.print(f"  [cyan]{act['target']}[/cyan]")
+            console.print(f"Your learning data stays: [green]{DEFAULT_DOJO_DIR}[/green]")
+            if not getattr(args, "yes", False):
+                from .interactive import confirm
+                if not confirm("Remove dojo?", default=False):
+                    console.print("[dim]Nothing removed.[/dim]")
+                    return 0
+        removed, errors = _execute_uninstall_plan(plan)
+        if human:
+            for r in removed:
+                console.print(f"  [green]✓ removed[/green] {r}")
+            for e in errors:
+                console.print(f"  [red]✗ {e}[/red]")
+            if errors:
+                console.print(f"[yellow]Finished with errors — manual fallback:[/yellow] {manual_cmd}")
+                return 1
+            console.print(f"\n[bold green]dojo is gone.[/bold green] {note.capitalize()}")
+            return 0
         _print_json({
-            "ok": True,
-            "install_method": method[0],
-            "run_this": method[1],
+            "ok": not errors,
+            "install_method": method,
+            "removed": removed,
+            **({"errors": errors, "manual_fallback": manual_cmd} if errors else {}),
             "learning_data": str(DEFAULT_DOJO_DIR),
-            "note": "your learning data is untouched; delete it manually only if you "
-                    "are sure — it is your entire practice history",
+            "note": note,
         })
-        return 0
+        return 1 if errors else 0
 
     agent = getattr(args, "agent", None)
     dest = getattr(args, "dest", None)
@@ -1583,18 +1674,28 @@ def cmd_uninstall(args: argparse.Namespace) -> int:
     else:
         raise SystemExit("specify an agent name, --dest <path>, or --self")
 
+    human = not _use_json(args)
     if not target_path.exists():
-        _print_json({"ok": True, "removed": [], "note": f"nothing installed at {target_path}"})
+        if human:
+            console.print(f"[yellow]Nothing installed at {target_path}.[/yellow]")
+        else:
+            _print_json({"ok": True, "removed": [], "note": f"nothing installed at {target_path}"})
         return 0
     if not _is_owned_by_dojo(target_path):
-        _print_json({
-            "ok": False,
-            "error": f"{target_path} exists but is not a dojo-owned skill "
-                     "(no dojo owner marker in SKILL.md) — refusing to delete it",
-        })
+        msg = (f"{target_path} exists but is not a dojo-owned skill "
+               "(no dojo owner marker in SKILL.md) — refusing to delete it")
+        if human:
+            console.print(f"[red]✗ {msg}[/red]")
+        else:
+            _print_json({"ok": False, "error": msg})
         return 1
     _shutil.rmtree(target_path)
     removed.append(str(target_path))
+    if human:
+        console.print(f"[green]✓ removed[/green] {target_path}\n"
+                      f"Learning data untouched ([green]{DEFAULT_DOJO_DIR}[/green]) — "
+                      "[dim]dojo uninstall --self removes the program itself.[/dim]")
+        return 0
     _print_json({
         "ok": True,
         "removed": removed,
@@ -2145,6 +2246,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_uninstall = sub.add_parser("uninstall", help="remove the skill from an agent (or --self for the program); learning data is never touched")
     p_uninstall.add_argument("agent", nargs="?", help="agent name whose skill install to remove")
     p_uninstall.add_argument("--dest", help="explicit skill directory to remove")
+    p_uninstall.add_argument("--yes", action="store_true",
+                             help="skip the confirmation prompt (--self)")
     p_uninstall.add_argument("--self", dest="self_uninstall", action="store_true",
                              help="show how to remove the dojo program itself (pipx/venv/binary aware)")
     p_uninstall.set_defaults(func=cmd_uninstall)
