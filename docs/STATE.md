@@ -1,7 +1,7 @@
 # STATE
 
-_Last updated: 2026-07-09 (learn session). Trust this snapshot; git
-history carries the detail._
+_Last updated: 2026-07-09 (route-first → capacity → ownership → traces →
+eval-program session). Trust this snapshot; git history carries the detail._
 
 ## Phase
 
@@ -17,8 +17,11 @@ plan is a consent-gated contract), **route-first entry** (`dojo learn`;
 a goal routes against the registry before any new campaign is planned), and
 the **capacity channel** (`dojo more`; at-request-only, debt-guarded), and
 the **ownership block** (`dojo insights` with receipts; campaign lifecycle
-with deterministic completion → ADR 005 maintenance).
-**344 tests green** + 28 eval-marked.
+with deterministic completion → ADR 005 maintenance), **provenance traces**
+(every submission verbatim on its task; `task show --trace`), **task
+housekeeping**, and the **anti-reward-hacking eval program** (55-scenario
+visible corpus + 19-scenario blind holdout with structural isolation).
+**522 tests green** + eval-marked tiers.
 Repo is PRIVATE (owner's choice) — install via checkout `sh install.sh`;
 owner's machine runs the current build.
 
@@ -35,8 +38,9 @@ flows on the same machinery (structurally impossible to block an agent).
 AI plan restructures are consent-gated (minor/asked-for auto-apply with
 undo; major inferred await `dojo plan confirm`; reflection can ASK via its
 questions channel). Quality is guarded by ratcheted per-(driver,judge)
-baselines over a 26-scenario judged corpus + compliance corpus + golden
-payload/footprint pins.
+baselines over a 55-scenario judged corpus + compliance corpus + golden
+payload/footprint pins, with a 19-scenario BLIND holdout (aggregate-gap-only,
+release gates) guarding against prompt overfitting.
 
 ## NEXT ACTIONS (in order)
 
