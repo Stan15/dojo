@@ -16,6 +16,9 @@ Deep background, only when a task touches it:
 - `docs/product-north-star.md`, `docs/pedagogy-foundation.md` — product vision & pedagogy (authoritative).
 - `docs/design/prompts.md` — prompt-craft rules + model-strength neutrality; edit
   templates only with this open (goldens + footprint baselines will diff).
+  Numeric caps interpolate from `limits.TEMPLATE_CAPS` ({{ placeholders }},
+  single source; drift gates in tests/test_prompts.py) — every validator a
+  payload can trip MUST be stated in its template, same commit.
 - `docs/design/usecase-audit.md` — every user journey traced; the backlog ledger.
 - `docs/adr/` — decision records. ADR 010–016 supersede earlier ADRs where they conflict.
 - `docs/INSIGHTS.md` — non-obvious learnings; append when you learn something durable.

@@ -2,7 +2,39 @@
 
 Non-blocking. Each open question has the default I will proceed on if unanswered.
 
-## Open
+## Open — decisions actually waiting on you
+
+1. **v1.0.0** — your stated condition (quality iteration) is met: visible
+   corpus 55 scenarios, floors ratcheted, holdout standing. Remaining step:
+   run the holdout release gate once (first run = floor bootstrap + gap
+   verdict, ~76 codex calls), and if the gap is healthy (≤ 0.1), tag.
+   **Default: run the gate + tag v1.0.0 at your go-signal; I don't trigger
+   this spend unprompted.**
+2. **Anki import (+ one-way export)** — you backlogged it (ADR 015); it is
+   the highest-adoption feature on the ledger (learners arrive with decks).
+   Promote it above the parked items, or leave parked?
+   **Default: parked until you promote it.**
+3. **Repo visibility** — the repo is private by your choice; the README's
+   curl one-liner activates only when public. Any timeline?
+   **Default: stays private; no action.**
+4. **Weak-floor iteration budget** — known weak floors on the visible corpus
+   (extension-binge 0.00, learner-contradicts 0.33, single-fact-goal 0.44,
+   plus whatever the latest bootstrap surfaces). Iterating them is a codex
+   spend session. When do you want it?
+   **Default: next session you green-light eval spend.**
+5. **CLI/UI i18n** — learner-facing TASK OUTPUT follows the learner's
+   language (shipped); the CLI shell itself (labels, help, completion
+   message) is English. Full i18n is a product surface decision.
+   **Default: English shell; revisit on real non-English usage.**
+6. **Strategic tier timing** — Postgres backend (bounded by the conformance
+   suite), the app, dojo-side PDF/EPUB ingestion (agents already cover it by
+   reading + capturing). All owner-gated.
+   **Default: none started without your call.**
+
+_Parked by your explicit rule (not decisions, just recorded): interleave
+share tuning and OP #13 exact-undo — both wait for real usage data._
+
+## Decided & shipped — 2026-07-09 ledger (detail preserved)
 
 1. **Anti-reward-hacking: holdout evals + corpus enrichment** (owner
    directive 2026-07-09: "the prompts shouldn't reward hack; create a
