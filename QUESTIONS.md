@@ -4,6 +4,30 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
 
 ## Open
 
+1. **Anti-reward-hacking: holdout evals + corpus enrichment** (owner
+   directive 2026-07-09: "the prompts shouldn't reward hack; create a
+   holdout set; highly enrich the evals"). The risk is real and this
+   session demonstrated it: prompt iteration reads the visible rubric
+   verdicts, so a prompt can learn THE TEST (the rushing carve-out's
+   wording sits close to its scenario's rubric — general principle, but
+   the pattern is the hazard). Shipped:
+   - **Holdout tier** `corpus/holdout/` + tests/test_evals_holdout.py:
+     own marker (`-m eval_holdout`, excluded from default and from
+     `-m eval`), own baseline `<pair>__holdout.json`, reports prefixed
+     `holdout-`. THE PROTOCOL (in the module docstring): never run/read
+     during prompt iteration; run at release gates only; a visible-vs-
+     holdout mean gap = overfitting — generalize the failing skill, never
+     fix the named scenario; a holdout scenario whose verdicts drive a fix
+     is burnt → migrate to visible, author a replacement; authored by a
+     subagent and committed UNREAD by the prompt author (mechanical QA:
+     shape suite + judge calibration gate).
+   - **Enrichment** (12 visible scenarios, category "robustness" + others):
+     wordy/terse/JSON-bearing/injection-bearing answers, right-answer-
+     wrong-method, non-Latin script, mixed reflection signals, learner-
+     contradicts-evidence, mixed-language and single-fact goals, junk
+     captures, extension-binge discounting.
+   Floors bootstrapped once per set (codex, batched — spend policy).
+
 1. **Model-output traces with provenance** (your 2026-07-09 question: "a
    model might fetch a website, do whatever, before the final JSON — JSON
    may not be all it outputs"). Analysis of the core need:

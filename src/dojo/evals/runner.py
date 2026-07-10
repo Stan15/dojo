@@ -41,8 +41,11 @@ def slug_for(command: str) -> str:
 
 
 def load_corpus(tier: str) -> list[dict]:
-    """tier: "compliance" | "quality". Scenarios sorted by name; each carries
-    its path stem as `name` and a `category`."""
+    """tier: "compliance" | "quality" | "holdout". Scenarios sorted by name;
+    each carries its path stem as `name` and a `category`. The holdout tier
+    is quality-shaped but NEVER read or run during prompt iteration — it
+    exists to measure generalization (anti-reward-hacking, owner directive
+    2026-07-09); see tests/test_evals_holdout.py for the protocol."""
     scenarios = []
     for path in sorted((CORPUS_DIR / tier).glob("*.yaml")):
         sc = yaml.safe_load(path.read_text(encoding="utf-8"))

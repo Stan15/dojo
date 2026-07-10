@@ -16,6 +16,11 @@ from dojo.schemas import RESULT_SCHEMAS
 from dojo.tasks import service
 
 QUALITY_SCENARIOS = sorted((CORPUS_DIR / "quality").glob("*.yaml"))
+# Holdout scenarios get the same MECHANICAL integrity checks (shape, schema,
+# executability) — that is their entire automated QA, since nobody who tunes
+# prompts may read them (see tests/test_evals_holdout.py). They are excluded
+# from the coverage floors: holdout size is a protocol matter, not a ratchet.
+HOLDOUT_SCENARIOS = sorted((CORPUS_DIR / "holdout").glob("*.yaml"))
 COMPILE_FN_TO_KIND = {
     "generate": "exercise.generate",
     "diagnostic": "exercise.diagnostic",
@@ -89,7 +94,7 @@ class TestCorpusCoverage:
         ), "no plan-elucidation scenario"
 
 
-@pytest.mark.parametrize("path", QUALITY_SCENARIOS, ids=lambda p: p.stem)
+@pytest.mark.parametrize("path", QUALITY_SCENARIOS + HOLDOUT_SCENARIOS, ids=lambda p: p.stem)
 class TestCorpusIntegrity:
     def test_shape(self, path: Path):
         sc = load(path)
