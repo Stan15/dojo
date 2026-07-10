@@ -1,0 +1,73 @@
+# A brand-new topic with zero practice history: the learner has never met
+# this material. Strong generation INTRODUCES it (one `present` study card)
+# before or alongside gentle probes; weak generation quizzes cold — the exact
+# field failure ADR 017 exists to prevent ("you never taught me what the
+# failure patterns are").
+category: encoding
+domain: aviation
+scenario_context: |
+  Learner starting "radio phonetic alphabet for PPL radiotelephony". The
+  topic aviation.phonetic_alphabet is registered, has NO exercises, NO
+  attempts, no source. RECENT says "(no practice on this topic yet)".
+  Task: generate 2 items. Strong output: exactly one skill:"present" item
+  whose answer carries the actual material to study (e.g. the alphabet
+  block or a coherent first slice of it), plus at most one gentle probe of
+  that same presented content — nothing tests material the present item
+  does not carry. Weak output: two cold quiz items assuming the learner
+  already knows letters/callsigns, or zero present items, or a "present"
+  whose answer is a vague description rather than the material itself.
+seed:
+  campaign:
+    id: ppl-radio
+    name: PPL Radiotelephony
+    mission: Pass the practical radio exam and sound competent on frequency.
+    strategy_profile: {difficulty: beginner, scaffolding: high}
+    topics:
+      - {path: aviation.phonetic_alphabet, kind: skill,
+         summary: "NATO phonetic alphabet, letter-to-word both directions"}
+steps:
+  - compile: {fn: generate, topic_path: aviation.phonetic_alphabet, n_items: 2,
+              difficulty: beginner}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does the output contain exactly ONE item with
+      skill 'present' whose answer field contains actual study material (concrete
+      letter-word pairs or equivalent substance, not a description of what the
+      learner will study)?"}
+  - {id: c2, weight: 3, question: "Does every non-present item test ONLY content
+      that the present item's answer actually carries (no cold quizzing of
+      material nothing in this output or RECENT shows the learner has met)?"}
+  - {id: c3, weight: 2, question: "Is the present item's prompt a framing/cue
+      (what this is, why to hold it) rather than a question demanding an answer?"}
+  - {id: c4, weight: 1, question: "Do items respect beginner difficulty — a small
+      coherent first slice rather than the whole alphabet dumped at once?"}
+references:
+  good:
+    items:
+      - prompt: "Study card — the first phonetic letters you'll use on frequency.
+          You'll recall these from memory next session."
+        answer: "A-Alpha, B-Bravo, C-Charlie, D-Delta, E-Echo, F-Foxtrot,
+          G-Golf, H-Hotel"
+        rubric: null
+        skill: present
+      - prompt: "From the letters you just studied: your callsign ends in D-E-H.
+          Say it phonetically."
+        answer: "Delta Echo Hotel"
+        rubric: "- all three correct phonetic words in order"
+        skill: recall
+    note: null
+    intervention: null
+  bad:
+    items:
+      - prompt: "Give the full phonetic alphabet from A to Z without hesitation."
+        answer: "Alpha, Bravo, Charlie, Delta, Echo, Foxtrot, Golf, Hotel,
+          India, Juliett, Kilo, Lima, Mike, November, Oscar, Papa, Quebec,
+          Romeo, Sierra, Tango, Uniform, Victor, Whiskey, X-ray, Yankee, Zulu"
+        rubric: "- all 26 correct"
+        skill: recall
+      - prompt: "Transcribe this tower call: 'Golf Alpha Bravo Charlie Delta,
+          cleared touch-and-go runway two seven.'"
+        answer: "G-ABCD, cleared touch-and-go, runway 27"
+        rubric: "- callsign decoded - clearance understood"
+        skill: apply
+    note: null
+    intervention: null

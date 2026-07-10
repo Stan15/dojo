@@ -1,0 +1,80 @@
+# RECENT shows material was PRESENTED yesterday and is awaiting first recall.
+# Strong generation probes THAT content with a varied cue direction; weak
+# generation ignores the window — invents unrelated content to quiz (the Dana
+# problem: nothing real ever tested), or presents yet more material while the
+# first artifact sits unretrieved (encoding-debt creep, rule 1b).
+category: encoding
+domain: memory-training
+scenario_context: |
+  Memory-training learner. Yesterday the system presented "the golden apple
+  key: cat, tree, turmoil, hat" (a deliberate memorization artifact) and
+  RECENT shows it awaiting first recall. Task: generate 2 items on the same
+  topic. Strong output: both items are retrieval probes of the presented
+  key, varying cue direction (reproduce the whole; position cue such as
+  "third word"; completion such as "tree, hat, cat — what's missing?");
+  answers derive strictly from the artifact; NO new present item. Weak
+  output: probes about a different invented list, generic memory-technique
+  trivia, or another skill:"present" card stacked on the unretrieved one.
+seed:
+  campaign:
+    id: memory-gym
+    name: Memory Gym
+    mission: Train reliable deliberate memorization of exact material.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+    topics:
+      - {path: memory.keys, kind: skill, summary: "exact-recall key lists",
+         sr: {card_id: 1, state: 1, step: 0, stability: 2.3, difficulty: 2.1,
+              due: "2026-07-06T09:10:00+00:00",
+              last_review: "2026-07-06T09:00:00+00:00"}}
+  exercises:
+    - {id: ex_key1, topic_path: memory.keys, difficulty: intermediate,
+       kind: present, quality: spent,
+       answer: "the golden apple key: cat, tree, turmoil, hat",
+       prompt: "Memorize the golden apple key — you will recall it later."}
+  attempts:
+    - {id: att_p1, session_id: s1, exercise_id: ex_key1, score: 1.0,
+       latency_seconds: 20.0, grader: exposure, reflected: true,
+       created_at: "2026-07-06T09:00:00+00:00",
+       prompt: "Memorize the golden apple key — you will recall it later.",
+       user_answer: ""}
+steps:
+  - compile: {fn: generate, topic_path: memory.keys, n_items: 2,
+              difficulty: intermediate}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Do the items probe the golden apple key
+      specifically — cat, tree, turmoil, hat — with answers derivable from that
+      exact artifact (not some other list the output invented)?"}
+  - {id: c2, weight: 2, question: "Do the two probes use DIFFERENT cue directions
+      (e.g. whole reproduction vs position/completion/reverse), rather than the
+      same ask twice?"}
+  - {id: c3, weight: 3, question: "Does the output contain NO new 'present' item
+      (RECENT shows a presentation still awaiting first recall — rule 1b)?"}
+  - {id: c4, weight: 1, question: "Do prompts avoid leaking the key's words except
+      where the cue direction requires showing a subset (completion cues may show
+      some words; whole-recall prompts must show none)?"}
+references:
+  good:
+    items:
+      - prompt: "Reproduce the golden apple key you memorized, in order."
+        answer: "cat, tree, turmoil, hat"
+        rubric: "- all four words - correct order"
+        skill: recall
+      - prompt: "From the golden apple key: 'tree, hat, cat' — which word is
+          missing, and what position does it hold?"
+        answer: "turmoil — third position"
+        rubric: "- identifies turmoil - correct position"
+        skill: apply
+    note: null
+    intervention: null
+  bad:
+    items:
+      - prompt: "Memorize this new key for tomorrow: river, lamp, quiet, stone."
+        answer: "river, lamp, quiet, stone"
+        rubric: null
+        skill: present
+      - prompt: "What are the three main benefits of the method of loci?"
+        answer: "spatial anchoring, ordered retrieval, durable encoding"
+        rubric: "- names benefits"
+        skill: explain
+    note: null
+    intervention: null

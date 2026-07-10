@@ -1,0 +1,87 @@
+# The learner's own voice asks to stop reviewing a topic, and TRENDS agrees
+# (months of fluency). Strong reflection retires exactly that topic through
+# the care-exit channel, citing the learner's words; weak reflection keeps
+# serving reviews the learner explicitly no longer wants (review-debt disease)
+# or retires the wrong/extra topics.
+category: care-exit
+domain: aviation
+scenario_context: |
+  PPL learner, phonetic alphabet long mastered: TRENDS shows months of
+  graded fluency, never missed, and the learner uses it daily on frequency.
+  Their FEEDBACK says: "stop quizzing me on the phonetic alphabet, I use it
+  on the radio every day now — it's noise." A struggling topic
+  (aviation.radio_calls) is also present. Strong output: topic_retirements
+  = [aviation.phonetic_alphabet] with the feedback attempt cited and a
+  short reason; radio_calls untouched; journal names the learner's ask.
+  Weak output: no retirement (the voice ignored), retiring radio_calls too,
+  or converting the ask into a mere insight while reviews keep coming.
+seed:
+  campaign:
+    id: ppl-radio
+    name: PPL Radiotelephony
+    mission: Pass the practical radio exam and sound competent on frequency.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+    topics:
+      - {path: aviation.phonetic_alphabet, kind: skill, summary: "NATO alphabet",
+         sr: {card_id: 3, state: 2, step: 0, stability: 58.0, difficulty: 1.4,
+              due: "2026-07-08T08:00:00+00:00",
+              last_review: "2026-05-11T08:00:00+00:00"}}
+      - {path: aviation.radio_calls, kind: skill, summary: "standard calls",
+         sr: {card_id: 4, state: 2, step: 0, stability: 3.1, difficulty: 6.8,
+              due: "2026-07-06T08:00:00+00:00",
+              last_review: "2026-07-03T08:00:00+00:00"}}
+  exercises:
+    - {id: ex_pa, topic_path: aviation.phonetic_alphabet, difficulty: intermediate,
+       kind: skill, quality: spent, answer: "Mike Alpha Yankee",
+       rubric: "- correct words", prompt: "Say M-A-Y phonetically."}
+    - {id: ex_rc, topic_path: aviation.radio_calls, difficulty: intermediate,
+       kind: skill, quality: spent, answer: "request taxi with information",
+       rubric: "- correct call", prompt: "Initial taxi call at a towered field?"}
+  attempts:
+    - {id: att_pa1, session_id: s5, exercise_id: ex_pa, score: 1.0,
+       latency_seconds: 6.0, reflected: true, created_at: "2026-05-11T08:00:00+00:00",
+       prompt: "Say M-A-Y phonetically.", user_answer: "Mike Alpha Yankee"}
+    - {id: att_pa2, session_id: s6, exercise_id: ex_pa, score: 1.0,
+       latency_seconds: 5.0, created_at: "2026-07-05T08:00:00+00:00",
+       feedback: "stop quizzing me on the phonetic alphabet, I use it on the
+         radio every day now - it's noise",
+       prompt: "Say M-A-Y phonetically.", user_answer: "Mike Alpha Yankee"}
+    - {id: att_rc1, session_id: s6, exercise_id: ex_rc, score: 0.3,
+       latency_seconds: 90.0, created_at: "2026-07-05T08:05:00+00:00",
+       error_tag: "call order",
+       prompt: "Initial taxi call at a towered field?",
+       user_answer: "umm, callsign then just ask taxi? not sure about ATIS"}
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does topic_retirements contain exactly
+      aviation.phonetic_alphabet (and NOT aviation.radio_calls)?"}
+  - {id: c2, weight: 2, question: "Does the retirement cite att_pa2 (the attempt
+      carrying the learner's own stop-request) as evidence?"}
+  - {id: c3, weight: 2, question: "Is aviation.radio_calls left in active practice
+      (no retirement, no plan surgery), since the learner is still struggling and
+      still cares?"}
+  - {id: c4, weight: 1, question: "Does the journal name the learner's request as
+      the driver (their words, not an invented rationale)?"}
+references:
+  good:
+    insight_updates: []
+    strategy: null
+    plan_revision: null
+    questions: []
+    topic_retirements:
+      - {path: aviation.phonetic_alphabet,
+         reason: "learner asked to stop; used daily on frequency",
+         evidence: [att_pa2]}
+    journal: "Learner asked to stop alphabet reviews (fluent, daily real use) —
+      retired. radio_calls still weak, unchanged."
+  bad:
+    insight_updates:
+      - {op: create, key: aviation.alphabet_confidence,
+         text: "Learner feels confident about the phonetic alphabet.",
+         evidence: [att_pa2], reason: "positive feedback"}
+    strategy: null
+    plan_revision: null
+    questions: []
+    topic_retirements: []
+    journal: "Noted learner confidence; keeping all reviews as scheduled."

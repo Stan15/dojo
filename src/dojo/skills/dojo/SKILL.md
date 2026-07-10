@@ -34,6 +34,8 @@ Follow each envelope's `next` hint. `dojo <cmd> --help` is the manual.
 1. `dojo daily` → fulfill any tasks → session begins (re-run daily if it says so)
 2. Loop: `dojo ready` → show the prompt VERBATIM → **stop and wait for the
    user's answer** (no tool calls) → `dojo answer "<their answer>"`
+   Study cards (`present: true`): show prompt AND `material` verbatim — it's
+   teaching, not a question; any acknowledgment → `dojo answer ok`.
 3. Report grades honestly. `pending_grade` tasks may wait until the session
    ends — then fulfill ALL of them before the conversation ends.
 4. On `is_session_completed`, run `dojo progress` and celebrate briefly.
@@ -68,6 +70,7 @@ Follow each envelope's `next` hint. `dojo <cmd> --help` is the manual.
 ## Signals worth relaying (in the user's words, not yours)
 
 - User struggling/bored: `dojo skip --reason too_hard|too_easy|forgot|bad_quality --feedback "<their words>"`
+- "Stop asking me about X": `dojo topic retire <topic.path> --because "<their words>"` (undo: `dojo topic revive`)
 - Wrong grade: `dojo correct --score 1.0`; preferences they voice: `dojo feedback "<their words>"`
 - If a task result asks clarifying questions (an intervention), relay them
   conversationally — the user's answers calibrate everything.

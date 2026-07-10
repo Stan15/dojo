@@ -1,0 +1,70 @@
+# The learner's answer SAYS the material was never taught. Strong grading
+# sets knowledge_gap (so the schedule records an encoding need, not a lapse)
+# and the feedback teaches; weak grading treats honest ignorance as plain
+# failure — the exact signal corruption from the 2026-07-10 field report.
+category: grading-integrity
+domain: memory
+scenario_context: |
+  The exercise asks the learner to NAME a memory-failure pattern. Their
+  answer: "you never taught me what the failure patterns are - i don't know
+  what the different failure patterns are. am i supposed to figure it out
+  from scratch?" plus a genuine partial attempt at the second half of the
+  question. Strong output: knowledge_gap true, a low band for what the
+  answer demonstrates, evidence quoted from the never-taught statement,
+  feedback that TEACHES the missing label in one correction. Weak output:
+  knowledge_gap false (or absent) with a bare 0.0 and feedback that scolds
+  or restates the rubric without the missing knowledge.
+seed:
+  campaign:
+    id: memory-basics
+    name: Memory Basics
+    mission: Stop relying on raw memory for tasks and names.
+    strategy_profile: {difficulty: intermediate, scaffolding: high}
+    topics:
+      - {path: memory.failure_patterns, kind: skill, summary: "where memory breaks"}
+  exercises:
+    - {id: ex_fp, topic_path: memory.failure_patterns, difficulty: intermediate,
+       kind: skill,
+       answer: "This is a name-to-concept binding failure: the concept stored
+         but the link to the name did not. Active recall of the pairing soon
+         after meeting fixes it.",
+       rubric: "- names or clearly describes the binding failure\n- proposes an
+         active-recall fix",
+       prompt: "You remember the idea but not who explained it. Name the failure
+         pattern and one active-recall move that would help."}
+  attempts:
+    - {id: att_gap, session_id: s2, exercise_id: ex_fp, score: 0.0,
+       latency_seconds: 185.0, grader: null,
+       prompt: "You remember the idea but not who explained it. Name the failure
+         pattern and one active-recall move that would help.",
+       user_answer: "you never taught me what the failure patterns are - i don't
+         know what the different failure patterns are. am i supposed to figure it
+         out from scratch? for the recall move, maybe associating the name to a
+         feature of how they look might help."}
+steps:
+  - compile: {fn: grade, attempt_id: att_gap}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Is knowledge_gap true (the answer explicitly
+      states the material was never taught)?"}
+  - {id: c2, weight: 2, question: "Does feedback TEACH the missing piece — naming
+      the binding/failure pattern — rather than only pointing out it was missing?"}
+  - {id: c3, weight: 2, question: "Does the score credit what the answer DOES
+      demonstrate (a plausible recall move), i.e. 0.3 rather than 0.0?"}
+  - {id: c4, weight: 1, question: "Is evidence a verbatim quote from the learner's
+      answer?"}
+references:
+  good:
+    score: 0.3
+    evidence: "you never taught me what the failure patterns are"
+    feedback: "Your association idea is a real recall move. The pattern you were
+      missing is called a name-to-concept binding failure — the idea stored, the
+      link to the name didn't."
+    error_tag: null
+    knowledge_gap: true
+  bad:
+    score: 0.0
+    evidence: "am i supposed to figure it out"
+    feedback: "Incorrect. The rubric requires naming the failure pattern and you
+      did not name it."
+    error_tag: "missing pattern"
+    knowledge_gap: false

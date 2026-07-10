@@ -46,12 +46,14 @@ class TestCorpusCoverage:
         "personalization": 5,
         "calibration": 12,
         "planning": 7,
-        "grading-integrity": 6,
+        "grading-integrity": 8,  # +2 ADR 017: knowledge_gap honest/adversarial
         "meta-learning": 3,
         "domain-breadth": 4,
         "change-authority": 3,
         "routing": 5,
         "robustness": 10,
+        "encoding": 2,   # ADR 017: present-before-probing, history-sighted probes
+        "care-exit": 2,  # ADR 017 §6: retirement on voice / never on phase-pass
     }
     MIN_DISTINCT_DOMAINS = 14
 

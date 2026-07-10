@@ -170,24 +170,28 @@ committed work, not proposals awaiting an answer. Item numbering is stable
    (owner-agreed; drift gates in test_prompts.py); reflect plan revisions
    can't strand ghost topics (registry shown, paths validated, scheduled ⇒
    registered).
-7. **IN PROGRESS 2026-07-10 — ADR 017 encoding stage & practice continuity**
-   (owner-approved after multi-round design review; full design in the ADR —
-   READ IT before touching this block). Units, in order, each with tests:
-   a. substrate: `grader: exposure` + miss-is-free floor (land path,
-      provenance field, exclusions in phase-advance/reflect/stats/more);
-   b. `knowledge_gap` grade flag + total-miss answer reveal (interactive +
-      envelope; partial misses stay feedback-only — owner noise ruling);
-   c. `present` generator move + per-packet encoding cap (2);
-   d. practice-history window in generate payloads (byte-capped section);
-   e. topic retirement (care-exit) + deterministic trend digest in reflect
-      payload + reflect question-fulfillability rule;
-   f. SKILL/interactive surfaces + docs; g. eval categories with floors
-      (present-planning, gap-grading incl. adversarial, history-use,
-      retirement judgment) + BLIND holdout enrichment (subagent-authored,
-      smaller than visible, floors bootstrap at next release gate).
-   Owner rulings binding here: noise is the test at every juncture; every
+7. ✓ **DONE 2026-07-10 — ADR 017 encoding stage & practice continuity**
+   (all units shipped: 79d158f substrate+gap, cd68889 present+history window,
+   7a4fdd2 retirement+trends+question rule, plus SKILL/corpus commit).
+   Owner rulings binding forever: noise is the test at every juncture; every
    pedagogy surface benchmarked; task contract stays single-shot (tool-call
    enrichment REJECTED — see ADR 017); prompt sections stable-prefix-first.
+   Visible corpus 55→61 (new categories: encoding ×2, care-exit ×2,
+   grading-integrity 6→8) with coverage floors ratcheted. **Quality floors
+   for the new scenarios are UNBOOTSTRAPPED** — they bootstrap on the next
+   owner-authorized real eval run (`-m eval`, codex spend policy applies).
+7b. **NEXT (OWNER PROTOCOL — dedicated FRESH session, nothing else in it):
+   holdout enrichment for the ADR 017 surfaces.** Owner ruling 2026-07-10:
+   prompts FIRST (done, this session), THEN holdout, and the session that
+   authors holdout scenarios must NEVER touch prompts afterward — start a
+   NEW Claude Code session whose only job is: read ADR 017 + public
+   contracts (schemas/limits; NOT the visible corpus, NOT this session's
+   scenarios), author ~5-6 holdout scenarios covering the same skill
+   breadth (encoding, care-exit, gap-grading incl. adversarial,
+   history-use) into src/dojo/evals/corpus/holdout/, run the shape suite,
+   commit. Holdout stays smaller than visible; floors bootstrap at the
+   v1.0.0 release gate as already planned. NEVER optimize prompts on
+   holdout data — one aggregate bit per gate run, unchanged.
 8. ✓ **DONE 2026-07-10 — vault-grade store layout (ADR 018, commit 0ab991f)**:
    investigation first (owner precondition) — no surface reads the journal's
    full-text snapshots; only plan-authority snapshots are functional. Campaign

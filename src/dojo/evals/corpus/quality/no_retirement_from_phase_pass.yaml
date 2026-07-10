@@ -1,0 +1,82 @@
+# Adversarial twin of retire_on_learner_voice: a topic whose phase is passed
+# and whose accuracy is good — but the learner never asked to stop and still
+# engages. Passing a phase is NEVER a retirement reason (old strengths are
+# maintained by design; that's what spaced repetition IS). Strong reflection
+# holds still; weak reflection "cleans up" mastered topics into retirement.
+category: care-exit
+domain: french
+scenario_context: |
+  French learner. week-one vocabulary (french.vocab.basics) passed its phase
+  weeks ago and now sits at comfortable long intervals — recent maintenance
+  reviews score 1.0 with normal latency, no boredom signals, no feedback
+  asking to stop; the campaign is mid-flight on later phases. Strong output:
+  topic_retirements empty — maintenance of old strengths is the product
+  working; at most nothing changes. Weak output: retires vocab.basics
+  because it is "mastered"/"phase done", or asks a consent question with no
+  evidence of fading care.
+seed:
+  campaign:
+    id: french-tef
+    name: French TEF
+    mission: Reach NCLC 7 for Canadian immigration.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+    active_phase_index: 2
+    topics:
+      - {path: french.vocab.basics, kind: skill, summary: "core vocabulary",
+         sr: {card_id: 5, state: 2, step: 0, stability: 41.0, difficulty: 2.2,
+              due: "2026-08-02T08:00:00+00:00",
+              last_review: "2026-07-01T08:00:00+00:00"}}
+      - {path: french.conditionnel, kind: skill, summary: "conditional mood",
+         sr: {card_id: 6, state: 2, step: 0, stability: 2.4, difficulty: 6.1,
+              due: "2026-07-06T08:00:00+00:00",
+              last_review: "2026-07-04T08:00:00+00:00"}}
+  exercises:
+    - {id: ex_vb, topic_path: french.vocab.basics, difficulty: beginner,
+       kind: skill, quality: spent, answer: "le lendemain",
+       rubric: "- correct word", prompt: "'The next day' in one French word?"}
+    - {id: ex_cd, topic_path: french.conditionnel, difficulty: intermediate,
+       kind: skill, quality: spent, answer: "je serais allé",
+       rubric: "- past conditional with être", prompt: "Say 'I would have gone'."}
+  attempts:
+    - {id: att_vb1, session_id: s7, exercise_id: ex_vb, score: 1.0,
+       latency_seconds: 12.0, reflected: true, created_at: "2026-06-01T08:00:00+00:00",
+       prompt: "'The next day' in one French word?", user_answer: "le lendemain"}
+    - {id: att_vb2, session_id: s8, exercise_id: ex_vb, score: 1.0,
+       latency_seconds: 14.0, created_at: "2026-07-01T08:00:00+00:00",
+       prompt: "'The next day' in one French word?", user_answer: "le lendemain"}
+    - {id: att_cd1, session_id: s8, exercise_id: ex_cd, score: 0.7,
+       latency_seconds: 40.0, created_at: "2026-07-04T08:00:00+00:00",
+       prompt: "Say 'I would have gone'.", user_answer: "je serais allé... aller
+         takes être right?"}
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Is topic_retirements empty (no learner voice
+      asked to stop; steady successful maintenance is the system working, and
+      phase completion is never a retirement reason)?"}
+  - {id: c2, weight: 2, question: "Does the output avoid manufacturing change from
+      health — no insight about 'mastery', no strategy shift, plan_revision null?"}
+  - {id: c3, weight: 1, question: "Does the journal say why nothing changed rather
+      than inventing something to do?"}
+judge_note: |
+  A consent QUESTION about retiring vocab.basics is weaker than holding still
+  (no evidence of fading care exists) but far less wrong than retiring
+  outright — score c1 at half credit if the output asks instead of retiring.
+references:
+  good:
+    insight_updates: []
+    strategy: null
+    plan_revision: null
+    questions: []
+    topic_retirements: []
+    journal: "no change: vocab maintenance at 1.0 on long intervals is the goal
+      state; conditionnel progressing at 0.7."
+  bad:
+    insight_updates: []
+    strategy: null
+    plan_revision: null
+    questions: []
+    topic_retirements:
+      - {path: french.vocab.basics, reason: "phase passed and fully mastered",
+         evidence: []}
+    journal: "Cleaned up mastered vocabulary topic; focus narrows to later phases."
