@@ -361,6 +361,27 @@ class TestMarkdownBackendPhysics:
         got = md_store.sources.get(src.id)
         assert got is not None and got.id == src.id
 
+    def test_store_under_hidden_path_component(self, tmp_path: Path):
+        """Field bug (owner install, 2026-07-09): the default store lives at
+        ~/.local/share/dojo — `.local` matched the index scan's hidden-dir
+        filter, so EVERY entity was invisible (`get` → None) and `dojo learn`
+        crashed. Hidden-dir pruning must be relative to the store root, never
+        applied to the root's own path."""
+        store = DojoStore(tmp_path / ".local" / "share" / "dojo")
+        tsk = make_task()
+        store.tasks.save(tsk)
+        got = store.tasks.get(tsk.id)
+        assert got is not None and got.id == tsk.id
+        assert [t.id for t in store.tasks.list()] == [tsk.id]
+
+    def test_hidden_dirs_inside_store_stay_unindexed(self, md_store: DojoStore):
+        """The filter's original intent still holds: .git (and any dot-dir)
+        INSIDE the store never enters the index."""
+        md_store.campaigns.save(make_campaign())
+        md_store.audit("recovery point")  # materializes .git content
+        md_store.engine.sync_index()
+        assert not any(rel.startswith(".") for rel in md_store.engine.index["files"])
+
     def test_doctor_surfaces_unaudited_changes(self, md_store: DojoStore):
         """ADR 011: a failing audit setup must become visible, not stay swallowed."""
         md_store.campaigns.save(make_campaign())

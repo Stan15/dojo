@@ -300,10 +300,11 @@ class StorageEngine:
 
         # Gather files recursively
         all_files = []
-        for root, _, files in os.walk(self.dojo_dir):
-            # Ignore hidden dirs like .git
-            if "/." in root or root.endswith("/."):
-                continue
+        for root, dirs, files in os.walk(self.dojo_dir):
+            # Ignore hidden dirs like .git — but only INSIDE the store: the
+            # store root itself may live under a hidden path component
+            # (the default is ~/.local/share/dojo) and must never match.
+            dirs[:] = [d for d in dirs if not d.startswith(".")]
             for f in files:
                 if f.startswith("."):
                     continue
@@ -332,8 +333,10 @@ class StorageEngine:
                             "data": metadata
                         }
                         dirty = True
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        # Unparseable file: leave it out of the index, but say so —
+                        # a silent skip here makes an entity invisibly "not exist".
+                        self.logger.error(f"Index skip (unparseable {ent_type}) {rel}: {e}")
 
         # Prune deleted files
         for rel in list(self.index["files"].keys()):

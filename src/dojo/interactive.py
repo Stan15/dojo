@@ -74,7 +74,13 @@ def drain_tasks(api: DojoAPI, task_refs: list[dict[str, Any]], *, timeout: int =
     ok = True
     for ref in task_refs:
         task = api.store.tasks.get(ref["id"])
-        if task is None or task.status != "pending":
+        if task is None:
+            # A just-emitted ref that doesn't resolve is store corruption, not
+            # done-work: reporting success here turns into a crash downstream.
+            console.print(f"  [red]✗ {ref['id']}: not found in the store — try dojo doctor[/red]")
+            ok = False
+            continue
+        if task.status != "pending":
             continue
         label = task.kind.replace(".", " · ")
         with console.status(f"[cyan]thinking[/cyan] ({label})…", spinner="dots"):
@@ -272,6 +278,9 @@ def plan_flow(api: DojoAPI, *, goal: str, level: Optional[str], context: Optiona
     if not drain_tasks(api, [task_ref]):
         return 1
     task = api.store.tasks.get(task_ref["id"])
+    if task is None:
+        console.print(f"[red]✗ {task_ref['id']} vanished after fulfillment — try dojo doctor[/red]")
+        return 1
     proposal = task.context.get("_applied") or {}
     _render_proposal(proposal)
 
@@ -286,8 +295,10 @@ def plan_flow(api: DojoAPI, *, goal: str, level: Optional[str], context: Optiona
     if answers:
         task_ref = emit_plan_task(goal, "; ".join(filter(None, [notes, *answers])))
         if drain_tasks(api, [task_ref]):
-            task = api.store.tasks.get(task_ref["id"])
-            proposal = task.context.get("_applied") or proposal
+            refreshed = api.store.tasks.get(task_ref["id"])
+            if refreshed is not None:  # else: keep the first proposal — it was real
+                task = refreshed
+                proposal = task.context.get("_applied") or proposal
             _render_proposal(proposal)
 
     if not confirm("Create this campaign?"):
