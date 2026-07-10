@@ -9,8 +9,11 @@ uses; this module renders and sequences, it never owns logic.
 """
 from __future__ import annotations
 
+import random
 import shlex
 import subprocess
+import threading
+import time
 from typing import Any, Optional
 
 try:  # line editing for every human prompt: arrows, ctrl-a/e, history.
@@ -41,7 +44,13 @@ def _input(prompt: str) -> str:
             "interactive prompt reached without a terminal — this is a dojo bug; "
             "agents must pass --json (re-run the command with --json)"
         )
-    return console.input(prompt)
+    # Plain prompt through the BUILT-IN input(): readline then owns the prompt
+    # boundary, so backspace can never eat the ›/question (owner field report
+    # 2026-07-09). rich's console.input prints the prompt itself, which leaves
+    # it erasable in most terminals.
+    from rich.text import Text
+
+    return input(Text.from_markup(prompt).plain)
 
 
 def confirm(question: str, default: bool = True) -> bool:
@@ -54,19 +63,66 @@ def confirm(question: str, default: bool = True) -> bool:
 
 
 def fulfiller_command(api: DojoAPI) -> Optional[str]:
-    """The configured one-string local model command, or None."""
-    return api.store.configs.get_value("fulfiller.command")
+    """The configured one-string model command, or None. `model.command` is
+    the user-facing key (owner ruling 2026-07-09: "fulfiller" is contract
+    jargon, not people-speak); `fulfiller.command` stays honored for
+    existing installs."""
+    return (api.store.configs.get_value("model.command")
+            or api.store.configs.get_value("fulfiller.command"))
 
 
 def explain_no_fulfiller() -> None:
-    """Tells the human their two options when an AI step has no fulfiller:
-    drive dojo from an agent, or set `fulfiller.command` once."""
+    """Tells the human their two options when an AI step has no model
+    configured: drive dojo from an agent, or set `model.command` once."""
     console.print(
-        "\n[yellow]This step needs an AI and no fulfiller is configured.[/yellow]\n"
-        "Either drive dojo from your AI agent (it fulfills tasks itself), or set\n"
-        "a one-string local model command once:\n"
-        '  [bold]dojo config set fulfiller.command "codex exec"[/bold]   # or "ollama run llama3"\n'
+        "\n[yellow]This step needs an AI and no model is configured.[/yellow]\n"
+        "Either drive dojo from your AI agent (it does the AI work itself), or\n"
+        "point dojo at any model command once:\n"
+        '  [bold]dojo config set model.command "codex exec"[/bold]   # or "ollama run llama3"\n'
     )
+
+
+# Spinner phrases per task phase (owner ask 2026-07-09): one random pick per
+# cycle from the bucket for what dojo is doing RIGHT NOW — flavor, not status;
+# the honest label rides alongside.
+PHASE_PHRASES: dict[str, list[str]] = {
+    "campaign.plan": [
+        "drawing the map…", "cutting scope like a ruthless editor…",
+        "negotiating with your ambitions…", "finding the shortest path to competent…",
+        "throwing out the boring chapters…",
+    ],
+    "exercise.generate": [
+        "writing questions you'll pretend are easy…", "hiding the answers…",
+        "sharpening the pointy ones…", "aiming at your weak spots (lovingly)…",
+        "brewing fresh practice…",
+    ],
+    "exercise.diagnostic": [
+        "sizing you up (gently)…", "asking around about you…",
+        "calibrating the difficulty dial…", "figuring out what you already know…",
+    ],
+    "attempt.grade": [
+        "sharpening the red pen…", "reading it twice to be fair…",
+        "consulting the rubric gods…", "weighing every word you wrote…",
+    ],
+    "campaign.reflect": [
+        "reading your mind (with receipts)…", "connecting the dots…",
+        "updating its opinion of you…", "studying how you study…",
+        "looking for patterns you'd rather hide…",
+    ],
+    "capture.route": [
+        "finding this a home…", "checking the filing cabinet…",
+        "sniffing out where this belongs…",
+    ],
+    "goal.route": [
+        "checking if you already own this…", "looking for prior art in your head…",
+        "seeing where this fits in your world…",
+    ],
+}
+
+
+def _phrase_for(kind: str) -> str:
+    bucket = PHASE_PHRASES.get(kind) or ["thinking…"]
+    return random.choice(bucket)
 
 
 def drain_tasks(api: DojoAPI, task_refs: list[dict[str, Any]], *, timeout: int = 300) -> bool:
@@ -88,14 +144,33 @@ def drain_tasks(api: DojoAPI, task_refs: list[dict[str, Any]], *, timeout: int =
         if task.status != "pending":
             continue
         label = task.kind.replace(".", " · ")
-        with console.status(f"[cyan]thinking[/cyan] ({label})…", spinner="dots"):
+        result: dict[str, Any] = {}
+
+        def _run() -> None:
             try:
-                proc = subprocess.run(
+                result["proc"] = subprocess.run(
                     shlex.split(command), input=task.prompt,
                     capture_output=True, text=True, timeout=timeout,
                 )
-                outcome = service.submit(api.store, task.id, proc.stdout)
             except Exception as exc:  # timeout, missing binary, …
+                result["exc"] = exc
+
+        worker = threading.Thread(target=_run, daemon=True)
+        with console.status(
+            f"[cyan]{_phrase_for(task.kind)}[/cyan] [dim]({label})[/dim]",
+            spinner="dots",
+        ) as status:
+            worker.start()
+            while worker.is_alive():  # rotate the flavor while the model works
+                worker.join(timeout=4.0)
+                if worker.is_alive():
+                    status.update(
+                        f"[cyan]{_phrase_for(task.kind)}[/cyan] [dim]({label})[/dim]")
+            try:
+                if "exc" in result:
+                    raise result["exc"]
+                outcome = service.submit(api.store, task.id, result["proc"].stdout)
+            except Exception as exc:
                 console.print(f"  [red]✗ {task.id}: {str(exc)[:120]}[/red]")
                 ok = False
                 continue

@@ -115,7 +115,8 @@ def clip(text: str, budget_bytes: int) -> tuple[str, bool]:
 
 
 def _tier(store) -> float:
-    tier = store.configs.get_value("fulfiller.tier", "standard")
+    tier = (store.configs.get_value("model.tier")
+            or store.configs.get_value("fulfiller.tier", "standard"))
     return TIER_MULTIPLIER.get(str(tier), 1.0)
 
 

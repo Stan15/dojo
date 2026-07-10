@@ -684,7 +684,7 @@ def cmd_install(args: argparse.Namespace) -> int:
     # headless use (dojo task run) — no wrapper scripts, ever (Q1).
     fulfiller = getattr(args, "argv", None)
     if fulfiller:
-        store.configs.set("fulfiller.command", fulfiller)
+        store.configs.set("model.command", fulfiller)
 
     output = {
         "ok": True,
@@ -1143,7 +1143,7 @@ def cmd_campaign_create(args: argparse.Namespace) -> int:
                 for t in sess_res.get("tasks", []):
                     console.print(f"  Pending task [cyan]{t['id']}[/cyan] — {t['submit_with']}")
                 console.print(
-                    "  Fulfill the task(s) (or configure one: dojo config set fulfiller.command \"<cmd>\" "
+                    "  Fulfill the task(s) (or configure a model: dojo config set model.command \"<cmd>\" "
                     "then dojo task run), then run [bold]dojo campaign resume[/bold] via [bold]dojo start[/bold].\n"
                 )
                 return 0
@@ -1484,11 +1484,12 @@ def cmd_task_run(args: argparse.Namespace) -> int:
     from .tasks import service
 
     store = DojoStore(_db_path(args))
-    command = args.command or store.configs.get_value("fulfiller.command")
+    command = (args.command or store.configs.get_value("model.command")
+               or store.configs.get_value("fulfiller.command"))
     if not command:
         _print_json({
             "ok": False,
-            "error": "no fulfiller command: pass --command or set `dojo config set fulfiller.command \"<cmd>\"`",
+            "error": "no model command: pass --command or set `dojo config set model.command \"<cmd>\"`",
         })
         return 1
 
@@ -2308,7 +2309,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_task_submit.add_argument("--file", help="read the result JSON from a file instead of stdin")
     p_task_submit.set_defaults(func=cmd_task_submit)
     p_task_run = p_task_sub.add_parser("run")
-    p_task_run.add_argument("--command", help="fulfiller command (default: fulfiller.command config)")
+    p_task_run.add_argument("--command", help="model command (default: model.command config, fulfiller.command honored)")
     p_task_run.add_argument("--limit", type=int)
     p_task_run.add_argument("--timeout", type=int, default=300)
     p_task_run.set_defaults(func=cmd_task_run)
@@ -2570,7 +2571,14 @@ def main(argv: list[str] | None = None) -> int:
     recovery point on success (`_audit_command_boundary`)."""
     parser = build_parser()
     args = parser.parse_args(argv)
-    rc = args.func(args)
+    try:
+        rc = args.func(args)
+    except (KeyboardInterrupt, EOFError):
+        # TUI manners (owner field report 2026-07-09): a cancel is a cancel,
+        # never a stack trace.
+        print()
+        console.print("[dim]cancelled[/dim]")
+        return 130
     if rc == 0:
         _audit_command_boundary(args, argv)
     return rc

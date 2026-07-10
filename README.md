@@ -70,7 +70,7 @@ Then just tell your agent what you want to learn.
 a response — one string, no wrapper scripts:
 
 ```bash
-dojo config set fulfiller.command "codex exec"   # or "ollama run llama3", …
+dojo config set model.command "codex exec"        # or "ollama run llama3", …
 dojo task run                                     # drain pending AI work
 ```
 

@@ -98,7 +98,7 @@ class TestTaskCli:
     def test_run_without_command_config_fails_honestly(self, dojo_dir: Path, capsys):
         emit_task(dojo_dir)
         rc, data = run(capsys, "--db", str(dojo_dir), "task", "run")
-        assert rc == 1 and "fulfiller.command" in data["error"]
+        assert rc == 1 and "model.command" in data["error"]
 
 
 class TestBenchmarkCli:
@@ -200,3 +200,26 @@ class TestBenchmarkQualityPipeline:
             "--output", str(tmp_path / "r.json"))
 
         assert store_hash() == before, "benchmark leaked writes into the user's store"
+
+
+class TestModelCommandNaming:
+    """`model.command` is the user-facing key (owner ruling 2026-07-09:
+    'fulfiller' is contract jargon); `fulfiller.command` keeps working for
+    existing installs."""
+
+    def test_legacy_fulfiller_command_still_honored(self, dojo_dir: Path, capsys):
+        task_id = emit_task(dojo_dir)
+        store = DojoStore(dojo_dir)
+        store.configs.set_value("fulfiller.command", f"python -c \"import sys; sys.stdin.read(); print('{VALID_ONE_ITEM}'.replace(chr(39), chr(34)))\"")
+        # a legacy-configured store must still drain tasks
+        from dojo.interactive import fulfiller_command
+        from dojo.api import DojoAPI
+        assert fulfiller_command(DojoAPI(dojo_dir)) is not None
+
+    def test_model_command_takes_precedence(self, dojo_dir: Path):
+        store = DojoStore(dojo_dir)
+        store.configs.set_value("fulfiller.command", "old-cmd")
+        store.configs.set_value("model.command", "new-cmd")
+        from dojo.interactive import fulfiller_command
+        from dojo.api import DojoAPI
+        assert fulfiller_command(DojoAPI(dojo_dir)) == "new-cmd"
