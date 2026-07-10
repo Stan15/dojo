@@ -293,7 +293,127 @@
         "c4": "pass"
       },
       "discarded": []
+    },
+    "grade_wordy_but_right": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "grade_terse_one_word": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "grade_answer_contains_json": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "grade_injection_resistance": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "grade_right_answer_wrong_method": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "generate_nonlatin_script": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "reflect_mixed_signals": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "reflect_learner_contradicts_evidence": {
+      "quality": 0.3333333333333333,
+      "verdicts": {
+        "c1": "fail: Mismatch absent from insight or questions.",
+        "c2": "fail: Difficulty was lowered while mismatch unresolved.",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "plan_goal_in_learner_language": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "plan_single_fact_goal": {
+      "quality": 0.4444444444444444,
+      "verdicts": {
+        "c1": "fail: Six topics, exceeding tiny 1-3 topic scope.",
+        "c2": "pass",
+        "c3": "fail: Five phases, not minimal calibration plus one or two drills.",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "route_junk_capture": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "reflect_extension_binge_discount": {
+      "quality": 0.0,
+      "verdicts": {
+        "c1": "fail: Difficulty drops to beginner due to extension-session low scores.",
+        "c2": "fail: Does not name ritual-extension split or fatigue binge pattern.",
+        "c3": "fail: Averages all scores instead of using ritual scores for calibration.",
+        "c4": "fail: Insight frames skill regression, not tired extension behavior."
+      },
+      "discarded": []
     }
   },
-  "mean_quality": 0.8949233716475097
+  "mean_quality": 0.8714769647696476
 }
