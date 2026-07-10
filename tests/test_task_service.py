@@ -311,9 +311,15 @@ class TestPlanApplier:
 
 class TestGradeApplier:
     def _seed_attempt(self, store: DojoStore) -> tuple[str, Exercise]:
+        from datetime import datetime, timezone
+        from dojo import scheduling
+
         ex = Exercise(
             id="ex_1", topic_path="french.grammar", difficulty="intermediate",
             answer="Il serait allé.", rubric="- être as auxiliary",
+            # Encoded already: these tests pin normal grade application; the
+            # first-encounter exposure conversion is pinned in test_encoding.py.
+            sr=scheduling.new_state(datetime.now(timezone.utc)),
             prompt="Traduisez : He would have gone.",
         )
         store.exercises.save(CAMP_ID, ex)

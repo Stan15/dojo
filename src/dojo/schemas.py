@@ -156,6 +156,10 @@ class GradeResult(BaseModel):
     evidence: str = Field(min_length=1)
     feedback: str = Field(min_length=1)
     error_tag: Optional[str] = None
+    # ADR 017: the learner's answer SAYS the material was never learned
+    # ("I don't know this / nobody showed me") — distinct from a failed
+    # retrieval. The applier lands no lapse for these.
+    knowledge_gap: bool = False
 
     @field_validator("score")
     @classmethod
@@ -470,6 +474,7 @@ class Exercise(StoredEntity):
     candidate_id: Optional[str] = None
     archived: bool = False
     quality: str = "reviewed"
+    provenance: str = "synthetic"  # synthetic: model-invented | grounded: from source/capture the learner met (ADR 017)
     answer: Optional[str] = None
     rubric: Optional[str] = None
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
@@ -492,6 +497,7 @@ class Candidate(StoredEntity):
     generation_run: Optional[str] = None
     archived: bool = False
     quality: str = "reviewed"
+    provenance: str = "synthetic"  # mirrors Exercise; copied on promotion (ADR 017)
     answer: Optional[str] = None
     rubric: Optional[str] = None
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())

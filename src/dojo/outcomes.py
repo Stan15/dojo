@@ -16,6 +16,61 @@ from typing import Optional
 from . import scheduling
 
 
+def first_encounter(campaign, ex) -> bool:
+    """ADR 017 predicate: would a score land on never-encoded material?
+
+    True only for model-invented (`provenance: synthetic`) practice items
+    whose lane has no memory state yet — skill items check the topic node,
+    recall items their own card. Grounded material (from a source/capture
+    the learner already met in life) and diagnostics are never encoding
+    candidates; an item with no stored answer has no kernel to reveal, so
+    it cannot serve as an encoding event either."""
+    if ex is None or ex.quality == "diagnostic" or not ex.answer:
+        return False
+    if getattr(ex, "provenance", "synthetic") == "grounded":
+        return False
+    if ex.kind == "skill":
+        entry = next(
+            (t for t in ((campaign.topics if campaign else None) or [])
+             if t.get("path") == ex.topic_path),
+            None,
+        )
+        return entry is None or not entry.get("sr")
+    return ex.sr is None
+
+
+def land_exposure(
+    store, campaign_id: str, exercise_id: str, *, now: Optional[datetime] = None
+) -> None:
+    """Lands an encoding event (ADR 017): initializes the lane's memory with
+    a fixed Good and leaves already-encoded state UNTOUCHED (a knowledge_gap
+    grade on presented material must neither reward nor punish — the still-
+    due schedule brings it back soon on its own). The exercise is never
+    spent: it becomes the first real retrieval of the just-encoded content."""
+    ex = store.exercises.get(campaign_id, exercise_id)
+    if ex is None or ex.quality == "diagnostic":
+        return
+    stamp = datetime.now(timezone.utc).isoformat()
+    if ex.kind == "skill":
+        campaign = store.campaigns.get(campaign_id)
+        if campaign is None:
+            return
+        entry = next(
+            (t for t in campaign.topics if t.get("path") == ex.topic_path), None
+        )
+        if entry is None:
+            entry = {"path": ex.topic_path, "kind": "skill", "summary": ""}
+            campaign.topics.append(entry)
+        if not entry.get("sr"):
+            entry["sr"] = scheduling.record_exposure(None, now=now)
+            campaign.updated_at = stamp
+            store.campaigns.save(campaign)
+    elif ex.sr is None:
+        ex.sr = scheduling.record_exposure(None, now=now)
+        ex.updated_at = stamp
+        store.exercises.save(campaign_id, ex)
+
+
 def land_score(
     store,
     campaign_id: str,

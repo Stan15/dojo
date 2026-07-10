@@ -18,6 +18,9 @@ RULES
 5. If the mistake looks like a pattern (not a slip), name it in `error_tag`
    (2-{{ error_tag_words }} words, reusable as a label); else null.
 6. Write `feedback` in the learner's language (the language of ANSWER).
+7. `knowledge_gap`: true ONLY if the ANSWER states the material was never
+   learned ("you never taught me X"). Wrong or blank is NOT a gap — score
+   it normally.
 
 ## EXERCISE
 {{ exercise_prompt }}
@@ -27,5 +30,5 @@ RULES
 {{ user_answer }}
 
 OUTPUT — return only this JSON:
-{"score": 0.0, "evidence": "...", "feedback": "...", "error_tag": null}
+{"score": 0.0, "evidence": "...", "feedback": "...", "error_tag": null, "knowledge_gap": false}
 Check: score is one of 1.0/0.7/0.3/0.0; evidence is quoted verbatim from ANSWER.

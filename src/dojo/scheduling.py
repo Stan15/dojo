@@ -73,6 +73,21 @@ def record_outcome(
     return card.to_dict()
 
 
+def record_exposure(
+    sr: Optional[dict[str, Any]], *, now: Optional[datetime] = None
+) -> dict[str, Any]:
+    """Encoding-event landing (ADR 017): a first contact with the material,
+    rated a fixed Good — information, never judgment. Measured shape: due
+    next session (~10 min under default learning steps), ~7 days after the
+    first real retrieval succeeds. Never called on already-encoded state
+    (callers guard); an exposure must not inflate difficulty the way a
+    lapse would — that was the field failure this exists to fix."""
+    now = now or datetime.now(timezone.utc)
+    card = Card.from_dict(sr) if sr else Card(due=now)
+    card, _log = _scheduler.review_card(card, Rating.Good, review_datetime=now)
+    return card.to_dict()
+
+
 def due_at(sr: Optional[dict[str, Any]]) -> Optional[datetime]:
     """The stored due timestamp, or None for never-practiced state."""
     if not sr or not sr.get("due"):

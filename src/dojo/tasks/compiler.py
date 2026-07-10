@@ -340,7 +340,13 @@ def compile_reflect(store, campaign: Campaign, *, window_n: int = 15) -> Compile
         f"- [{ins.id}] {ins.key}: {(ins.description or '').splitlines()[0]}"
         for ins in active
     ]
-    attempts = store.attempts.list(campaign.id)
+    # Encoding events (grader="exposure", ADR 017) are information, not
+    # learner evidence: they are pre-marked reflected and stay out of the
+    # rows entirely — aggregate encoding activity reaches reflection via the
+    # trend digest, not as pseudo-failures.
+    attempts = [
+        a for a in store.attempts.list(campaign.id) if a.grader != "exposure"
+    ]
     window = attempts[-window_n:]
     unreflected = [a for a in attempts if not a.reflected and a not in window]
 

@@ -352,7 +352,7 @@ class DojoAPI:
             topic_of = {ex.id: ex.topic_path for ex in self.store.exercises.list(camp.id)}
             for a in self.store.attempts.list(camp.id):
                 topic = topic_of.get(a.exercise_id)
-                if topic and not a.skip_reason and a.grader is not None:
+                if topic and not a.skip_reason and a.grader not in (None, "exposure"):
                     means.setdefault((camp.id, topic), []).append(a.score)
         if not means:
             return None
@@ -510,7 +510,10 @@ class DojoAPI:
             )
             due = sum(1 for ex in exercises if scheduling.is_due(ex.sr, now))
             attempts = self.store.attempts.list(camp.id)
-            answered = [a for a in attempts[-20:] if not a.skip_reason]
+            answered = [
+                a for a in attempts[-20:]
+                if not a.skip_reason and a.grader != "exposure"  # encodings aren't accuracy (ADR 017)
+            ]
             accuracy = (
                 sum(a.score for a in answered) / len(answered) if answered else None
             )
@@ -1303,6 +1306,7 @@ class DojoAPI:
                     kind=cand.kind,
                     generation_run=cand.generation_run,
                     candidate_id=cand.id,
+                    provenance=cand.provenance,
                     prompt=cand.prompt,
                     answer=cand.answer,
                     rubric=cand.rubric,
@@ -1334,6 +1338,7 @@ class DojoAPI:
                         difficulty=cand.difficulty,
                         generation_run=cand.generation_run,
                         candidate_id=cand.id,
+                        provenance=cand.provenance,
                         prompt=cand.prompt,
                         answer=cand.answer,
                         rubric=cand.rubric,
@@ -2130,6 +2135,8 @@ class DojoAPI:
                     continue
                 if a.grader is None and a.score == 0.0 and not a.skip_reason:
                     continue  # provisional (grade pending) — not evidence yet
+                if a.grader == "exposure":
+                    continue  # encoding event (ADR 017) — information, never mastery evidence
                 # Load corresponding exercise
                 ex = self.store.exercises.get(campaign.id, a.exercise_id)
                 if ex:

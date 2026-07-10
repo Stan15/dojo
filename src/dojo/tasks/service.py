@@ -289,6 +289,7 @@ def apply_generate(store, task: Task, result: GenerateResult) -> dict[str, Any]:
                 kind="recall" if item.skill == "recall" else "skill",
                 generation_run=task.id,
                 quality="auto_accepted",
+                provenance="grounded" if ctx.get("mode") == "grounded" else "synthetic",
                 answer=item.answer,
                 rubric=item.rubric,
                 prompt=item.prompt,
@@ -325,6 +326,7 @@ def apply_generate(store, task: Task, result: GenerateResult) -> dict[str, Any]:
                 kind="recall" if item.skill == "recall" else "skill",
                 generation_run=task.id,
                 quality="candidate",
+                provenance="grounded" if ctx.get("mode") == "grounded" else "synthetic",
                 answer=item.answer,
                 rubric=item.rubric,
                 prompt=item.prompt,
@@ -356,24 +358,55 @@ def apply_grade(store, task: Task, result: GradeResult) -> dict[str, Any]:
             "evidence is not a verbatim quote from the answer — re-read ANSWER and quote it"
         )
 
+    # ADR 017 — a first-encounter miss is free: a below-success grade on
+    # never-encoded material, or a grader-flagged knowledge gap ("I was
+    # never taught this"), is an ENCODING event, not a lapse. The schedule
+    # is initialized instead of punished, the attempt never counts toward
+    # accuracy anywhere (grader="exposure" + pre-marked reflected), and the
+    # kernel — the stored model answer — is revealed to the learner.
+    from ..outcomes import first_encounter, land_exposure, land_score
+
+    campaign = store.campaigns.get(campaign_id)
+    exercise = store.exercises.get(campaign_id, ctx["exercise_id"])
+    is_exposure = result.knowledge_gap or (
+        result.score < 0.7 and first_encounter(campaign, exercise)
+    )
+
     attempt.score = result.score
-    attempt.grader = "ai"
+    attempt.grader = "exposure" if is_exposure else "ai"
     attempt.grade_run = task.id  # provenance: the trace behind this score
     attempt.grade_evidence = result.evidence
     attempt.grade_feedback = result.feedback
     attempt.error_tag = result.error_tag
+    if is_exposure:
+        attempt.reflected = True  # information, not evidence: never enters reflection
     store.attempts.save(campaign_id, attempt)
 
     # The grade is final: advance the memory model now (ADR 014). Pending
     # attempts deliberately skipped this at answer time.
-    from ..outcomes import land_score
+    if is_exposure:
+        land_exposure(store, campaign_id, ctx["exercise_id"])
+    else:
+        land_score(
+            store, campaign_id, ctx["exercise_id"],
+            score=result.score, latency_seconds=attempt.latency_seconds,
+        )
 
-    land_score(
-        store, campaign_id, ctx["exercise_id"],
-        score=result.score, latency_seconds=attempt.latency_seconds,
-    )
-
-    return {"attempt_id": attempt_id, "score": result.score, "error_tag": result.error_tag}
+    out: dict[str, Any] = {
+        "attempt_id": attempt_id, "score": result.score, "error_tag": result.error_tag,
+    }
+    # Total misses reveal the kernel (ADR 017; owner noise ruling: partial
+    # misses keep the one-line feedback only — the answer reveal is the
+    # re-encoding fallback, not a second commentary channel).
+    if exercise is not None and exercise.answer and (is_exposure or result.score == 0.0):
+        out["correct_answer"] = exercise.answer
+    if is_exposure:
+        out["landed"] = "exposure"
+        out["note"] = (
+            "first contact with never-encoded material — no lapse recorded; "
+            "show the learner the correct_answer (that reveal IS the teaching)"
+        )
+    return out
 
 
 def _check_new_phase_topics(store, campaign, phases) -> list[str]:

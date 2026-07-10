@@ -247,12 +247,31 @@ def _settle_grades(api: DojoAPI, pending: list[dict[str, Any]]) -> None:
     drained = drain_tasks(api, [t for res in pending for t in res["tasks"]])
     for res in pending:
         attempt = api.store.attempts.get(res["campaign_id"], res["attempt_id"])
-        if attempt.grader == "ai":
+        if attempt.grader == "exposure":
+            # ADR 017: first contact with never-encoded material (or a stated
+            # knowledge gap) — no lapse, no accuracy hit; the reveal below IS
+            # the teaching. Framed as news, not as a failure.
+            console.print("  [cyan]☆ new to you — nothing scored against you[/cyan]")
+            _reveal_answer(api, res)
+        elif attempt.grader == "ai":
             _print_score(attempt.score, attempt.grade_feedback)
+            if attempt.score == 0.0:
+                # Total miss: feedback has nothing to correct against — show
+                # the kernel itself (owner ruling: partial misses stay
+                # feedback-only to keep noise down).
+                _reveal_answer(api, res)
         else:
             console.print("  [yellow]grade still pending — an agent (or dojo task run) can finish it[/yellow]\n")
     if not drained:
         console.print("  [dim]dojo daily will re-surface unfinished grades tomorrow[/dim]")
+
+
+def _reveal_answer(api: DojoAPI, res: dict[str, Any]) -> None:
+    """Prints the stored model answer for a settled attempt's exercise —
+    the re-encoding step after a total miss (ADR 017)."""
+    ex = api.store.exercises.get(res["campaign_id"], res["exercise_id"])
+    if ex is not None and ex.answer:
+        console.print(f"  [bold]the answer:[/bold] {ex.answer}\n")
 
 
 def _print_score(score: float, note: Optional[str]) -> None:
