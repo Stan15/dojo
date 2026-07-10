@@ -413,7 +413,149 @@
         "c4": "fail: Insight frames skill regression, not tired extension behavior."
       },
       "discarded": []
+    },
+    "diagnostic_axis_coverage": {
+      "quality": 0.6,
+      "verdicts": {
+        "c1": "discarded-unproven-pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": [
+        "c1"
+      ]
+    },
+    "diagnostic_respects_known_insights": {
+      "quality": 0.6363636363636364,
+      "verdicts": {
+        "c1": "fail: Re-asks prior exposure, goal, tools, and practice preference.",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "reflect_pending_grade_integrity": {
+      "quality": 0.6363636363636364,
+      "verdicts": {
+        "c1": "fail: No explicit evidence att_35/att_36 are ignored as ungraded.",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "grade_band_discipline": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "grade_empty_answer_honesty": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "grade_unicode_evidence": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "reflect_learner_language": {
+      "quality": 0.1,
+      "verdicts": {
+        "c1": "fail: Journal includes English phrase: “no change”.",
+        "c2": "fail: Learner-facing journal prose is not Spanish-only.",
+        "c3": "fail: Overwatering pattern is not explicitly preserved.",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "grade_learner_language": {
+      "quality": 0.6666666666666666,
+      "verdicts": {
+        "c1": "fail: Score is 0.3, not required 0.7 partial-credit band.",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "reflect_diagnostic_voice_revision": {
+      "quality": 0.3333333333333333,
+      "verdicts": {
+        "c1": "fail: Garment fitting remains instead of being replaced by portable hand-mending.",
+        "c2": "pass",
+        "c3": "fail: Missing patches, buttons, and field hems; includes garment fitting.",
+        "c4": "fail: Journal only cites dropping machine work and adds accuracy rationale."
+      },
+      "discarded": []
+    },
+    "plan_multicampaign_registry": {
+      "quality": 0.9,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "fail: No question asks rooftop campaign, compost campaign, or both."
+      },
+      "discarded": []
+    },
+    "route_crosslanguage_reuse": {
+      "quality": 0.9,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "fail: seed is true, not false."
+      },
+      "discarded": []
+    },
+    "generate_downward_calibration": {
+      "quality": 0.3,
+      "verdicts": {
+        "c1": "fail: Prompts are full multi-factor pruning scenarios, not scaffolded entry items.",
+        "c2": "fail: No visible reference to slow 0.3 struggles or difficulty adjustment.",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "chain_reflect_then_targeted_generation": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "chain_strategy_change_then_calibrated_generation": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
     }
   },
-  "mean_quality": 0.8714769647696476
+  "mean_quality": 0.8327869605142332
 }

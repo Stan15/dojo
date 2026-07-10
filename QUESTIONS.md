@@ -17,11 +17,15 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
 3. **Repo visibility** — the repo is private by your choice; the README's
    curl one-liner activates only when public. Any timeline?
    **Default: stays private; no action.**
-4. **Weak-floor iteration budget** — known weak floors on the visible corpus
-   (extension-binge 0.00, learner-contradicts 0.33, single-fact-goal 0.44,
-   plus whatever the latest bootstrap surfaces). Iterating them is a codex
-   spend session. When do you want it?
-   **Default: next session you green-light eval spend.**
+4. **Weak-floor iteration budget** — honest weak floors on the visible
+   corpus, all with driver traces recorded for analysis: reflect_learner_
+   language 0.10, generate_downward_calibration 0.30, reflect_diagnostic_
+   voice_revision 0.33, extension-binge 0.00, learner-contradicts 0.33,
+   single-fact-goal 0.44, diagnostic-kind pair ~0.60 (never-iterated
+   prompt), grade_learner_language 0.67, pending-grade 0.64. The language
+   floors suggest the one-line language rule needs reinforcement; the
+   diagnostic prompt has never had an iteration pass. It's a codex spend
+   session. **Default: next session you green-light eval spend.**
 5. **CLI/UI i18n** — learner-facing TASK OUTPUT follows the learner's
    language (shipped); the CLI shell itself (labels, help, completion
    message) is English. Full i18n is a product surface decision.
