@@ -19,7 +19,16 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
    "your memories transfer intact" is a pitch no non-FSRS competitor can
    make. Bulk collection import is explicitly rejected (would break packet/
    debt-guard honesty); import is deck→campaign scoped. Four sub-decisions
-   listed in the doc §8. **Default: parked until you promote it.**
+   listed in the doc §8. **The sync question you pressed is now §9 of that
+   doc**: the SATELLITE model — dojo keeps sole scheduling authority, Anki
+   becomes a rendering device (content+due dates push out; revlog outcomes
+   flow back as origin:"anki" attempts that feed dojo's FSRS and the
+   evidence loop). It engages §4's rejections directly (it is neither
+   rejected shape) and challenges A2's binary-custody rule (custody-export
+   amputates the evidence loop for phone reviewers; the satellite keeps
+   them). Recommendation: A1 import first, then A2 defaulting to satellite
+   with --handoff as the explicit exit; ADR 017 amends 015 to "no
+   SYMMETRIC sync". **Default: parked until you promote it.**
 3. **Repo visibility** — the repo is private by your choice; the README's
    curl one-liner activates only when public. Any timeline?
    **Default: stays private; no action.**

@@ -131,3 +131,56 @@ fsrs-optimizer, torch-class dependency — wrong weight until proven demand).
    `dojo import anki`, or both (recommendation: both — one mechanism)?
 3. v1 scheduling fidelity: ladder as specced (a+b), or notes-only first?
 4. genanki optional-extra policy for export (A2).
+
+## 9. The sync question, pressed (owner, 2026-07-09): the satellite model
+
+§4 rejected two sync-adjacent shapes; the owner's follow-up ("investigate
+**syncing**") deserves the third shape examined on its merits, because it is
+neither of the rejected ones:
+
+- Option 6 rejected "Anki keeps authority, dojo reads revlog." The satellite
+  inverts custody: **dojo keeps authority; Anki is a rendering device.**
+- Option 3 rejected AnkiConnect as *required* infrastructure. The satellite
+  needs no live bridge: it composes from A1/A2's own parts (apkg export out,
+  revlog read back from the collection/exported file); AnkiConnect becomes an
+  optional convenience transport when desktop Anki is present, never a
+  dependency.
+
+**The mechanism** (recall lane only — skills are novel-per-session, ADR 007,
+nothing to sync):
+1. Content, one way (dojo → Anki): due recall items push into a
+   machine-managed `Dojo::<campaign>` deck; note guid = exercise id (A2's
+   dedupe machinery, reused). Dojo also writes the DUE DATES it computed —
+   Anki displays dojo's schedule instead of running its own over these cards.
+2. Outcomes, one way (Anki → dojo): the revlog rows for dojo-guid cards pull
+   back as Attempts — ease maps to score bands (Again 0.0 · Hard 0.7 ·
+   Good/Easy 1.0), latency from revlog ms, `origin: "anki"` (the extension-
+   channel pattern) — and `outcomes.land_score` advances **dojo's** FSRS.
+   Contra option 6's "no pedagogy": score+latency is precisely what the
+   scheduler consumes, and reflection reads the rows (without answer
+   glimpses or error tags — an honest, marked signal reduction, identical to
+   what custody-export loses *entirely*).
+3. Divergence is self-healing: reviewed early/late in Anki → the revlog says
+   so → dojo reschedules → next push re-aligns Anki. One brain, eventually
+   consistent, no merge algebra.
+
+**Why this matters against §6's A2 custody rule**: binary custody
+("exported items leave dojo's brain") answers the two-scheduler problem by
+amputation — the moment a user wants phone review, their most-practiced facts
+EXIT the evidence loop forever. For a product whose differentiator is that
+loop, custody-export bleeds it precisely for the most engaged users. The
+satellite keeps them.
+
+**Costs, honestly**: a sync step in the heartbeat (push dues / pull revlog
+when linked); machine-managed-deck rules users must accept (edits overwritten
+on push; content changes belong in dojo); file-transport mode needs access to
+the Anki collection or a re-exported file (documented flow), with AnkiConnect
+as the zero-friction path when available. Estimate: ~2-4 focused days on top
+of A1+A2 (parser, genanki, guid discipline all shared).
+
+**Recommendation (PM+eng)**: sequence A1 (import) unchanged; ship A2 in
+**satellite mode as the default** (custody-export remains as an explicit
+`--handoff` for users leaving); write ADR 017 amending 015: "no *symmetric*
+sync" stays; asymmetric satellite adopted. This also upgrades §8's decision 4
+and adds:
+5. A2 default mode: satellite (recommended) vs binary custody handoff?
