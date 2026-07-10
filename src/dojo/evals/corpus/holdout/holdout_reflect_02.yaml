@@ -1,0 +1,148 @@
+# Tests whether reflection selects scaffolding, not easier difficulty, when errors appear only after support is removed.
+# Strong reflection reads cue-dependence as a support-fading problem, not a knowledge-level problem.
+category: calibration
+domain: wilderness_first_aid
+scenario_context: |
+  Wilderness first aid learner practicing patient assessment. Across six recent
+  attempts, the learner handles intermediate scenario content correctly when the
+  prompt supplies an assessment checklist or ordered headings. On matched
+  intermediate free-response cases without the checklist, they omit the scene
+  safety and SAMPLE-history sequence while still identifying the injury and
+  immediate risk. Latencies are steady, answers are substantive, and feedback
+  says the checklist makes the order available. Reflection ran. Strong output:
+  create an insight about assessment-sequence cue dependence and raise
+  scaffolding while keeping difficulty intermediate. Weak output: lowers
+  difficulty because of the misses, or reduces scaffolding because scaffolded
+  items were correct.
+seed:
+  campaign:
+    id: wfa-readiness
+    name: Wilderness First Aid
+    mission: Build reliable field assessment decisions for remote day hikes.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  exercises:
+    - id: ex_01
+      topic_path: first_aid.patient_assessment.primary_survey
+      difficulty: intermediate
+      prompt: "Checklist provided: scene safety, responsiveness, airway, breathing, circulation. Assess an unconscious hiker after a fall."
+      answer: "Check scene safety, responsiveness, airway, breathing, circulation, then urgent evacuation needs."
+      rubric: "Full credit for ordered primary survey with scene safety before patient contact."
+    - id: ex_02
+      topic_path: first_aid.patient_assessment.history
+      difficulty: intermediate
+      prompt: "No checklist: describe your assessment sequence for a hiker with ankle pain after a slip."
+      answer: "Scene safety, primary survey, focused exam, SAMPLE history, plan and monitor."
+      rubric: "Full credit requires scene safety and SAMPLE history in a coherent sequence."
+    - id: ex_03
+      topic_path: first_aid.patient_assessment.history
+      difficulty: intermediate
+      prompt: "Checklist headings provided: scene, primary, focused exam, SAMPLE, plan. Assess a hiker with chest tightness."
+      answer: "Use the headings in order and collect SAMPLE history before planning evacuation."
+      rubric: "Full credit for using all headings in order, including SAMPLE before plan."
+    - id: ex_04
+      topic_path: first_aid.patient_assessment.primary_survey
+      difficulty: intermediate
+      prompt: "No checklist: what do you do first for a conscious hiker bleeding from the forearm?"
+      answer: "Confirm scene safety, control major bleeding, perform primary survey, then focused exam and history."
+      rubric: "Full credit requires scene safety before treatment and primary survey before focused history."
+    - id: ex_05
+      topic_path: first_aid.patient_assessment.history
+      difficulty: intermediate
+      prompt: "Checklist provided: primary survey, focused exam, SAMPLE, vitals, decision. Assess a dehydrated hiker."
+      answer: "Run the checklist in order, gather SAMPLE and vitals, then decide rest, fluids, or evacuation."
+      rubric: "Full credit for preserving the provided sequence and using SAMPLE before decision."
+    - id: ex_06
+      topic_path: first_aid.patient_assessment.history
+      difficulty: intermediate
+      prompt: "No checklist: outline your full assessment for a hiker with nausea and dizziness."
+      answer: "Scene safety, primary survey, focused exam, SAMPLE, vitals, monitoring, and evacuation decision."
+      rubric: "Full credit requires scene safety and SAMPLE before final plan."
+  attempts:
+    - id: att_1
+      session_id: s1
+      exercise_id: ex_01
+      score: 1.0
+      latency_seconds: 64.0
+      user_answer: "I check the scene, then responsiveness, airway, breathing, circulation, and decide if evacuation is urgent."
+    - id: att_2
+      session_id: s1
+      exercise_id: ex_02
+      score: 0.7
+      latency_seconds: 70.0
+      error_tag: sequence omission
+      user_answer: "I look at the ankle, compare both sides, ask pain level, splint if needed, and monitor."
+      feedback: "Without headings I forget the first sweep and SAMPLE."
+    - id: att_3
+      session_id: s2
+      exercise_id: ex_03
+      score: 1.0
+      latency_seconds: 67.0
+      user_answer: "Scene check, primary survey, focused exam, SAMPLE questions, then plan evacuation based on symptoms."
+    - id: att_4
+      session_id: s2
+      exercise_id: ex_04
+      score: 0.7
+      latency_seconds: 73.0
+      error_tag: sequence omission
+      user_answer: "I stop the bleeding with pressure, bandage it, check pain and movement, then decide whether to leave."
+      feedback: "I know the care, but blank prompts make me skip the opening order."
+    - id: att_5
+      session_id: s3
+      exercise_id: ex_05
+      score: 1.0
+      latency_seconds: 69.0
+      user_answer: "Primary survey first, focused exam, SAMPLE, vitals, then decide rest, fluids, and whether to evacuate."
+    - id: att_6
+      session_id: s3
+      exercise_id: ex_06
+      score: 0.7
+      latency_seconds: 71.0
+      error_tag: sequence omission
+      user_answer: "I ask about nausea, food, water, and dizziness, take vitals, rest them, and watch for worsening."
+      feedback: "The checklist helps me remember scene safety before questions."
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - id: c1
+    weight: 3
+    question: "Does the output keep difficulty intermediate instead of lowering it because supported intermediate work is successful?"
+  - id: c2
+    weight: 3
+    question: "Does the output raise scaffolding to high because misses occur when sequence cues are removed?"
+  - id: c3
+    weight: 2
+    question: "Does the output create or update an insight about cue-dependent assessment sequencing using both unsupported misses and supported successes?"
+  - id: c4
+    weight: 1
+    question: "Does the journal faithfully summarize the scaffolding adjustment without inventing unrelated learner problems?"
+references:
+  good:
+    insight_updates:
+      - op: create
+        id: null
+        key: assessment.sequence_cues
+        text: "Assessment order holds with headings but loses scene safety and SAMPLE when cues are removed."
+        evidence: [att_1, att_2, att_3, att_4, att_5, att_6]
+        reason: "matched unsupported prompts cause sequence omissions"
+    strategy:
+      difficulty: intermediate
+      scaffolding: high
+      reason: "Use ordered prompts and fade cues; content level is otherwise successful."
+    plan_revision: null
+    questions: []
+    journal: "Raised scaffolding for cue-dependent assessment sequencing; kept intermediate difficulty."
+  bad:
+    insight_updates:
+      - op: create
+        id: null
+        key: assessment.content_gap
+        text: "Learner is not ready for intermediate patient assessment scenarios."
+        evidence: [att_2, att_4, att_6]
+        reason: "three misses show content too hard"
+    strategy:
+      difficulty: beginner
+      scaffolding: medium
+      reason: "Assessment misses indicate the learner needs easier cases."
+    plan_revision: null
+    questions: []
+    journal: "Lowered difficulty after repeated assessment errors."

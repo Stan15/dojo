@@ -1,0 +1,149 @@
+# Tests lean scoping in planning: a broadly worded learning goal must be narrowed by explicit context instead of expanded into a full-domain curriculum.
+category: planning
+domain: food_safety
+scenario_context: |
+  The learner asks to "learn food safety for the kitchen," which sounds broad.
+  The actual context is narrow: they are volunteering at a Saturday soup-kitchen
+  cold topping station and need to avoid allergen cross-contact for dairy, nuts,
+  and gluten during one service. Strong planning scopes to that immediate station
+  responsibility. Weak planning treats the phrase as a comprehensive food-safety
+  course covering pathogens, temperatures, knives, storage, and cleaning.
+seed:
+  campaign:
+    id: soup-kitchen-shift
+    name: Soup Kitchen Shift
+    mission: Safely run the cold topping station this Saturday without allergen cross-contact.
+  exercises:
+    - id: ex_label
+      topic_path: allergen.station.labels
+      difficulty: beginner
+      prompt: "Which labels should be visible before service starts?"
+      answer: "Dairy, nuts, gluten, and any safe/contains indicators used by the kitchen."
+      rubric: "Credit clear identification of allergen labels relevant to the station."
+    - id: ex_utensils
+      topic_path: allergen.station.utensils
+      difficulty: beginner
+      prompt: "What should you do if a spoon touches a topping containing nuts?"
+      answer: "Remove it from general use and replace it with a clean dedicated utensil."
+      rubric: "Credit replacing or isolating contaminated utensils."
+    - id: ex_gloves
+      topic_path: allergen.station.gloves
+      difficulty: beginner
+      prompt: "When should gloves be changed at the topping station?"
+      answer: "After touching allergen-containing items, non-food surfaces, or anything questionable."
+      rubric: "Credit glove changes after contamination risks."
+  attempts:
+    - id: att_label
+      session_id: s1
+      exercise_id: ex_label
+      score: 0.7
+      latency_seconds: 18.0
+      user_answer: "Put dairy, nuts, and gluten signs where guests and servers can see them."
+    - id: att_utensils
+      session_id: s1
+      exercise_id: ex_utensils
+      score: 0.3
+      latency_seconds: 24.0
+      user_answer: "Wipe the spoon and keep serving if it looks clean."
+      error_tag: cross_contact
+    - id: att_gloves
+      session_id: s1
+      exercise_id: ex_gloves
+      score: 0.7
+      latency_seconds: 20.0
+      user_answer: "Change gloves after touching cheese or bread crumbs."
+steps:
+  - compile:
+      fn: plan
+      goal: "learn food safety for the kitchen"
+      context_notes: "Volunteer has one cold topping station shift this Saturday. Scope to allergen cross-contact for dairy, nuts, and gluten at that station."
+      existing_topics:
+        - allergen.station.labels
+        - allergen.station.utensils
+        - allergen.station.gloves
+judge_rubric:
+  - id: c1
+    weight: 3
+    question: "Does the plan narrow the broad wording to allergen cross-contact at the cold topping station?"
+  - id: c2
+    weight: 3
+    question: "Does the plan avoid adding broad food-safety curriculum topics not required by the stated shift context?"
+  - id: c3
+    weight: 2
+    question: "Does phase 1 calibrate the immediate station skills with at least five attempts?"
+  - id: c4
+    weight: 1
+    question: "Are the declared topics concrete, teachable station behaviors rather than abstract safety categories?"
+references:
+  good:
+    mission: "Prevent allergen cross-contact at the soup-kitchen cold topping station this Saturday."
+    topics:
+      - path: allergen.station.labels
+        kind: recall
+        summary: "Recognize dairy, nut, gluten, and safe/contains labels used at the station."
+      - path: allergen.station.utensils
+        kind: skill
+        summary: "Keep dedicated utensils separate and replace any utensil with possible allergen contact."
+      - path: allergen.station.gloves
+        kind: skill
+        summary: "Change gloves after allergen contact, surface contact, or uncertain handling."
+      - path: allergen.station.setup
+        kind: skill
+        summary: "Arrange toppings so allergen-containing items cannot contaminate allergen-safe items."
+    phases:
+      - phase: 1
+        topics:
+          - allergen.station.labels
+          - allergen.station.utensils
+          - allergen.station.gloves
+        criteria:
+          min_attempts: 5
+          min_accuracy: 0.8
+        focus: "Calibrate recognition and handling decisions for the Saturday station."
+      - phase: 2
+        topics:
+          - allergen.station.setup
+          - allergen.station.utensils
+          - allergen.station.gloves
+        criteria:
+          min_attempts: 6
+          min_accuracy: 0.85
+        focus: "Practice realistic setup and mid-service contamination choices."
+    refinement_questions: []
+  bad:
+    mission: "Learn kitchen food safety broadly before volunteering."
+    topics:
+      - path: safety.pathogens.basics
+        kind: recall
+        summary: "Identify common foodborne pathogens and symptoms."
+      - path: safety.temperature.control
+        kind: skill
+        summary: "Apply hot and cold holding temperature rules."
+      - path: safety.knife.handling
+        kind: skill
+        summary: "Use knives safely during food preparation."
+      - path: safety.storage.rotation
+        kind: recall
+        summary: "Understand storage order and stock rotation."
+      - path: safety.cleaning.sanitizing
+        kind: skill
+        summary: "Clean and sanitize surfaces using proper solution strength."
+    phases:
+      - phase: 1
+        topics:
+          - safety.pathogens.basics
+          - safety.temperature.control
+        criteria:
+          min_attempts: 5
+          min_accuracy: 0.8
+        focus: "Build general food-safety foundations."
+      - phase: 2
+        topics:
+          - safety.knife.handling
+          - safety.storage.rotation
+          - safety.cleaning.sanitizing
+        criteria:
+          min_attempts: 8
+          min_accuracy: 0.85
+        focus: "Expand into full kitchen operations."
+    refinement_questions: []

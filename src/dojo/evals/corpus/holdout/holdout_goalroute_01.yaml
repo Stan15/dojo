@@ -1,0 +1,86 @@
+# Skill under test: route a goal by mission fit, proposing a new campaign when
+# existing campaigns share vocabulary but not the learner's actual objective.
+category: goal_routing
+domain: emergency_preparedness
+scenario_context: |
+  Learner has two existing campaigns. One is about writing workplace incident
+  reports after warehouse safety events. Another is about wilderness first-aid
+  response for day hikes. New goal: "Build a two-week earthquake readiness plan
+  for my apartment building and run a tenant drill." The words readiness,
+  response, safety, and drill superficially resemble both existing campaigns,
+  especially the workplace incident campaign, but the requested mission is
+  community disaster preparation: supplies, roles, communication, and drill
+  execution before an event. Strong routing proposes a new campaign. Weak routing
+  attaches to workplace incident reports because of safety/drill overlap.
+seed:
+  campaign:
+    id: warehouse-incident-reports
+    name: Warehouse Reports
+    mission: Write clear post-incident reports for warehouse safety reviews.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  campaigns:
+    - id: warehouse-incident-reports
+      name: Warehouse Reports
+      mission: Write clear post-incident reports for warehouse safety reviews.
+      strategy_profile: {difficulty: intermediate, scaffolding: medium}
+    - id: trail-first-aid
+      name: Trail First Aid
+      mission: Practice recognizing and responding to common day-hike injuries.
+      strategy_profile: {difficulty: beginner, scaffolding: high}
+  topics:
+    - {path: workplace.incident.reporting, kind: skill, summary: "Document timeline, cause, impact, and corrective action after warehouse incidents."}
+    - {path: outdoor.first_aid.triage, kind: skill, summary: "Prioritize basic first-aid responses for hiking injuries."}
+  exercises:
+    - id: ex_wr_1
+      topic_path: workplace.incident.reporting
+      difficulty: intermediate
+      prompt: "Draft the opening summary for a pallet-jack near miss."
+      answer: "State what happened, where, when, who was involved, and immediate containment."
+      rubric: "Includes event, location, time, people, and immediate action."
+    - id: ex_fa_1
+      topic_path: outdoor.first_aid.triage
+      difficulty: beginner
+      prompt: "A hiker twists an ankle two miles from the trailhead. What do you check first?"
+      answer: "Check scene safety, circulation, sensation, movement, pain, swelling, and ability to bear weight."
+      rubric: "Prioritizes safety and basic injury assessment."
+  attempts:
+    - id: att_wr_1
+      session_id: s1
+      exercise_id: ex_wr_1
+      score: 0.7
+      latency_seconds: 95.0
+      user_answer: "Worker almost hit a rack at 3 p.m.; supervisor stopped the aisle and checked for damage."
+    - id: att_fa_1
+      session_id: s2
+      exercise_id: ex_fa_1
+      score: 1.0
+      latency_seconds: 42.0
+      user_answer: "Check safety, swelling, circulation, sensation, movement, and whether they can walk."
+steps:
+  - compile:
+      fn: goal_route
+      goal: "Build a two-week earthquake readiness plan for my apartment building and run a tenant drill."
+judge_rubric:
+  - {id: c1, weight: 4, question: "Does the output choose propose_campaign rather than attaching to either existing safety-adjacent campaign?"}
+  - {id: c2, weight: 3, question: "Does the reason distinguish proactive building disaster readiness from post-incident reporting or trail first aid?"}
+  - {id: c3, weight: 2, question: "Does the proposed campaign name and mission capture apartment earthquake planning and tenant drill practice?"}
+  - {id: c4, weight: 1, question: "Does the output avoid inventing a new topic under an existing campaign?"}
+references:
+  good:
+    action: propose_campaign
+    campaign: null
+    topic_path: null
+    new_name: Building Quake Drill
+    new_mission: Prepare apartment earthquake supplies, roles, communication, and tenant drill.
+    confidence: high
+    reason: "New proactive building-readiness mission."
+    seed: false
+  bad:
+    action: attach
+    campaign: warehouse-incident-reports
+    topic_path: workplace.incident.reporting
+    new_name: null
+    new_mission: null
+    confidence: high
+    reason: "Safety drill resembles incident reporting."
+    seed: false

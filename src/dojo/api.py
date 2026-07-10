@@ -18,6 +18,7 @@ moving — because agents and humans alike resume from cold context.
 from __future__ import annotations
 
 import json
+import re
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -98,6 +99,11 @@ class DojoAPI:
             if campaign.status == "active":
                 self._evaluate_campaign_phase_advancement(campaign)
 
+        # 1b. Housekeeping is the heartbeat's job too: spent, unreferenced
+        # task files age out (git keeps history); provenance-bearing tasks
+        # are untouchable. Counted honestly in the envelope when it acts.
+        housekept = self._task_housekeeping(now)
+
         # Plan-authority surfacing (QUESTIONS.md 2026-07-09): pending proposals
         # repeat until resolved; auto-applied changes announce exactly once.
         # Ownership surfacing rides the same machinery: insight changes and
@@ -112,6 +118,7 @@ class DojoAPI:
             | ({"insight_notices": insight_notes} if insight_notes else {})
             | ({"campaign_completions": completions} if completions else {})
             | ({"idle_campaigns": idle} if idle else {})
+            | ({"housekeeping": {"spent_tasks_deleted": housekept}} if housekept else {})
         )
         proposal_hint = (
             f" ({len(plan_proposals)} plan proposal(s) await you: dojo plan show)"
@@ -2355,6 +2362,66 @@ class DojoAPI:
         self.store.campaigns.save(camp)
         return {"campaign_id": camp.id, "status": "reverted",
                 "plan": [p.model_dump() for p in camp.attack_plan]}
+
+    _TASK_ID_RE = re.compile(r"tsk_[0-9a-f]{8}")
+
+    def _referenced_task_ids(self) -> set[str]:
+        """Every task id some piece of learning state points at — these carry
+        PROVENANCE (the model's words behind an insight, item, score, or plan
+        change) and are never housekept away."""
+        referenced: set[str] = set()
+        for camp in self.store.campaigns.list():
+            for ins in self.store.insights.list(camp.id):
+                if ins.generation_run:
+                    referenced.add(ins.generation_run)
+            for ex in self.store.exercises.list(camp.id):
+                if ex.generation_run:
+                    referenced.add(ex.generation_run)
+            for cand in self.store.candidates.list(camp.id):
+                if cand.generation_run:
+                    referenced.add(cand.generation_run)
+            for att in self.store.attempts.list(camp.id):
+                if att.grade_run:
+                    referenced.add(att.grade_run)
+            for entry in camp.pedagogical_journal:
+                for field in ("trigger", "hypothesis"):
+                    referenced.update(self._TASK_ID_RE.findall(str(entry.get(field, ""))))
+        for cap in self.store.captures.list():
+            if cap.proposal and cap.proposal.get("task_id"):
+                referenced.add(cap.proposal["task_id"])
+        return referenced
+
+    def _task_housekeeping(self, now: datetime) -> int:
+        """Deletes spent task files (delete-over-retain: git is the archive):
+        fulfilled/failed tasks older than `tasks.retention_days` (default 14)
+        that nothing references. Pending tasks and every provenance-bearing
+        task (insight/exercise/grade/journal/capture pointers) are untouchable
+        regardless of age, so `--trace` receipts keep working. Returns the
+        number removed."""
+        retention = float(self.store.configs.get_value("tasks.retention_days", 14))
+        if retention <= 0:
+            return 0
+        cutoff = now - timedelta(days=retention)
+        referenced = None  # computed lazily: most days there is nothing old
+        removed = 0
+        for task in self.store.tasks.list():
+            if task.status == "pending":
+                continue
+            try:
+                updated = datetime.fromisoformat(task.updated_at)
+            except (TypeError, ValueError):
+                continue
+            if updated > cutoff:
+                continue
+            if referenced is None:
+                referenced = self._referenced_task_ids()
+            if task.id in referenced:
+                continue
+            self.store.tasks.delete(task.id)
+            removed += 1
+        if removed:
+            self.log.info(f"Task housekeeping: {removed} spent task file(s) deleted (git keeps history)")
+        return removed
 
     def _plan_notices(self) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         """(pending proposals, unannounced applied changes) across active

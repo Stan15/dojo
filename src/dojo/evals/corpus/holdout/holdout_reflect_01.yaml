@@ -1,0 +1,171 @@
+# Calibration restraint: hold learning-state changes when alarming evidence is
+# a single anomalous session rather than a durable performance signal.
+category: calibration
+domain: botany
+scenario_context: |
+  Botany learner preparing for field identification. Across four regular sessions,
+  the learner has been accurate and steady on leaf arrangement and plant-family
+  cues. After a two-week travel gap, one late-night catch-up session produced two
+  slow misses with self-reported fatigue and missing field notes, followed by a
+  correct answer on the same topic. Reflection ran. Strong output makes no insight,
+  strategy, or plan changes: the dip is isolated, externally explained, and
+  inconsistent with the surrounding history. Weak output treats the anomalous
+  session as evidence of a broad identification weakness and lowers difficulty or
+  increases scaffolding.
+seed:
+  campaign:
+    id: field-botany
+    name: Field Botany
+    mission: Reliably identify common local plants using observable structures during weekend surveys.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  insights: []
+  exercises:
+    - id: ex_01
+      topic_path: botany.identification.leaf_arrangement
+      difficulty: intermediate
+      prompt: "A stem has two leaves at each node, directly across from each other. Name the leaf arrangement."
+      answer: "opposite"
+      rubric: "Credit opposite; do not credit alternate or whorled."
+    - id: ex_02
+      topic_path: botany.identification.leaf_arrangement
+      difficulty: intermediate
+      prompt: "A stem has one leaf per node, switching sides as it grows. Name the leaf arrangement."
+      answer: "alternate"
+      rubric: "Credit alternate; minor wording is acceptable."
+    - id: ex_03
+      topic_path: botany.identification.flower_parts
+      difficulty: intermediate
+      prompt: "Which structure produces pollen in a typical flower?"
+      answer: "anther"
+      rubric: "Credit anther; stamen is partial only if anther is identified."
+    - id: ex_04
+      topic_path: botany.identification.leaf_arrangement
+      difficulty: intermediate
+      prompt: "Three leaves emerge from the same node around the stem. Name the leaf arrangement."
+      answer: "whorled"
+      rubric: "Credit whorled; do not credit opposite."
+    - id: ex_05
+      topic_path: botany.identification.plant_families
+      difficulty: intermediate
+      prompt: "A flower has four petals in a cross shape and six stamens, four long and two short. Which family is suggested?"
+      answer: "brassicaceae"
+      rubric: "Credit Brassicaceae or mustard family."
+    - id: ex_06
+      topic_path: botany.identification.leaf_arrangement
+      difficulty: intermediate
+      prompt: "Leaves appear in opposite pairs, with each pair rotated ninety degrees from the one below. Name the pattern."
+      answer: "decussate opposite"
+      rubric: "Credit decussate or opposite with rotated pairs."
+    - id: ex_07
+      topic_path: botany.identification.plant_families
+      difficulty: intermediate
+      prompt: "A plant has square stems, opposite leaves, and aromatic foliage. Which family is most likely?"
+      answer: "lamiaceae"
+      rubric: "Credit Lamiaceae or mint family."
+    - id: ex_08
+      topic_path: botany.identification.plant_families
+      difficulty: intermediate
+      prompt: "A composite flower head made of many florets points toward which family?"
+      answer: "asteraceae"
+      rubric: "Credit Asteraceae or daisy family."
+    - id: ex_09
+      topic_path: botany.identification.leaf_arrangement
+      difficulty: intermediate
+      prompt: "One leaf occurs at each node, and successive leaves spiral around the stem. Name the arrangement."
+      answer: "alternate"
+      rubric: "Credit alternate or spiral alternate."
+  attempts:
+    - id: att_01
+      session_id: s1
+      exercise_id: ex_01
+      score: 1.0
+      latency_seconds: 8.0
+      user_answer: "Opposite."
+    - id: att_02
+      session_id: s1
+      exercise_id: ex_02
+      score: 1.0
+      latency_seconds: 9.0
+      user_answer: "Alternate."
+    - id: att_03
+      session_id: s2
+      exercise_id: ex_03
+      score: 1.0
+      latency_seconds: 11.0
+      user_answer: "The anther produces pollen."
+    - id: att_04
+      session_id: s2
+      exercise_id: ex_04
+      score: 1.0
+      latency_seconds: 10.0
+      user_answer: "Whorled."
+    - id: att_05
+      session_id: s3
+      exercise_id: ex_05
+      score: 1.0
+      latency_seconds: 14.0
+      user_answer: "Brassicaceae, the mustard family."
+    - id: att_06
+      session_id: s3
+      exercise_id: ex_06
+      score: 0.7
+      latency_seconds: 16.0
+      user_answer: "Opposite pairs, rotated at each node."
+      feedback: "Correct pattern; name decussate when opposite pairs rotate."
+    - id: att_07
+      session_id: s4
+      exercise_id: ex_07
+      score: 0.0
+      latency_seconds: 48.0
+      error_tag: fatigue slip
+      user_answer: "Not sure. I am tired and do not have my notes."
+    - id: att_08
+      session_id: s4
+      exercise_id: ex_08
+      score: 0.3
+      latency_seconds: 52.0
+      error_tag: fatigue slip
+      user_answer: "Maybe rose family? Guessing after travel."
+    - id: att_09
+      session_id: s4
+      exercise_id: ex_09
+      score: 1.0
+      latency_seconds: 13.0
+      user_answer: "Alternate, spiraling around the stem."
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - id: c1
+    weight: 3
+    question: "Does the output refrain from creating, updating, or resolving any insight from the two anomalous misses?"
+  - id: c2
+    weight: 3
+    question: "Does the output keep strategy null, preserving intermediate difficulty and medium scaffolding?"
+  - id: c3
+    weight: 2
+    question: "Does the output keep plan_revision null rather than adding remediation for plant families or identification?"
+  - id: c4
+    weight: 1
+    question: "Does the journal explain that no change is justified because the dip is isolated and externally explained?"
+references:
+  good:
+    insight_updates: []
+    strategy: null
+    plan_revision: null
+    questions: []
+    journal: "No changes: one tired post-gap session conflicts with otherwise steady accurate performance."
+  bad:
+    insight_updates:
+      - op: create
+        id: null
+        key: botany.identification.family_confusion
+        text: "Learner is confusing plant-family cues during field identification."
+        evidence: [att_07, att_08]
+        reason: "two recent misses on family cues"
+    strategy:
+      difficulty: beginner
+      scaffolding: high
+      reason: "recent family misses suggest fundamentals need rebuilding"
+    plan_revision: null
+    questions: []
+    journal: "Added family-confusion insight and lowered difficulty after recent misses."

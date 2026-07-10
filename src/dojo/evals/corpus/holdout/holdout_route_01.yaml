@@ -1,0 +1,94 @@
+# Skill under test: route an ambiguous capture to the better existing campaign,
+# preserving uncertainty when two homes are plausible.
+category: routing
+domain: urban_gardening
+scenario_context: |
+  Learner runs two active campaigns with overlapping compost interests. One campaign
+  is about balcony food gardening; the other is about reducing household waste. A
+  captured note mentions using worm-bin castings in tomato containers. It could fit
+  either composting or container gardening, but the practice outcome is applying an
+  amendment to balcony tomatoes, so the better home is the balcony gardening campaign
+  under soil amendments. Confidence should stay low because the worm-bin wording also
+  plausibly belongs to household waste composting.
+seed:
+  campaign:
+    id: balcony-harvest
+    name: Balcony Harvest
+    mission: Grow reliable herbs and vegetables in a small apartment balcony setup.
+    strategy_profile: {difficulty: beginner, scaffolding: medium}
+  registry:
+    campaigns:
+      - id: balcony-harvest
+        name: Balcony Harvest
+        mission: Grow reliable herbs and vegetables in a small apartment balcony setup.
+        topics:
+          - path: gardening.containers.soil_amendments
+            kind: skill
+            summary: Use compost, fertilizer, and other amendments safely in container crops.
+          - path: gardening.containers.tomatoes
+            kind: skill
+            summary: Grow tomatoes in balcony containers with correct light, water, and support.
+      - id: household-waste
+        name: Household Waste
+        mission: Cut apartment trash volume through practical reuse, sorting, and composting habits.
+        topics:
+          - path: waste.composting.worm_bins
+            kind: skill
+            summary: Maintain indoor worm bins and troubleshoot moisture, odor, and feeding issues.
+          - path: waste.sorting.kitchen
+            kind: recall
+            summary: Sort common kitchen waste into landfill, recycling, and compost streams.
+  captures:
+    - id: cap_01
+      text: "Practice when and how much worm-bin castings to mix into tomato containers without burning roots."
+  exercises:
+    - id: ex_01
+      topic_path: gardening.containers.soil_amendments
+      difficulty: beginner
+      prompt: "How should finished compost be added to a tomato container?"
+      answer: "Mix a modest amount into the potting mix or top-dress lightly; avoid large fresh doses near roots."
+      rubric: "Credits safe quantity, finished compost, and avoiding root damage."
+  attempts:
+    - id: att_01
+      session_id: s1
+      exercise_id: ex_01
+      score: 0.7
+      latency_seconds: 26.0
+      user_answer: "Use a small handful and keep it away from the stem."
+steps:
+  - compile:
+      fn: route
+      capture_id: cap_01
+      capture_text: "Practice when and how much worm-bin castings to mix into tomato containers without burning roots."
+judge_rubric:
+  - id: c1
+    weight: 3
+    question: "Does the output attach the capture to balcony-harvest rather than household-waste?"
+  - id: c2
+    weight: 3
+    question: "Does the output choose the existing topic gardening.containers.soil_amendments?"
+  - id: c3
+    weight: 2
+    question: "Does the output set confidence to low because the capture plausibly fits two campaigns?"
+  - id: c4
+    weight: 1
+    question: "Does the reason cite tomato container amendment use rather than generic compost wording?"
+references:
+  good:
+    action: attach
+    campaign: balcony-harvest
+    topic_path: gardening.containers.soil_amendments
+    new_name: null
+    new_mission: null
+    confidence: low
+    reason: "tomato container amendment practice outweighs worm-bin wording"
+    seed: false
+  bad:
+    action: attach
+    campaign: household-waste
+    topic_path: waste.composting.worm_bins
+    new_name: null
+    new_mission: null
+    confidence: high
+    reason: "mentions worm-bin castings"
+    seed: false

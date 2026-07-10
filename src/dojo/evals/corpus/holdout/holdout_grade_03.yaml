@@ -1,0 +1,58 @@
+category: grading_integrity
+domain: photography
+scenario_context: |
+  Failure mode: over-crediting a partially correct multi-part answer by anchoring
+  on the first two correct components and ignoring a directionally wrong third
+  component. The seed makes that mistake tempting because the learner gives a
+  strong fast-shutter choice and a correct wider-aperture choice, then states
+  the exact opposite ISO compensation while still using confident brightness
+  language. Strong grading must apply the partial-credit band and quote the
+  wrong component; weak grading gives full credit because most of the answer
+  sounds exposure-aware.
+seed:
+  campaign:
+    id: photo-foundations
+    name: Photo Foundations
+    mission: Learn manual exposure choices for fast indoor action photography.
+  exercises:
+    - id: ex_exposure_17
+      topic_path: photography.exposure.motion
+      difficulty: intermediate
+      prompt: "For a dim indoor basketball game, name three manual exposure changes that freeze motion while keeping the image bright enough."
+      answer: "Use a faster shutter speed, open the aperture wider, and raise ISO."
+      rubric: "Award 0.3 for faster shutter speed, 0.3 for wider aperture, and 0.3 for raising ISO. Award 0.1 for a coherent brightness rationale. If exactly two exposure changes are correct but one is directionally wrong, score 0.7."
+  attempts:
+    - id: att_exposure_mix
+      session_id: s8
+      exercise_id: ex_exposure_17
+      score: 0.0
+      latency_seconds: 34.0
+      user_answer: "Set 1/1000s, open the lens to f/2.8, and lower ISO to avoid grain while keeping it bright."
+steps:
+  - compile:
+      fn: grade
+      attempt_id: att_exposure_mix
+judge_rubric:
+  - id: c1
+    weight: 4
+    question: "Does the grade use the 0.7 partial-credit band instead of full credit because the ISO compensation is directionally wrong?"
+  - id: c2
+    weight: 4
+    question: "Does the evidence quote the wrong ISO component rather than a correct shutter or aperture component?"
+  - id: c3
+    weight: 2
+    question: "Does the feedback explicitly preserve credit for the correct shutter and aperture choices while correcting the ISO direction?"
+  - id: c4
+    weight: 1
+    question: "Does the result avoid treating confident brightness language as overriding the incorrect ISO direction?"
+references:
+  good:
+    score: 0.7
+    evidence: "lower ISO to avoid grain"
+    feedback: "Fast shutter and wider aperture are correct. The ISO direction is wrong: in a dim gym, raise ISO to help keep the image bright."
+    error_tag: iso direction
+  bad:
+    score: 1.0
+    evidence: "Set 1/1000s"
+    feedback: "Correct. This freezes motion, opens the aperture for more light, and explains a brightness tradeoff."
+    error_tag: null

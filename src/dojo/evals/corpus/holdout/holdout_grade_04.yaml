@@ -1,0 +1,57 @@
+# Skill under test: grading must award full credit for a valid alternative procedure
+# that satisfies the same criterion even when it differs from the demonstrated method.
+category: grading
+domain: horticulture
+scenario_context: |
+  A container-gardening learner is being graded on deciding whether to water a basil plant.
+  The lesson example used the finger-depth soil test: water when soil is dry below the surface,
+  not merely when the top looks dry. This holdout checks whether grading accepts a different
+  legitimate procedure: pot-weight plus drainage-hole soil texture and leaf recovery pattern.
+  Strong grading gives full credit because the learner reaches the correct watering decision
+  with reliable evidence. Weak grading penalizes the answer for not naming the finger test.
+seed:
+  campaign:
+    id: container-herbs
+    name: Container Herbs
+    mission: Grow healthy kitchen herbs by diagnosing watering needs from plant and soil evidence.
+    strategy_profile: {difficulty: beginner, scaffolding: medium}
+  exercises:
+    - id: ex_basil_water
+      topic_path: horticulture.herbs.watering
+      difficulty: beginner
+      prompt: "A basil plant droops at midday. The soil surface looks dry, the pot feels light, and soil visible through the drainage hole is pale and crumbly. By evening the leaves recover slightly. Decide whether to water now and justify your decision."
+      answer: "Water thoroughly now, because below-surface/container evidence shows the root zone is dry; do not rely only on surface appearance."
+      rubric: "Full credit for watering now with reliable root-zone evidence. Accept finger-depth dryness, light pot weight, dry drainage-hole soil, or another sound method. Do not require the exact demonstrated finger test."
+  attempts:
+    - id: att_basil_1
+      session_id: s1
+      exercise_id: ex_basil_water
+      score: 0.0
+      latency_seconds: 42.0
+      user_answer: "Yes, water it deeply. The pot is light and the soil at the drainage hole is pale and crumbly, so the root zone is dry; the evening recovery means heat stress was part of it, but the container still needs water."
+steps:
+  - compile: {fn: grade, attempt_id: att_basil_1}
+judge_rubric:
+  - id: c1
+    weight: 3
+    question: "Does the grade award full credit for a correct watering decision supported by reliable alternative root-zone evidence?"
+  - id: c2
+    weight: 2
+    question: "Does the feedback avoid penalizing the learner merely for not using the demonstrated finger-depth test?"
+  - id: c3
+    weight: 2
+    question: "Does the evidence quote come verbatim from the learner answer and support the accepted alternative method?"
+  - id: c4
+    weight: 1
+    question: "Does the feedback mention why pot weight and drainage-hole soil texture are sufficient evidence?"
+references:
+  good:
+    score: 1.0
+    evidence: "The pot is light"
+    feedback: "Correct. Pot weight and dry, crumbly drainage-hole soil are reliable root-zone evidence, so watering deeply now is justified even without the finger-depth test."
+    error_tag: null
+  bad:
+    score: 0.3
+    evidence: "The pot is light"
+    feedback: "Partially correct, but you needed to use the finger-depth soil test from the lesson before deciding to water."
+    error_tag: missing finger test

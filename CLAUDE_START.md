@@ -47,7 +47,20 @@ data** — no verdicts, no traces, no per-scenario peeking, ever. The holdout
 aggregate gap vs the visible mean. Bad gap → broaden the VISIBLE corpus and
 iterate there. Full protocol: tests/test_evals_holdout.py (its report
 mechanically withholds everything but bare scores). Holdout scenarios are
-authored by subagents and never read by whoever tunes prompts.
+authored by subagents/codex pipelines and never read by whoever tunes prompts.
+
+Run the holdout gate (RELEASE GATES ONLY — before a version tag, after an
+iteration series; never mid-iteration):
+
+```bash
+# ratcheting release gate (writes/checks the __holdout baseline, prints the gap):
+DOJO_EVAL_DRIVER="codex exec --skip-git-repo-check -s read-only" python -m pytest -m eval_holdout -q
+# or the aggregate-only report with computed gap + verdict:
+dojo benchmark "codex exec --skip-git-repo-check -s read-only" --holdout
+```
+
+Both print: holdout mean · visible mean · gap. Gap ≤ 0.1 = prompts
+generalize; > 0.2 = overfit (broaden the visible corpus).
 
 ## Ground rules specific to this repo
 

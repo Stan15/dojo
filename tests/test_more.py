@@ -259,3 +259,74 @@ class TestMoreCLI:
         assert out["ok"] is True, "no is an answer, not an error"
         assert out["extension_available"] is False
         assert {"projected_due_7d", "capacity_7d", "reason", "alternative"} <= out.keys()
+
+
+class TestTaskHousekeeping:
+    """Spent task files age out via the daily heartbeat (backlog item,
+    2026-07-09): delete-over-retain, git is the archive — but every
+    provenance-bearing task (the model's words behind an insight, item,
+    score, or plan change) is untouchable regardless of age."""
+
+    def age(self, api, task_id: str, days: int = 30) -> None:
+        t = api.store.tasks.get(task_id)
+        t.status = "fulfilled"
+        t.updated_at = iso(datetime.now(timezone.utc) - timedelta(days=days))
+        api.store.tasks.save(t)
+
+    def emit(self, api) -> str:
+        from dojo.tasks import compiler, service
+        compiled = compiler.compile_goal_route(api.store, goal="learn something")
+        return service.emit(api.store, compiled).id
+
+    def test_old_unreferenced_fulfilled_tasks_are_deleted(self, api):
+        tid = self.emit(api)
+        self.age(api, tid)
+        removed = api._task_housekeeping(datetime.now(timezone.utc))
+        assert removed == 1 and api.store.tasks.get(tid) is None
+
+    def test_referenced_tasks_survive_any_age(self, api):
+        from dojo.schemas import Insight
+        gen = self.emit(api)
+        graded = self.emit(api)
+        journaled = self.emit(api)
+        for tid in (gen, graded, journaled):
+            self.age(api, tid, days=400)
+        api.store.insights.save(CAMP_ID, Insight(
+            id="ins_h", key="k.h", generation_run=gen, description="belief"))
+        add_exercise(api, "ex_h")
+        add_attempt(api, "att_h", "ex_h")
+        att = api.store.attempts.get(CAMP_ID, "att_h")
+        att.grade_run = graded
+        api.store.attempts.save(CAMP_ID, att)
+        camp = api.store.campaigns.get(CAMP_ID)
+        camp.pedagogical_journal.append({
+            "action": "PLAN_APPLIED", "trigger": f"reflection task {journaled}",
+            "status": "applied", "announced": True,
+        })
+        api.store.campaigns.save(camp)
+        removed = api._task_housekeeping(datetime.now(timezone.utc))
+        assert removed == 0
+        for tid in (gen, graded, journaled):
+            assert api.store.tasks.get(tid) is not None, f"{tid} carries provenance"
+
+    def test_pending_and_young_tasks_untouched(self, api):
+        pending = self.emit(api)  # stays pending
+        young = self.emit(api)
+        t = api.store.tasks.get(young)
+        t.status = "failed"
+        api.store.tasks.save(t)  # failed but recent
+        assert api._task_housekeeping(datetime.now(timezone.utc)) == 0
+        assert api.store.tasks.get(pending) and api.store.tasks.get(young)
+
+    def test_daily_reports_housekeeping_honestly(self, api):
+        tid = self.emit(api)
+        self.age(api, tid)
+        add_exercise(api, "ex_live")  # something due so daily builds normally
+        res = api.daily()
+        assert res["housekeeping"]["spent_tasks_deleted"] == 1
+
+    def test_retention_zero_disables(self, api):
+        api.store.configs.set_value("tasks.retention_days", "0")
+        tid = self.emit(api)
+        self.age(api, tid, days=999)
+        assert api._task_housekeeping(datetime.now(timezone.utc)) == 0

@@ -1,0 +1,79 @@
+# Skill under test: when relevant source evidence is too thin for the requested count,
+# generate fewer grounded practice items with a note, without padding or intervening.
+category: generation
+domain: seed_starting
+scenario_context: |
+  Learner is building source-backed practice from one short note about starting
+  pea shoots. The generate request asks for 5 intermediate exercises on
+  seed_starting.pea_shoots. The source is relevant, but it contains only three
+  usable facts: soak pea seeds 8-12 hours, sow 2 cm deep, and keep the medium
+  evenly moist until shoots emerge. Strong output should generate only the
+  few grounded items the source can support, add a short note that the source is
+  too thin for five distinct items, and avoid an intervention. Weak output pads
+  with unsupported advice about light, harvest timing, mold prevention, yield,
+  fertilizer, or temperature, or incorrectly asks for clarification instead of
+  using the relevant source.
+seed:
+  campaign:
+    id: window-greens
+    name: Window Greens
+    mission: Grow reliable edible greens from seed on a sunny apartment windowsill.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  sources:
+    - id: src_pea_shoot_note
+      title: Pea shoot seed-starting note
+      text: |
+        For pea shoots, soak pea seeds in clean water for 8-12 hours before sowing.
+        Sow the soaked seeds 2 cm deep in seed-starting medium.
+        Keep the medium evenly moist until shoots emerge.
+  exercises: []
+  attempts: []
+steps:
+  - compile:
+      fn: generate
+      topic_path: seed_starting.pea_shoots
+      n_items: 5
+      difficulty: intermediate
+      source_slice: src_pea_shoot_note
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does the output generate fewer than 5 items because the relevant source only supports a small number of distinct facts?"}
+  - {id: c2, weight: 3, question: "Are all generated items grounded only in soaking 8-12 hours, sowing 2 cm deep, or keeping the medium evenly moist?"}
+  - {id: c3, weight: 2, question: "Does the output include a concise note explaining the source is too thin for five good items?"}
+  - {id: c4, weight: 1, question: "Does it avoid using an intervention or asking for clarification when some useful grounded practice is possible?"}
+references:
+  good:
+    items:
+      - prompt: "Before sowing pea shoots, how long should the pea seeds soak in clean water?"
+        answer: "Soak the pea seeds for 8-12 hours before sowing."
+        rubric: "Correct if it gives the 8-12 hour soak window before sowing."
+        skill: recall
+      - prompt: "Apply the note: you have soaked pea seeds and seed-starting medium. What sowing depth and moisture condition should you use until emergence?"
+        answer: "Sow the soaked seeds 2 cm deep and keep the medium evenly moist until shoots emerge."
+        rubric: "Correct if it includes both 2 cm depth and evenly moist medium until emergence."
+        skill: apply
+    note: "Source is too thin for five distinct grounded items."
+    intervention: null
+  bad:
+    items:
+      - prompt: "What soaking window does the note give for pea seeds before sowing?"
+        answer: "8-12 hours."
+        rubric: "Correct if it states 8-12 hours."
+        skill: recall
+      - prompt: "How deep should soaked pea seeds be sown in seed-starting medium?"
+        answer: "2 cm deep."
+        rubric: "Correct if it states 2 cm."
+        skill: recall
+      - prompt: "What temperature range should pea shoots be kept in for fastest germination?"
+        answer: "Keep them around 18-21 C."
+        rubric: "Correct if it names a cool room-temperature range."
+        skill: recall
+      - prompt: "When should pea shoots be harvested for best texture?"
+        answer: "Harvest when they are 10-15 cm tall."
+        rubric: "Correct if it gives a harvest height or similar timing."
+        skill: recall
+      - prompt: "Explain one way to prevent mold while growing pea shoots indoors."
+        answer: "Use airflow and avoid overwatering."
+        rubric: "Correct if it mentions airflow or avoiding excess moisture."
+        skill: explain
+    note: null
+    intervention: null

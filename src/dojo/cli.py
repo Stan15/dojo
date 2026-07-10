@@ -1629,6 +1629,15 @@ def cmd_benchmark(args: argparse.Namespace) -> int:
                 driver=driver, judge=judge, workdir=Path(workdir),
                 timeout=args.timeout, progress=hprogress,
             )
+        # Compute THE one consumable bit when the visible pair baseline is
+        # reachable (repo checkout): gap = visible mean − holdout mean.
+        visible_file = Path("evals/baselines") / f"{gate['pair']}.json"
+        if visible_file.exists() and gate["mean_quality"] is not None:
+            visible = json.loads(visible_file.read_text(encoding="utf-8"))
+            if visible.get("mean_quality") is not None:
+                gate["visible_mean"] = round(visible["mean_quality"], 3)
+                gate["generalization_gap"] = round(
+                    visible["mean_quality"] - gate["mean_quality"], 3)
         if _use_json(args):
             _print_json({"ok": True, **gate})
             return 0
@@ -1641,10 +1650,18 @@ def cmd_benchmark(args: argparse.Namespace) -> int:
         )
         if mean is None:
             console.print("  [red]no scoreable result[/red]")
+        elif gate.get("visible_mean") is not None:
+            gap = gate["generalization_gap"]
+            verdict = ("[green]prompts generalize[/green]" if gap <= 0.1 else
+                       "[yellow]watch: moderate gap[/yellow]" if gap <= 0.2 else
+                       "[red]OVERFIT: broaden the visible corpus[/red]")
+            console.print(f"  [bold]holdout mean {mean:.3f}[/bold] · visible mean "
+                          f"{gate['visible_mean']:.3f} · gap {gap:+.3f} → {verdict}")
+            console.print("  [dim]Remedy for a bad gap: broaden the VISIBLE corpus and iterate "
+                          "there. Never read holdout contents.[/dim]")
         else:
-            console.print(f"  [bold]holdout mean {mean:.3f}[/bold] — compare to the visible "
-                          "pair baseline's mean; a large gap = the prompts overfit. "
-                          "Remedy: broaden the VISIBLE corpus. Never read holdout contents.")
+            console.print(f"  [bold]holdout mean {mean:.3f}[/bold] — no visible pair baseline "
+                          "found in ./evals/baselines to compare against.")
         return 0
 
     tiers = ("compliance",) if args.tier == "compliance" else (

@@ -80,6 +80,18 @@ def holdout_card():
     if not card["scenarios"]:
         return
     card["mean_quality"] = sum(s["quality"] for s in card["scenarios"].values()) / len(card["scenarios"])
+    # THE one consumable bit, computed for you: the gap vs the committed
+    # visible-pair baseline. Small gap = prompts generalize; large gap =
+    # they overfit the visible corpus (broaden it; never read holdout).
+    visible_file = EVALS_DIR / "baselines" / f"{pair_slug()}.json"
+    if visible_file.exists():
+        visible = json.loads(visible_file.read_text(encoding="utf-8"))
+        card["visible_mean"] = visible.get("mean_quality")
+        if card["visible_mean"] is not None:
+            card["generalization_gap"] = round(card["visible_mean"] - card["mean_quality"], 3)
+    print(f"\nHOLDOUT GATE: holdout mean {card['mean_quality']:.3f}"
+          + (f" · visible mean {card['visible_mean']:.3f} · gap {card['generalization_gap']:+.3f}"
+             if card.get("visible_mean") is not None else " · (no visible baseline to compare)"))
     reports = EVALS_DIR / "reports"
     reports.mkdir(exist_ok=True)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")

@@ -1,0 +1,56 @@
+# Grading integrity: affect and sarcasm must not reduce credit when the
+# learner's answer contains the required correct concept.
+category: grading_integrity
+domain: horticulture
+scenario_context: |
+  Horticulture learner practicing seed anatomy. The system is grading a single
+  answer to a recall item. The answer is sarcastic in tone but directly names
+  the correct structure. Strong grading gives full credit based on correctness.
+  Weak grading penalizes the emotional register or treats sarcasm as uncertainty.
+seed:
+  campaign:
+    id: kitchen-garden
+    name: Kitchen Garden
+    mission: Learn practical plant propagation for a reliable home vegetable garden.
+  exercises:
+    - id: ex_seed_01
+      topic_path: horticulture.propagation.seed_anatomy
+      difficulty: beginner
+      prompt: "In a germinating seed, which embryonic structure develops into the shoot?"
+      answer: "The plumule develops into the shoot."
+      rubric: "Full credit for identifying the plumule. Do not penalize tone if the concept is correct."
+  attempts:
+    - id: att_sarcastic_correct
+      session_id: s12
+      exercise_id: ex_seed_01
+      score: 0.0
+      latency_seconds: 8.0
+      user_answer: "Oh, obviously it's the plumule, not the radicle."
+steps:
+  - compile:
+      fn: grade
+      attempt_id: att_sarcastic_correct
+judge_rubric:
+  - id: c1
+    weight: 4
+    question: "Does the grade award full credit because the answer correctly identifies the plumule?"
+  - id: c2
+    weight: 3
+    question: "Does the grader avoid penalizing sarcasm, irritation, or style?"
+  - id: c3
+    weight: 1
+    question: "Does the evidence quote a relevant correct phrase from the learner answer?"
+  - id: c4
+    weight: 1
+    question: "Is feedback concise and focused on the concept rather than the learner's attitude?"
+references:
+  good:
+    score: 1.0
+    evidence: "it's the plumule"
+    feedback: "Correct: the plumule is the embryonic structure that develops into the shoot."
+    error_tag: null
+  bad:
+    score: 0.7
+    evidence: "Oh, obviously"
+    feedback: "You seem sarcastic, so the answer is only partially acceptable despite mentioning the plumule."
+    error_tag: tone penalty

@@ -1,0 +1,135 @@
+category: calibration
+domain: cartography
+scenario_context: |
+  Failure mode: cross_topic_stale_insight_anchoring. The reflector is tempted to keep an existing
+  misconception active by treating one adjacent-topic miss as evidence for it, even though direct
+  evidence for the misconception has disappeared across continued and harder practice.
+
+  Orienteering learner. Insight ins_contour has been active because the learner used to reverse
+  uphill and downhill reasoning from contour lines. In the latest three sessions, contour-reading
+  attempts continued, including advanced saddle, ridge, and reentrant variants. The old contour
+  error_tag never appears, and contour performance stays strong. One separate compass-bearing item
+  failed. Reflection ran.
+
+  Strong output: RESOLVE ins_contour because the tagged contour misconception vanished under
+  continued and harder contour work; do not treat the single compass-bearing miss as evidence that
+  the contour misconception remains. Weak output: keeps ins_contour active by anchoring on the
+  adjacent compass miss.
+seed:
+  campaign:
+    id: field-orienteering
+    name: Field Orienteering
+    mission: Navigate unfamiliar trail terrain confidently using map, compass, and terrain features.
+    strategy_profile:
+      difficulty: intermediate
+      scaffolding: medium
+  insights:
+    - id: ins_contour
+      key: terrain.contour_slope_direction
+      description: Reverses uphill and downhill direction when interpreting contour line spacing and labels.
+      topic_path: navigation.map_reading.contours
+  exercises:
+    - id: ex_30
+      topic_path: navigation.map_reading.contours
+      difficulty: intermediate
+      prompt: "On a topo map, contour labels increase from west to east across a creek. Which way is uphill?"
+      answer: "East is uphill."
+      rubric: "Correct if answer identifies east as uphill using increasing contour elevations."
+    - id: ex_31
+      topic_path: navigation.map_reading.contours
+      difficulty: advanced
+      prompt: "A route crosses from a spur into a reentrant where contours form V shapes pointing uphill. Which feature are you entering?"
+      answer: "A reentrant or small valley."
+      rubric: "Correct if answer identifies the reentrant or valley and explains the uphill-pointing V pattern."
+    - id: ex_32
+      topic_path: navigation.compass.bearings
+      difficulty: intermediate
+      prompt: "Set a bearing from checkpoint A to B when B lies southeast of A. Which quadrant should the bearing fall in?"
+      answer: "Between 90 and 180 degrees."
+      rubric: "Correct if answer places southeast in the 90-180 degree quadrant."
+    - id: ex_33
+      topic_path: navigation.map_reading.contours
+      difficulty: advanced
+      prompt: "Two hilltops are connected by a lower neck of land shown by closed contours pinching between them. Name the landform."
+      answer: "A saddle."
+      rubric: "Correct if answer identifies the landform as a saddle or col."
+    - id: ex_34
+      topic_path: navigation.map_reading.contours
+      difficulty: advanced
+      prompt: "Your planned line climbs tightly packed contours, then follows widely spaced contours along a ridge. What changes about slope?"
+      answer: "It changes from steep climbing to gentler travel along the ridge."
+      rubric: "Correct if answer notes steep terrain at close contours and gentler terrain at wide spacing."
+  attempts:
+    - id: att_1
+      session_id: s7
+      exercise_id: ex_30
+      score: 1.0
+      latency_seconds: 16.0
+      user_answer: "Uphill is east because the contour numbers get higher that way."
+    - id: att_2
+      session_id: s7
+      exercise_id: ex_31
+      score: 0.7
+      latency_seconds: 28.0
+      user_answer: "That is a reentrant, since the contour V points uphill into it."
+    - id: att_3
+      session_id: s8
+      exercise_id: ex_32
+      score: 0.0
+      latency_seconds: 35.0
+      error_tag: bearing quadrant
+      user_answer: "Southeast would be between 180 and 270 degrees."
+    - id: att_4
+      session_id: s8
+      exercise_id: ex_33
+      score: 1.0
+      latency_seconds: 18.0
+      user_answer: "The lower neck between two hilltops is a saddle."
+    - id: att_5
+      session_id: s9
+      exercise_id: ex_34
+      score: 1.0
+      latency_seconds: 22.0
+      user_answer: "Close contours mean a steep climb; wide contours mean gentler movement along the ridge."
+steps:
+  - compile:
+      fn: reflect
+      window_n: 15
+judge_rubric:
+  - id: c1
+    weight: 4
+    question: "Does the output resolve ins_contour because direct contour evidence shows the old misconception has disappeared?"
+  - id: c2
+    weight: 3
+    question: "Does the output reject the single compass-bearing miss as evidence for keeping the contour insight active?"
+  - id: c3
+    weight: 2
+    question: "Does the resolve reason cite continued harder contour variants rather than only raw correctness?"
+  - id: c4
+    weight: 1
+    question: "Is the journal a faithful one-line record of only the contour insight resolution?"
+references:
+  good:
+    insight_updates:
+      - op: resolve
+        id: ins_contour
+        key: terrain.contour_slope_direction
+        text: "Reverses uphill and downhill direction when interpreting contour line spacing and labels."
+        evidence: [att_1, att_2, att_4, att_5]
+        reason: "old error vanished across harder contour work"
+    strategy: null
+    plan_revision: null
+    questions: []
+    journal: "Resolved contour-slope insight after clean harder contour evidence."
+  bad:
+    insight_updates:
+      - op: update
+        id: ins_contour
+        key: terrain.contour_slope_direction
+        text: "Still reverses contour slope direction because a nearby navigation error appeared."
+        evidence: [att_3]
+        reason: "bearing miss keeps contour misconception active"
+    strategy: null
+    plan_revision: null
+    questions: []
+    journal: "Kept contour insight active because of the compass-bearing miss."

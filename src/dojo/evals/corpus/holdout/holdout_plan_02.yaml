@@ -1,0 +1,205 @@
+# Deadline pressure should force a named mission trade-off, preserving the core outcome while explicitly deferring a learner-stated sub-goal.
+# Strong plans name what is deferred; weak plans pretend every stated ambition still fits.
+category: planning
+domain: public_speaking
+scenario_context: |
+  Learner is preparing for an investor demo in 9 days. The mission is to deliver
+  a clear 12-minute product demo with credible answers in the live Q&A. In the
+  planning notes, the learner also said they wanted to add a funny cold open and
+  polish a personal founder story. Recent attempts show the core demo structure
+  and objection answers still need work. Strong output compresses the plan around
+  demo clarity, timing, and Q&A readiness, and names the trade-off: defer the
+  funny cold open/personal-story polish until after investor day. Weak output
+  tries to keep demo, Q&A, humor, and story polish all in the 9-day plan, or
+  vaguely says the timeline is tight without naming the deferred sub-goal.
+seed:
+  campaign:
+    id: investor-demo
+    name: Investor Demo
+    mission: Deliver a clear 12-minute product demo with credible live Q&A in 9 days.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  exercises:
+    - id: ex_1
+      topic_path: speaking.demo.structure
+      difficulty: intermediate
+      prompt: "Give the 90-second opening: problem, target buyer, and product promise."
+      answer: "Names the buyer, states the problem concretely, and gives one clear product promise."
+      rubric: "Full credit for buyer, problem, and promise in a coherent opening under 90 seconds."
+    - id: ex_2
+      topic_path: speaking.demo.timing
+      difficulty: intermediate
+      prompt: "Run the transition from problem to live demo in under 45 seconds."
+      answer: "Links the problem to the demo action quickly without extra background."
+      rubric: "Full credit for a concise transition that reaches the demo action within 45 seconds."
+    - id: ex_3
+      topic_path: speaking.qa.objections
+      difficulty: intermediate
+      prompt: "Answer: Why will customers switch from their current workflow?"
+      answer: "Explains switching pressure, adoption path, and evidence of value."
+      rubric: "Full credit for addressing switching cost with adoption evidence and value."
+    - id: ex_4
+      topic_path: speaking.qa.metrics
+      difficulty: intermediate
+      prompt: "Answer: Which metric proves this is working?"
+      answer: "Names a relevant metric and connects it to the product's promised outcome."
+      rubric: "Full credit for one relevant metric tied directly to the promised outcome."
+    - id: ex_5
+      topic_path: speaking.story.humor
+      difficulty: intermediate
+      prompt: "Draft a funny cold open for the investor demo."
+      answer: "A brief joke or light opening that supports the demo without distracting from credibility."
+      rubric: "Full credit for relevant humor that is brief, audience-safe, and connected to the demo."
+  attempts:
+    - id: att_1
+      session_id: s1
+      exercise_id: ex_1
+      score: 0.7
+      latency_seconds: 84.0
+      user_answer: "Our product helps operations teams spot blocked renewals before the quarter slips."
+      feedback: "Clear promise, but target buyer and concrete problem need sharper wording."
+    - id: att_2
+      session_id: s1
+      exercise_id: ex_2
+      score: 0.3
+      latency_seconds: 71.0
+      user_answer: "Before I show the screen, I should explain the whole renewal process and why it breaks."
+      error_tag: too much setup
+      feedback: "The transition delays the demo and adds background beyond the 45-second target."
+    - id: att_3
+      session_id: s2
+      exercise_id: ex_3
+      score: 0.3
+      latency_seconds: 63.0
+      user_answer: "They will switch because the current tools are frustrating and ours is much better."
+      error_tag: unsupported claim
+      feedback: "The answer needs switching pressure, adoption path, and evidence."
+    - id: att_4
+      session_id: s2
+      exercise_id: ex_4
+      score: 0.7
+      latency_seconds: 39.0
+      user_answer: "Expansion risk caught before renewal should be the metric, tied to saved accounts."
+      feedback: "Relevant metric, but make the causal link easier to say live."
+    - id: att_5
+      session_id: s2
+      exercise_id: ex_5
+      score: 0.3
+      latency_seconds: 122.0
+      user_answer: "I have three joke ideas and a personal founder story, but none quite lands yet."
+      error_tag: unfinished polish
+      feedback: "Humor is not ready and is secondary to the demo mission."
+steps:
+  - compile:
+      fn: plan
+      goal: "Investor demo is in 9 days. Keep the 12-minute demo and credible Q&A as the mission. I also want a funny cold open and polished founder story if possible."
+      existing_topics:
+        - speaking.demo.structure
+        - speaking.demo.timing
+        - speaking.qa.objections
+        - speaking.qa.metrics
+        - speaking.story.humor
+judge_rubric:
+  - id: c1
+    weight: 3
+    question: "Does the plan explicitly name the trade-off by deferring the funny cold open or founder-story polish?"
+  - id: c2
+    weight: 3
+    question: "Does the plan preserve the mission-critical demo clarity, timing, and Q&A readiness for the 9-day deadline?"
+  - id: c3
+    weight: 2
+    question: "Does the plan avoid pretending all stated sub-goals can be completed before investor day?"
+  - id: c4
+    weight: 1
+    question: "Does phase 1 remain calibration with at least 5 attempts?"
+references:
+  good:
+    mission: "Deliver a clear 12-minute investor demo with credible Q&A; defer humor and founder-story polish until after investor day."
+    topics:
+      - path: speaking.demo.structure
+        kind: skill
+        summary: "Open with buyer, problem, and product promise."
+      - path: speaking.demo.timing
+        kind: skill
+        summary: "Move quickly from setup into the live demo."
+      - path: speaking.qa.objections
+        kind: skill
+        summary: "Answer switching and adoption objections with evidence."
+      - path: speaking.qa.metrics
+        kind: skill
+        summary: "Tie success metrics to the product promise."
+    phases:
+      - phase: 1
+        topics:
+          - speaking.demo.structure
+          - speaking.demo.timing
+          - speaking.qa.objections
+          - speaking.qa.metrics
+        criteria:
+          min_attempts: 5
+          min_accuracy: 0.7
+        focus: "Calibrate the core demo path and Q&A gaps under deadline."
+      - phase: 2
+        topics:
+          - speaking.demo.structure
+          - speaking.demo.timing
+        criteria:
+          min_attempts: 6
+          min_accuracy: 0.8
+        focus: "Stabilize the 12-minute flow and reduce excess setup."
+      - phase: 3
+        topics:
+          - speaking.qa.objections
+          - speaking.qa.metrics
+        criteria:
+          min_attempts: 6
+          min_accuracy: 0.8
+        focus: "Practice concise investor answers backed by evidence."
+    refinement_questions: []
+  bad:
+    mission: "Deliver the investor demo, master Q&A, add a funny cold open, and polish the founder story in 9 days."
+    topics:
+      - path: speaking.demo.structure
+        kind: skill
+        summary: "Open with buyer, problem, and product promise."
+      - path: speaking.demo.timing
+        kind: skill
+        summary: "Move quickly from setup into the live demo."
+      - path: speaking.qa.objections
+        kind: skill
+        summary: "Answer switching and adoption objections with evidence."
+      - path: speaking.qa.metrics
+        kind: skill
+        summary: "Tie success metrics to the product promise."
+      - path: speaking.story.humor
+        kind: skill
+        summary: "Create a funny cold open and polished founder story."
+    phases:
+      - phase: 1
+        topics:
+          - speaking.demo.structure
+          - speaking.demo.timing
+          - speaking.qa.objections
+          - speaking.qa.metrics
+          - speaking.story.humor
+        criteria:
+          min_attempts: 5
+          min_accuracy: 0.7
+        focus: "Calibrate every desired demo element before investor day."
+      - phase: 2
+        topics:
+          - speaking.demo.structure
+          - speaking.demo.timing
+          - speaking.story.humor
+        criteria:
+          min_attempts: 8
+          min_accuracy: 0.8
+        focus: "Polish flow, humor, and story while maintaining timing."
+      - phase: 3
+        topics:
+          - speaking.qa.objections
+          - speaking.qa.metrics
+        criteria:
+          min_attempts: 6
+          min_accuracy: 0.8
+        focus: "Prepare investor answers after presentation polish."
+    refinement_questions: []

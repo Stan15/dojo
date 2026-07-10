@@ -1,0 +1,108 @@
+# Grounded generation must use source evidence and active learner insight to target
+# precise misconceptions without importing or corrupting adjacent facts.
+category: personalization
+domain: woodworking
+scenario_context: |
+  Learner is practicing shop-jig concepts from a short source note. Active
+  misconception: they keep treating a bench hook as the jig used to plane end
+  grain square. The source contains an adjacent but different fact: both a
+  shooting board and a bench hook use a stop or fence, but only the shooting
+  board is for planing an end square with a plane on its side. Generation was
+  asked for 3 intermediate items on woodworking.jigs.shooting_board grounded in
+  the source. Strong output targets the misconception by contrasting the two
+  jigs while keeping every fact faithful. Weak output blends the adjacent facts
+  and teaches that a bench hook is for shooting end grain.
+seed:
+  campaign:
+    id: shop-jigs
+    name: Shop Jigs
+    mission: Learn reliable hand-tool jig use for accurate small furniture parts.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  sources:
+    - id: src_jig_note_01
+      title: Shooting board and bench hook note
+      text: |
+        A shooting board holds a workpiece against a square fence while a hand
+        plane rides on its side along a track. It is used to plane end grain
+        square or true the edge of small parts. A bench hook is a separate aid
+        that hooks over the bench edge and holds work against a stop for sawing
+        or light chiseling. Do not plane into the bench hook's stop; it is a
+        sacrificial stop for sawing and chopping, not a shooting-board track.
+  insights:
+    - id: ins_bench_hook_mixup
+      key: jigs.shooting_board.bench_hook_confusion
+      description: Treats a bench hook as the jig for planing end grain square.
+      topic_path: woodworking.jigs.shooting_board
+  exercises:
+    - id: ex_1
+      topic_path: woodworking.jigs.shooting_board
+      difficulty: intermediate
+      prompt: "Which jig uses a plane on its side to square end grain: a shooting board or a bench hook?"
+      answer: "A shooting board."
+      rubric: "Correct if it names the shooting board and does not name the bench hook."
+    - id: ex_2
+      topic_path: woodworking.jigs.shooting_board
+      difficulty: intermediate
+      prompt: "A board end is out of square. Which shop aid from the note should be used to plane it square?"
+      answer: "Use the shooting board."
+      rubric: "Correct if it selects the shooting board for planing the end square."
+  attempts:
+    - id: att_1
+      session_id: s1
+      exercise_id: ex_1
+      score: 0.0
+      latency_seconds: 34.0
+      error_tag: jig confusion
+      user_answer: "A bench hook, because it holds the work against a stop."
+    - id: att_2
+      session_id: s1
+      exercise_id: ex_2
+      score: 0.3
+      latency_seconds: 42.0
+      error_tag: jig confusion
+      user_answer: "Probably the bench hook if the stop is square."
+steps:
+  - compile:
+      fn: generate
+      topic_path: woodworking.jigs.shooting_board
+      n_items: 3
+      difficulty: intermediate
+      source_slice: src_jig_note_01
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does at least one item directly target the learner's bench-hook versus shooting-board confusion?"}
+  - {id: c2, weight: 3, question: "Do all items preserve the source distinction that the shooting board planes end grain square while the bench hook supports sawing or light chiseling?"}
+  - {id: c3, weight: 2, question: "Does the output avoid corrupting the adjacent stop or fence facts into a claim that a bench hook is a shooting-board track?"}
+  - {id: c4, weight: 1, question: "Are the rubrics concrete enough to catch both the correct jig and the rejected misconception?"}
+references:
+  good:
+    items:
+      - prompt: "You need to plane the end of a small part square. Which jig from the note should you choose, and why not the bench hook?"
+        answer: "Choose the shooting board because it guides a plane on its side; the bench hook is for sawing or light chiseling."
+        rubric: "Correct if it names the shooting board, mentions side-riding plane use, and rejects bench-hook planing."
+        skill: apply
+      - prompt: "Explain the key difference between the shooting board's fence and the bench hook's stop in the source note."
+        answer: "The shooting board fence holds work for planing square; the bench hook stop holds work for sawing or light chiseling."
+        rubric: "Correct if it separates planing on the shooting board from sawing or chiseling on the bench hook."
+        skill: explain
+      - prompt: "Critique this claim: 'A bench hook is a good track for planing end grain square because it has a stop.'"
+        answer: "Incorrect. The source says not to plane into the bench hook's stop; use a shooting board for planing end grain square."
+        rubric: "Correct if it rejects the claim, cites the no-planing warning, and names the shooting board."
+        skill: critique
+    note: null
+    intervention: null
+  bad:
+    items:
+      - prompt: "Which jig uses its stop as a track for planing end grain square?"
+        answer: "A bench hook."
+        rubric: "Correct if it identifies the bench hook stop as the planing track."
+        skill: recall
+      - prompt: "Apply the note: how should you use a bench hook to true the edge of a small part?"
+        answer: "Hook it over the bench edge, hold the work against the stop, and plane along the stop."
+        rubric: "Correct if it describes planing along the bench hook stop."
+        skill: apply
+      - prompt: "Explain why shooting boards and bench hooks are interchangeable for squaring board ends."
+        answer: "Both hold work against a square fence or stop, so either can guide the plane."
+        rubric: "Correct if it says both jigs can square ends with a plane."
+        skill: explain
+    note: null
+    intervention: null

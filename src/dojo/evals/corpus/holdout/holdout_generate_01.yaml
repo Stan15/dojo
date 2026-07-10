@@ -1,0 +1,62 @@
+# Tests whether generation refuses unsupported practice and asks for source context
+# when the requested topic is absent from the available evidence.
+category: generation
+domain: mushroom_foraging
+scenario_context: |
+  Learner is building source-backed practice from a short field note about mushroom
+  observation. The generate request asks for advanced pressure-canning practice, but
+  the available source slice contains only basic cap, gill, stem, and habitat
+  observations for identifying mushrooms in the field. Strong output should
+  intervene with need_context and ask for a relevant pressure-canning source instead
+  of inventing food-preservation items from unrelated evidence. Weak output creates
+  plausible canning questions anyway.
+seed:
+  campaign:
+    id: mushroom-fieldcraft
+    name: Mushroom Fieldcraft
+    mission: Learn source-backed mushroom observation for safer field identification.
+    strategy_profile: {difficulty: beginner, scaffolding: medium}
+  sources:
+    - id: src_field_note_01
+      title: Field observation note
+      text: |
+        Record the mushroom's cap shape, cap surface, gill attachment, stem base,
+        bruising color, spore print color, nearby trees, substrate, and weather.
+        Do not taste unidentified mushrooms. Photograph the specimen in place,
+        including the underside and base, before collecting notes.
+  exercises: []
+  attempts: []
+steps:
+  - compile:
+      fn: generate
+      topic_path: food_preservation.pressure_canning
+      n_items: 3
+      difficulty: advanced
+      source_slice: src_field_note_01
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does the output return no items and use a need_context intervention because pressure canning is absent from the source?"}
+  - {id: c2, weight: 3, question: "Does it avoid inventing canning temperatures, timings, safety rules, or procedures not supported by the seeded source?"}
+  - {id: c3, weight: 2, question: "Does the intervention reason name the evidence mismatch between mushroom observation notes and pressure-canning practice?"}
+  - {id: c4, weight: 1, question: "Are the clarification questions concise and aimed at obtaining a relevant source or changing the topic?"}
+references:
+  good:
+    items: []
+    note: null
+    intervention:
+      kind: need_context
+      questions:
+        - "Please provide a pressure-canning source for this topic."
+        - "Should I instead generate mushroom observation practice from the current note?"
+      reason: "Source covers mushroom observation, not pressure canning."
+  bad:
+    items:
+      - prompt: "At sea level, what pressure should a dial-gauge canner reach for low-acid foods?"
+        answer: "Use 11 psi on a dial-gauge canner at sea level."
+        rubric: "Correct if it names 11 psi and connects it to low-acid pressure canning."
+        skill: recall
+      - prompt: "Explain why jars should be processed for the full tested time in pressure canning."
+        answer: "The full tested time ensures heat penetrates the food enough to reduce botulism risk."
+        rubric: "Correct if it explains tested time and botulism risk."
+        skill: explain
+    note: "Generated from general knowledge."
+    intervention: null

@@ -1,0 +1,127 @@
+category: planning
+domain: horticulture
+scenario_context: |
+  Learner already has an active local campaign about practical home horticulture.
+  The existing topic registry includes gardening.plant.pruning and
+  gardening.plant.watering, plus unrelated composting and pest topics. A new
+  planning request asks for learning to diagnose houseplant leaf symptoms. The
+  trap is surface-word namespace drift: "houseplant" sounds like a new product
+  area, but the seeded registry already has the right middle layer for plant-care
+  skills. Strong planning should add a diagnosis skill under gardening.plant and
+  reuse the existing watering and pruning topics. Weak planning creates a parallel
+  houseplants.* branch while preserving otherwise reasonable pedagogy.
+seed:
+  campaign:
+    id: home-horticulture
+    name: Home Horticulture
+    mission: Build practical plant-care judgment for a healthy indoor and patio garden.
+    strategy_profile: {difficulty: beginner, scaffolding: medium}
+  exercises:
+    - id: ex_1
+      topic_path: gardening.plant.watering
+      difficulty: beginner
+      prompt: "A peace lily droops two days after watering. What should you check before adding more water?"
+      answer: "Check soil moisture and drainage before watering again."
+      rubric: "Mentions checking soil moisture or drainage before watering."
+    - id: ex_2
+      topic_path: gardening.plant.pruning
+      difficulty: beginner
+      prompt: "Where should you cut a dead pothos vine to encourage clean regrowth?"
+      answer: "Cut just above a healthy node."
+      rubric: "Identifies cutting above a healthy node."
+  attempts:
+    - id: att_1
+      session_id: s1
+      exercise_id: ex_1
+      score: 0.7
+      latency_seconds: 42.0
+      user_answer: "I would feel the soil and make sure the pot drains."
+    - id: att_2
+      session_id: s1
+      exercise_id: ex_2
+      score: 1.0
+      latency_seconds: 26.0
+      user_answer: "Cut just above a healthy node on the vine."
+steps:
+  - compile:
+      fn: plan
+      goal: "Learn to diagnose common houseplant leaf symptoms and choose the right care response."
+      existing_topics:
+        - gardening.plant.watering
+        - gardening.plant.pruning
+        - gardening.soil.composting
+        - gardening.pest.aphids
+judge_rubric:
+  - id: c1
+    weight: 4
+    question: "Does the plan add the new diagnosis skill under gardening.plant rather than starting any houseplants or botany root?"
+  - id: c2
+    weight: 3
+    question: "Does the plan reuse gardening.plant.watering and gardening.plant.pruning verbatim instead of duplicating them under a new namespace?"
+  - id: c3
+    weight: 1
+    question: "Is phase 1 a calibration phase with at least 5 attempts using only topics declared by the plan?"
+  - id: c4
+    weight: 1
+    question: "Does the plan keep the goal focused on practical care decisions?"
+references:
+  good:
+    mission: "Diagnose common houseplant leaf symptoms and choose practical care responses."
+    topics:
+      - path: gardening.plant.diagnosis
+        kind: skill
+        summary: "Interpret leaf color, texture, and pattern clues to choose a likely care response."
+      - path: gardening.plant.watering
+        kind: skill
+        summary: "Use soil moisture, pot drainage, and plant response to decide when to water."
+      - path: gardening.plant.pruning
+        kind: skill
+        summary: "Remove damaged growth cleanly while protecting nodes and healthy tissue."
+    phases:
+      - phase: 1
+        topics:
+          - gardening.plant.diagnosis
+          - gardening.plant.watering
+        criteria:
+          min_attempts: 5
+          min_accuracy: 0.7
+        focus: "Calibrate symptom diagnosis against watering evidence and likely care responses."
+      - phase: 2
+        topics:
+          - gardening.plant.diagnosis
+          - gardening.plant.pruning
+        criteria:
+          min_attempts: 8
+          min_accuracy: 0.8
+        focus: "Choose care actions from symptom evidence and existing plant-care skills."
+    refinement_questions: []
+  bad:
+    mission: "Diagnose common houseplant leaf symptoms and choose practical care responses."
+    topics:
+      - path: houseplants.plant.diagnosis
+        kind: skill
+        summary: "Interpret leaf color, texture, and pattern clues to choose a likely care response."
+      - path: houseplants.plant.watering
+        kind: skill
+        summary: "Use soil moisture, pot drainage, and plant response to decide when to water."
+      - path: houseplants.plant.pruning
+        kind: skill
+        summary: "Remove damaged growth cleanly while protecting nodes and healthy tissue."
+    phases:
+      - phase: 1
+        topics:
+          - houseplants.plant.diagnosis
+          - houseplants.plant.watering
+        criteria:
+          min_attempts: 5
+          min_accuracy: 0.7
+        focus: "Calibrate symptom diagnosis against watering evidence and likely care responses."
+      - phase: 2
+        topics:
+          - houseplants.plant.diagnosis
+          - houseplants.plant.pruning
+        criteria:
+          min_attempts: 8
+          min_accuracy: 0.8
+        focus: "Choose care actions from symptom evidence and existing plant-care skills."
+    refinement_questions: []

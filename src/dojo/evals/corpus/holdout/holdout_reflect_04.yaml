@@ -1,0 +1,142 @@
+category: calibration
+domain: workplace_safety
+scenario_context: |
+  Warehouse safety learner preparing for shift-lead responsibilities. The active
+  insight ins_lockout exists because earlier maintenance answers skipped
+  lockout/tagout before touching equipment. The latest six attempts look
+  flawless, fast, and safety-related, which makes it tempting to conclude the
+  learner has generally improved. However, every recent attempt is about other
+  hazard controls: pedestrian routing, spills, stacking, PPE, walkway blockage,
+  and trip hazards. None tests maintenance, stored energy, jam clearing, repair,
+  or lockout/tagout. A correct reflection preserves the old insight unchanged
+  because recent silence is not counterevidence. The targeted failure mode is
+  resolving an active insight from adjacent but non-diagnostic success.
+seed:
+  campaign:
+    id: warehouse-safety
+    name: Warehouse Safety
+    mission: Lead safe warehouse shifts by applying practical hazard controls before work begins.
+    strategy_profile:
+      difficulty: intermediate
+      scaffolding: medium
+  insights:
+    - id: ins_lockout
+      key: maintenance.energy_isolation
+      description: Starts equipment maintenance steps before confirming lockout/tagout and stored-energy isolation.
+      topic_path: safety.equipment.maintenance
+  exercises:
+    - id: ex_01
+      topic_path: safety.pedestrian_routes.visibility
+      difficulty: intermediate
+      prompt: "A forklift lane crosses a walking path near a blind corner. Name two controls before foot traffic resumes."
+      answer: "Use barriers or marked crossings, mirrors, signage, and a spotter or traffic separation."
+      rubric: "Full credit for two practical pedestrian visibility or separation controls."
+    - id: ex_02
+      topic_path: safety.housekeeping.spills
+      difficulty: intermediate
+      prompt: "A small oil spill appears beside the loading dock. What should you do first and next?"
+      answer: "Stop traffic, mark or block the area, clean with the right kit, and report the hazard."
+      rubric: "Full credit requires controlling access before cleanup and reporting."
+    - id: ex_03
+      topic_path: safety.storage.pallet_stacking
+      difficulty: intermediate
+      prompt: "A pallet stack leans into an aisle. What immediate action should a shift lead take?"
+      answer: "Keep people away, stop movement near it, and restack or unload it safely with proper equipment."
+      rubric: "Full credit for isolating the hazard and correcting the unstable stack safely."
+    - id: ex_04
+      topic_path: safety.ppe.chemical_handling
+      difficulty: intermediate
+      prompt: "Before moving a leaking cleaning-chemical container, what should you check?"
+      answer: "Check the label or SDS, wear compatible PPE, ventilate if needed, and contain the leak."
+      rubric: "Full credit for SDS or label check plus compatible PPE."
+    - id: ex_05
+      topic_path: safety.pedestrian_routes.visibility
+      difficulty: intermediate
+      prompt: "A new temporary storage rack blocks a marked walkway. What is the safest response?"
+      answer: "Move the obstruction or reroute and mark the walkway before allowing normal traffic."
+      rubric: "Full credit for restoring or clearly rerouting the walking path before use."
+    - id: ex_06
+      topic_path: safety.housekeeping.trip_hazards
+      difficulty: intermediate
+      prompt: "Extension cords are stretched across a packing area during a rush. What should you do?"
+      answer: "Pause the work area, remove or route the cords safely, and use approved cable protection if needed."
+      rubric: "Full credit for controlling access and removing or protecting the trip hazard."
+  attempts:
+    - id: att_1
+      session_id: s6
+      exercise_id: ex_01
+      score: 1.0
+      latency_seconds: 13.0
+      user_answer: "Put up barriers and a convex mirror, then use a marked crossing."
+    - id: att_2
+      session_id: s6
+      exercise_id: ex_02
+      score: 1.0
+      latency_seconds: 15.0
+      user_answer: "Stop traffic, cone it off, use the spill kit, and report it."
+    - id: att_3
+      session_id: s7
+      exercise_id: ex_03
+      score: 1.0
+      latency_seconds: 14.0
+      user_answer: "Keep people out of the aisle and restack it safely with equipment."
+    - id: att_4
+      session_id: s7
+      exercise_id: ex_04
+      score: 1.0
+      latency_seconds: 16.0
+      user_answer: "Check the SDS and label, then use compatible gloves and eye protection."
+    - id: att_5
+      session_id: s8
+      exercise_id: ex_05
+      score: 1.0
+      latency_seconds: 12.0
+      user_answer: "Clear the walkway or mark a safe detour before traffic continues."
+    - id: att_6
+      session_id: s8
+      exercise_id: ex_06
+      score: 1.0
+      latency_seconds: 14.0
+      user_answer: "Pause the area and reroute the cords so nobody trips."
+steps:
+  - compile:
+      fn: reflect
+      window_n: 15
+judge_rubric:
+  - id: c1
+    weight: 3
+    question: "Does the output keep ins_lockout active by making no insight update when recent attempts did not test maintenance energy isolation?"
+  - id: c2
+    weight: 3
+    question: "Does the output reject flawless adjacent safety performance as evidence for resolving the lockout insight?"
+  - id: c3
+    weight: 2
+    question: "Does the output avoid citing pedestrian, spill, stacking, PPE, walkway, or trip-hazard attempts as counterevidence to ins_lockout?"
+  - id: c4
+    weight: 1
+    question: "Does the journal state that no change was made because the recent evidence was non-diagnostic?"
+references:
+  good:
+    insight_updates: []
+    strategy: null
+    plan_revision: null
+    questions: []
+    journal: "No changes: recent strong attempts did not test maintenance energy isolation."
+  bad:
+    insight_updates:
+      - op: resolve
+        id: ins_lockout
+        key: maintenance.energy_isolation
+        text: "Starts maintenance before confirming lockout/tagout and stored-energy isolation."
+        evidence:
+          - att_1
+          - att_2
+          - att_3
+          - att_4
+          - att_5
+          - att_6
+        reason: "recent related safety answers were flawless"
+    strategy: null
+    plan_revision: null
+    questions: []
+    journal: "Resolved lockout because recent safety work was correct and fast."
