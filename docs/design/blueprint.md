@@ -56,7 +56,13 @@ mis-schedule, overflow a queue, lose provenance, or corrupt the store. That is t
    scheduling state from bloating (§7).
 4. **Exercise** — one practice item. Lifecycle: `candidate → active → retired`.
    Kind: `recall` (static, repeats verbatim) or `skill` (generative, disposable).
+   `provenance: synthetic | grounded` records whether the material is
+   model-invented or drawn from source/capture the learner already met —
+   the encoding-stage predicate consumes it (§7, ADR 017).
 5. **Attempt** — evidence: answer, score, latency, skip reason, feedback.
+   `grader: "exposure"` marks an encoding event (first contact with
+   never-encoded material, or a `knowledge_gap` grade): schedule-initializing,
+   excluded from every accuracy/mastery computation (ADR 017).
 6. **Insight** — a consolidated, campaign-scoped learner hypothesis
    (misconception, preference, goal), with evidence links and an active/resolved
    status.
@@ -99,7 +105,8 @@ Stated once, tested forever. Each maps to at least one test in the milestone pla
   plain-language reason, exposed via `dojo why` and in envelopes.
 - **I10 — Honest degradation.** Anything skipped, truncated, unfulfilled, or
   approximated is counted and surfaced. (Scores produced by AI grading are tagged
-  `grader: ai`; self-reported ones `grader: self`.)
+  `grader: ai`; self-reported ones `grader: self`; encoding events
+  `grader: exposure` — information, never judgment.)
 
 Proof-effort allocation (method §0): the compounding-flaw zones are the
 **scheduler** (I3, I8), the **store round-trip** (I7), and the **task boundary**
@@ -268,6 +275,30 @@ one maintenance item (easy, due) + one weak item (recent lapse / active-insight
 target) + one frontier item + optionally one new item. Composition is a pure
 function; property tests assert caps, lane mix, and determinism (I8) across
 generated state fixtures.
+
+### The encoding stage (ADR 017)
+
+Retrieval strengthens traces that exist; it cannot create the first one. So:
+
+- **A first-encounter miss is free.** Attempts on never-encoded material
+  (no SR state + `provenance: synthetic`) that grade below success land as
+  `grader: exposure`: the schedule is *initialized* (fixed Good), never
+  punished; the attempt is excluded from phase accuracy, reflection
+  windows/triggers, stats, and `more`'s weakest-topic math; the full model
+  answer is revealed — that reveal IS the encoding event. No ceremony:
+  learners with prior knowledge answer normally and get full credit.
+- **`present` items** are deliberate encoding events the generator plans
+  (`skill: "present"`): study card served show-both → confirm → exposure
+  lands on the topic schedule → item spent. Never graded, no grade task.
+- **Encoding cap (anti-overwhelm):** at most 2 encoding-stage items per
+  packet; remaining slots serve due reviews only — a short packet is
+  correct, never backfilled. Encoding is a promise of future reviews; the
+  cap prices that promise.
+- **Care-exit:** topics can be `retired` (learner-initiated immediately;
+  reflection-proposed via the authority lane on trend evidence) — dues stop,
+  counted honestly in `why`/`stats`. Phase advancement never cancels
+  reviews; only care does. Frequency *reduction* is emergent FSRS interval
+  growth, never a decision.
 
 **Correctness argument (I3+I8).** The packet builder consumes only store state and
 the clock, uses seeded tie-breaking, and clamps every count before emission

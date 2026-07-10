@@ -170,6 +170,38 @@ committed work, not proposals awaiting an answer. Item numbering is stable
    (owner-agreed; drift gates in test_prompts.py); reflect plan revisions
    can't strand ghost topics (registry shown, paths validated, scheduled ⇒
    registered).
+7. **IN PROGRESS 2026-07-10 — ADR 017 encoding stage & practice continuity**
+   (owner-approved after multi-round design review; full design in the ADR —
+   READ IT before touching this block). Units, in order, each with tests:
+   a. substrate: `grader: exposure` + miss-is-free floor (land path,
+      provenance field, exclusions in phase-advance/reflect/stats/more);
+   b. `knowledge_gap` grade flag + total-miss answer reveal (interactive +
+      envelope; partial misses stay feedback-only — owner noise ruling);
+   c. `present` generator move + per-packet encoding cap (2);
+   d. practice-history window in generate payloads (byte-capped section);
+   e. topic retirement (care-exit) + deterministic trend digest in reflect
+      payload + reflect question-fulfillability rule;
+   f. SKILL/interactive surfaces + docs; g. eval categories with floors
+      (present-planning, gap-grading incl. adversarial, history-use,
+      retirement judgment) + BLIND holdout enrichment (subagent-authored,
+      smaller than visible, floors bootstrap at next release gate).
+   Owner rulings binding here: noise is the test at every juncture; every
+   pedagogy surface benchmarked; task contract stays single-shot (tool-call
+   enrichment REJECTED — see ADR 017); prompt sections stable-prefix-first.
+8. **DIRECTED 2026-07-10 (owner, ledgered same session; design proposal owed
+   BEFORE implementation — public contract change):** the markdown store must
+   be **user-readable, Obsidian-vault quality** — "massive frontmatter values
+   are EXTREMELY inelegant." Known offenders (from the owner's live store):
+   `pedagogical_journal` entries embedding full plan/syllabus/hypotheses
+   snapshots in campaign.md frontmatter; sr dicts inline in the topics list;
+   raw task traces. Note: blueprint §5 already prescribes plan.yaml /
+   topics.yaml / journal.md as separate projections — implementation drifted.
+   Direction to explore: minimal campaign.md frontmatter; journal as
+   append-only prose (journal.md); snapshots replaced by git refs
+   (delete-over-retain: git IS the archive); Obsidian conventions
+   (wikilinks between exercise/attempt/insight files). Requires: ADR,
+   fixture round-trip + blueprint update same commit, migration for live
+   stores (owner installs from checkout).
 6. Backlog (ledgered in docs/design/usecase-audit.md + OPEN-PROBLEMS):
    fulfilled-task housekeeping (tasks/ grows forever — now including
    submission traces, so the cleanup pays for provenance too); interleave
