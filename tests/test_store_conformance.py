@@ -392,6 +392,31 @@ class TestMarkdownBackendPhysics:
         results = md_store.doctor.run()
         assert results["Version control audit"] == []
 
+    def test_doctor_pending_audit_is_advisory_not_blocking(self, tmp_path: Path):
+        """A store awaiting its per-command audit commit is a NORMAL
+        mid-command state, not non-compliance: doctor exits 0 and reports an
+        advisory. Regression for the 2026-07-09 field incident — install.sh's
+        doctor gate read a mid-`dojo learn` dirty tree as fatal and ROLLED
+        BACK the owner's working install."""
+        import io
+        import json as _json
+        from contextlib import redirect_stdout
+
+        from dojo.cli import main
+
+        dojo_dir = tmp_path / "dojo"
+        assert main(["--db", str(dojo_dir), "config", "set", "daily.packet_size", "5"]) == 0
+        cfg = dojo_dir / "config.yaml"
+        cfg.write_text(cfg.read_text(encoding="utf-8") + "# pending edit\n", encoding="utf-8")
+
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            rc = main(["--db", str(dojo_dir), "doctor"])
+        assert rc == 0, "a pending audit must never fail doctor (it gates installs)"
+        data = _json.loads(buf.getvalue())
+        assert data["ok"] is True and data["errors"] == []
+        assert any("uncommitted" in a for a in data["advisories"])
+
     def test_doctor_flags_content_without_git(self, md_store: DojoStore):
         import shutil
 

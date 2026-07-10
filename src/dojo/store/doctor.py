@@ -33,6 +33,7 @@ class DoctorService(BaseRepository):
         {check name: [error messages]}; all-empty lists mean a healthy store.
         A missing store directory returns silently (nothing to check)."""
         results = {
+            "Installation integrity": self._check_install_integrity(),
             "Root directory layout": [],
             "Ingested sources": [],
             "Campaigns structure": [],
@@ -45,6 +46,7 @@ class DoctorService(BaseRepository):
             return results
 
         results["Version control audit"].extend(self._check_audit_health())
+
 
         # 1. Check root directory layout
         allowed_root_dirs = {"campaigns", "sources", "tasks", "inbox", "archive", ".git"}
@@ -138,6 +140,26 @@ class DoctorService(BaseRepository):
                     results["Archived campaigns and sessions"].append(f"Unexpected item in archive/: {p.name}")
 
         return results
+
+    def _check_install_integrity(self) -> list[str]:
+        """Is this INSTALL complete — every registered task kind's prompt
+        template packaged and readable, fragments present? A broken install
+        must fail here (install.sh gates on doctor) instead of surfacing as a
+        TemplateError mid-conversation (owner field report 2026-07-09)."""
+        errors: list[str] = []
+        try:
+            from ..prompts import all_templates
+            from ..tasks.compiler import TEMPLATES
+
+            available = all_templates()
+            for kind, name in sorted(TEMPLATES.items()):
+                if name not in available:
+                    errors.append(f"Missing prompt template for task kind {kind}: {name} (broken install)")
+            if not any(n.startswith("fragments/") for n in available):
+                errors.append("No prompt fragments installed (broken install)")
+        except Exception as exc:  # unimportable package IS the finding
+            errors.append(f"Prompt package unreadable: {exc} (broken install)")
+        return errors
 
     def _check_audit_health(self) -> list[str]:
         """Audit commits are best-effort at command boundaries (ADR 011); this is

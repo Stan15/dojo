@@ -202,6 +202,18 @@ def test_dojo_doctor_clean_and_dirty(tmp_path: Path):
     assert res.returncode == 0
 
 
+def test_dojo_doctor_catches_broken_install(tmp_path: Path):
+    """Installation integrity: a registered task kind whose prompt template
+    is not packaged must fail doctor — install.sh gates on it — instead of
+    surfacing as a TemplateError mid-conversation (owner field report
+    2026-07-09)."""
+    with patch.dict("dojo.tasks.compiler.TEMPLATES", {"fake.kind": "nope.md"}):
+        res = run_cli(tmp_path, "doctor", check=False)
+    assert res.returncode == 1
+    data = json.loads(res.stdout)
+    assert any("nope.md" in e for e in data["errors"])
+
+
 def test_dojo_doctor_validation_errors(tmp_path: Path):
     tmp_path.mkdir(parents=True, exist_ok=True)
     

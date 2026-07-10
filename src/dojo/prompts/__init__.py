@@ -20,11 +20,29 @@ from pathlib import Path
 
 _PLACEHOLDER = re.compile(r"\{\{\s*(\w+)\s*\}\}")
 
+_snapshot: dict[str, str] | None = None
+
 
 def _templates_dir() -> Path:
     if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
         return Path(sys._MEIPASS) / "dojo" / "prompts"
     return Path(__file__).parent
+
+
+def all_templates() -> dict[str, str]:
+    """Every packaged template, `name → text`, snapshotted ONCE per process at
+    first use. A long-lived conversation must survive its install being
+    replaced or removed beneath it (field incident 2026-07-09: an upgrade
+    mid-`dojo learn` deleted the venv and the re-plan render died) — after the
+    first AI step, templates come from memory, never disk."""
+    global _snapshot
+    if _snapshot is None:
+        base = _templates_dir()
+        _snapshot = {
+            str(p.relative_to(base)): p.read_text(encoding="utf-8")
+            for p in sorted(base.rglob("*.md"))
+        }
+    return _snapshot
 
 
 class TemplateError(ValueError):
@@ -40,10 +58,9 @@ def render(template_name: str, values: dict[str, str]) -> str:
     `{{ }}` behind (e.g. a value smuggled a placeholder in). Extra keys in
     `values` are fine — compilers may pass a superset.
     """
-    path = _templates_dir() / template_name
-    if not path.exists():
+    text = all_templates().get(template_name)
+    if text is None:
         raise TemplateError(f"Prompt template not found: {template_name} (broken install?)")
-    text = path.read_text(encoding="utf-8")
 
     needed = set(_PLACEHOLDER.findall(text))
     missing = needed - values.keys()

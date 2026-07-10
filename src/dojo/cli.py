@@ -709,19 +709,31 @@ def cmd_install(args: argparse.Namespace) -> int:
     return 0
 
 
+# Doctor categories that are ADVISORY: real findings, but recoverable states a
+# running system produces normally (e.g. a store awaiting its per-command audit
+# commit — the owner was mid-`dojo learn` when install.sh's doctor gate read a
+# dirty tree as non-compliance and ROLLED BACK the install, 2026-07-09). Only
+# structural non-compliance may gate installs / exit non-zero.
+_DOCTOR_ADVISORY_CATEGORIES = frozenset({"Version control audit"})
+
+
 def cmd_doctor(args: argparse.Namespace) -> int:
-    """`dojo doctor`: run every store health check; exit 1 on any finding."""
+    """`dojo doctor`: run every store health check; exit 1 only on structural
+    findings — advisory categories report but never fail the command."""
     store = DojoStore(_db_path(args))
     results = store.doctor.run()
-    
-    # Flatten all errors to see if there are any failures
-    all_errors = [err for errs in results.values() for err in errs]
-        
+
+    structural = [err for cat, errs in results.items()
+                  if cat not in _DOCTOR_ADVISORY_CATEGORIES for err in errs]
+    advisories = [err for cat in _DOCTOR_ADVISORY_CATEGORIES
+                  for err in results.get(cat, [])]
+
     if _use_json(args):
         _print_json({
-            "ok": len(all_errors) == 0,
+            "ok": len(structural) == 0,
             "results": results,
-            "errors": all_errors
+            "errors": structural,
+            **({"advisories": advisories} if advisories else {}),
         })
     else:
         console.print("[bold cyan]Dojo Doctor Diagnostics[/bold cyan]")
@@ -729,21 +741,27 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         for category, errors in results.items():
             if not errors:
                 console.print(f"[green]✓[/green] [bold]{category}[/bold]")
+            elif category in _DOCTOR_ADVISORY_CATEGORIES:
+                console.print(f"[yellow]⚠[/yellow] [bold]{category}[/bold]")
+                for err in errors:
+                    console.print(f"    - [yellow]{err}[/yellow]")
             else:
                 console.print(f"[red]✗[/red] [bold]{category}[/bold]")
                 for err in errors:
                     console.print(f"    - [red]{err}[/red]")
         console.print("")
-        
-        if all_errors:
-            console.print(f"[bold red]✗ Dojo Doctor found {len(all_errors)} issues in your repository.[/bold red]")
+
+        if structural:
+            console.print(f"[bold red]✗ Dojo Doctor found {len(structural)} issues in your repository.[/bold red]")
+        elif advisories:
+            console.print(f"[bold yellow]⚠ Healthy, with {len(advisories)} advisory note(s) — nothing blocking.[/bold yellow]")
         else:
             if not store.dojo_dir.exists():
                 console.print("[bold green]✓ Dojo Doctor: Repository directory does not exist yet (will be initialized on first run). Folder is clear![/bold green]")
             else:
                 console.print("[bold green]✓ Dojo Doctor: Repository directory is completely compliant and clean![/bold green]")
-                
-    return 1 if all_errors else 0
+
+    return 1 if structural else 0
 
 
 def cmd_due(args: argparse.Namespace) -> int:
