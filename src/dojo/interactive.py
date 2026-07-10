@@ -374,13 +374,19 @@ def plan_flow(api: DojoAPI, *, goal: str, level: Optional[str], context: Optiona
     questions = proposal.get("refinement_questions") or []
     answers = []
     if questions:
-        console.print("[bold]A few questions to sharpen this[/bold] [dim](enter to skip)[/dim]")
+        console.print("[bold]A few questions to sharpen this[/bold] [dim]('-' skips one)[/dim]")
         for q in questions:
             # Blank line + styled question: the previous free-form answer can
             # be long, and the next question must not read as its tail.
             console.print(f"\n  [bold cyan]?[/bold cyan] [bold]{q}[/bold]")
-            reply = _input("  [bold cyan]›[/bold cyan] ").strip()
-            if reply:
+            # Empty input is never destructive (owner ruling 2026-07-09): an
+            # accidental Enter re-asks; skipping is the deliberate '-'.
+            while True:
+                reply = _input("  [bold cyan]›[/bold cyan] ").strip()
+                if reply:
+                    break
+                console.print("  [dim]type an answer, or '-' to skip this question[/dim]")
+            if reply != "-":
                 answers.append(f"{q} -> {reply}")
     if answers:
         task_ref = emit_plan_task(goal, "; ".join(filter(None, [notes, *answers])))

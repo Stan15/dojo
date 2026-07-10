@@ -179,3 +179,48 @@ class TestWhyForHumans:
         attempts = api.store.attempts.list(cid)
         assert len(attempts) == 1 and attempts[0].user_answer == "oui", \
             "/why consumed nothing; the real answer still landed"
+
+
+class TestEmptyInputIsNeverDestructive:
+    """Owner ruling (2026-07-09, option A): an accidental Enter re-asks a
+    refinement question with a hint; '-' is the deliberate skip. Empty input
+    never advances, submits, or discards — anywhere."""
+
+    def _plan_api(self, tmp_path: Path) -> DojoAPI:
+        api = DojoAPI(tmp_path)
+        proposal = {
+            "mission": "Tie the six knots that cover 95% of situations.",
+            "topics": [{"path": "knots.core", "kind": "skill", "summary": "the six"}],
+            "phases": [{"phase": 1, "topics": ["knots.core"],
+                        "criteria": {"min_attempts": 5, "min_accuracy": 0.6},
+                        "focus": "calibration"}],
+            "refinement_questions": ["Boating, climbing, or general use?"],
+        }
+        api.store.configs.set_value("model.command", scripted_fulfiller(tmp_path, proposal))
+        return api
+
+    def run_plan_flow(self, api, answers):
+        it = iter(answers)
+        from dojo.cli import _emit_plan_task, _materialize_core
+        with patch.object(interactive, "_input", lambda prompt: next(it)):
+            interactive.plan_flow(
+                api, goal="learn knots", level=None, context=None,
+                emit_plan_task=lambda g, n: _emit_plan_task(api.store, g, n),
+                materialize=lambda tid: _materialize_core(api, tid, None),
+            )
+
+    def test_accidental_enter_reasks_and_dash_skips(self, tmp_path: Path, capsys):
+        api = self._plan_api(tmp_path)
+        # empty (accident) → hint + re-ask → '-' (deliberate skip) → decline create
+        self.run_plan_flow(api, ["", "-", "n"])
+        out = capsys.readouterr().out
+        assert "'-' to skip this question" in out, "the accidental Enter got a hint"
+        assert not api.store.campaigns.list(), "declined — nothing created"
+
+    def test_real_answer_after_accidental_enter_still_lands(self, tmp_path: Path):
+        api = self._plan_api(tmp_path)
+        # empty (accident) → real answer → re-plan drains → decline both creates
+        self.run_plan_flow(api, ["", "climbing mostly", "n"])
+        replans = [t for t in api.store.tasks.list() if t.kind == "campaign.plan"]
+        assert len(replans) == 2, "the answer triggered the re-plan"
+        assert "climbing mostly" in replans[-1].prompt or "climbing mostly" in replans[0].prompt
