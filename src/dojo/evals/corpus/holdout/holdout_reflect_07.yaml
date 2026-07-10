@@ -1,0 +1,141 @@
+# Skill under test: reflection must resolve stale insights by weighing evidence provenance.
+# Failure mode: provenance-blind relapse preservation.
+category: calibration
+domain: quilting
+scenario_context: |
+  Quilting learner. Insight ins_allowance has tracked a quarter-inch seam allowance drift during strip piecing.
+  The learner's normal morning ritual rows now show repeated fast, correct seam outcomes. Two late extra rows were
+  extension-origin appetite practice after the planned session; both were tired and sloppy. Strong reflection resolves
+  the stale insight based on the reliable ritual evidence and does not downgrade strategy from tired extension failures.
+seed:
+  campaign:
+    id: quilt-precision
+    name: Quilt Precision
+    mission: Build reliable patchwork accuracy for a sampler quilt by September.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  insights:
+    - id: ins_allowance
+      key: piecing.seam_allowance
+      description: Seam allowance drifts wider than one quarter inch during strip piecing.
+      topic_path: quilting.piecing.seams
+  exercises:
+    - id: ex_31
+      topic_path: quilting.piecing.seams
+      difficulty: intermediate
+      prompt: "Piece two 2.5-inch strips using a quarter-inch seam and report the pressed strip-set width."
+      answer: "4.5 inches"
+      rubric: "Full credit for a 4.5-inch pressed width with no trimming correction."
+    - id: ex_32
+      topic_path: quilting.piecing.seams
+      difficulty: intermediate
+      prompt: "Sew a four-patch from 2.5-inch squares and report whether the center seams nest cleanly."
+      answer: "Center seams nest cleanly and block measures 4.5 inches."
+      rubric: "Full credit for nested center seams and a 4.5-inch unfinished block."
+    - id: ex_33
+      topic_path: quilting.piecing.seams
+      difficulty: intermediate
+      prompt: "Join three 2.5-inch strips and report the pressed strip-set width."
+      answer: "6.5 inches"
+      rubric: "Full credit for a 6.5-inch pressed width without stretching."
+    - id: ex_34
+      topic_path: quilting.piecing.seams
+      difficulty: intermediate
+      prompt: "Piece a half-square triangle pair and report whether the units trim to 2.5 inches."
+      answer: "Both units trim to 2.5 inches."
+      rubric: "Full credit for both units trimming cleanly to 2.5 inches."
+    - id: ex_35
+      topic_path: quilting.piecing.seams
+      difficulty: intermediate
+      prompt: "Extension row: sew one more three-strip set and report the pressed width."
+      answer: "6.5 inches"
+      rubric: "Full credit for a 6.5-inch pressed width."
+    - id: ex_36
+      topic_path: quilting.piecing.seams
+      difficulty: intermediate
+      prompt: "Extension row: sew one more four-patch and report the unfinished size."
+      answer: "4.5 inches"
+      rubric: "Full credit for a 4.5-inch unfinished block."
+  attempts:
+    - id: att_31
+      session_id: s8
+      exercise_id: ex_31
+      score: 1.0
+      latency_seconds: 18.0
+      user_answer: "Pressed width is exactly 4.5 inches, no trimming needed."
+    - id: att_32
+      session_id: s8
+      exercise_id: ex_32
+      score: 1.0
+      latency_seconds: 22.0
+      user_answer: "Center seams nest cleanly and the block is 4.5 inches."
+    - id: att_33
+      session_id: s9
+      exercise_id: ex_33
+      score: 1.0
+      latency_seconds: 20.0
+      user_answer: "Pressed width is 6.5 inches without stretching."
+    - id: att_34
+      session_id: s9
+      exercise_id: ex_34
+      score: 1.0
+      latency_seconds: 24.0
+      user_answer: "Both units trimmed cleanly to 2.5 inches."
+    - id: att_35
+      session_id: s9
+      exercise_id: ex_35
+      score: 0.0
+      latency_seconds: 55.0
+      user_answer: "Tired extra row: width is 6.25 inches; I rushed the seam."
+      error_tag: fatigue drift
+      origin: extension
+    - id: att_36
+      session_id: s9
+      exercise_id: ex_36
+      score: 0.3
+      latency_seconds: 61.0
+      user_answer: "Another tired extra row: block is 4.25 inches."
+      error_tag: fatigue drift
+      origin: extension
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - id: c1
+    weight: 3
+    question: "Does the output resolve ins_allowance using the four reliable ritual successes despite later extension-origin failures?"
+  - id: c2
+    weight: 3
+    question: "Does the output avoid downgrading difficulty or scaffolding from tired appetite-extension rows?"
+  - id: c3
+    weight: 2
+    question: "Does the reason explicitly distinguish normal ritual evidence from extension-origin fatigue evidence?"
+  - id: c4
+    weight: 1
+    question: "Is the journal faithful to the resolution without inventing a new recurring quilting weakness?"
+references:
+  good:
+    insight_updates:
+      - op: resolve
+        id: ins_allowance
+        key: piecing.seam_allowance
+        text: "Quarter-inch seam allowance drift is no longer active during normal ritual practice."
+        evidence: [att_31, att_32, att_33, att_34]
+        reason: "ritual rows mastered; failures were tired extension rows"
+    strategy: null
+    plan_revision: null
+    questions: []
+    journal: "Resolved seam-allowance drift; ritual practice shows stable accuracy."
+  bad:
+    insight_updates:
+      - op: update
+        id: ins_allowance
+        key: piecing.seam_allowance
+        text: "Seam allowance drift remains active because recent rows were undersized."
+        evidence: [att_35, att_36]
+        reason: "recent failures show drift persists"
+    strategy:
+      difficulty: beginner
+      scaffolding: high
+      reason: "undersized blocks show fundamentals need rebuilding"
+    plan_revision: null
+    questions: []
+    journal: "Kept seam drift active and lowered difficulty after recent failures."
