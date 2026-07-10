@@ -13,6 +13,11 @@ import shlex
 import subprocess
 from typing import Any, Optional
 
+try:  # line editing for every human prompt: arrows, ctrl-a/e, history.
+    import readline  # noqa: F401  (importing is the feature)
+except ImportError:  # some minimal builds ship without it — degrade quietly
+    pass
+
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
@@ -289,7 +294,10 @@ def plan_flow(api: DojoAPI, *, goal: str, level: Optional[str], context: Optiona
     if questions:
         console.print("[bold]A few questions to sharpen this[/bold] [dim](enter to skip)[/dim]")
         for q in questions:
-            reply = _input(f"  {q}\n  [bold cyan]›[/bold cyan] ").strip()
+            # Blank line + styled question: the previous free-form answer can
+            # be long, and the next question must not read as its tail.
+            console.print(f"\n  [bold cyan]?[/bold cyan] [bold]{q}[/bold]")
+            reply = _input("  [bold cyan]›[/bold cyan] ").strip()
             if reply:
                 answers.append(f"{q} -> {reply}")
     if answers:
