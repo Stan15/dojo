@@ -1,0 +1,101 @@
+# Insight-resolution under a gloomy window (added 2026-07-11, visible-corpus
+# broadening for the resolution skill): the insight's OWN ground is clean, but
+# unrelated struggles drag overall window accuracy below the lower-difficulty
+# threshold. Resolution is a per-insight finding, not a mood — the global
+# gloom must not block it, and the difficulty response must still happen.
+domain: statistics
+category: calibration
+scenario_context: |
+  Data-science interview candidate. Insight ins_pvalue (misreads a p-value as
+  the probability the null is true) has three straight correct interpretations
+  on its own ground — beaten. But five Bayes-reasoning attempts in the same
+  window failed slowly with the same tag, dragging window accuracy below 0.5.
+  Strong output: RESOLVE ins_pvalue with a reason citing its own successes
+  (not global averages), AND lower difficulty for the slow repeated Bayes
+  failures. Weak output: refuses the resolution because overall accuracy is
+  low ("too early to resolve anything"), or resolves but leaves the Bayes
+  collapse unaddressed.
+seed:
+  campaign:
+    id: stats-interview
+    name: Statistics Interview Prep
+    mission: Explain and apply core statistical inference concepts in interviews.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  insights:
+    - id: ins_pvalue
+      key: inference.p_value_meaning
+      description: Interprets a p-value as the probability that the null hypothesis is true.
+      topic_path: stats.p_values
+  exercises:
+    - {id: ex_p1, topic_path: stats.p_values, difficulty: intermediate,
+       prompt: "A test returns p = 0.03. State precisely what this number is the probability of."}
+    - {id: ex_p2, topic_path: stats.p_values, difficulty: intermediate,
+       prompt: "An interviewer says 'so there is a 3% chance the null is true.' Correct them in two sentences."}
+    - {id: ex_p3, topic_path: stats.p_values, difficulty: intermediate,
+       prompt: "Explain why a p-value alone cannot tell you the probability your hypothesis is correct."}
+    - {id: ex_b1, topic_path: stats.bayes, difficulty: intermediate,
+       prompt: "A disease affects 1% of people; a test has 90% sensitivity, 95% specificity. Estimate P(disease | positive)."}
+    - {id: ex_b2, topic_path: stats.bayes, difficulty: intermediate,
+       prompt: "In Bayes' theorem, which quantity plays the role of the prior in a spam-filter example, and why?"}
+    - {id: ex_b3, topic_path: stats.bayes, difficulty: intermediate,
+       prompt: "Why does a positive result from a rare-condition test usually NOT mean the condition is likely?"}
+    - {id: ex_b4, topic_path: stats.bayes, difficulty: intermediate,
+       prompt: "Distinguish the likelihood P(data | hypothesis) from the posterior P(hypothesis | data) with one concrete example."}
+    - {id: ex_b5, topic_path: stats.bayes, difficulty: intermediate,
+       prompt: "You update a prior of 0.2 with evidence twice as likely under H1 as H0. Roughly where does the posterior land?"}
+  attempts:
+    - {id: att_1, session_id: s11, exercise_id: ex_p1, score: 1.0, latency_seconds: 30.0,
+       user_answer: "It is the probability of seeing data at least this extreme if the null hypothesis were true — not the probability the null is true."}
+    - {id: att_2, session_id: s11, exercise_id: ex_b1, score: 0.3, latency_seconds: 85.0,
+       error_tag: prior neglect, user_answer: "Around 90%, since the test is 90% sensitive?"}
+    - {id: att_3, session_id: s11, exercise_id: ex_b2, score: 0.3, latency_seconds: 70.0,
+       error_tag: prior neglect, user_answer: "The prior is how accurate the filter is on known spam, I think."}
+    - {id: att_4, session_id: s12, exercise_id: ex_p2, score: 1.0, latency_seconds: 35.0,
+       user_answer: "No — p is computed assuming the null. It says how surprising the data would be under it, not how likely the null itself is."}
+    - {id: att_5, session_id: s12, exercise_id: ex_b3, score: 0.0, latency_seconds: 95.0,
+       error_tag: prior neglect, user_answer: "Because the test could be wrong sometimes, but mostly a positive means you probably have it."}
+    - {id: att_6, session_id: s12, exercise_id: ex_b4, score: 0.3, latency_seconds: 80.0,
+       error_tag: prior neglect, user_answer: "The likelihood and posterior are basically the same thing seen from different sides."}
+    - {id: att_7, session_id: s13, exercise_id: ex_p3, score: 1.0, latency_seconds: 28.0,
+       user_answer: "Because it conditions on the null being true; to get the probability of a hypothesis you need a prior and Bayes' rule."}
+    - {id: att_8, session_id: s13, exercise_id: ex_b5, score: 0.0, latency_seconds: 100.0,
+       error_tag: prior neglect, user_answer: "The posterior would be about 0.9 because the evidence favors H1."}
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - {id: c1, weight: 4, question: "Does the output RESOLVE insight ins_pvalue (op resolve
+      on that id) despite the low overall window accuracy, given three correct p-value
+      interpretations and no new p-value failures?"}
+  - {id: c2, weight: 2, question: "Does the resolve reason cite the correct p-value attempts
+      or their content, rather than overall window accuracy or averages?"}
+  - {id: c3, weight: 3, question: "Does the output lower difficulty (or raise scaffolding),
+      grounded in the slow, repeated Bayes failures?"}
+  - {id: c4, weight: 1, question: "Does the journal name both movements — the p-value pattern
+      resolved and the Bayes struggles driving the strategy change?"}
+references:
+  good:
+    insight_updates:
+      - {op: resolve, id: ins_pvalue,
+         reason: "three precise p-value interpretations, no new misses on that ground"}
+      - {op: create, key: bayes.prior_neglect,
+         text: "Ignores base rates when updating: repeatedly equates sensitivity or likelihood with the posterior.",
+         evidence: [att_2, att_5, att_8],
+         reason: "same prior-neglect tag across five slow misses"}
+    strategy: {difficulty: beginner, scaffolding: high,
+               reason: "Bayes accuracy 0.18 over five slow attempts"}
+    plan_revision: null
+    questions: []
+    topic_retirements: []
+    journal: "P-value misreading resolved (att_1, att_4, att_7 all precise). Bayes reasoning collapsing under prior neglect — difficulty lowered, scaffolding raised."
+  bad:
+    insight_updates:
+      - {op: update, id: ins_pvalue,
+         text: "Statistical understanding still shaky overall; keep watching p-value interpretation until accuracy recovers.",
+         evidence: [att_2, att_5],
+         reason: "overall accuracy below 0.5, too early to resolve"}
+    strategy: {difficulty: beginner, scaffolding: high,
+               reason: "overall accuracy below threshold"}
+    plan_revision: null
+    questions: []
+    topic_retirements: []
+    journal: "Window accuracy 0.49: keeping all insights active and lowering difficulty until performance recovers."

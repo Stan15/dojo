@@ -1,0 +1,83 @@
+# Premature-resolution CONTROL (added 2026-07-11, visible-corpus broadening
+# for the resolution skill): the counterweight to the resolve-when-beaten
+# scenarios. Two successes plus a FRESH failure on the insight's own ground
+# does not meet the bar (3+ successes, no new failures) — resolving here
+# throws away a live learner-model signal. Guards against reflection learning
+# "resolve eagerly" instead of "resolve on evidence".
+domain: birdwatching
+category: calibration
+scenario_context: |
+  Raptor-identification learner. Insight ins_buteo (confuses red-tailed and
+  red-shouldered hawk silhouettes in flight) shows two recent successes on
+  its own ground — but also a fresh miss with the same old tag in the latest
+  session. The resolution bar (three-plus successes, no new failures) is not
+  met. Strong output: KEEP ins_buteo active and UPDATE it with the new
+  failing attempt; no new insights; strategy stays null on this mixed but
+  unforced evidence. Weak output: resolves the insight off two successes,
+  spins the miss into a second duplicate insight, or moves difficulty.
+seed:
+  campaign:
+    id: raptor-id
+    name: Raptors In Flight
+    mission: Identify common North American raptors in flight by silhouette, wing shape, and flight pattern.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  insights:
+    - id: ins_buteo
+      key: identification.buteo_confusion
+      description: Confuses red-tailed and red-shouldered hawk silhouettes in flight.
+      topic_path: birding.raptors.buteos
+  exercises:
+    - {id: ex_1, topic_path: birding.raptors.buteos, difficulty: intermediate,
+       prompt: "A large buteo soars overhead: broad rounded wings, dark patagial bars, pale chest band. Name it and the clinching field mark."}
+    - {id: ex_2, topic_path: birding.raptors.buteos, difficulty: intermediate,
+       prompt: "In flight, what translucent wing feature separates a red-shouldered hawk from a red-tailed hawk?"}
+    - {id: ex_3, topic_path: birding.raptors.buteos, difficulty: intermediate,
+       prompt: "A mid-size buteo flaps in stiff quick beats, shows checkered flight feathers and reddish underwing coverts. Which species, and what did you weigh?"}
+    - {id: ex_4, topic_path: birding.raptors.falcons, difficulty: intermediate,
+       prompt: "Describe the wing shape and flight style that mark a peregrine falcon at a distance."}
+    - {id: ex_5, topic_path: birding.raptors.falcons, difficulty: intermediate,
+       prompt: "A small falcon hovers over a field edge before dropping. Name the species and the behavior that identifies it."}
+  attempts:
+    - {id: att_1, session_id: s5, exercise_id: ex_1, score: 1.0, latency_seconds: 20.0,
+       user_answer: "Red-tailed hawk — the dark patagial bars on the leading edge are the giveaway."}
+    - {id: att_2, session_id: s5, exercise_id: ex_2, score: 1.0, latency_seconds: 24.0,
+       user_answer: "The pale translucent crescents near the wingtips — red-shouldered shows them, red-tailed doesn't."}
+    - {id: att_3, session_id: s6, exercise_id: ex_3, score: 0.3, latency_seconds: 45.0,
+       error_tag: buteo mixup, user_answer: "Red-tailed hawk? The quick wingbeats made me think accipiter but the shape looked buteo."}
+    - {id: att_4, session_id: s6, exercise_id: ex_4, score: 1.0, latency_seconds: 18.0,
+       user_answer: "Long pointed wings, powerful shallow beats, and a compact anchor-like shape when it stoops."}
+    - {id: att_5, session_id: s6, exercise_id: ex_5, score: 0.7, latency_seconds: 26.0,
+       user_answer: "American kestrel — the hovering hunt is the tell, though I couldn't name the plumage marks."}
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - {id: c1, weight: 4, question: "Does the output keep ins_buteo active — no resolve op on it —
+      because the window holds a fresh buteo failure alongside only two successes?"}
+  - {id: c2, weight: 3, question: "Does the output UPDATE ins_buteo (op update on that id)
+      appending the failing attempt att_3 as evidence?"}
+  - {id: c3, weight: 2, question: "Does the output avoid creating any new insight and leave
+      strategy null on this mixed but unforced evidence?"}
+  - {id: c4, weight: 1, question: "Does the journal honestly record that the buteo confusion
+      persists, rather than claiming mastery or inventing other changes?"}
+references:
+  good:
+    insight_updates:
+      - {op: update, id: ins_buteo,
+         text: "Still confuses buteo silhouettes when flight style is the cue; missed again in the latest session.",
+         evidence: [att_3],
+         reason: "fresh miss with the same tag blocks resolution"}
+    strategy: null
+    plan_revision: null
+    questions: []
+    topic_retirements: []
+    journal: "Buteo confusion persists: two correct calls but att_3 missed on flight style. Updated the insight; nothing else changed."
+  bad:
+    insight_updates:
+      - {op: resolve, id: ins_buteo,
+         reason: "two recent correct buteo identifications show mastery"}
+    strategy: {difficulty: advanced, scaffolding: low,
+               reason: "mostly correct answers justify a step up"}
+    plan_revision: null
+    questions: []
+    topic_retirements: []
+    journal: "Resolved the buteo confusion after strong recent performance; raising difficulty to keep pace."

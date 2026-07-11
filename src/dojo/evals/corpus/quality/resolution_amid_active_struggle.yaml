@@ -1,0 +1,96 @@
+# Insight-resolution under mixed adjudication (added 2026-07-11, visible-corpus
+# broadening for the resolution skill): one insight is beaten, another is
+# actively repeating, in the same window. Strong reflection issues BOTH
+# verdicts in one pass; weak reflection blankets "no change" (staleness wins)
+# or lets the centering failures drag a global strategy move.
+domain: pottery
+category: calibration
+scenario_context: |
+  Wheel-pottery learner working toward a café tableware commission. Insight
+  ins_glaze (glaze applied too thickly) has been active for weeks; the last
+  four glazing attempts are all correct thickness decisions — the pattern is
+  beaten. Insight ins_center (loses centering when opening) is NOT beaten:
+  three recent centering attempts failed with the same tag. Strong output:
+  RESOLVE ins_glaze citing its own successes, UPDATE ins_center appending the
+  new failing attempts, and leave strategy null — mixed evidence fits neither
+  global threshold. Weak output: a blanket no-change that protects the stale
+  glaze belief, a duplicate centering insight instead of an update, or a
+  global difficulty drop driven by the centering misses alone.
+seed:
+  campaign:
+    id: wheel-pottery
+    name: Wheel Pottery
+    mission: Throw and glaze consistent 20cm bowls for a café tableware commission.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  insights:
+    - id: ins_glaze
+      key: glazing.thickness_judgment
+      description: Applies glaze too thickly, causing crawling in the kiln.
+      topic_path: pottery.glazing
+    - id: ins_center
+      key: throwing.centering_pressure
+      description: Loses centering when opening the clay.
+      topic_path: pottery.centering
+  exercises:
+    - {id: ex_g1, topic_path: pottery.glazing, difficulty: intermediate,
+       prompt: "Your dipped bowl shows glaze pooling near the foot. What thickness cue did you miss, and what do you do before firing?"}
+    - {id: ex_g2, topic_path: pottery.glazing, difficulty: intermediate,
+       prompt: "Describe the finger-test you use to confirm a raw glaze layer is thin enough to avoid crawling."}
+    - {id: ex_g3, topic_path: pottery.glazing, difficulty: intermediate,
+       prompt: "You want a double-dip effect on the rim. How long do you wait between dips, and why?"}
+    - {id: ex_g4, topic_path: pottery.glazing, difficulty: intermediate,
+       prompt: "A test tile fired with crawling on one half. What application difference most likely explains it?"}
+    - {id: ex_c1, topic_path: pottery.centering, difficulty: intermediate,
+       prompt: "Walk through your hand positions as you open a centered 1.5kg lump without letting it wobble."}
+    - {id: ex_c2, topic_path: pottery.centering, difficulty: intermediate,
+       prompt: "Your clay goes off-center the moment you begin opening. Name the two most likely pressure mistakes."}
+    - {id: ex_c3, topic_path: pottery.centering, difficulty: intermediate,
+       prompt: "Explain how you re-center a piece that developed a wobble after opening, without collapsing the walls."}
+  attempts:
+    - {id: att_1, session_id: s7, exercise_id: ex_g1, score: 1.0, latency_seconds: 28.0,
+       user_answer: "The glaze was still wet-shiny when I re-dipped; I should wipe back the pooling and thin it before firing."}
+    - {id: att_2, session_id: s7, exercise_id: ex_g2, score: 1.0, latency_seconds: 22.0,
+       user_answer: "Scratch a fingernail line: if the edge crumbles or flakes it is too thick; a clean shallow line means it is right."}
+    - {id: att_3, session_id: s8, exercise_id: ex_g3, score: 1.0, latency_seconds: 25.0,
+       user_answer: "Wait until the first coat loses its shine, a few minutes, so the second dip does not slide off or build too thick."}
+    - {id: att_4, session_id: s8, exercise_id: ex_g4, score: 1.0, latency_seconds: 24.0,
+       user_answer: "That half was double-loaded — thicker application, so it crawled where the layer was heaviest."}
+    - {id: att_5, session_id: s8, exercise_id: ex_c1, score: 0.3, latency_seconds: 75.0,
+       error_tag: centering lost, user_answer: "I brace my left arm and push down with the right thumb, but the walls still went uneven when I opened."}
+    - {id: att_6, session_id: s9, exercise_id: ex_c2, score: 0.3, latency_seconds: 68.0,
+       error_tag: centering lost, user_answer: "Maybe pressing too fast? I'm not sure what the second mistake would be."}
+    - {id: att_7, session_id: s9, exercise_id: ex_c3, score: 0.0, latency_seconds: 90.0,
+       error_tag: centering lost, user_answer: "Honestly once it wobbles I just start over, I don't know how to save it."}
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does the output RESOLVE insight ins_glaze (op resolve
+      on that id), given four correct glazing-thickness attempts and no new glazing failures?"}
+  - {id: c2, weight: 3, question: "Does the output UPDATE insight ins_center (op update on
+      that id) citing the failing centering attempt ids, rather than creating a duplicate insight?"}
+  - {id: c3, weight: 2, question: "Does the output leave strategy null, since the window mixes
+      glazing mastery with centering struggle and fits neither global accuracy threshold?"}
+  - {id: c4, weight: 1, question: "Does the journal record both verdicts — glazing resolved,
+      centering still failing — with their evidence?"}
+references:
+  good:
+    insight_updates:
+      - {op: resolve, id: ins_glaze,
+         reason: "four correct thickness decisions, no new glazing failures"}
+      - {op: update, id: ins_center,
+         text: "Loses centering when opening; three straight misses, cannot yet recover a wobble mid-piece.",
+         evidence: [att_5, att_6, att_7],
+         reason: "centering failures repeat with same tag"}
+    strategy: null
+    plan_revision: null
+    questions: []
+    topic_retirements: []
+    journal: "Glazing thickness resolved (att_1-att_4 all correct); centering still failing, updated with att_5-att_7. Strategy unchanged: mixed evidence."
+  bad:
+    insight_updates: []
+    strategy: {difficulty: beginner, scaffolding: high,
+               reason: "repeated centering failures show the level is too high"}
+    plan_revision: null
+    questions: []
+    topic_retirements: []
+    journal: "Lowering difficulty after repeated centering failures; keeping all insights active to be safe."
