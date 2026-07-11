@@ -190,7 +190,16 @@ committed work, not proposals awaiting an answer. Item numbering is stable
    money. Then the owed tag-blocking floors (insight-resolution skill,
    diagnostic-kind prompt, language floors). Tag bar: holdout gap ≤ 0.1
    STRICT. VISIBLE CORPUS ONLY — holdout stays sealed (see 7b).
-7d. **DIRECTED 2026-07-11 (owner; investigation before design):** the
+7e. **CONTAMINATION EVENT 2026-07-11 (recorded per the CLAUDE_START rule,
+   same day):** an IDE selection accidentally relayed partial holdout seed
+   content (reflect_retirement_not_phase_prize.yaml, ~8 attempt rows) into
+   the working session's context AFTER the prompt freeze (d2d024f). Per
+   protocol: that session is permanently disqualified from prompt work; no
+   prompt work was pending (freeze predates the leak); item 7d MUST be
+   executed by a fresh session. Non-prompt work (benchmark runs, gate,
+   relaying blind-subagent reports) unaffected.
+7d. **DIRECTED 2026-07-11 (owner; investigation before design — FRESH
+   SESSION ONLY, see 7e):** the
    reflect mega-task is an ANTI-PATTERN — one call now juggles five jobs
    (insight adjudication, strategy dials, plan revision, questions, topic
    retirement), and multi-sample eval variance (different criterion dropped

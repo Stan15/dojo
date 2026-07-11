@@ -78,6 +78,17 @@ mirrors the visible set). The author reports back ONLY filenames, counts,
 and shape-suite results — scenario content never enters a prompt-tuning
 context. Holdout stays smaller than visible; floors bootstrap at gates.
 
+**Contamination is contextual, not intentional (owner ruling 2026-07-11):**
+a model cannot firewall information inside its own context window —
+anything present influences every subsequent output, regardless of intent
+or instruction. Therefore: holdout content must NEVER enter the context of
+any session/agent that does prompt work — "I read it but won't use it"
+does not exist. If holdout content lands in a prompt-work context by ANY
+route (accidental file read, a paste, a verbose tool result), that context
+is permanently disqualified from prompt work: stop, note it in STATE, and
+hand prompt work to a fresh session. This binds humans relaying content
+too: quoting holdout material into a working session contaminates it.
+
 ## Ground rules specific to this repo
 
 - Commit every completed logical unit immediately; conventional messages; never batch.
