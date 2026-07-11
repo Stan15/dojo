@@ -180,7 +180,17 @@ committed work, not proposals awaiting an answer. Item numbering is stable
    grading-integrity 6→8) with coverage floors ratcheted. **Quality floors
    for the new scenarios are UNBOOTSTRAPPED** — they bootstrap on the next
    owner-authorized real eval run (`-m eval`, codex spend policy applies).
-7b. **NEXT (OWNER PROTOCOL — dedicated FRESH session, nothing else in it):
+7c. **IN FLIGHT 2026-07-10 — visible-corpus eval run (owner-authorized codex
+   spend)** for post-ADR-017 re-baseline + 6 new floors. Triage mandate
+   (owner directive, same day): TWO axes — (1) quality regressions vs the
+   0.895 pair baseline, weak floors iterated visible-only; (2) **output
+   token length**: audit response_bytes per task kind + driver traces for
+   verbosity (reasoning preambles, cap-padded answers); tighten output
+   contracts/word caps where fat — users' token budgets are the product's
+   money. Then the owed tag-blocking floors (insight-resolution skill,
+   diagnostic-kind prompt, language floors). Tag bar: holdout gap ≤ 0.1
+   STRICT. VISIBLE CORPUS ONLY — holdout stays sealed (see 7b).
+7b. **NEXT (OWNER PROTOCOL — subagent with cold context, this or any session):
    holdout enrichment for the ADR 017 surfaces.** Owner ruling 2026-07-10:
    prompts FIRST (done, this session), THEN holdout, and the session that
    authors holdout scenarios must NEVER touch prompts afterward — start a
