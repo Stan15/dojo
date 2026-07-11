@@ -84,9 +84,10 @@ OUTPUT — return only this JSON:
   "topic_retirements": [],  // rule 5 only: [{"path": "a.b", "reason": "...", "evidence": []}]
   "journal": "..."
 }
-A non-null plan_revision carries the FULL phase list, each phase shaped exactly:
-{"phases": [{"phase": 1, "topics": ["a.b"], "criteria": {"min_attempts": 5,
- "min_accuracy": 0.6}, "focus": "..."}], "evidence": ["att_id"], "reason": "..."}
+A non-null plan_revision carries the FULL phase list (never a diff), each
+phase shaped exactly: {"phases": [{"topics": ["a.b"], "criteria":
+{"min_attempts": 5, "min_accuracy": 0.6}, "focus": "..."}],
+"evidence": ["att_id"], "reason": "..."} — phases are numbered by position.
 Check: nulls wherever nothing changed; ≤ {{ max_new_insights }} creates (each with
 a key); ≤ {{ max_questions }} questions; every cited attempt id (insights AND plan)
 exists in ATTEMPTS; new phase topics: lowercase dotted, ≤ {{ topic_depth }} levels.

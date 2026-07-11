@@ -42,10 +42,16 @@ class CriteriaEntry(BaseModel):
 class AttackPlanPhase(BaseModel):
     """One phase of a campaign's attack plan: which topics are in play and
     the criteria to graduate past it. The plan is data, not prose — reflection
-    may revise it (`PlanRevision`) but phase advancement is deterministic."""
+    may revise it (`PlanRevision`) but phase advancement is deterministic.
 
-    phase: int = Field(
-        description="Phase index number."
+    `phase` is ASSIGNED by deterministic code (list position), never
+    required from a model — every consumer already reads position, and a
+    number a model must retype is a number a model can get wrong
+    (owner principle 2026-07-11: structure models shouldn't care about
+    belongs to the core)."""
+
+    phase: Optional[int] = Field(
+        default=None, description="Phase number — assigned from list position."
     )
     topics: List[str] = Field(
         description="List of topic paths targeted in this phase."
@@ -247,6 +253,14 @@ class PlanRevision(BaseModel):
 
     _cap_reason = field_validator("reason")(_cap_words("reason", _limits.REFLECT_REASON_WORDS))
 
+    @model_validator(mode="after")
+    def _assign_phase_numbers(self):
+        """Deterministic numbering (ADR audit 2026-07-11): position is the
+        identity every consumer reads; whatever a model emitted is overwritten."""
+        for i, p in enumerate(self.phases):
+            p.phase = i + 1
+        return self
+
 
 class TopicRetirement(BaseModel):
     """Reflection's care-exit call (ADR 017 §6): stop reviewing a topic the
@@ -352,7 +366,10 @@ class PlanResult(BaseModel):
         return v
 
     @model_validator(mode="after")
-    def _phase_topics_exist(self):
+    def _assign_phase_numbers_and_check_topics(self):
+        # Numbering is deterministic (position); models never emit it.
+        for i, p in enumerate(self.phases):
+            p.phase = i + 1
         declared = {t.path for t in self.topics}
         for phase in self.phases:
             for tp in phase.topics:

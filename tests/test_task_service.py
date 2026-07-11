@@ -420,3 +420,31 @@ class TestSubmissionTraces:
         att = store.attempts.get(CAMP_ID, "att_g")
         assert att.grade_run == task.id, "a score's trace is one pointer away"
         assert store.tasks.get(task.id).trace[0]["ok"] is True
+
+
+class TestPhaseNumberingIsDeterministic:
+    """Models never emit phase numbers (owner audit 2026-07-11): position is
+    the identity every consumer reads; validation assigns 1..n regardless of
+    what a submission carried."""
+
+    def test_plan_result_renumbers_by_position(self):
+        from dojo.schemas import PlanResult
+
+        res = PlanResult.model_validate({
+            "mission": "m",
+            "topics": [{"path": "a.b", "kind": "skill", "summary": ""}],
+            "phases": [
+                {"topics": ["a.b"], "criteria": {"min_attempts": 5, "min_accuracy": 0.6}},
+                {"phase": 9, "topics": ["a.b"], "criteria": {"min_attempts": 5, "min_accuracy": 0.7}},
+            ],
+        })
+        assert [p.phase for p in res.phases] == [1, 2], "emitted 9 overwritten"
+
+    def test_plan_revision_renumbers_by_position(self):
+        from dojo.schemas import PlanRevision
+
+        rev = PlanRevision.model_validate({
+            "phases": [{"topics": ["x"], "criteria": {"min_attempts": 3, "min_accuracy": 0.6}}],
+            "reason": "r",
+        })
+        assert rev.phases[0].phase == 1
