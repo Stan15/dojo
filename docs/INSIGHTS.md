@@ -145,3 +145,28 @@ edge-tolerant comparison or ~15% of honest passes get discarded.
   collected scores). Ratchet writers must re-apply acceptance rules at
   write time (`merge_holdout_baseline`: zeros never floor, unknown scenarios
   merge in, existing floors immutable).
+
+## 2026-07-11 — encoding-era session learnings
+
+- **Contamination is contextual, not intentional.** A model cannot firewall
+  info in its context window; "read but won't use" doesn't exist. Proven
+  live: an IDE-selection relay leaked holdout rows into the working session
+  minutes after the rule was written. Remedy: burn + regenerate the exposed
+  scenario (the transcript then describes a test that no longer exists).
+- **Judge-evidence verbatim checks must decode JSON escapes** — LaTeX/regex
+  outputs (`\\[` raw vs `\[` decoded) had every honest judge pass discarded
+  as "unproven". Fixed in evidence_haystacks; the discard mechanism itself
+  is sound anti-reward-hacking machinery.
+- **Single-sample floor bootstraps are noise-prone**: two scenarios floored
+  at a lucky 1.0 failed on a DIFFERENT criterion each re-run. Multi-sample
+  spread + a different-criterion-each-time signature = variance, not a
+  failure mode. Owner-approved floor adjustment with documented notes.
+- **Structure models must emit is structure models can corrupt**: plan phase
+  numbers were retyped by models yet every consumer reads list position —
+  now position-assigned at validation. Generalized owner principle.
+- **Reflect variance is an architecture smell**: the mega-task juggles five
+  jobs; per-sample criterion-dropping is the measurable symptom (STATE 7d).
+- **Reasoning-neutral output anchors**: "return only this JSON" suppressed
+  deliberation weak models may need; "your final output is exactly this
+  JSON (anything before it is ignored)" tells the extraction truth without
+  inviting token burn. Empirical check owed via the Ollama pairs.

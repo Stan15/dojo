@@ -180,16 +180,25 @@ committed work, not proposals awaiting an answer. Item numbering is stable
    grading-integrity 6→8) with coverage floors ratcheted. **Quality floors
    for the new scenarios are UNBOOTSTRAPPED** — they bootstrap on the next
    owner-authorized real eval run (`-m eval`, codex spend policy applies).
-7c. **IN FLIGHT 2026-07-10 — visible-corpus eval run (owner-authorized codex
-   spend)** for post-ADR-017 re-baseline + 6 new floors. Triage mandate
-   (owner directive, same day): TWO axes — (1) quality regressions vs the
-   0.895 pair baseline, weak floors iterated visible-only; (2) **output
-   token length**: audit response_bytes per task kind + driver traces for
-   verbosity (reasoning preambles, cap-padded answers); tighten output
-   contracts/word caps where fat — users' token budgets are the product's
-   money. Then the owed tag-blocking floors (insight-resolution skill,
-   diagnostic-kind prompt, language floors). Tag bar: holdout gap ≤ 0.1
-   STRICT. VISIBLE CORPUS ONLY — holdout stays sealed (see 7b).
+7c. ✓ **DONE 2026-07-11 — post-ADR-017 visible corpus HEALED** (full run
+   0.799 mean → trace-driven triage → 5 fix commits → all 61 scenarios pass
+   floors). Root causes found+fixed: present-move over-application (rules
+   1b/1c rails), RECENT topic-scoping collapsed cross-topic struggle signal
+   ("struggle travels, success aggregates" rows), retirement-channel misuse
+   (TRENDS-listed-only rule), floundering both-dials ambiguity, scaffolding
+   never defined as item design, verbatim-stays-verbatim, judge
+   escape-decoding bug (LaTeX evidence discarded — evidence_haystacks fix
+   + free tests), route seed honesty. Token audit: plan responses fattest →
+   PlanTopic.summary word-capped (18); phase numbers no longer emitted by
+   models (position-assigned). Output anchor now REASONING-NEUTRAL (owner:
+   never invite, never suppress). Two floors adjusted on multi-sample
+   evidence (owner-approved; notes in the baseline card). **PROMPTS FROZEN
+   at d2d024f for this era** — next prompt work belongs to a fresh session
+   (see 7e). Also shipped: `benchmark.judge` standing-judge config +
+   honest compliance banner (5f02c89); owner's store configured with codex
+   as standing judge. Weak-model program: qwen3:4b + gemma3:1b +
+   LFM2.5-1.2B pulled; owner drives the bake-off via the benchmark TUI
+   (compliance first — free; judged tiers on finalists).
 7e. **CONTAMINATION EVENT 2026-07-11 (recorded per the CLAUDE_START rule,
    same day):** an IDE selection accidentally relayed partial holdout seed
    content (reflect_retirement_not_phase_prize.yaml, ~8 attempt rows) into
@@ -211,7 +220,13 @@ committed work, not proposals awaiting an answer. Item numbering is stable
    (single jobs are the model-strength-neutrality win), and applier/
    authority complexity. Deliverable: investigation + proposal for owner
    gate — not implementation.
-7b. **NEXT (OWNER PROTOCOL — subagent with cold context, this or any session):
+7b′. ✓ **DONE 2026-07-11 — holdout enriched to 24 scenarios** by a
+   cold-context subagent under the CLAUDE_START blind protocol (350b4e2;
+   one scenario burnt + regenerated after an accidental partial exposure,
+   18d83dc — leak permanently neutralized). Filenames-only reporting held;
+   mechanical QA green. Floors bootstrap at the v1.0.0 gate as planned.
+   _Original protocol text kept below for the next enrichment:_
+7b. **(protocol reference — subagent with cold context, this or any session):
    holdout enrichment for the ADR 017 surfaces.** Owner ruling 2026-07-10:
    prompts FIRST (done, this session), THEN holdout, and the session that
    authors holdout scenarios must NEVER touch prompts afterward — start a
