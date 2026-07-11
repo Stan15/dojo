@@ -39,7 +39,7 @@ RULES
 OUTPUT — return only this JSON:
 {
   "mission": "...",
-  "topics": [{"path": "a.b.c", "kind": "recall|skill", "summary": "..."}],
+  "topics": [{"path": "a.b.c", "kind": "recall|skill", "summary": "≤ {{ topic_summary_words }} words — a hook, not a syllabus"}],
   "phases": [{"phase": 1, "topics": ["a.b"], "criteria": {"min_attempts": 5, "min_accuracy": 0.6}, "focus": "..."}],
   "refinement_questions": ["..."]
 }

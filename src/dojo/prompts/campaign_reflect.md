@@ -42,13 +42,16 @@ RULES
    cannot). Retire a topic ONLY when the learner's own voice asked for it
    (FEEDBACK / resolved insight — cite the ids), or TRENDS shows sustained
    over-mastery with the learner's interest gone (a months-scale pattern,
-   never a two-session one). Max {{ max_retirements }} per run. Reviews
-   stop; the learner can always `dojo topic revive`. Passing a phase is
-   NEVER a reason — old strengths are maintained by design.
+   never a two-session one). Only paths LISTED IN TRENDS can retire; taking
+   a topic out of future phases is a plan_revision, NOT a retirement. Max
+   {{ max_retirements }} per run. Reviews stop; the learner can always
+   `dojo topic revive`. Passing a phase is NEVER a reason — old strengths
+   are maintained by design.
 6. Every change carries a `reason` ≤ {{ reason_words }} words — it becomes the
    audit journal. `journal` (≤ {{ journal_words }} words) names the EVIDENCE —
    the accuracy, the seconds, the repeated tag — not just the verdict, and
-   says "no change: <why>" when holding still.
+   says "no change: <why>" when holding still (in the learner's language,
+   like all journal prose).
 7. Write insight text, questions, and journal in the learner's language
    (the language of their answers/FEEDBACK); keys stay lowercase English.
 

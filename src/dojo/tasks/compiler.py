@@ -262,6 +262,14 @@ def recent_rows(store, campaign_id: str, topic_path: str = "", n: int = 8) -> st
         if others:
             mean = sum(a.score for a in others) / len(others)
             rows.append(f"other topics, last {len(others)} graded: mean {mean:.2f}")
+        # Struggle travels, success aggregates (eval finding 2026-07-10:
+        # topic-scoping this window collapsed the cross-topic struggle rows
+        # calibration depends on): the most recent sub-0.7 rows ride along.
+        for a in [a for a in others if a.score < 0.7][-2:]:
+            glimpse = (a.prompt or "").replace("\n", " ")[:40]
+            rows.append(
+                f'nearby struggle · score {a.score} · {a.latency_seconds:.0f}s · "{glimpse}"'
+            )
     return "\n".join(rows) if rows else "(no practice on this topic yet)"
 
 

@@ -305,11 +305,17 @@ class ReflectResult(BaseModel):
 
 class PlanTopic(BaseModel):
     """One topic a plan declares: dot-path (bounded depth), recall/skill
-    kind, optional summary. Phases may only reference declared topics."""
+    kind, optional summary (word-capped — plan responses are the token-
+    fattest output; the summary is a hook, not a syllabus). Phases may only
+    reference declared topics."""
 
     path: str = Field(min_length=1, pattern=r"^[a-z0-9_]+(\.[a-z0-9_]+)*$")
     kind: Literal["recall", "skill"]
     summary: str = ""
+
+    _cap_summary = field_validator("summary")(
+        _cap_words("summary", _limits.PLAN_TOPIC_SUMMARY_WORDS)
+    )
 
     @field_validator("path")
     @classmethod

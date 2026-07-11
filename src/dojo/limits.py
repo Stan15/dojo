@@ -42,6 +42,7 @@ PLAN_MAX_TOPIC_DEPTH = 4  # deep enough to EXTEND existing namespaces (music.gui
 PLAN_MIN_PHASES = 1  # deadline compression may collapse phases; 3-6 is guidance, not a gate
 PLAN_MAX_PHASES = 6
 PLAN_MISSION_WORDS = 40
+PLAN_TOPIC_SUMMARY_WORDS = 18  # plan responses were the token-fattest output (audit 2026-07-10)
 PLAN_MAX_QUESTIONS = 3
 PLAN_QUESTION_WORDS = 15
 
@@ -103,6 +104,7 @@ TEMPLATE_CAPS: dict[str, dict[str, int]] = {
         "max_questions": PLAN_MAX_QUESTIONS,
         "question_words": PLAN_QUESTION_WORDS,
         "mission_words": PLAN_MISSION_WORDS,
+        "topic_summary_words": PLAN_TOPIC_SUMMARY_WORDS,
     },
     "capture.route": {
         "reason_words": ROUTE_REASON_WORDS,
