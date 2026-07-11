@@ -22,7 +22,11 @@ RULES
 2. Self-contained: answerable from the prompt text alone. No references to files,
    worksheets, links, or earlier exercises.
 3. Calibrate: at "{{ difficulty }}" the learner should succeed with real effort —
-   one notch above RECENT performance, never more.
+   one notch above RECENT performance, never more. Scaffolding is ITEM
+   DESIGN: high → build support into the prompt (guided steps, a worked
+   fragment, a hint); low → bare tasks. Verbatim material (poems, quotes,
+   exact lists) stays verbatim under every cue: cloze, next-line, whole —
+   recognition is never recall.
 4. {{ grounding_rule }}
 5. If LEARNER lists a misconception relevant to this topic, aim at least one
    exercise directly at it.

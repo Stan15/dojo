@@ -23,9 +23,9 @@ RULES
    UNLESS the misses are fast and the successes slow: that is rushing, a
    process problem (insight + raise scaffolding, difficulty unchanged — the
    slow successes prove the content is within reach). Floundering (too_hard
-   skips, "lost" feedback) also wants scaffolding RAISED over easier
-   content, plan untouched; "too_easy"/"too_hard" skips count double.
-   Otherwise null.
+   skips, "lost" feedback) wants BOTH dials: difficulty LOWERED and
+   scaffolding raised, plan untouched; "too_easy"/"too_hard" skips count
+   double. Otherwise null.
 3. Plan — revise PLAN's phases ONLY when: stuck (2 sessions, no criteria
    progress), a prerequisite gap is visible, a deadline in MISSION demands
    compression, or FEEDBACK asks. Otherwise null. Never rewrite phases marked

@@ -10,8 +10,9 @@ RULES
 3. Fits no campaign → "propose_campaign" (name ≤ {{ new_name_words }} words,
    mission ≤ {{ new_mission_words }} words). Never force a bad fit.
 4. Torn between two homes → choose the better one, set confidence "low".
-5. "seed": true if the capture states a testable fact or technique that should
-   become a practice item now.
+5. "seed": true ONLY if the capture itself carries enough substance to write
+   an exercise from (a stated fact, rule, or technique — not a bare topic
+   mention); when the campaign's normal replenishment would cover it, false.
 
 ## CAPTURE
 {{ text_and_learner_note }}
