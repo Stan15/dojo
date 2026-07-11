@@ -22,6 +22,8 @@ agent:  dojo campaign create --from-task tsk_a1b2c3d4
         → two quick calibration questions, then your first practice session
 ```
 
+> 🎬 *Demo GIF coming — recording script in [docs/demo-shots.md](docs/demo-shots.md).*
+
 From then on, every session is a handful of exercises calibrated to *you* —
 grounded in your own notes when you have them, graded against rubrics, and fed
 back into a learner profile that sharpens the next session.
@@ -54,11 +56,11 @@ back into a learner profile that sharpens the next session.
 ## Get started in 60 seconds
 
 ```bash
-git clone https://github.com/Stan15/dojo && cd dojo && sh install.sh
+curl -fsSL https://raw.githubusercontent.com/Stan15/dojo/main/install.sh | sh
 ```
 
-(One-liner `curl -fsSL https://raw.githubusercontent.com/Stan15/dojo/main/install.sh | sh`
-works once this repo is public.)
+(Prefer to see what you're running? `git clone https://github.com/Stan15/dojo
+&& cd dojo && sh install.sh` — same installer, your checkout.)
 
 **Using an AI coding agent (the happy path)?** Install the skill and you're done
 — no API keys, no configuration. Your agent fulfills dojo's AI work itself:
@@ -140,29 +142,58 @@ failure: the schedule starts instead of punishing, and the full answer
 appears on the spot. Real forgetting of things you *were* taught still
 counts — that's the scheduler doing its job.
 
-Agents (and scripts) drive the same loop stepwise:
+The commands that matter:
 
 ```bash
-dojo daily                 # today's packet: small, interleaved, every pick explained
-dojo why                   # "weakest memory here (~38% recall odds) · French: 6 due…"
-dojo start --topic french.oral   # targeted manual drill outside the ritual (replenishes itself)
-dojo ready                 # reveal the next prompt, timer starts
-dojo answer "il serait allé"
-dojo skip --reason too_easy --feedback "know this cold"   # calibration signal
-dojo stats                 # per-campaign retention estimates, due counts, AI token spend
-dojo progress              # accuracy, latency, recent history
-dojo reflect               # distill recent evidence into insights & strategy
+dojo daily     # the whole ritual — the one command to remember
+dojo why       # "weakest memory here (~38% recall odds) · French: 6 due…"
+dojo stats     # retention estimates, due counts, AI token spend
 ```
+
+(Inside a session: type your answer, or `/why`, `/skip too_easy`, `/quit`.
+Want a targeted extra drill? `dojo start --topic french.conversation`.)
+
+If you talk to dojo *through an agent*, you don't even need these — say
+"let's practice" and the agent runs the same machinery stepwise over its JSON
+API. It learns how from the installed skill; you never have to.
 
 `dojo stats` is the honesty dashboard: estimated recall odds per campaign
 (tagged as estimates — scores and counts are records), days idle, and exactly
 how many tokens your AI tasks have consumed, by kind.
 
+### Practice from anywhere your agent can reach you
+
+Dojo never sends messages — but because the whole loop is JSON with a `next`
+hint on every response, **any agent that can reach your messenger becomes a
+practice surface**. Tell an assistant like Hermes (or any harness with a
+Telegram/WhatsApp/Slack bridge) to run your ritual, and your morning looks
+like this:
+
+```text
+you → hermes:  "run my dojo practice every morning at 8 and message me"
+
+08:00, your messenger pings:
+hermes:  Morning! 3 prompts today. First (French, weakest memory ~38% odds):
+         "Traduisez : She would have come to the party."
+you:     elle serait venue à la fête
+hermes:  ✓ 2 more to go. Next: ☆ new material — study this…
+         (…finishes the session, then…)
+         Done — 2/3 first try, grades explained. Tomorrow makes it stick. 🥋
+```
+
+Under the hood that's nothing but the loop above: the agent runs
+`dojo daily --json`, relays each prompt verbatim, pipes your replies to
+`dojo answer`, and fulfills the AI tasks itself. Scheduling is your agent's
+cron; delivery is whatever messenger it already has. Dojo stays local,
+deterministic, and asleep until called.
+
+> 🎬 *Demo GIF coming — [shot list](docs/demo-shots.md).*
+
 Want something to show up more? Two honest knobs, not an algorithm guessing:
 
 ```bash
 dojo campaign boost french 2.0            # this CAMPAIGN surfaces more in packets
-dojo campaign topic-boost french french.oral 3.0   # this TOPIC comes due 3x faster
+dojo campaign topic-boost french french.conversation 3.0   # this TOPIC comes due 3x faster
 ```
 
 Still hungry after today's session? `dojo more` grants a bounded top-up of
@@ -177,18 +208,16 @@ Everything that personalizes your practice is inspectable, traceable, and
 contestable — your word always outranks the machine's hypothesis:
 
 ```bash
-dojo insights                      # every belief the system holds about you
-dojo insights show ins_xxx         # the receipts: your verbatim answers behind it,
-                                   #   who graded them, and how many exercises target it
+dojo insights                    # every belief the system holds about you, with receipts
 dojo insights resolve ins_xxx --because "I know this — I was rushing"
-                                   # your words, stored verbatim, outrank the evidence
-dojo campaign list                 # status, phase, retention, dues, idle days
-dojo campaign archive french       # done with it? out of rotation; git remembers
+                                 # your words, stored verbatim, outrank the evidence
 dojo topic retire aviation.phonetic_alphabet --because "use it daily now"
-                                   # reviews for ONE topic stop — retention you
-                                   #   no longer care about is noise, not diligence
-dojo topic revive aviation.phonetic_alphabet   # changed your mind? they resume
+                                 # reviews you no longer care about are noise — stop them
 ```
+
+(`dojo insights show` walks any belief back to your verbatim answers;
+`dojo topic revive` resumes a retired topic; `dojo campaign list / archive`
+manage whole subjects. Git remembers everything you remove.)
 
 When a campaign's last phase is passed, dojo says so and switches it to
 **maintenance**: reviews keep coming (memories are kept warm), but no new
@@ -199,30 +228,21 @@ py-fsrs) for facts; skills schedule on their topic and always get *novel*
 exercises so you learn the skill, not the question. The scheduler is pure,
 deterministic code — no model ever decides what you practice.
 
-Ingesting material and reviewing what the AI drafted:
-
-```bash
-dojo add notes.md --topic french.grammar --generate   # source → draft exercises
-dojo source review src_ab12cd34                       # accept/edit/reject drafts
-dojo queue --source src_ab12cd34                      # promote to practice
-```
-
-Everything speaks JSON for automation (`--json` or any piped context), every
-response tells the agent its next step, and `dojo doctor` audits the whole
-store — structure, schemas, and whether your git history is protecting you.
+Have notes or articles? `dojo add notes.md --generate` turns your material
+into draft exercises that wait for your review — generated content never
+silently becomes practice. And `dojo doctor` audits the whole store whenever
+you want reassurance.
 
 ## How the AI plugs in
+
+*(Plumbing — your agent handles all of this; shown for the curious.)*
 
 Dojo emits **tasks**: self-contained prompt files with a strict output
 contract, compiled to a token budget (typically 3–7 KB — your context window
 and your bill are treated as precious). Any fulfiller completes them through
-one validated door:
-
-```bash
-dojo task list --status pending
-dojo task show tsk_1a2b3c4d --prompt   # the exact prompt, nothing else
-dojo task submit tsk_1a2b3c4d          # result JSON on stdin; validated, applied
-```
+one validated door (`dojo task show` → `dojo task submit`); malformed output
+is rejected with actionable errors and your data is untouched. No API keys
+live in dojo — the intelligence is whatever you already run.
 
 ## Benchmark your model
 
@@ -231,9 +251,16 @@ category-by-category profile — personalization, calibration, planning,
 grading integrity, knowing-when-to-ask, domain breadth:
 
 ```bash
-dojo benchmark --driver "codex exec"               # judge defaults to the driver
-dojo benchmark -d "ollama run llama3" -j "codex exec" --detail
+dojo benchmark -d "ollama run qwen3:4b"        # grades with your configured judge
+dojo benchmark -d "codex exec" --detail        # per-criterion verdicts
 ```
+
+Set a standing judge once (`dojo config set benchmark.judge "codex exec"`) and
+every scorecard is graded by the same referee — comparable across models. In a
+terminal you get a **live pane** while it runs: the model's raw stream, its
+speed in tokens/sec, and what's being tested, in real time.
+
+> 🎬 *Demo GIF coming — [shot list](docs/demo-shots.md).*
 
 ```text
 Overall  ████████░░ 0.84   (28 scenarios)
@@ -255,12 +282,15 @@ can't silently regress.
 
 ## Status & roadmap
 
-Dojo is **a working v1 core, moving fast**. Everything you read above exists
-and is tested (257 tests, plus live model evals against ratcheted baselines).
-On the bench next: sharper reflection prompts against the measured weak spots,
-a wider benchmark corpus, consent rails for AI-proposed plan changes (nothing
-restructures under your feet), and a `dojo more` bonus packet for the days you
-finish and want extra.
+Dojo is **a working v1, used daily by its author, moving fast**. Everything
+you read above exists and is tested (649 deterministic tests, plus live-model
+evals against ratcheted baselines and a blind holdout set that keeps the
+prompts honest). Recent: first-encounter teaching (you're never graded on
+material nobody showed you), per-topic retirement, an Obsidian-grade store
+layout, and the benchmark live pane. On the bench next: v1.0.0 (gated on a
+strict prompt-generalization bar), first-class weak-model support profiles
+(Raspberry-Pi-class models are being benchmarked now), and decomposing the
+biggest AI task into simpler jobs small models handle better.
 
 ## Going deeper
 
