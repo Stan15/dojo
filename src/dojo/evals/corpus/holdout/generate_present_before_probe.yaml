@@ -1,0 +1,68 @@
+# Skill under test: generation must PRESENT never-met material as a study card
+# (skill "present") instead of cold-quizzing content no surface ever showed.
+category: encoding
+domain: coastal_navigation
+scenario_context: |
+  Night-sailing learner who has stated they have never read a nautical chart.
+  The topic navigation.lights.characteristics has no practice history at all
+  (RECENT is empty) and there is no source: the light-rhythm notation (Fl, Oc,
+  Iso, flash grouping, period) is material the learner has never met. The
+  request asks for 3 beginner items. Strong output uses exactly one
+  skill:"present" study card whose answer carries the notation itself (prompt
+  only a framing cue, no rubric, never graded), and the remaining graded items
+  probe only content that study card's answer actually carries. Weak output
+  cold-quizzes graded recall on notation nothing ever presented, includes no
+  encoding event, and ranges into material beyond the card (quick-flashing,
+  sector colors, compound characters).
+seed:
+  campaign:
+    id: night-passages
+    name: Night Passages
+    mission: I have never read a nautical chart — learn to identify coastal navigation lights at night before the autumn passages.
+    strategy_profile: {difficulty: beginner, scaffolding: medium}
+  exercises: []
+  attempts: []
+steps:
+  - compile:
+      fn: generate
+      topic_path: navigation.lights.characteristics
+      n_items: 3
+      difficulty: beginner
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does the output include exactly one skill 'present' study card whose answer itself carries the light-rhythm notation (Fl, Oc, Iso, flash grouping, period)?"}
+  - {id: c2, weight: 3, question: "Do the remaining graded items probe only content the study card's answer carries, rather than quizzing the never-met notation or other chart material cold?"}
+  - {id: c3, weight: 2, question: "Is the study card a true presentation — the material in answer, the prompt only a framing cue, and no rubric or grading attached?"}
+  - {id: c4, weight: 1, question: "Are all prompts self-contained and free of answer leakage?"}
+references:
+  good:
+    items:
+      - prompt: "Study card — how a chart names a light's rhythm. Read it now; on later nights you will recall it in the dark."
+        answer: "A chart writes a light's rhythm as pattern plus period. Fl means flashing: brief flashes, more dark than light. Oc means occulting: steady light with brief dark gaps, more light than dark. Iso means isophase: equal light and dark. A number groups flashes and the seconds give the repeating cycle, so Fl(3) 10s is three flashes together repeating every ten seconds."
+        rubric: null
+        skill: present
+      - prompt: "From the study card you just read: a chart marks a light Fl(3) 10s. Describe exactly what you would see watching it from the cockpit."
+        answer: "Three brief flashes close together, then darkness, with the whole cycle repeating every ten seconds — more darkness than light overall."
+        rubric: "- Three grouped flashes\n- Whole cycle repeats every 10 seconds\n- Flashing means more dark than light"
+        skill: recall
+      - prompt: "At night you watch a harbor light: steady light interrupted by brief regular dark gaps, clearly more light than dark. Which abbreviation from the study card names this rhythm, and which one would mean equal light and dark?"
+        answer: "Occulting, written Oc; equal light and dark is isophase, written Iso."
+        rubric: "- Names Oc / occulting for the described rhythm\n- Names Iso / isophase for equal light and dark"
+        skill: apply
+    note: null
+    intervention: null
+  bad:
+    items:
+      - prompt: "What does the chart abbreviation Q mean, and roughly how fast does such a light pulse?"
+        answer: "Q is quick-flashing, about 50-79 flashes per minute."
+        rubric: "- Names quick-flashing\n- Gives an approximate flash rate"
+        skill: recall
+      - prompt: "Name the colors used for sector lights and what entering a red sector warns a skipper about."
+        answer: "White, red, and green; a red sector warns you are standing into danger."
+        rubric: "- Names the sector colors\n- Red sector means danger bearing"
+        skill: recall
+      - prompt: "Decode the full character Fl(2) WR 6s from a chart."
+        answer: "Group-flashing two flashes every six seconds, showing white or red depending on sector."
+        rubric: "- Reads the group and period\n- Explains the W/R sector colors"
+        skill: recall
+    note: null
+    intervention: null

@@ -1,0 +1,94 @@
+# Adversarial: reflection must NOT retire a topic merely because its phase passed
+# and accuracy is high — phase advancement never cancels reviews; only care exits.
+category: care-exit
+domain: archery
+scenario_context: |
+  Club archer three weeks into a campaign. Phase 1 (stance and anchor) just
+  passed its criteria with high accuracy over a few weeks; phase 2 (arrow
+  spine tuning) is active and rocky. Nothing in the learner's voice asks to
+  stop stance work — their only feedback is that spine charts are confusing
+  but they want to crack them. The temptation is to retire the passed topic
+  as finished. Strong reflection retires nothing: stance stays under review
+  by design (a weeks-scale streak is not months-scale over-mastery, and
+  interest is not gone), the plan stays intact, and the journal honestly says
+  why no change is made. Weak reflection hands the passed phase a retirement
+  — "phase complete, no further review needed" — or strips stance from the
+  plan, cancelling the maintenance spaced repetition exists to provide.
+seed:
+  campaign:
+    id: field-archery
+    name: Field Archery League
+    mission: Shoot consistent scores in the winter field-archery league.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+    active_phase_index: 1
+    attack_plan:
+      - phase: 1
+        topics: [archery.form.stance_anchor]
+        criteria: {min_attempts: 4, min_accuracy: 0.8}
+        focus: repeatable stance and anchor
+      - phase: 2
+        topics: [archery.tuning.arrow_spine]
+        criteria: {min_attempts: 8, min_accuracy: 0.65}
+        focus: matching spine to the bow
+    topics:
+      - path: archery.form.stance_anchor
+        kind: skill
+        summary: Repeatable stance and anchor point
+        sr:
+          card_id: 771201
+          state: 2
+          step: null
+          stability: 9.6
+          difficulty: 4.1
+          due: "2026-07-15T18:00:00+00:00"
+          last_review: "2026-07-05T18:00:00+00:00"
+      - path: archery.tuning.arrow_spine
+        kind: skill
+        summary: Matching arrow spine to the bow
+        sr:
+          card_id: 771202
+          state: 1
+          step: 1
+          stability: 1.1
+          difficulty: 6.8
+          due: "2026-07-10T18:00:00+00:00"
+          last_review: "2026-07-09T18:00:00+00:00"
+  exercises:
+    - {id: ex_st1, topic_path: archery.form.stance_anchor, difficulty: intermediate, kind: skill, prompt: "Describe your foot placement and weight split for a repeatable open stance.", answer: "Feet shoulder-width, front foot slightly open, weight 60/40 toward the balls of the feet.", rubric: "- Placement described\n- Weight split stated"}
+    - {id: ex_st3, topic_path: archery.form.stance_anchor, difficulty: intermediate, kind: skill, prompt: "Shoot three ends focusing only on identical anchor; report the drift.", answer: "Anchor identical across ends; no vertical drift.", rubric: "- Consistent anchor reported\n- Drift assessed"}
+    - {id: ex_st5, topic_path: archery.form.stance_anchor, difficulty: intermediate, kind: skill, prompt: "Run a blank-boss session checking stance and anchor only; report consistency.", answer: "Ten shots, stance and anchor identical, group inside a fist.", rubric: "- Full session run\n- Consistency reported"}
+    - {id: ex_sp1, topic_path: archery.tuning.arrow_spine, difficulty: intermediate, kind: skill, prompt: "Your bare shafts land nock-left of fletched groups (right-handed recurve). Is the spine too stiff or too weak?", answer: "Nock-left for a right-handed archer means the shaft is too stiff.", rubric: "- Correct stiff/weak call\n- Direction logic"}
+    - {id: ex_sp3, topic_path: archery.tuning.arrow_spine, difficulty: intermediate, kind: skill, prompt: "Read a spine chart: 32 lb on the fingers at 29 inches — which spine band do you start with?", answer: "Start around a 700-600 spine band and bare-shaft test from there.", rubric: "- Plausible band\n- Testing mentioned"}
+    - {id: ex_sp4, topic_path: archery.tuning.arrow_spine, difficulty: intermediate, kind: skill, prompt: "Your fletched and bare shafts group together at 18 m. What does that tell you and what next?", answer: "Spine and nocking point are close to matched; confirm at longer distance before fine-tuning.", rubric: "- Correct reading\n- Sensible next step"}
+  attempts:
+    - {id: att_st1, session_id: s70, exercise_id: ex_st1, score: 0.7, latency_seconds: 55.0, user_answer: "Shoulder width, front foot open, 60/40 forward.", created_at: "2026-06-18T18:00:00+00:00"}
+    - {id: att_st3, session_id: s71, exercise_id: ex_st3, score: 1.0, latency_seconds: 48.0, user_answer: "Anchor identical all three ends, no drift.", created_at: "2026-06-25T18:00:00+00:00"}
+    - {id: att_st5, session_id: s73, exercise_id: ex_st5, score: 1.0, latency_seconds: 33.0, user_answer: "Ten shots identical, fist-size group.", created_at: "2026-07-05T18:00:00+00:00"}
+    - {id: att_sp1, session_id: s74, exercise_id: ex_sp1, score: 0.3, latency_seconds: 85.0, user_answer: "Nock-left means too weak? I always flip these.", created_at: "2026-07-06T18:00:00+00:00"}
+    - {id: att_sp3, session_id: s75, exercise_id: ex_sp3, score: 0.3, latency_seconds: 90.0, user_answer: "No idea of the band; guessed 500.", feedback: "Spine charts are confusing but I want to crack them.", created_at: "2026-07-08T18:00:00+00:00"}
+    - {id: att_sp4, session_id: s75, exercise_id: ex_sp4, score: 0.7, latency_seconds: 66.0, user_answer: "Close to matched; test further out next.", created_at: "2026-07-09T18:00:00+00:00"}
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - {id: c1, weight: 4, question: "Is topic_retirements empty, keeping archery.form.stance_anchor under review despite the passed phase and its high accuracy?"}
+  - {id: c2, weight: 2, question: "Does the output leave the plan intact — no plan_revision stripping stance maintenance out of the campaign?"}
+  - {id: c3, weight: 2, question: "Does the journal or reasoning hold still honestly, noting that maintenance of the passed topic continues rather than declaring it finished?"}
+  - {id: c4, weight: 1, question: "Does the output avoid strategy escalation justified by the mastered stance rows while spine work still sits near 0.5?"}
+references:
+  good:
+    insight_updates: []
+    strategy: null
+    plan_revision: null
+    questions: []
+    topic_retirements: []
+    journal: "No change: stance passed its phase but stays under light review by design; spine practice continues near 0.5 while the charts click."
+  bad:
+    insight_updates: []
+    strategy: null
+    plan_revision: null
+    questions: []
+    topic_retirements:
+      - path: archery.form.stance_anchor
+        reason: "phase complete with near-perfect accuracy; no further review needed"
+        evidence: []
+    journal: "Retired stance and anchor after the phase pass to clear space for arrow tuning."

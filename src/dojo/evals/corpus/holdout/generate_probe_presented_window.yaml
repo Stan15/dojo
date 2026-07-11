@@ -1,0 +1,99 @@
+# Skill under test: generation must probe PREVIOUSLY-PRESENTED content faithfully —
+# the RECENT window shows a presentation awaiting first recall; probes test that
+# exact content with varied cues, and no new material is introduced meanwhile.
+category: encoding
+domain: artisan_baking
+scenario_context: |
+  Trainee baker. Yesterday the system presented a study card with the house
+  levain build (40 g ripe starter + 80 g water at 26 °C + 80 g strong flour,
+  6 hour rest at 24-26 °C, ready when doubled and domed, keep 40 g back to
+  restart). The RECENT window shows that presentation still awaiting its first
+  successful recall. The request asks for 3 beginner items on the same topic.
+  Strong output probes exactly the presented build — its quantities, water
+  temperature, rest time, readiness sign, hold-back amount — varying the cue
+  direction (whole recall, missing part, readiness/reverse), with no new
+  present card. Weak output ignores the presentation: it quizzes levain or
+  sourdough material the card never carried (autolyse, hydration percentages,
+  bake temperatures), invents a different build, or adds another study card
+  while the first still awaits recall.
+seed:
+  campaign:
+    id: levain-discipline
+    name: Levain Discipline
+    mission: Run the bakery's levain build from memory so morning bakes never wait on a recipe card.
+    strategy_profile: {difficulty: beginner, scaffolding: medium}
+  exercises:
+    - id: ex_present_build
+      topic_path: baking.levain.build
+      difficulty: beginner
+      kind: present
+      quality: spent
+      prompt: "Study card — the house levain build. Read it now; tomorrow you recall it from memory."
+      answer: "House levain build: 40 g ripe starter + 80 g water at 26 °C + 80 g strong flour. Rest 6 hours at 24-26 °C. It is ready when doubled and domed. Keep 40 g back to restart the next build."
+    - id: ex_batard_shape
+      topic_path: baking.shaping.batard
+      difficulty: beginner
+      kind: skill
+      prompt: "Describe the three moves that shape a batard from a preshaped round."
+      answer: "Pat to a rectangle, fold the top two-thirds down and seal, then roll toward you and seal the seam with the heel of the hand."
+      rubric: "- Fold and seal described\n- Final seam sealed"
+  attempts:
+    - id: att_present_build
+      session_id: s21
+      exercise_id: ex_present_build
+      score: 1.0
+      latency_seconds: 25.0
+      grader: exposure
+      user_answer: "Read it — makes sense."
+      created_at: "2026-07-08T07:30:00+00:00"
+    - id: att_batard_shape
+      session_id: s22
+      exercise_id: ex_batard_shape
+      score: 0.7
+      latency_seconds: 40.0
+      user_answer: "Fold the top down, roll it up, seal the seam."
+      created_at: "2026-07-09T07:30:00+00:00"
+steps:
+  - compile:
+      fn: generate
+      topic_path: baking.levain.build
+      n_items: 3
+      difficulty: beginner
+judge_rubric:
+  - {id: c1, weight: 3, question: "Do the graded probes test the presented build's actual content — the 40 g starter / 80 g water / 80 g flour quantities, 26 °C water, six-hour rest, doubled-and-domed sign, or the 40 g hold-back?"}
+  - {id: c2, weight: 3, question: "Does the output avoid probing levain material the presentation never carried (autolyse, hydration percentages, bake temperatures) and avoid inventing a different build?"}
+  - {id: c3, weight: 2, question: "Does the output avoid adding another present study card while the presented build still awaits its first successful recall?"}
+  - {id: c4, weight: 1, question: "Do the probes vary the cue direction (whole recall, missing part, readiness/reverse) instead of repeating one phrasing?"}
+references:
+  good:
+    items:
+      - prompt: "From memory: give the house levain build in full — quantities, water temperature, rest time, and the readiness sign."
+        answer: "40 g ripe starter, 80 g water at 26 °C, 80 g strong flour; rest 6 hours at 24-26 °C, ready when doubled and domed."
+        rubric: "- 40/80/80 quantities\n- 26 °C water and 6 hour rest\n- Doubled and domed readiness"
+        skill: recall
+      - prompt: "A trainee mixes 40 g ripe starter with 80 g strong flour and walks away. Name what the house build still needs and the two numbers that go with it."
+        answer: "80 g of water at 26 °C — and the mix then rests 6 hours."
+        rubric: "- Water identified as missing\n- 80 g quantity and 26 °C temperature"
+        skill: apply
+      - prompt: "It is hour six and the levain has doubled and domed. What happens to it now, and what must stay behind for tomorrow's build?"
+        answer: "Use it in the dough now; keep 40 g back to restart the next build."
+        rubric: "- Use the ripe levain now\n- 40 g held back to restart"
+        skill: apply
+    note: null
+    intervention: null
+  bad:
+    items:
+      - prompt: "What is an autolyse, and why do bakers rest flour and water before adding levain?"
+        answer: "A rest of flour and water that develops gluten and extensibility before mixing."
+        rubric: "- Defines autolyse\n- Names a benefit"
+        skill: explain
+      - prompt: "At what oven temperature and steam setting do you bake a sourdough batard?"
+        answer: "About 240 °C with steam for the first 20 minutes."
+        rubric: "- Reasonable temperature\n- Mentions steam"
+        skill: recall
+      - prompt: "Study card — converting the house levain to a rye starter. Read and confirm."
+        answer: "Replace half the strong flour with wholegrain rye and shorten the rest to 5 hours; rye ferments faster and peaks earlier."
+        rubric: null
+        skill: present
+    note: null
+    intervention: null

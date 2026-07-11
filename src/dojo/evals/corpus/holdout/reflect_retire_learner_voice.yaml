@@ -1,0 +1,102 @@
+# Skill under test: reflection retires a topic through topic_retirements when the
+# learner's own voice asks for it and the lifetime trend backs the call.
+category: care-exit
+domain: home_cooking
+scenario_context: |
+  Home cook whose campaign moved from knife skills into fermentation. The
+  lifetime trend shows knife sharpening at perfect accuracy for five months,
+  never missed, with latencies falling to under half a minute, while koji work
+  is young and climbing. In the newest attempt the learner says outright:
+  "Please stop scheduling sharpening drills — my edges are fine; I want every
+  session on koji." Strong reflection retires
+  culinary.knife.sharpening via topic_retirements, citing the attempt carrying
+  that request, leaves koji fully active, avoids strategy churn, and journals
+  the learner's stated reason. Weak reflection ignores the request: it keeps
+  the topic, reframes the voice as a boredom insight, and raises difficulty to
+  make sharpening "challenging" again.
+seed:
+  campaign:
+    id: kitchen-craft
+    name: Kitchen Craft
+    mission: Cook restaurant-level dinners at home — knife skills, then koji and fermentation.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+    active_phase_index: 1
+    attack_plan:
+      - phase: 1
+        topics: [culinary.knife.sharpening]
+        criteria: {min_attempts: 4, min_accuracy: 0.75}
+        focus: whetstone fundamentals
+      - phase: 2
+        topics: [culinary.ferment.koji]
+        criteria: {min_attempts: 8, min_accuracy: 0.6}
+        focus: koji growth and safe use
+    topics:
+      - path: culinary.knife.sharpening
+        kind: skill
+        summary: Whetstone sharpening and edge maintenance
+        sr:
+          card_id: 660101
+          state: 2
+          step: null
+          stability: 58.4
+          difficulty: 3.2
+          due: "2026-08-30T09:00:00+00:00"
+          last_review: "2026-07-02T09:00:00+00:00"
+      - path: culinary.ferment.koji
+        kind: skill
+        summary: Growing koji and using it safely
+        sr:
+          card_id: 660102
+          state: 1
+          step: 1
+          stability: 1.2
+          difficulty: 6.1
+          due: "2026-07-09T09:00:00+00:00"
+          last_review: "2026-07-08T09:00:00+00:00"
+  exercises:
+    - {id: ex_k1, topic_path: culinary.knife.sharpening, difficulty: intermediate, kind: skill, prompt: "Sharpen a chef's knife from 1000 to 6000 grit and report burr removal.", answer: "Even burr raised and removed on both sides; edge passes the paper test.", rubric: "- Burr raised and removed\n- Paper test passes"}
+    - {id: ex_k5, topic_path: culinary.knife.sharpening, difficulty: intermediate, kind: skill, prompt: "Flatten a dished waterstone and prove it is true.", answer: "Stone flattened with pencil-grid check gone.", rubric: "- Grid fully removed\n- Stone true"}
+    - {id: ex_k6, topic_path: culinary.knife.sharpening, difficulty: intermediate, kind: skill, prompt: "Full maintenance pass on the house santoku: sharpen, deburr, strop, test.", answer: "Sharpened, deburred, stropped; tomato test passes without pressure.", rubric: "- All four steps done\n- Tomato test passes"}
+    - {id: ex_j1, topic_path: culinary.ferment.koji, difficulty: intermediate, kind: skill, prompt: "State the incubation temperature band for growing koji on rice and why it must not be exceeded.", answer: "30-36 °C; above about 40 °C the mold dies and bacteria take over.", rubric: "- 30-36 °C band\n- Overheating risk named"}
+    - {id: ex_j3, topic_path: culinary.ferment.koji, difficulty: intermediate, kind: skill, prompt: "List the visual and aroma signs that koji is ready to harvest.", answer: "White bloom binding the grains and a sweet chestnut aroma.", rubric: "- White mycelium bloom\n- Sweet chestnut smell"}
+    - {id: ex_j4, topic_path: culinary.ferment.koji, difficulty: intermediate, kind: skill, prompt: "Plan a shio koji from finished koji: ratio and maturing time.", answer: "Koji, salt, and water about 3:1:4 by weight; mature 7-10 days at room temperature.", rubric: "- Reasonable ratio\n- About a week to mature"}
+  attempts:
+    - {id: att_k1, session_id: s60, exercise_id: ex_k1, score: 1.0, latency_seconds: 95.0, user_answer: "Burr removed evenly, paper test clean.", created_at: "2026-02-10T18:00:00+00:00"}
+    - {id: att_k5, session_id: s64, exercise_id: ex_k5, score: 1.0, latency_seconds: 41.0, user_answer: "Flattened, pencil grid gone.", created_at: "2026-06-20T18:00:00+00:00"}
+    - {id: att_k6, session_id: s65, exercise_id: ex_k6, score: 1.0, latency_seconds: 24.0, user_answer: "Full pass in minutes; tomato test perfect.", feedback: "Please stop scheduling sharpening drills — my edges are fine; I want every session on koji.", created_at: "2026-07-09T18:00:00+00:00"}
+    - {id: att_j1, session_id: s64, exercise_id: ex_j1, score: 0.0, latency_seconds: 70.0, user_answer: "Guessed 45 °C — way too hot.", created_at: "2026-07-05T18:00:00+00:00"}
+    - {id: att_j3, session_id: s65, exercise_id: ex_j3, score: 0.7, latency_seconds: 74.0, user_answer: "White bloom; missed the aroma sign.", created_at: "2026-07-07T18:00:00+00:00"}
+    - {id: att_j4, session_id: s65, exercise_id: ex_j4, score: 0.7, latency_seconds: 61.0, user_answer: "3:1:4; said 3 days instead of a week.", created_at: "2026-07-08T18:00:00+00:00"}
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - {id: c1, weight: 4, question: "Does the output retire culinary.knife.sharpening via topic_retirements, citing the attempt where the learner asked to stop?"}
+  - {id: c2, weight: 2, question: "Is culinary.ferment.koji left active — no retirement and no plan gutting of the topic the learner still wants?"}
+  - {id: c3, weight: 2, question: "Does the output avoid converting the request into dial churn, such as raising difficulty to keep sharpening challenging?"}
+  - {id: c4, weight: 1, question: "Does the journal carry the learner's stated reason in their own terms?"}
+references:
+  good:
+    insight_updates: []
+    strategy: null
+    plan_revision: null
+    questions: []
+    topic_retirements:
+      - path: culinary.knife.sharpening
+        reason: "learner asked to stop; months of fast flawless edges"
+        evidence: [att_k6]
+    journal: "Retired knife sharpening — the learner said their edges are fine and asked for every session on koji; five months of fast perfect rows agree."
+  bad:
+    insight_updates:
+      - op: create
+        key: motivation.knife_boredom
+        text: "Learner shows boredom with sharpening drills and craves novelty."
+        evidence: [att_k6]
+        reason: "learner complained about sharpening drills"
+    strategy:
+      difficulty: advanced
+      scaffolding: null
+      reason: "perfect sharpening accuracy demands harder drills"
+    plan_revision: null
+    questions: []
+    topic_retirements: []
+    journal: "Raised difficulty to keep sharpening challenging; the learner seems bored so the drills will get harder."

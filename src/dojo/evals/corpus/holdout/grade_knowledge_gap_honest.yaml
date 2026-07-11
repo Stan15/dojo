@@ -1,0 +1,60 @@
+# Skill under test: grading must set knowledge_gap when the learner's own answer
+# states the material was never taught — an encoding gap, not a failed retrieval.
+category: grading-integrity
+domain: tig_welding
+scenario_context: |
+  Hobby welder repairing bike frames. The system is grading one answer to a
+  synthetic exercise on tungsten electrode selection — a topic with no memory
+  state, on material no session ever showed. The learner's answer plainly
+  states nobody has ever shown them tungsten types and that none of their
+  drills mentioned electrode colors or tip prep. Strong grading scores 0.0,
+  sets knowledge_gap true, quotes the never-learned statement as evidence,
+  and uses feedback to supply the missing kernel (a correct AC-aluminum
+  tungsten choice). Weak grading treats the honesty as giving up: it leaves
+  knowledge_gap false, tags the learner with an avoidance pattern, and scolds
+  instead of teaching.
+seed:
+  campaign:
+    id: frame-welds
+    name: Frame Welds
+    mission: Lay clean TIG welds on mild steel and aluminum for bicycle-frame repair.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  exercises:
+    - id: ex_tungsten_pick
+      topic_path: welding.tig.tungsten_selection
+      difficulty: intermediate
+      kind: recall
+      provenance: synthetic
+      prompt: "You switch from mild steel to 3 mm aluminum on an AC TIG machine. Which tungsten electrode type do you choose, how do you prepare the tip, and why?"
+      answer: "For AC aluminum use a 2% lanthanated or zirconiated tungsten with a lightly rounded or balled tip; a sharply pointed thoriated electrode belongs to DC steel work."
+      rubric: "- Names lanthanated or zirconiated for AC aluminum\n- Tip lightly rounded or balled\n- Contrasts with DC steel preparation"
+  attempts:
+    - id: att_never_taught
+      session_id: s31
+      exercise_id: ex_tungsten_pick
+      score: 0.0
+      latency_seconds: 32.0
+      grader: null
+      user_answer: "I have to be honest: nobody has ever shown me tungsten types. None of the drills so far mentioned electrode colors or tip prep, so I don't know this yet."
+steps:
+  - compile:
+      fn: grade
+      attempt_id: att_never_taught
+judge_rubric:
+  - {id: c1, weight: 4, question: "Is knowledge_gap true because the answer itself states the tungsten material was never shown or taught?"}
+  - {id: c2, weight: 2, question: "Is the score 0.0, with no credit invented for honesty?"}
+  - {id: c3, weight: 2, question: "Does the feedback supply the missing kernel — a correct AC-aluminum tungsten choice — instead of scolding the learner for not answering?"}
+  - {id: c4, weight: 1, question: "Is the evidence a verbatim quote of the learner's never-learned statement?"}
+references:
+  good:
+    score: 0.0
+    evidence: "nobody has ever shown me tungsten types"
+    feedback: "New material, not a failed recall: for AC aluminum reach for a 2% lanthanated or zirconiated tungsten with a lightly balled tip — sharp thoriated points stay with DC steel."
+    error_tag: null
+    knowledge_gap: true
+  bad:
+    score: 0.0
+    evidence: "I don't know this yet"
+    feedback: "You should still attempt an answer; giving up earns nothing. Review tungsten selection in your notes before the next session."
+    error_tag: "gives up"
+    knowledge_gap: false
