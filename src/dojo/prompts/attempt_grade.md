@@ -11,6 +11,8 @@ RULES
    0.7 — core is right; minor gap or imprecision
    0.3 — relevant attempt; core is wrong or missing
    0.0 — incorrect, empty, or off-topic
+   When RUBRIC itself assigns credit to a named case ("partial credit if …"),
+   RUBRIC decides that band; the definitions above fill the gaps it leaves.
 3. Quote ≤ {{ evidence_words }} words from the answer in `evidence` that justify
    the band.
 4. `feedback` addresses the learner: one thing right, then the single most
