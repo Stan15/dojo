@@ -136,6 +136,35 @@ class TestBenchmarkCli:
         assert scores["grade_partial_credit"] == 0.0, "wrong-shape output must fail honestly"
         assert out_file.exists()
 
+    def test_configured_judge_wins_over_self_judging(self, dojo_dir: Path, tmp_path: Path, capsys):
+        """benchmark.judge config supplies the standing judge (owner feature
+        2026-07-11): omitting -j must not silently mean self-judging once a
+        judge is configured; an explicit -j still wins."""
+        from unittest.mock import patch
+
+        run(capsys, "--db", str(dojo_dir), "--json", "config", "set",
+            "benchmark.judge", "echo CONFIGURED-JUDGE")
+        captured = {}
+
+        def fake_run_benchmark(driver, judge, **kw):
+            captured["judge"] = judge
+            return {"driver": driver, "judge": judge, "pair": "p", "date": "",
+                    "total_scenarios": 0, "categories": {}, "failures": {}}
+
+        with patch("dojo.cli.run_benchmark", side_effect=fake_run_benchmark, create=True), \
+             patch("dojo.evals.runner.run_benchmark", side_effect=fake_run_benchmark):
+            run(capsys, "--db", str(dojo_dir), "--json", "benchmark",
+                "--driver", "echo DRIVER", "--tier", "compliance",
+                "--output", str(tmp_path / "r.json"))
+        assert captured["judge"] == "echo CONFIGURED-JUDGE"
+
+        with patch("dojo.cli.run_benchmark", side_effect=fake_run_benchmark, create=True), \
+             patch("dojo.evals.runner.run_benchmark", side_effect=fake_run_benchmark):
+            run(capsys, "--db", str(dojo_dir), "--json", "benchmark",
+                "--driver", "echo DRIVER", "--judge", "echo EXPLICIT",
+                "--tier", "compliance", "--output", str(tmp_path / "r2.json"))
+        assert captured["judge"] == "echo EXPLICIT"
+
 
 class TestBenchmarkQualityPipeline:
     """CI lock on the FULL quality tier of run_benchmark with scripted models —

@@ -1743,7 +1743,15 @@ def cmd_benchmark(args: argparse.Namespace) -> int:
     from .evals.runner import run_benchmark, run_holdout_gate
 
     driver = args.driver
-    judge = args.judge or driver
+    # Judge resolution: explicit -j wins; else the configured standing judge
+    # (benchmark.judge — owner 2026-07-11: "codex should grade"); only then
+    # the driver itself — self-judging is a choice, never an accident.
+    store = DojoStore(_db_path(args))
+    judge = (
+        args.judge
+        or str(store.configs.get_value("benchmark.judge", "") or "").strip()
+        or driver
+    )
 
     if getattr(args, "holdout", False):
         # Release gate: structurally aggregate-only (owner ruling — holdout
@@ -1800,7 +1808,10 @@ def cmd_benchmark(args: argparse.Namespace) -> int:
     if not _use_json(args):
         console.print("\n[bold]🥋 Dojo model benchmark[/bold]")
         console.print(f"  Driver (does the work):   [cyan]{driver}[/cyan]")
-        console.print(f"  Judge  (grades quality):  [cyan]{judge}[/cyan]")
+        if "quality" in tiers:
+            console.print(f"  Judge  (grades quality):  [cyan]{judge}[/cyan]")
+        else:
+            console.print("  [dim]compliance tier: scored by validators — no judge involved[/dim]")
         console.print("  [dim]This drives your models on real scenarios — expect several minutes.[/dim]\n")
 
     def progress(msg: str) -> None:
@@ -2315,7 +2326,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_bench.add_argument(
         "--judge", "-j",
-        help="evaluator command grading output quality (default: same as --driver)",
+        help="evaluator command grading output quality (default: benchmark.judge config if set, else --driver)",
     )
     p_bench.add_argument("--tier", choices=["all", "compliance", "quality"], default="all")
     p_bench.add_argument("--holdout", action="store_true",
