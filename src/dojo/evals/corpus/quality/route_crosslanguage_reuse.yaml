@@ -1,3 +1,8 @@
+# Adjudicated 2026-07-11: the capture states the full technique ("sentarse,
+# esperar cinco minutos, brazalete, anotar mañana y noche") and asks to
+# practice it — template rule 5 therefore demands seed TRUE; the original
+# c4 ("keep seed false") contradicted the prompt contract and was judging
+# obedience to a wrong expectation. c4 now checks only metadata honesty.
 category: routing
 domain: hypertension
 scenario_context: |
@@ -42,7 +47,7 @@ judge_rubric:
     question: "Does the output avoid proposing a new Spanish campaign or Spanish practice topic?"
   - id: c4
     weight: 1
-    question: "Does the output keep seed false and avoid inventing new topic metadata?"
+    question: "Does the output avoid inventing new topic metadata such as new names or missions?"
 references:
   good:
     action: attach
@@ -52,7 +57,7 @@ references:
     new_mission: null
     confidence: high
     reason: "Spanish capture matches home monitoring practice"
-    seed: false
+    seed: true
   bad:
     action: propose_campaign
     campaign: null
