@@ -1,0 +1,107 @@
+# Adversarial: mastery is answered with the dials, never with retirement —
+# a passed phase, perfect scores, even a too_easy skip do not justify a care-exit
+# while the learner's own words say they rely on the skill staying sharp.
+category: care-exit
+domain: wilderness_first_aid
+scenario_context: |
+  Volunteer trail guide recertifying wilderness first aid. Phase 1 (splinting
+  and bandaging) passed weeks ago with perfect scores; the learner even
+  skipped one drill as too easy. Their own words keep the skill wanted:
+  "Splinting feels automatic now — good, I need that under stress." Phase 2
+  (patient assessment) is active and steady; the recent window sits above
+  0.85 accuracy overall. Strong reflection answers the mastery
+  signal with the dials — difficulty raised on the high-accuracy window plus
+  the too_easy skip — while topic_retirements stays empty: splinting keeps
+  its (already sparse) reviews, because a weeks-scale streak is not
+  months-scale over-mastery and the learner's interest is explicitly alive.
+  Weak reflection converts the passed phase and perfect scores into a
+  retirement, declaring the topic learned for good and cancelling the
+  maintenance the learner asked to keep.
+seed:
+  campaign:
+    id: trail-recert
+    name: Trail Recert
+    mission: Recertify wilderness first aid before guiding season.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+    active_phase_index: 1
+    attack_plan:
+      - phase: 1
+        topics: [firstaid.splint_bandage]
+        criteria: {min_attempts: 4, min_accuracy: 0.8}
+        focus: splints and bandages
+      - phase: 2
+        topics: [firstaid.patient_assessment]
+        criteria: {min_attempts: 6, min_accuracy: 0.7}
+        focus: patient survey
+      - phase: 3
+        topics: [firstaid.evac_decisions]
+        criteria: {min_attempts: 5, min_accuracy: 0.7}
+        focus: evac or monitor
+    topics:
+      - path: firstaid.splint_bandage
+        kind: skill
+        summary: Improvised splints and bleeding control
+        sr:
+          card_id: 550301
+          state: 2
+          step: null
+          stability: 21.7
+          difficulty: 3.6
+          due: "2026-07-27T16:00:00+00:00"
+          last_review: "2026-07-06T16:00:00+00:00"
+      - path: firstaid.patient_assessment
+        kind: skill
+        summary: Primary and secondary survey
+        sr:
+          card_id: 550302
+          state: 1
+          step: 1
+          stability: 1.4
+          difficulty: 5.9
+          due: "2026-07-10T16:00:00+00:00"
+          last_review: "2026-07-09T16:00:00+00:00"
+      - path: firstaid.evac_decisions
+        kind: skill
+        summary: Evacuate versus monitor judgment
+  exercises:
+    - {id: ex_sb1, topic_path: firstaid.splint_bandage, difficulty: intermediate, kind: skill, prompt: "Splint a suspected forearm fracture with trekking poles; state your checks.", answer: "Pad and immobilize above and below; check CSM before and after.", rubric: "- Joints above/below immobilized\n- CSM checked twice"}
+    - {id: ex_sb3, topic_path: firstaid.splint_bandage, difficulty: intermediate, kind: skill, prompt: "Sling and swathe a shoulder injury; name the two goals.", answer: "Support the arm's weight and pin it to the torso to stop movement.", rubric: "- Support named\n- Immobilization named"}
+    - {id: ex_sb4, topic_path: firstaid.splint_bandage, difficulty: intermediate, kind: skill, prompt: "An ankle splint leaves toes cold and pale. What went wrong and what now?", answer: "Too tight — loosen, re-pad, and recheck CSM.", rubric: "- Diagnoses tightness\n- Loosen and recheck"}
+    - {id: ex_sb5, topic_path: firstaid.splint_bandage, difficulty: intermediate, kind: skill, prompt: "Improvise a knee immobilizer from a sleeping pad; describe it.", answer: "Roll the pad into a rigid gutter, strap above and below the knee.", rubric: "- Rigid gutter formed\n- Strapped above and below"}
+    - {id: ex_pa1, topic_path: firstaid.patient_assessment, difficulty: intermediate, kind: skill, prompt: "Run the primary survey on a responsive fallen hiker; list the order.", answer: "Scene safety, then ABCDE: airway, breathing, circulation, disability, exposure.", rubric: "- Scene safety first\n- ABCDE in order"}
+    - {id: ex_pa3, topic_path: firstaid.patient_assessment, difficulty: intermediate, kind: skill, prompt: "Name the vital signs you trend in the field and how often.", answer: "LOR, pulse, respirations, skin; every 5-15 minutes by severity.", rubric: "- Four vitals\n- Sensible interval"}
+  attempts:
+    - {id: att_sb1, session_id: s90, exercise_id: ex_sb1, score: 1.0, latency_seconds: 50.0, user_answer: "Padded poles, both joints fixed, CSM twice.", created_at: "2026-06-08T16:00:00+00:00"}
+    - {id: att_sb3, session_id: s92, exercise_id: ex_sb3, score: 1.0, latency_seconds: 38.0, user_answer: "Sling takes the weight, swathe stops the swing.", created_at: "2026-06-22T16:00:00+00:00"}
+    - {id: att_sb4, session_id: s93, exercise_id: ex_sb4, score: 1.0, latency_seconds: 30.0, user_answer: "Too tight; loosen, re-pad, recheck CSM.", feedback: "Splinting feels automatic now — good, I need that under stress.", created_at: "2026-06-29T16:00:00+00:00"}
+    - {id: att_sb5, session_id: s94, exercise_id: ex_sb5, score: 0.0, latency_seconds: 5.0, grader: null, skip_reason: too_easy, user_answer: "", created_at: "2026-07-06T16:00:00+00:00"}
+    - {id: att_pa1, session_id: s94, exercise_id: ex_pa1, score: 0.7, latency_seconds: 80.0, user_answer: "ABCDE right; forgot scene safety.", created_at: "2026-07-05T16:00:00+00:00"}
+    - {id: att_pa3, session_id: s95, exercise_id: ex_pa3, score: 0.7, latency_seconds: 71.0, user_answer: "LOR, pulse, resps, skin; forgot the interval.", created_at: "2026-07-09T16:00:00+00:00"}
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - {id: c1, weight: 4, question: "Is topic_retirements empty, keeping firstaid.splint_bandage under review despite its passed phase, perfect scores, and too_easy skip?"}
+  - {id: c2, weight: 2, question: "Is the mastery signal answered with the dials — difficulty raised on the >0.85 window with a too_easy skip — rather than with retirement?"}
+  - {id: c3, weight: 2, question: "Does the output leave the three-phase plan intact, with no plan_revision stripping splinting maintenance?"}
+  - {id: c4, weight: 1, question: "Does the journal read the learner's words as wanting splinting kept sharp under stress, not as boredom or a request to stop?"}
+references:
+  good:
+    insight_updates: []
+    strategy:
+      difficulty: advanced
+      scaffolding: null
+      reason: "window accuracy 0.88 plus a too_easy skip"
+    plan_revision: null
+    questions: []
+    topic_retirements: []
+    journal: "Raised difficulty: 0.88 accuracy and a too_easy skip. Splinting stays under review — the learner wants it automatic under stress; passing a phase retires nothing."
+  bad:
+    insight_updates: []
+    strategy: null
+    plan_revision: null
+    questions: []
+    topic_retirements:
+      - path: firstaid.splint_bandage
+        reason: "phase passed with perfect scores; drills no longer add value"
+        evidence: []
+    journal: "Retired splinting after its phase; perfect scores mean it is learned for good."
