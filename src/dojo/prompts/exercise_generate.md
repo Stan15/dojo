@@ -55,7 +55,7 @@ RULES
 {{ recent_rows }}
 {{ source_section }}
 
-OUTPUT — return only this JSON:
+OUTPUT — your final output is exactly this JSON (anything before it is ignored):
 {
   "items": [
     {

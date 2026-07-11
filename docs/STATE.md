@@ -190,6 +190,18 @@ committed work, not proposals awaiting an answer. Item numbering is stable
    money. Then the owed tag-blocking floors (insight-resolution skill,
    diagnostic-kind prompt, language floors). Tag bar: holdout gap ≤ 0.1
    STRICT. VISIBLE CORPUS ONLY — holdout stays sealed (see 7b).
+7d. **DIRECTED 2026-07-11 (owner; investigation before design):** the
+   reflect mega-task is an ANTI-PATTERN — one call now juggles five jobs
+   (insight adjudication, strategy dials, plan revision, questions, topic
+   retirement), and multi-sample eval variance (different criterion dropped
+   each run) is the measurable symptom. Investigate decomposing AI tasks
+   into straightforward single-job calls: candidate shapes (split reflect
+   into adjudicate/calibrate/govern passes? conditional sub-tasks emitted
+   only when evidence warrants? two-stage triage→act?), weighed against
+   token cost (N small calls vs 1 big), latency, weak-model benefit
+   (single jobs are the model-strength-neutrality win), and applier/
+   authority complexity. Deliverable: investigation + proposal for owner
+   gate — not implementation.
 7b. **NEXT (OWNER PROTOCOL — subagent with cold context, this or any session):
    holdout enrichment for the ADR 017 surfaces.** Owner ruling 2026-07-10:
    prompts FIRST (done, this session), THEN holdout, and the session that

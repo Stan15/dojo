@@ -19,7 +19,7 @@ RULES
 ## REGISTRY
 {{ campaign_lines_and_topic_paths }}
 
-OUTPUT — return only this JSON:
+OUTPUT — your final output is exactly this JSON (anything before it is ignored):
 {"action": "attach|new_topic|propose_campaign|stay_inbox", "campaign": null,
  "topic_path": null, "new_name": null, "new_mission": null,
  "confidence": "high|low", "reason": "≤ {{ reason_words }} words", "seed": false}

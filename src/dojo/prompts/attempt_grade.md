@@ -29,6 +29,6 @@ RULES
 ## ANSWER
 {{ user_answer }}
 
-OUTPUT — return only this JSON:
+OUTPUT — your final output is exactly this JSON (anything before it is ignored):
 {"score": 0.0, "evidence": "...", "feedback": "...", "error_tag": null, "knowledge_gap": false}
 Check: score is one of 1.0/0.7/0.3/0.0; evidence is quoted verbatim from ANSWER.

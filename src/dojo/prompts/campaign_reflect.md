@@ -71,7 +71,7 @@ RULES
 ## FEEDBACK
 {{ learner_feedback_or_none }}
 
-OUTPUT — return only this JSON:
+OUTPUT — your final output is exactly this JSON (anything before it is ignored):
 {
   "insight_updates": [
     {"op": "create|update|resolve", "id": null, "key": "dotted.lowercase.label",

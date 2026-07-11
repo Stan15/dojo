@@ -40,7 +40,10 @@ class TestInventory:
     @pytest.mark.parametrize("name", TASK_TEMPLATES)
     def test_task_templates_demand_json_only_output(self, name: str):
         text = (_templates_dir() / name).read_text(encoding="utf-8")
-        assert "return only this JSON" in text
+        # Reasoning-neutral output anchor (owner ruling 2026-07-11): format
+        # is anchored, deliberation is neither invited nor suppressed.
+        assert "your final output is exactly this JSON" in text
+        assert "return only this JSON" not in text
         closing_lines = text.rstrip().splitlines()[-3:]
         assert any(line.startswith("Check") for line in closing_lines), (
             "every task template ends with a self-check line (craft rule 9)"

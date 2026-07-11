@@ -36,7 +36,7 @@ RULES
 ## EXISTING TOPICS
 {{ registry_topic_paths_or_none }}
 
-OUTPUT — return only this JSON:
+OUTPUT — your final output is exactly this JSON (anything before it is ignored):
 {
   "mission": "...",
   "topics": [{"path": "a.b.c", "kind": "recall|skill", "summary": "≤ {{ topic_summary_words }} words — a hook, not a syllabus"}],

@@ -35,7 +35,11 @@ money, and pedagogy must survive weak execution:
 7. **Example skeleton, not JSON Schema.** The output contract is a literal JSON
    skeleton with inline `//` constraints — cheaper than a `model_json_schema()`
    dump and more reliably followed. Formal validation stays server-side.
-   Skeletons instruct "return only this JSON" to cut wrapper prose.
+   Skeletons anchor with "your final output is exactly this JSON (anything
+   before it is ignored)" — format-anchored but REASONING-NEUTRAL (owner
+   ruling 2026-07-11): never invite deliberation (weak models burn tokens),
+   never suppress it (hard scenarios need it); extraction consumes the last
+   JSON object either way, so the line simply tells the truth.
 8. **One anti-goal named per prompt.** Each prompt states its characteristic
    failure ("an inflated score schedules material away before it is learned") —
    naming the failure mode measurably outperforms listing virtues.
@@ -142,7 +146,7 @@ RULES
 {{recent_rows}}
 {{source_section}}
 
-OUTPUT — return only this JSON:
+OUTPUT — your final output is exactly this JSON (anything before it is ignored):
 {
   "items": [
     {
@@ -204,7 +208,7 @@ RULES
 ## ANSWER
 {{user_answer}}
 
-OUTPUT — return only this JSON:
+OUTPUT — your final output is exactly this JSON (anything before it is ignored):
 {"score": 0.0, "evidence": "...", "feedback": "...", "error_tag": null}
 Check: score is one of 1.0/0.7/0.3/0.0; evidence is quoted verbatim from ANSWER.
 ```
@@ -271,7 +275,7 @@ RULES
 ## FEEDBACK
 {{learner_feedback_or_none}}
 
-OUTPUT — return only this JSON:
+OUTPUT — your final output is exactly this JSON (anything before it is ignored):
 {
   "insight_updates": [
     {"op": "create|update|resolve", "id": null, "text": "...", "evidence": ["att_id"], "reason": "..."}
@@ -333,7 +337,7 @@ RULES
 ## EXISTING TOPICS
 {{registry_topic_paths_or_none}}
 
-OUTPUT — return only this JSON:
+OUTPUT — your final output is exactly this JSON (anything before it is ignored):
 {
   "mission": "...",        // ≤ 40 words; what the learner will be able to DO
   "topics": [{"path": "a.b.c", "kind": "recall|skill", "summary": "≤ 12 words"}],
@@ -372,7 +376,7 @@ RULES
 ## REGISTRY
 {{campaign_lines_and_topic_paths}}
 
-OUTPUT — return only this JSON:
+OUTPUT — your final output is exactly this JSON (anything before it is ignored):
 {"action": "attach|new_topic|propose_campaign|stay_inbox", "campaign": null,
  "topic_path": null, "new_name": null, "new_mission": null,
  "confidence": "high|low", "reason": "≤ 12 words", "seed": false}

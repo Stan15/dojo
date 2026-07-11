@@ -57,7 +57,7 @@ difficulty=intermediate, scaffolding=medium, mode=practice
 ## SOURCE
 Le conditionnel passé se forme avec l'auxiliaire au conditionnel présent suivi du participe passé.
 
-OUTPUT — return only this JSON:
+OUTPUT — your final output is exactly this JSON (anything before it is ignored):
 {
   "items": [
     {
