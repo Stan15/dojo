@@ -109,15 +109,77 @@ def compile_step(store: DojoStore, campaign_id: str, spec: dict):
     raise ValueError(f"unknown compile fn: {fn}")
 
 
+# Optional live-stream observer (benchmark TUI, owner ask 2026-07-11):
+# when set, run_command switches to an incremental Popen read and feeds
+# every stdout chunk to the observer as it arrives — the model's speed and
+# thinking become visible in real time. Behavior (output, errors, timeout
+# semantics) is identical either way; None keeps the simple blocking path.
+_STREAM_OBSERVER = None
+
+
+def set_stream_observer(cb) -> None:
+    """cb(event: dict) with events {"kind": "call_start", "command": …} and
+    {"kind": "chunk", "text": …}; pass None to disable streaming."""
+    global _STREAM_OBSERVER
+    _STREAM_OBSERVER = cb
+
+
 def run_command(command: str, prompt: str, timeout: int) -> str:
     """Pipes a prompt to a model command's stdin, returns stdout; nonzero
-    exit raises with the stderr head."""
-    proc = subprocess.run(
-        shlex.split(command), input=prompt, capture_output=True, text=True, timeout=timeout,
+    exit raises with the stderr head. With a stream observer set, stdout is
+    read incrementally and mirrored to the observer chunk by chunk."""
+    if _STREAM_OBSERVER is None:
+        proc = subprocess.run(
+            shlex.split(command), input=prompt, capture_output=True, text=True, timeout=timeout,
+        )
+        if proc.returncode != 0:
+            raise RuntimeError(f"command exited {proc.returncode}: {proc.stderr[:300]}")
+        return proc.stdout
+
+    import os
+    import selectors
+    import time as _time
+
+    observer = _STREAM_OBSERVER
+    observer({"kind": "call_start", "command": command})
+    proc = subprocess.Popen(
+        shlex.split(command), stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE, text=True,
     )
+    try:
+        proc.stdin.write(prompt)
+        proc.stdin.close()
+    except BrokenPipeError:
+        pass  # command died early; the exit-code check below reports it
+    sel = selectors.DefaultSelector()
+    for stream in (proc.stdout, proc.stderr):
+        os.set_blocking(stream.fileno(), False)
+        sel.register(stream, selectors.EVENT_READ)
+    out_parts: list[str] = []
+    err_parts: list[str] = []
+    deadline = _time.monotonic() + timeout
+    open_streams = 2
+    while open_streams:
+        budget = deadline - _time.monotonic()
+        if budget <= 0:
+            proc.kill()
+            raise subprocess.TimeoutExpired(command, timeout)
+        for key, _ in sel.select(timeout=min(budget, 0.5)):
+            data = key.fileobj.read(4096)
+            if data is None:
+                continue
+            if data == "":
+                sel.unregister(key.fileobj)
+                open_streams -= 1
+            elif key.fileobj is proc.stdout:
+                out_parts.append(data)
+                observer({"kind": "chunk", "text": data})
+            else:
+                err_parts.append(data)
+    proc.wait(timeout=max(1.0, deadline - _time.monotonic()))
     if proc.returncode != 0:
-        raise RuntimeError(f"command exited {proc.returncode}: {proc.stderr[:300]}")
-    return proc.stdout
+        raise RuntimeError(f"command exited {proc.returncode}: {''.join(err_parts)[:300]}")
+    return "".join(out_parts)
 
 
 def fulfill_step(store: DojoStore, compiled, fulfiller: str, timeout: int):

@@ -1814,15 +1814,76 @@ def cmd_benchmark(args: argparse.Namespace) -> int:
             console.print("  [dim]compliance tier: scored by validators — no judge involved[/dim]")
         console.print("  [dim]This drives your models on real scenarios — expect several minutes.[/dim]\n")
 
-    def progress(msg: str) -> None:
-        if not _use_json(args):
-            console.print(f"  [dim]·[/dim] {msg}")
+    # Live pane (owner ask 2026-07-11: "visualize the speed and its
+    # reasoning"): anchored summary on top, a rolling tail of the model's
+    # raw stream below — deliberately NOT scrollable; the full output lands
+    # in the report JSON for reading, the pane is for watching it think.
+    live_mode = not _use_json(args) and sys.stdout.isatty()
 
-    with tempfile.TemporaryDirectory(prefix="dojo-bench-") as workdir:
-        report = run_benchmark(
-            driver=driver, judge=judge, workdir=Path(workdir),
-            timeout=args.timeout, tiers=tiers, progress=progress,
-        )
+    if not live_mode:
+        def progress(msg: str) -> None:
+            if not _use_json(args):
+                console.print(f"  [dim]·[/dim] {msg}")
+
+        with tempfile.TemporaryDirectory(prefix="dojo-bench-") as workdir:
+            report = run_benchmark(
+                driver=driver, judge=judge, workdir=Path(workdir),
+                timeout=args.timeout, tiers=tiers, progress=progress,
+            )
+    else:
+        import time as _time
+        from collections import deque
+
+        from rich.console import Group
+        from rich.live import Live
+        from rich.text import Text
+
+        from .evals.runner import set_stream_observer
+
+        TAIL_LINES = 14
+        state = {"stage": "starting…", "done": 0, "call_start": 0.0, "chars": 0,
+                 "tail": deque(maxlen=4096)}
+
+        def _render():
+            elapsed = max(_time.monotonic() - state["call_start"], 1e-6)
+            toks = state["chars"] / 4 / elapsed if state["chars"] else 0.0
+            head = Text.assemble(
+                ("🥋 ", ""), (driver, "cyan"),
+                (f"  ·  {state['stage']}", "bold"),
+                (f"  ·  {state['done']} step(s) done", "dim"),
+                (f"  ·  ≈{toks:5.1f} tok/s", "yellow" if toks else "dim"),
+            )
+            tail = "".join(state["tail"]).splitlines()[-TAIL_LINES:]
+            body = Text("\n".join(tail) or "(waiting for the model…)", style="dim")
+            return Panel(Group(head, Text("─" * 60, style="dim"), body),
+                         title="[bold]live[/bold]", border_style="cyan")
+
+        with Live(_render(), console=console, refresh_per_second=8,
+                  vertical_overflow="crop") as live:
+            def progress(msg: str) -> None:
+                state["stage"] = msg
+                state["done"] += 1
+                live.update(_render())
+
+            def observer(event: dict) -> None:
+                if event["kind"] == "call_start":
+                    state["call_start"] = _time.monotonic()
+                    state["chars"] = 0
+                    state["tail"].clear()
+                else:
+                    state["chars"] += len(event["text"])
+                    state["tail"].extend(event["text"])
+                live.update(_render())
+
+            set_stream_observer(observer)
+            try:
+                with tempfile.TemporaryDirectory(prefix="dojo-bench-") as workdir:
+                    report = run_benchmark(
+                        driver=driver, judge=judge, workdir=Path(workdir),
+                        timeout=args.timeout, tiers=tiers, progress=progress,
+                    )
+            finally:
+                set_stream_observer(None)
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
     out_path = Path(args.output or f"dojo-benchmark-{report['pair']}-{stamp}.json")
