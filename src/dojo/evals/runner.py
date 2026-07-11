@@ -164,6 +164,21 @@ def _evidence_core(quote: str) -> str:
     return _norm(quote).strip("…. \"'“”‘’")
 
 
+def evidence_haystacks(output_text: str) -> tuple[str, ...]:
+    """The surfaces an honest judge quote may match: the raw output, and the
+    output with JSON escapes decoded — a judge reads STRING VALUES, so its
+    verbatim quote of LaTeX/regex/code arrives decoded (\\[ → \\\\[ in raw
+    source). Backslash decoding runs FIRST, mirroring JSON semantics (eval
+    finding 2026-07-11: every honest pass on a LaTeX-heavy output was being
+    discarded as unproven)."""
+    decoded = (
+        output_text.replace("\\\\", "\\")
+        .replace("\\n", " ").replace("\\t", " ").replace('\\"', '"')
+    )
+    legacy = output_text.replace("\\n", " ").replace("\\t", " ").replace('\\"', '"')
+    return (_norm(output_text), _norm(legacy), _norm(decoded))
+
+
 def render_judge_prompt(scenario_context: str, output_text: str, criteria: list[dict]) -> str:
     """Fills judge_prompt.md with the scenario context, the output on trial,
     and the criterion questions."""
@@ -190,13 +205,7 @@ def judge_output(
     raw = run_command(judge_cmd, prompt, timeout)
     data = service.extract_json(raw)
     got = {v.get("id"): v for v in data.get("verdicts", []) if isinstance(v, dict)}
-
-    # Honest quotes may differ from the JSON-rendered output only by escape
-    # sequences (\n in string values) — accept both surfaces.
-    haystacks = (
-        _norm(output_text),
-        _norm(output_text.replace("\\n", " ").replace("\\t", " ").replace('\\"', '"')),
-    )
+    haystacks = evidence_haystacks(output_text)
 
     total_weight, earned, discarded, verdicts = 0.0, 0.0, [], {}
     for c in criteria:

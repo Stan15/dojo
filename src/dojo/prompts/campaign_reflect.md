@@ -49,8 +49,9 @@ RULES
    are maintained by design.
 6. Every change carries a `reason` ≤ {{ reason_words }} words — it becomes the
    audit journal. `journal` (≤ {{ journal_words }} words) names the EVIDENCE —
-   the accuracy, the seconds, the repeated tag — not just the verdict, and
-   says "no change: <why>" when holding still (in the learner's language,
+   the accuracy, the seconds, the repeated tag, and when FEEDBACK drove a
+   change, the learner's stated reason in their terms — not just the verdict;
+   say "no change: <why>" when holding still (in the learner's language,
    like all journal prose).
 7. Write insight text, questions, and journal in the learner's language
    (the language of their answers/FEEDBACK); keys stay lowercase English.
