@@ -59,25 +59,34 @@ back into a learner profile that sharpens the next session.
 curl -fsSL https://raw.githubusercontent.com/Stan15/dojo/main/install.sh | sh
 ```
 
-(Prefer to see what you're running? `git clone https://github.com/Stan15/dojo
-&& cd dojo && sh install.sh` — same installer, your checkout.)
+Then your entire life with dojo is two commands:
 
-**Using an AI coding agent (the happy path)?** Install the skill and you're done
-— no API keys, no configuration. Your agent fulfills dojo's AI work itself:
+```bash
+dojo learn "I want to learn Japanese"   # start something — dojo plans it with you
+dojo daily                              # a few minutes of practice — the habit
+```
+
+**That's the whole product.** One command when you want to learn something,
+one command you come back to every day. Everything below is why those few
+minutes actually stick.
+
+**Connect the intelligence** (one-time). With an AI coding agent — the happy
+path — install the skill and you're done; your agent fulfills dojo's AI work
+itself, no API keys:
 
 ```bash
 dojo install claude   # or: dojo install --dest <your agent's skills dir>
 ```
 
-Then just tell your agent what you want to learn.
-
-**No agent?** Point dojo at any command that reads a prompt on stdin and prints
-a response — one string, no wrapper scripts:
+No agent? Point dojo at any command that reads a prompt and prints a
+response — one string, no wrappers:
 
 ```bash
-dojo config set model.command "codex exec"        # or "ollama run llama3", …
-dojo task run                                     # drain pending AI work
+dojo config set model.command "codex exec"   # or "ollama run qwen3:4b", …
 ```
+
+(Prefer to inspect before piping to `sh`? `git clone
+https://github.com/Stan15/dojo && cd dojo && sh install.sh` — same installer.)
 
 **Your data travels.** `dojo export <folder>` writes your entire store as a
 fresh markdown tree — read entity-by-entity through the storage layer, blind to
