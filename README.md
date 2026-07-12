@@ -70,19 +70,21 @@ dojo daily                              # a few minutes of practice — the habi
 one command you come back to every day. Everything below is why those few
 minutes actually stick.
 
-**Connect the intelligence** (one-time). With an AI coding agent — the happy
-path — install the skill and you're done; your agent fulfills dojo's AI work
-itself, no API keys:
+**Using an AI coding agent (the happy path)?** Install the skill and you're done
+— no API keys, no configuration. Your agent fulfills dojo's AI work itself:
 
 ```bash
 dojo install claude   # or: dojo install --dest <your agent's skills dir>
 ```
 
-No agent? Point dojo at any command that reads a prompt and prints a
-response — one string, no wrappers:
+Then just tell your agent what you want to learn.
+
+**No agent?** Point dojo at any command that reads a prompt on stdin and prints
+a response — one string, no wrapper scripts:
 
 ```bash
-dojo config set model.command "codex exec"   # or "ollama run qwen3:4b", …
+dojo config set model.command "codex exec"        # or "ollama run llama3", …
+dojo task run                                     # drain pending AI work
 ```
 
 (Prefer to inspect before piping to `sh`? `git clone
