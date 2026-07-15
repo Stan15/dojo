@@ -2268,6 +2268,24 @@ def cmd_campaign_list(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_amend(args: argparse.Namespace) -> int:
+    """`dojo amend "<answer>"`: replace a previous answer in the current
+    session while its grade is pending (--back N reaches further back). The
+    agent door for "wait, change my last answer" — humans use /back inside
+    the session; both ride the same API."""
+    api = DojoAPI(_db_path(args))
+    res = api.amend_previous_answer(args.answer, steps_back=args.back)
+    if _use_json(args):
+        _print_json(res)
+        return 0 if res.get("ok") else 1
+    if res.get("ok"):
+        console.print(f"[green]✓ amended[/green] [dim](was: {res['superseded'][:60]})[/dim] — {res['next']}")
+        return 0
+    hint = f" [dim]({res['next']})[/dim]" if res.get("next") else ""
+    console.print(f"[yellow]{res['error']}[/yellow]{hint}")
+    return 1
+
+
 def cmd_topic_retire(args: argparse.Namespace) -> int:
     """`dojo topic retire <path>`: the care-exit (ADR 017 §6) — reviews for
     this topic stop now; always reversible with `dojo topic revive`."""
@@ -2612,6 +2630,16 @@ def build_parser() -> argparse.ArgumentParser:
     p_ins_resolve.add_argument("insight_id")
     p_ins_resolve.add_argument("--because", required=True, help="your reason, verbatim — it feeds the next reflection")
     p_ins_resolve.set_defaults(func=cmd_insights)
+
+    p_amend = sub.add_parser(
+        "amend",
+        help="replace a previous answer while its grade is pending "
+             "(in-session: /back; landed grades: dojo correct)",
+    )
+    p_amend.add_argument("answer")
+    p_amend.add_argument("--back", type=int, default=1,
+                         help="how many questions back (default 1)")
+    p_amend.set_defaults(func=cmd_amend)
 
     p_topic = sub.add_parser(
         "topic",

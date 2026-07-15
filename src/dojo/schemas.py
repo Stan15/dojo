@@ -566,8 +566,9 @@ class Attempt(StoredEntity):
     origin: Optional[str] = None  # "extension" marks appetite-mode evidence (dojo more); None = the ritual
     skip_reason: Optional[str] = None
     feedback: Optional[str] = None  # the learner's own comment (reflection input)
-    grader: Optional[str] = None  # "exact" | "self" | "ai" — I10: who produced the score
+    grader: Optional[str] = None  # "exact" | "self" | "ai" | "exposure" — I10: who produced the score
     grade_run: Optional[str] = None  # the attempt.grade task whose trace backs an AI score
+    prior_answers: List[str] = Field(default_factory=list)  # earlier answers superseded by /back amendment (ADR 017-era; provenance never deletes)
     grade_feedback: Optional[str] = None  # grader → learner, one correction
     grade_evidence: Optional[str] = None  # verbatim quote from the answer
     error_tag: Optional[str] = None  # compact pattern label, feeds reflection

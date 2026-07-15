@@ -192,7 +192,7 @@ def practice_loop(api: DojoAPI, session: dict[str, Any]) -> None:
     total = len(session["exercise_ids"])
     done = session.get("current_index", 0)
     console.print(f"\n[bold]Session[/bold] — {total - done} prompt(s) to go. "
-                  "[dim](/why, /skip too_easy|too_hard|forgot|bad_quality, /quit)[/dim]\n")
+                  "[dim](/why, /back [n], /skip too_easy|too_hard|forgot|bad_quality, /quit)[/dim]\n")
     # Free-form answers grade at the END, in one batch: a model call between
     # every question stalls the human's flow, and scores never gated
     # progression anyway (use-case audit D1).
@@ -234,6 +234,35 @@ def practice_loop(api: DojoAPI, session: dict[str, Any]) -> None:
             console.print("[dim]Paused — dojo daily resumes right here.[/dim]")
             _settle_grades(api, pending_grades)
             return
+        if answer.strip().startswith("/back"):
+            # Amend an earlier answer (owner-approved supersede semantics):
+            # /back reaches one question back, /back N reaches N. Only
+            # pending grades amend; landed ones point at dojo correct.
+            parts = answer.strip().split()
+            steps = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 1
+            peek = api.amend_previous_answer("", session_id=session["id"],
+                                             steps_back=steps, peek=True)
+            if not peek.get("ok"):
+                hint = f" [dim]({peek['next']})[/dim]" if peek.get("next") else ""
+                console.print(f"  [yellow]{peek['error']}[/yellow]{hint}\n")
+                continue
+            console.print(Panel(
+                f"{peek['prompt']}\n\n[dim]your answer:[/dim] {peek['current_answer']}",
+                title=f"[bold]← back {steps}[/bold]", border_style="yellow"))
+            new_ans = _input("[bold yellow]new answer ('-' keeps it) ›[/bold yellow] ").strip()
+            if new_ans and new_ans != "-":
+                amended = api.amend_previous_answer(
+                    new_ans, session_id=session["id"], steps_back=steps)
+                if amended.get("ok"):
+                    console.print("  [green]✓ amended — grades with the batch at the end[/green]\n")
+                    for pg in pending_grades:
+                        if pg.get("attempt_id") == amended["attempt_id"]:
+                            pg["tasks"] = amended["tasks"]  # stale grade task superseded
+                else:
+                    console.print(f"  [yellow]{amended['error']}[/yellow]\n")
+            else:
+                console.print("  [dim]kept as it was[/dim]\n")
+            continue
         if answer.strip().startswith("/skip"):
             parts = answer.strip().split()
             reason = parts[1] if len(parts) > 1 else "forgot"

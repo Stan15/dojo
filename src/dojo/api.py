@@ -1892,6 +1892,97 @@ class DojoAPI:
             "total_exercises": len(exercise_ids),
         }
 
+    def amend_previous_answer(
+        self, user_answer: str, session_id: str | None = None, steps_back: int = 1,
+        peek: bool = False,
+    ) -> dict[str, Any]:
+        """Replaces an earlier answer in the current session while its grade
+        is still PENDING (owner-approved supersede semantics, 2026-07-13).
+        The superseded answer is kept verbatim in `prior_answers` — both are
+        the learner's words; provenance never deletes. The stale grade task
+        is marked failed and a fresh one is emitted for the new answer.
+        Landed scores refuse with the `dojo correct` door: FSRS is never
+        double-fed. Repeated amendments of the same answer accumulate.
+        `peek=True` validates and returns the target's prompt and current
+        answer without changing anything (the human /back shows it before
+        asking for the replacement).
+
+        Returns:
+            `{ok, attempt_id, prompt, superseded, tasks}` on success;
+            `{ok, prompt, current_answer}` for a peek;
+            `{ok: False, error, next?}` when the target can't be amended.
+        """
+        active = self.store.sessions.get_active()
+        target_session = active
+        if session_id and not (active and active.id == session_id):
+            target_session = self.store.sessions.get_archived(session_id)
+        if not target_session:
+            # A session archives the instant its last answer lands, but its
+            # grades are still pending in the end-of-session batch — that is
+            # precisely when "wait, change my last answer" arrives. The most
+            # recent completed session stays amendable (pending-grade checks
+            # below still guard every target).
+            archived = self.store.sessions.list_archived()
+            if archived:
+                target_session = max(archived, key=lambda s: s.created_at)
+        if not target_session:
+            return {"ok": False, "error": "no practice session to amend in"}
+        if steps_back < 1:
+            return {"ok": False, "error": "steps_back must be >= 1"}
+        target_idx = target_session.current_index - steps_back
+        if target_idx < 0:
+            return {"ok": False, "error": "that's before this session started"}
+        exercise_id = target_session.exercise_ids[target_idx]
+
+        campaign_id, attempt = None, None
+        for camp in self.store.campaigns.list():
+            for a in reversed(self.store.attempts.list(camp.id)):
+                if a.session_id == target_session.id and a.exercise_id == exercise_id:
+                    campaign_id, attempt = camp.id, a
+                    break
+            if attempt:
+                break
+        if attempt is None:
+            return {"ok": False, "error": f"no recorded answer for step -{steps_back} (was it skipped?)"}
+
+        pending = attempt.grader is None and attempt.score == 0.0 and not attempt.skip_reason
+        if not pending:
+            hint = ("dojo correct adjusts a landed grade"
+                    if attempt.grader in ("exact", "ai", "self", "auto")
+                    else "study-card confirmations have nothing to amend")
+            return {"ok": False, "error": "that answer's grade already landed", "next": hint}
+
+        if peek:
+            return {"ok": True, "prompt": attempt.prompt,
+                    "current_answer": attempt.user_answer or ""}
+
+        superseded = attempt.user_answer or ""
+        attempt.prior_answers = [*attempt.prior_answers, superseded]
+        attempt.user_answer = user_answer.strip()
+        self.store.attempts.save(campaign_id, attempt)
+
+        # Retire the stale grade task honestly; emit a fresh one for the new
+        # answer. The old task's trace stays on disk (provenance).
+        from .tasks import flows
+
+        for t in self.store.tasks.list(filters={"status": "pending"}):
+            if t.kind == "attempt.grade" and t.context.get("attempt_id") == attempt.id:
+                t.status = "failed"
+                t.error_history = [*t.error_history, "superseded: the learner amended this answer"]
+                self.store.tasks.save(t)
+        campaign = self.store.campaigns.get(campaign_id)
+        exercise = self.store.exercises.get(campaign_id, exercise_id)
+        task = flows.request_grade(self.store, campaign, exercise, attempt)
+        self.log.info(f"Amended attempt {attempt.id} (step -{steps_back}); grade task {task.id} re-emitted")
+        return {
+            "ok": True,
+            "attempt_id": attempt.id,
+            "prompt": attempt.prompt,
+            "superseded": superseded,
+            "tasks": [flows.task_ref(task)],
+            "next": "the new answer grades with the batch at session end",
+        }
+
     # ==========================================
     # Progress & Metrics Operations
     # ==========================================
