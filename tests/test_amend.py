@@ -114,3 +114,17 @@ class TestBackInSession:
         assert len(atts) == 1
         assert atts[0].user_answer == "much better answer"
         assert atts[0].prior_answers == ["first stab"]
+
+
+class TestCampaignIdCollisions:
+    """Owner 2026-07-15: archived ids count as taken (re-archiving a reused
+    id would clobber the earlier archive); a suffixed id suffixes the
+    display name too, so no two campaigns ever read identically."""
+
+    def test_archived_id_is_taken_and_name_follows_suffix(self, tmp_path: Path):
+        api = DojoAPI(tmp_path)
+        api.create_campaign(name="French", topic_path="french", mission="Speak.")
+        api.store.campaigns.archive("french")
+        again = api.create_campaign(name="French", topic_path="french", mission="Again.")
+        assert again["id"] == "french-2"
+        assert again["name"] == "French (2)"

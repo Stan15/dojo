@@ -207,6 +207,17 @@ committed work, not proposals awaiting an answer. Item numbering is stable
    prompt work was pending (freeze predates the leak); item 7d MUST be
    executed by a fresh session. Non-prompt work (benchmark runs, gate,
    relaying blind-subagent reports) unaffected.
+7f. **DIRECTED 2026-07-15 (owner; PROMPT-WORK HALF for the fresh session):
+   generated campaign names.** `dojo learn "<long goal>"` currently makes
+   the raw goal the campaign name+id (owner's store: camp_i-have-terrible-
+   memory). Design (owner-reviewed in conversation): PlanResult gains
+   `name` (≤ ROUTE_NEW_NAME_WORDS=4, same cap as route new_name), one
+   payload line lists existing campaign names (prevention), template
+   states the cap; shown in the proposal panel for approval. The
+   deterministic COLLISION FLOOR (id/display suffixing across all creation
+   doors, archived ids count as taken) is code and ships separately
+   (this session). Goal text stays verbatim in mission — the name is a
+   label, labels are AI work.
 7d. **DIRECTED 2026-07-11 (owner; investigation before design — FRESH
    SESSION ONLY, see 7e):** the
    reflect mega-task is an ANTI-PATTERN — one call now juggles five jobs

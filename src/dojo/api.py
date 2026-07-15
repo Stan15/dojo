@@ -2789,13 +2789,23 @@ class DojoAPI:
         self.log.info(f"Creating campaign: '{name}' (topic_path={topic_path})")
         # Id from the NAME (distinctive), never silently overwriting an existing
         # campaign (use-case audit A2: topic-root ids collided — a second
-        # git-adjacent campaign would have destroyed the first).
+        # git-adjacent campaign would have destroyed the first). Archived ids
+        # count as taken too (owner 2026-07-15): re-archiving a reused id
+        # would clobber the earlier archive's history. When the id suffixes,
+        # the display name follows ("French (2)") so two campaigns never
+        # read identically in any list.
+        def _id_taken(cid: str) -> bool:
+            if self.store.campaigns.get(cid) is not None:
+                return True
+            return (self.store.dojo_dir / "archive" / "campaigns" / f"camp_{cid}").exists()
+
         campaign_id = slugify(name) or slugify(topic_path)
-        if self.store.campaigns.get(campaign_id) is not None:
+        if _id_taken(campaign_id):
             suffix = 2
-            while self.store.campaigns.get(f"{campaign_id}-{suffix}") is not None:
+            while _id_taken(f"{campaign_id}-{suffix}"):
                 suffix += 1
             campaign_id = f"{campaign_id}-{suffix}"
+            name = f"{name} ({suffix})"
 
         # Default attack plan
         plan = [
