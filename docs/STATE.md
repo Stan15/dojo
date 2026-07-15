@@ -215,9 +215,14 @@ committed work, not proposals awaiting an answer. Item numbering is stable
    payload line lists existing campaign names (prevention), template
    states the cap; shown in the proposal panel for approval. The
    deterministic COLLISION FLOOR (id/display suffixing across all creation
-   doors, archived ids count as taken) is code and ships separately
-   (this session). Goal text stays verbatim in mission — the name is a
-   label, labels are AI work.
+   doors, archived ids count as taken) is code and shipped (cff9966).
+   Goal text stays verbatim in mission — the name is a label, labels are
+   AI work. Ride-alongs for the same block (owner field flow 2026-07-15):
+   (a) `learn extend`'s already-in-plan hint must distinguish "scheduled,
+   LATER phase" (right door: `dojo start --topic <path>` — topic-boost is
+   phase-gated and does nothing until that phase activates) from "already
+   active" (topic-boost is correct); (b) `dojo campaign rename <id>
+   "<name>"` so existing paragraph-named campaigns can be fixed in place.
 7d. **DIRECTED 2026-07-11 (owner; investigation before design — FRESH
    SESSION ONLY, see 7e):** the
    reflect mega-task is an ANTI-PATTERN — one call now juggles five jobs
