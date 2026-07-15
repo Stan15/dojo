@@ -435,10 +435,35 @@ def plan_flow(api: DojoAPI, *, goal: str, level: Optional[str], context: Optiona
         console.print(f"[dim]Kept as a proposal — dojo campaign create --from-task {task.id}[/dim]")
         return 0
     result = materialize(task.id)
-    console.print(f"[bold green]Campaign created:[/bold green] {result['id']} — "
-                  "[bold]dojo daily[/bold] starts the first session.")
-    if confirm("Start practicing now?"):
-        return daily_flow(api)
+    console.print(f"[bold green]Campaign created:[/bold green] {result['id']}")
+    if confirm("Start practicing it now?"):
+        return first_session_flow(api, result["id"])
+    console.print("[dim]When you're ready: dojo daily.[/dim]")
+    return 0
+
+
+def first_session_flow(api: DojoAPI, campaign_id: str) -> int:
+    """The first practice right after creating a campaign practices THAT
+    campaign — its calibration questions — never the general daily (owner
+    field report 2026-07-13: "Start practicing now?" resumed an unrelated
+    mid-flight session; the consent was about the new campaign). Any
+    in-progress session is parked honestly: its unattempted exercises stay
+    due and return through dojo daily."""
+    if api.store.sessions.get_active() is not None:
+        console.print("  [dim](pausing your other in-progress session — "
+                      "its remaining prompts return via dojo daily)[/dim]")
+    res = api.start_practice_session(campaign_id=campaign_id, reset=True)
+    if res.get("session") is None:
+        # A virgin campaign has no stock yet — the calibration questions are
+        # a pending generation task. Drain inline, then start for real.
+        if not drain_tasks(api, res.get("tasks") or []):
+            return 1
+        res = api.start_practice_session(campaign_id=campaign_id, reset=True)
+    if res.get("session") is None:
+        console.print("[yellow]Nothing to practice yet — fulfill the pending "
+                      "task(s), then run dojo daily.[/yellow]")
+        return 0
+    practice_loop(api, res["session"])
     return 0
 
 

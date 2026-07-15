@@ -224,3 +224,43 @@ class TestEmptyInputIsNeverDestructive:
         replans = [t for t in api.store.tasks.list() if t.kind == "campaign.plan"]
         assert len(replans) == 2, "the answer triggered the re-plan"
         assert "climbing mostly" in replans[-1].prompt or "climbing mostly" in replans[0].prompt
+
+
+class TestFirstSessionAfterCreate:
+    """Owner field report 2026-07-13: 'Start practicing now?' right after
+    campaign creation resumed an unrelated mid-flight session. The consent
+    is about the NEW campaign — the first session must practice it."""
+
+    def test_first_session_practices_the_new_campaign_not_the_stale_session(
+        self, tmp_path: Path, capsys
+    ):
+        api = DojoAPI(tmp_path)
+        # Campaign A: an in-progress session with prompts remaining.
+        cid_a = api.create_campaign(name="Memory", topic_path="memory", mission="Recall.")["id"]
+        for i in range(2):
+            api.store.exercises.save(cid_a, Exercise(
+                id=f"ex_a{i}", topic_path="memory.core", difficulty="beginner",
+                answer="x", prompt=f"old question {i}",
+            ))
+        from dojo.schemas import PracticeSession
+        api.store.sessions.save_active(PracticeSession(
+            id="sess_stale", exercise_ids=["ex_a0", "ex_a1"],
+        ))
+        # Campaign B: freshly created, its calibration question in stock.
+        cid_b = api.create_campaign(name="Arabic", topic_path="arabic", mission="Read MSA.")["id"]
+        api.store.exercises.save(cid_b, Exercise(
+            id="ex_diag", topic_path="arabic", difficulty="intermediate",
+            quality="diagnostic", prompt="Have you seen Arabic script before?",
+        ))
+
+        with patch.object(interactive, "_input", lambda prompt: "not really"):
+            rc = interactive.first_session_flow(api, cid_b)
+        assert rc == 0
+        out = capsys.readouterr().out
+        assert "Have you seen Arabic script before?" in out
+        assert "old question" not in out, "the stale session must not resume here"
+        assert "pausing your other in-progress session" in out
+        assert [a.exercise_id for a in api.store.attempts.list(cid_b)] == ["ex_diag"]
+        assert api.store.attempts.list(cid_a) == [], "campaign A untouched"
+        active = api.store.sessions.get_active()
+        assert active is None or active.id != "sess_stale"
