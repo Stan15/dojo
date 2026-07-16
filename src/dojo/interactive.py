@@ -184,15 +184,149 @@ def drain_tasks(api: DojoAPI, task_refs: list[dict[str, Any]], *, timeout: int =
 # Practice: one continuous session loop
 # ------------------------------------------------------------------
 
-def practice_loop(api: DojoAPI, session: dict[str, Any]) -> None:
+
+class SessionRenderer:
+    """Transcript mode — the default and the floor (append-only prints in
+    the terminal's native scrollback: copyable, greppable, SSH/tmux-proof).
+    Screen mode subclasses override PRESENTATION only; the session flow in
+    practice_loop is identical in both, so the modes can never drift
+    (display philosophy, owner-approved 2026-07-13)."""
+
+    def header(self, done: int, total: int) -> None:
+        """Prints the session banner with remaining count and commands."""
+        console.print(f"\n[bold]Session[/bold] — {total - done} prompt(s) to go. "
+                      "[dim](/why, /back [n], /skip too_easy|too_hard|forgot|bad_quality, /quit)[/dim]\n")
+
+    def study_card(self, info: dict[str, Any], done: int, total: int) -> None:
+        """Shows a ☆ presentation (prompt + material) as one panel."""
+        console.print(Panel(
+            f"{info['prompt']}\n\n[bold]{info['material']}[/bold]",
+            title=f"[bold]{done} of {total}[/bold] · [cyan]☆ new material[/cyan]",
+            border_style="cyan",
+        ))
+
+    def question(self, info: dict[str, Any], done: int, total: int) -> None:
+        """Shows the current exercise prompt as a panel."""
+        console.print(Panel(info["prompt"],
+                            title=f"[bold]{done} of {total}[/bold]",
+                            border_style="cyan"))
+
+    def amend_review(self, prompt_text: str, current_answer: str, steps: int) -> None:
+        """Shows the /back target: the earlier prompt and its current answer."""
+        console.print(Panel(
+            f"{prompt_text}\n\n[dim]your answer:[/dim] {current_answer}",
+            title=f"[bold]← back {steps}[/bold]", border_style="yellow"))
+
+    def note(self, markup: str) -> None:
+        """Prints a one-line status/feedback message (rich markup)."""
+        console.print(markup)
+
+    def score(self, score: float, note: Optional[str]) -> None:
+        """Prints a grade verdict line (✓/◐/✗ with the optional correction)."""
+        _print_score(score, note)
+
+    def ask(self, prompt: str) -> str:
+        """Collects one line of learner input (tests patch _input beneath)."""
+        return _input(prompt)
+
+    def done(self) -> None:
+        """Session over: settle/summary print in the normal buffer after this."""
+        console.print("[bold green]Session complete.[/bold green]")
+
+
+class ScreenRenderer(SessionRenderer):
+    """Screen mode (opt-in: `dojo config set ui.mode screen` or `--screen`):
+    each step clears and redraws — anchored progress header, a dim tail of
+    what already happened, the current card. v1 is clear-redraw (no alt
+    screen), so input works plainly and nothing can wedge the terminal;
+    the history it scrolls away is DATA, not pixels — the session record
+    and the store keep everything."""
+
+    TAIL = 6
+
+    def __init__(self) -> None:
+        self._history: list[str] = []
+        self._card: Optional[Panel] = None
+        self._done = 0
+        self._total = 0
+
+    def _redraw(self) -> None:
+        console.clear()
+        console.print(f"[bold cyan]🥋 dojo session[/bold cyan] — "
+                      f"[bold]{self._done} of {self._total}[/bold]  "
+                      "[dim]/why · /back [n] · /skip <reason> · /quit[/dim]")
+        for line in self._history[-self.TAIL:]:
+            console.print(f"  [dim]{line}[/dim]")
+        if self._card is not None:
+            console.print(self._card)
+
+    def header(self, done: int, total: int) -> None:
+        """Records progress and redraws the screen."""
+        self._done, self._total = done, total
+        self._redraw()
+
+    def study_card(self, info: dict[str, Any], done: int, total: int) -> None:
+        """Makes the ☆ presentation the current card and redraws."""
+        self._done, self._total = done, total
+        self._card = Panel(
+            f"{info['prompt']}\n\n[bold]{info['material']}[/bold]",
+            title=f"[bold]{done} of {total}[/bold] · [cyan]☆ new material[/cyan]",
+            border_style="cyan")
+        self._redraw()
+
+    def question(self, info: dict[str, Any], done: int, total: int) -> None:
+        """Makes the exercise prompt the current card and redraws."""
+        self._done, self._total = done, total
+        self._card = Panel(info["prompt"], title=f"[bold]{done} of {total}[/bold]",
+                           border_style="cyan")
+        self._redraw()
+
+    def amend_review(self, prompt_text: str, current_answer: str, steps: int) -> None:
+        """Makes the /back target the current card and redraws."""
+        self._card = Panel(
+            f"{prompt_text}\n\n[dim]your answer:[/dim] {current_answer}",
+            title=f"[bold]← back {steps}[/bold]", border_style="yellow")
+        self._redraw()
+
+    def note(self, markup: str) -> None:
+        """Prints the message and folds it into the history tail — notes
+        persist across redraws so the recent story stays visible."""
+        from rich.text import Text
+
+        self._history.append(Text.from_markup(markup.strip()).plain)
+        console.print(markup)
+
+    def score(self, score: float, note: Optional[str]) -> None:
+        """Folds the verdict into the history tail, then prints it."""
+        mark = "✓" if score >= 1.0 else ("◐" if score >= 0.7 else "✗")
+        self._history.append(f"{mark} {score:.1f}" + (f" — {note}" if note else ""))
+        _print_score(score, note)
+
+    def done(self) -> None:
+        """Final redraw without a card, then the completion line."""
+        self._card = None
+        self._redraw()
+        console.print("[bold green]Session complete.[/bold green]")
+
+
+def _session_renderer(api: DojoAPI, override: Optional[str] = None) -> SessionRenderer:
+    """Resolves the display mode: explicit flag > `ui.mode` config >
+    transcript (the default — trust before polish)."""
+    mode = (override or api.store.configs.get_value("ui.mode", "") or "").strip()
+    return ScreenRenderer() if mode == "screen" else SessionRenderer()
+
+
+def practice_loop(api: DojoAPI, session: dict[str, Any],
+                  r: Optional[SessionRenderer] = None) -> None:
     """Runs a session as one continuous conversation: reveal → answer →
     next, with `/skip <reason>` and `/quit` (pause; daily resumes). Free-form
     answers grade in ONE batch at the end (D1 — a model call between
-    questions stalls the human), then a stats summary prints."""
+    questions stalls the human), then a stats summary prints. All display
+    goes through `r` (SessionRenderer) — one flow, two modes."""
+    r = r or SessionRenderer()
     total = len(session["exercise_ids"])
     done = session.get("current_index", 0)
-    console.print(f"\n[bold]Session[/bold] — {total - done} prompt(s) to go. "
-                  "[dim](/why, /back [n], /skip too_easy|too_hard|forgot|bad_quality, /quit)[/dim]\n")
+    r.header(done, total)
     # Free-form answers grade at the END, in one batch: a model call between
     # every question stalls the human's flow, and scores never gated
     # progression anyway (use-case audit D1).
@@ -207,19 +341,14 @@ def practice_loop(api: DojoAPI, session: dict[str, Any]) -> None:
             # Deliberate encoding event (ADR 017): show the material, plain
             # Enter confirms — the ONE place empty input is a real action
             # (nothing is answered, so nothing can be lost by accident).
-            console.print(Panel(
-                f"{info['prompt']}\n\n[bold]{info['material']}[/bold]",
-                title=f"[bold]{done} of {total}[/bold] · [cyan]☆ new material[/cyan]",
-                border_style="cyan",
-            ))
-            _input("[dim]read it, own it — Enter to continue[/dim] ")
+            r.study_card(info, done, total)
+            r.ask("[dim]read it, own it — Enter to continue[/dim] ")
             res = api.submit_answer(user_answer="", session_id=session["id"])
-            console.print("  [cyan]✓ encoded — recall practice follows in coming sessions[/cyan]\n")
+            r.note("  [cyan]✓ encoded — recall practice follows in coming sessions[/cyan]\n")
             if res.get("is_session_completed"):
                 break
             continue
-        console.print(Panel(info["prompt"], title=f"[bold]{done} of {total}[/bold]",
-                            border_style="cyan"))
+        r.question(info, done, total)
         answer = ""
         while not answer.strip() or answer.strip() == "/why":
             if answer.strip() == "/why":
@@ -227,11 +356,11 @@ def practice_loop(api: DojoAPI, session: dict[str, Any]) -> None:
                 # 2026-07-09): answer it inline, then keep waiting.
                 reason = (session.get("packet_reasons") or {}).get(
                     info["exercise_id"], "(built before reasons were recorded)")
-                console.print(f"  [dim]{reason}[/dim]")
+                r.note(f"  [dim]{reason}[/dim]")
                 answer = ""
-            answer = answer or _input("[bold cyan]›[/bold cyan] ")
+            answer = answer or r.ask("[bold cyan]›[/bold cyan] ")
         if answer.strip() == "/quit":
-            console.print("[dim]Paused — dojo daily resumes right here.[/dim]")
+            r.note("[dim]Paused — dojo daily resumes right here.[/dim]")
             _settle_grades(api, pending_grades)
             return
         if answer.strip().startswith("/back"):
@@ -244,42 +373,40 @@ def practice_loop(api: DojoAPI, session: dict[str, Any]) -> None:
                                              steps_back=steps, peek=True)
             if not peek.get("ok"):
                 hint = f" [dim]({peek['next']})[/dim]" if peek.get("next") else ""
-                console.print(f"  [yellow]{peek['error']}[/yellow]{hint}\n")
+                r.note(f"  [yellow]{peek['error']}[/yellow]{hint}\n")
                 continue
-            console.print(Panel(
-                f"{peek['prompt']}\n\n[dim]your answer:[/dim] {peek['current_answer']}",
-                title=f"[bold]← back {steps}[/bold]", border_style="yellow"))
-            new_ans = _input("[bold yellow]new answer ('-' keeps it) ›[/bold yellow] ").strip()
+            r.amend_review(peek["prompt"], peek["current_answer"], steps)
+            new_ans = r.ask("[bold yellow]new answer ('-' keeps it) ›[/bold yellow] ").strip()
             if new_ans and new_ans != "-":
                 amended = api.amend_previous_answer(
                     new_ans, session_id=session["id"], steps_back=steps)
                 if amended.get("ok"):
-                    console.print("  [green]✓ amended — grades with the batch at the end[/green]\n")
+                    r.note("  [green]✓ amended — grades with the batch at the end[/green]\n")
                     for pg in pending_grades:
                         if pg.get("attempt_id") == amended["attempt_id"]:
                             pg["tasks"] = amended["tasks"]  # stale grade task superseded
                 else:
-                    console.print(f"  [yellow]{amended['error']}[/yellow]\n")
+                    r.note(f"  [yellow]{amended['error']}[/yellow]\n")
             else:
-                console.print("  [dim]kept as it was[/dim]\n")
+                r.note("  [dim]kept as it was[/dim]\n")
             continue
         if answer.strip().startswith("/skip"):
             parts = answer.strip().split()
             reason = parts[1] if len(parts) > 1 else "forgot"
             res = api.skip_active_exercise(reason, session_id=session["id"])
-            console.print(f"  [yellow]skipped ({reason})[/yellow]\n")
+            r.note(f"  [yellow]skipped ({reason})[/yellow]\n")
         else:
             res = api.submit_answer(user_answer=answer, session_id=session["id"])
             if res.get("pending_grade") and res.get("tasks"):
                 pending_grades.append(res)
-                console.print("  [dim]✓ recorded — scoring at the end[/dim]\n")
+                r.note("  [dim]✓ recorded — scoring at the end[/dim]\n")
             else:
                 correct = res.get("correct_answer")
-                _print_score(res["score"], None if res["score"] >= 1.0 else
-                             (f"answer: {correct}" if correct else None))
+                r.score(res["score"], None if res["score"] >= 1.0 else
+                        (f"answer: {correct}" if correct else None))
         if res.get("is_session_completed"):
             break
-    console.print("[bold green]Session complete.[/bold green]")
+    r.done()
     _settle_grades(api, pending_grades)
     _session_summary(api)
 
@@ -342,7 +469,8 @@ def _session_summary(api: DojoAPI) -> None:
     console.print("  [dim]*estimated recall odds · dojo why explains today's picks[/dim]")
 
 
-def daily_flow(api: DojoAPI, size: Optional[int] = None, reset: bool = False) -> int:
+def daily_flow(api: DojoAPI, size: Optional[int] = None, reset: bool = False,
+               mode: Optional[str] = None) -> int:
     """The human `dojo daily`: builds the packet, drains blocking generation
     tasks inline (at most drain → rebuild → drain, covering the cold-start
     diagnostic round), then hands off to `practice_loop`. Exits gracefully
@@ -388,7 +516,13 @@ def daily_flow(api: DojoAPI, size: Optional[int] = None, reset: bool = False) ->
         drain_tasks(api, res["tasks"])  # background replenishment, non-blocking
     if res.get("inbox_waiting"):
         console.print(f"[dim]{res['inbox_waiting']} capture(s) awaiting a home — dojo inbox[/dim]")
-    practice_loop(api, res["session"])
+    r = _session_renderer(api, mode)
+    practice_loop(api, res["session"], r)
+    if type(r) is SessionRenderer and not api.store.configs.get_value("ui.tip_screen_shown", ""):
+        # One-time awareness (noise ruling: once, then never again).
+        console.print("[dim]tip: prefer a full-screen session view? "
+                      "dojo config set ui.mode screen  (shown once)[/dim]")
+        api.save_config("ui.tip_screen_shown", "1")
     return 0
 
 
@@ -492,7 +626,7 @@ def first_session_flow(api: DojoAPI, campaign_id: str) -> int:
         console.print("[yellow]Nothing to practice yet — fulfill the pending "
                       "task(s), then run dojo daily.[/yellow]")
         return 0
-    practice_loop(api, res["session"])
+    practice_loop(api, res["session"], _session_renderer(api))
     return 0
 
 
@@ -542,7 +676,7 @@ def more_flow(api: DojoAPI, *, force: bool = False) -> int:
         console.print(f"[yellow]{res['warning']}[/yellow]")
     console.print(f"[bold]Extension granted[/bold] — {res['granted']} new item(s), "
                   "labeled so tomorrow's schedule stays honest.")
-    practice_loop(api, res["session"])
+    practice_loop(api, res["session"], _session_renderer(api))
     return 0
 
 

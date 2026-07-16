@@ -161,8 +161,11 @@ dojo why       # "weakest memory here (~38% recall odds) · French: 6 due…"
 dojo stats     # retention estimates, due counts, AI token spend
 ```
 
-(Inside a session: type your answer, or `/why`, `/skip too_easy`, `/quit`.
-Want a targeted extra drill? `dojo start --topic french.conversation`.)
+(Inside a session: type your answer, or `/why`, `/back` to amend an earlier
+answer, `/skip too_easy`, `/quit`. Want a targeted extra drill?
+`dojo start --topic french.conversation`. Prefer a full-screen session view
+that redraws in place? `dojo config set ui.mode screen` — classic scrollback
+stays the default.)
 
 If you talk to dojo *through an agent*, you don't even need these — say
 "let's practice" and the agent runs the same machinery stepwise over its JSON

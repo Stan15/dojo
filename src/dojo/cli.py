@@ -2022,7 +2022,9 @@ def cmd_daily(args: argparse.Namespace) -> int:
     api = DojoAPI(_db_path(args))
     if not _use_json(args):
         from .interactive import daily_flow
-        return daily_flow(api, size=args.size, reset=args.reset)
+        mode = "screen" if getattr(args, "screen", False) else (
+            "transcript" if getattr(args, "transcript", False) else None)
+        return daily_flow(api, size=args.size, reset=args.reset, mode=mode)
     res = api.daily(size=args.size, reset=args.reset)
     if _use_json(args):
         _print_json({"ok": True, **res})
@@ -2572,6 +2574,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_daily = sub.add_parser("daily", help="build today's bounded, explained practice packet")
     p_daily.add_argument("--size", type=int, help="override daily.packet_size (hard cap 8)")
     p_daily.add_argument("--reset", action="store_true", help="discard the active session and rebuild")
+    p_daily.add_argument("--screen", action="store_true",
+                         help="full-screen session view for this run (default: ui.mode config, else transcript)")
+    p_daily.add_argument("--transcript", action="store_true",
+                         help="classic scrollback view for this run, overriding ui.mode")
     p_daily.set_defaults(func=cmd_daily)
 
     p_why = sub.add_parser("why", help="explain every scheduling choice behind the current packet")

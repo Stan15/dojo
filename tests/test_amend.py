@@ -128,3 +128,46 @@ class TestCampaignIdCollisions:
         again = api.create_campaign(name="French", topic_path="french", mission="Again.")
         assert again["id"] == "french-2"
         assert again["name"] == "French (2)"
+
+
+class TestDisplayModes:
+    """Two UI modes, one flow (owner-approved display philosophy):
+    transcript is the default; screen is opt-in via ui.mode config or
+    --screen; the awareness tip prints exactly once."""
+
+    def test_default_is_transcript_and_config_switches(self, tmp_path: Path):
+        from dojo import interactive
+
+        api = DojoAPI(tmp_path)
+        r = interactive._session_renderer(api)
+        assert type(r) is interactive.SessionRenderer
+        api.save_config("ui.mode", "screen")
+        assert type(interactive._session_renderer(api)) is interactive.ScreenRenderer
+        assert type(interactive._session_renderer(api, "transcript")) is interactive.SessionRenderer
+
+    def test_screen_renderer_drives_a_full_session(self, api, capsys):
+        from dojo import interactive
+        from dojo.schemas import PracticeSession
+
+        api.store.sessions.save_active(PracticeSession(
+            id="sess_s", exercise_ids=["ex_exact"]))
+        with patch.object(interactive, "_input", lambda prompt: "chien"):
+            interactive.practice_loop(
+                api, api.store.sessions.get_active().model_dump(),
+                interactive.ScreenRenderer())
+        out = capsys.readouterr().out
+        assert "dojo session" in out and "Session complete." in out
+        atts = api.store.attempts.list(CAMP)
+        assert len(atts) == 1 and atts[0].score == 1.0
+
+    def test_screen_tip_prints_exactly_once(self, api, capsys):
+        from dojo import interactive
+        from dojo.schemas import PracticeSession
+
+        for i, sess in enumerate(("s1", "s2")):
+            api.store.sessions.save_active(PracticeSession(
+                id=sess, exercise_ids=["ex_exact"]))
+            with patch.object(interactive, "_input", lambda prompt: "chien"):
+                interactive.daily_flow(api)
+        out = capsys.readouterr().out
+        assert out.count("prefer a full-screen session view") == 1
