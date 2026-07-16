@@ -171,3 +171,38 @@ class TestDisplayModes:
                 interactive.daily_flow(api)
         out = capsys.readouterr().out
         assert out.count("prefer a full-screen session view") == 1
+
+
+class TestEmptyEnterFeedback:
+    """Owner field report 2026-07-16: empty Enters silently stacked '›'
+    lines. Empty input stays non-destructive but now explains itself, once
+    per question; screen mode redraws before every prompt so retries
+    replace the prompt line instead of stacking."""
+
+    def test_empty_enter_hints_once_then_accepts_answer(self, api, capsys):
+        from dojo import interactive
+        from dojo.schemas import PracticeSession
+
+        api.store.sessions.save_active(PracticeSession(
+            id="sess_e", exercise_ids=["ex_exact"]))
+        script = iter(["", "", "chien"])
+        with patch.object(interactive, "_input", lambda prompt: next(script)):
+            interactive.practice_loop(api, api.store.sessions.get_active().model_dump())
+        out = capsys.readouterr().out
+        assert out.count("an empty line sends nothing") == 1
+        assert api.store.attempts.list(CAMP)[0].score == 1.0
+
+    def test_screen_mode_redraws_on_each_ask(self, api):
+        from dojo import interactive
+        from dojo.schemas import PracticeSession
+
+        api.store.sessions.save_active(PracticeSession(
+            id="sess_r", exercise_ids=["ex_exact"]))
+        clears = []
+        script = iter(["", "chien"])
+        with patch.object(interactive, "_input", lambda prompt: next(script)), \
+             patch.object(interactive.console, "clear", lambda: clears.append(1)):
+            interactive.practice_loop(
+                api, api.store.sessions.get_active().model_dump(),
+                interactive.ScreenRenderer())
+        assert len(clears) >= 3, "header + one per ask retry — prompts never stack"

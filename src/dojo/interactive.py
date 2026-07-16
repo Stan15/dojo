@@ -288,6 +288,13 @@ class ScreenRenderer(SessionRenderer):
             title=f"[bold]← back {steps}[/bold]", border_style="yellow")
         self._redraw()
 
+    def ask(self, prompt: str) -> str:
+        """Redraws before prompting, so re-asks (empty Enter, /why) replace
+        the previous prompt line instead of stacking stray '›' lines
+        (owner field report 2026-07-16)."""
+        self._redraw()
+        return _input(prompt)
+
     def note(self, markup: str) -> None:
         """Prints the message and folds it into the history tail — notes
         persist across redraws so the recent story stays visible."""
@@ -350,6 +357,7 @@ def practice_loop(api: DojoAPI, session: dict[str, Any],
             continue
         r.question(info, done, total)
         answer = ""
+        hinted = False
         while not answer.strip() or answer.strip() == "/why":
             if answer.strip() == "/why":
                 # Curiosity strikes mid-question (owner field report
@@ -358,7 +366,15 @@ def practice_loop(api: DojoAPI, session: dict[str, Any],
                     info["exercise_id"], "(built before reasons were recorded)")
                 r.note(f"  [dim]{reason}[/dim]")
                 answer = ""
-            answer = answer or r.ask("[bold cyan]›[/bold cyan] ")
+            got = r.ask("[bold cyan]›[/bold cyan] ")
+            if not got.strip() and not hinted:
+                # Empty input is never destructive (owner ruling) — but it
+                # must never be SILENT either (owner field report 2026-07-16:
+                # stacked mute '›' lines read as a broken multiline editor).
+                r.note("  [dim]an empty line sends nothing — type an answer, "
+                       "or /skip <reason>, /why, /quit[/dim]")
+                hinted = True
+            answer = got
         if answer.strip() == "/quit":
             r.note("[dim]Paused — dojo daily resumes right here.[/dim]")
             _settle_grades(api, pending_grades)
