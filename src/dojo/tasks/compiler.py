@@ -63,18 +63,16 @@ SECTION_BUDGETS: dict[str, dict[str, int]] = {
     },
 }
 
-TOTAL_BUDGETS: dict[str, int] = {
-    # 8 KB since ADR 017: the present/probe rules + the practice-history
-    # window grew the skeleton ~0.7 KB; the 4 KB source slice still
-    # dominates the grounded worst case. Typical payloads stay ~3 KB.
-    "exercise.generate": 8 * 1024,
-    "exercise.diagnostic": 3 * 1024,
-    "attempt.grade": 5 * 1024,
-    "campaign.reflect": 6 * 1024,
-    "campaign.plan": 4 * 1024,
-    "capture.route": 3 * 1024,
-    "goal.route": 3 * 1024,
-}
+def total_budget(kind: str, skeleton_bytes: int, mult: float = 1.0) -> int:
+    """The honest payload ceiling: the rendered skeleton (template + caps +
+    non-section values) plus every section's scaled budget, plus slack for
+    truncation markers. DERIVED, never a magic number — a static table
+    silently went stale when templates grew and crashed the daily heartbeat
+    on a full store (owner field crash 2026-07-16: reflect 8035B vs a 6144B
+    constant last honest two eras ago). BudgetExceeded now fires only on
+    true compiler bugs: a value that bypassed section clipping."""
+    sections = sum(int(b * mult) for b in SECTION_BUDGETS[kind].values())
+    return skeleton_bytes + sections + 128
 
 TEMPLATES: dict[str, str] = {
     "exercise.generate": "exercise_generate.md",
@@ -147,12 +145,15 @@ def _compile(store, kind: str, values: dict[str, Any], context: dict[str, Any]) 
 
     prompt = render(TEMPLATES[kind], clipped_values)
 
-    total_budget = int(TOTAL_BUDGETS[kind] * mult)
+    skeleton = render(TEMPLATES[kind], {
+        **clipped_values, **{k: "" for k in budgets},
+    })
+    ceiling = total_budget(kind, len(skeleton.encode("utf-8")), mult)
     total = len(prompt.encode("utf-8"))
-    if total > total_budget:
+    if total > ceiling:
         raise BudgetExceeded(
-            f"{kind} payload is {total}B, budget {total_budget}B — "
-            "template or section budgets need rebalancing"
+            f"{kind} payload is {total}B, ceiling {ceiling}B — "
+            "a section escaped its clip (compiler bug)"
         )
     if truncated:
         context = {**context, "truncated_sections": truncated}

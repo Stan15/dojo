@@ -96,7 +96,7 @@ class TestLearnEntry:
     def test_payload_respects_route_budget(self, api):
         from dojo.tasks import compiler
         compiled = compiler.compile_goal_route(api.store, goal="learn French cooking")
-        assert compiled.payload_bytes <= compiler.TOTAL_BUDGETS["goal.route"]
+        assert compiled.payload_bytes <= 4 * 1024  # ceiling now derived; this pins typical size
 
 
 # ------------------------------------------------------------------

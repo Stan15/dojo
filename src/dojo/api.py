@@ -157,13 +157,22 @@ class DojoAPI:
             campaign = self.store.campaigns.get(need["campaign_id"])
             if campaign is None:
                 continue
-            task = flows.request_generation(
-                self.store, campaign,
-                topic_path=need["topic_path"], n_items=2,
-                source_slice=flows.grounding_slice(self.store, campaign, need["topic_path"]),
-                diagnostic=bool(need.get("diagnostic")),
-                auto_promote=not bool(need.get("diagnostic")),
-            )
+            try:
+                task = flows.request_generation(
+                    self.store, campaign,
+                    topic_path=need["topic_path"], n_items=2,
+                    source_slice=flows.grounding_slice(self.store, campaign, need["topic_path"]),
+                    diagnostic=bool(need.get("diagnostic")),
+                    auto_promote=not bool(need.get("diagnostic")),
+                )
+            except Exception as e:
+                # The heartbeat never dies because one AI task failed to
+                # compile (I4; owner field crash 2026-07-16) — count it,
+                # keep serving practice.
+                self.log.error(f"generation compile failed ({need['topic_path']}): {e}")
+                pkt.skipped["generation_compile_errors"] = (
+                    pkt.skipped.get("generation_compile_errors", 0) + 1)
+                continue
             tasks.append(flows.task_ref(task))
         deferred = len(pkt.needs_generation) - min(len(pkt.needs_generation), MAX_DAILY_TASKS)
         if deferred:
@@ -194,7 +203,13 @@ class DojoAPI:
         reflect_backlog = [x for x in reflect_backlog if x[0] >= REFLECT_THRESHOLD]
         if reflect_backlog:
             _, campaign_id = max(reflect_backlog)
-            reflect_task = flows.request_reflection(self.store, campaign_id)
+            try:
+                reflect_task = flows.request_reflection(self.store, campaign_id)
+            except Exception as e:
+                # Same rule (I4): reflection is deferrable, practice is not.
+                self.log.error(f"reflection compile failed ({campaign_id}): {e}")
+                pkt.skipped["reflection_compile_errors"] = 1
+                reflect_task = None
             if reflect_task is not None:
                 tasks.append(flows.task_ref(reflect_task))
 
