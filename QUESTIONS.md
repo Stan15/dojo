@@ -49,6 +49,19 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
    suite), the app, dojo-side PDF/EPUB ingestion (agents already cover it by
    reading + capturing). All owner-gated.
    **Default: none started without your call.**
+6b. **Reflect decomposition (STATE 7d)** — investigation delivered:
+   `docs/design/reflect-decomposition.md`. Headline: the five-job reflect
+   mega-task violates our own craft rule 5 (branching in the compiler, never
+   the model); the measured symptom is multi-sample variance (a different
+   criterion dropped each run) and a rule set at its byte ceiling. Proposal:
+   compiler-decided conditional sub-tasks — `reflect.adjudicate` always
+   (cheaper than today on quiet days), `reflect.govern` only when
+   deterministic triggers fire; authority rails unchanged; typical-week
+   tokens DROP ~15%. Costs priced in the doc: corpus migration, holdout
+   re-enrichment (reflect-targeting holdout scenarios burn), cycle
+   semantics. Recommendation: tag v1.0.0 on the current shape first; land
+   decomposition as the first post-1.0 milestone, evidence-gated by a
+   two-scenario spike. **Default: nothing built until you gate it.**
 7. **Growth strategy sign-off** — full researched strategy delivered at your
    direction: `docs/growth-strategy.md`. Headline: retention is already the
    product (the SRS community's documented abandonment causes map 1:1 onto
