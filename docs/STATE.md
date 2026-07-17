@@ -1,7 +1,7 @@
 # STATE
 
-_Last updated: 2026-07-09 late (field-bug + first-holdout-gate + Anki-investigation
-session). Trust this snapshot; git history carries the detail._
+_Last updated: 2026-07-17 (learn ride-along field session). Trust this
+snapshot; git history carries the detail._
 
 ## Phase
 
@@ -223,8 +223,33 @@ committed work, not proposals awaiting an answer. Item numbering is stable
    phase-gated and does nothing until that phase activates) from "already
    active" (topic-boost is correct); (b) `dojo campaign rename <id>
    "<name>"` so existing paragraph-named campaigns can be fixed in place.
-7d. **DIRECTED 2026-07-11 (owner; investigation before design — FRESH
-   SESSION ONLY, see 7e):** the
+7g. ✓ **DONE 2026-07-17 — learn ride-along field batch** (owner live-drove
+   `dojo learn "how to cook"`; six reports, six fixes, commit 963b7ed):
+   plan-template rule 3 stated phase-1 criteria without min_accuracy
+   (the invisible-floor class again — field crash); calibration is now
+   UNGATED BY INVARIANT (owner ruling: calibration measures, never gates
+   — template states min_accuracy 0, PlanResult validator enforces it at
+   the boundary; PlanRevision deliberately untouched; authority rails
+   make it one-way). First-practice chain healed: materialize stamps
+   diagnostic mode (parity with direct door), start treats no-evidence
+   campaigns as calibrating (packet rule mirrored), advancement past
+   phase 1 clears the stamp (LATENT: nothing ever cleared it — direct-
+   door campaigns replenished diagnostics forever), warm start
+   replenishment auto-promotes (daily J1 parity — candidates starved the
+   session that asked). drain_tasks spends the full submission budget +
+   human-readable errors + next steps. Refinement '/back'. Copy fixes.
+   696 tests green (14 new); plan footprint 2407→2540 (deliberate).
+7h. **DIRECTED 2026-07-17 (owner; design for gate — QUESTIONS 6c):**
+   SKILL.md behavioral evals — the driver-side prompt surface has zero
+   behavioral testing. Design delivered:
+   `docs/design/skill-behavioral-evals.md` (`-m eval_skill` tier, ~6
+   real-world sandboxed agent scenarios, deterministic floor free +
+   judged rubric under spend policy, ratcheted per-(driver,judge)).
+   Nothing built until gated.
+7d. ✓ **INVESTIGATION DELIVERED (found uncommitted in-tree, committed
+   0610a03 on 2026-07-17): `docs/design/reflect-decomposition.md` +
+   QUESTIONS 6b — awaiting the owner gate; nothing built.** Original
+   directive: the
    reflect mega-task is an ANTI-PATTERN — one call now juggles five jobs
    (insight adjudication, strategy dials, plan revision, questions, topic
    retirement), and multi-sample eval variance (different criterion dropped
@@ -324,3 +349,10 @@ committed work, not proposals awaiting an answer. Item numbering is stable
   Anki interop investigation delivered (docs/design/anki-interop.md; PM +
   engineering; QUESTIONS Q2 updated) — headline: scoped import/export ideal,
   FSRS-native transfer is the differentiator, sync stays rejected.
+- 07-17 (learn ride-along): owner live-drove `dojo learn` — six field
+  reports → 963b7ed (ungated-calibration invariant, first-practice chain,
+  submission-budget retries + honest failure copy, '/back', copy fixes;
+  14 new tests). Prior session's reflect-decomposition deliverable found
+  uncommitted → 0610a03. SKILL.md behavioral evals designed for gate
+  (7h / QUESTIONS 6c). INSIGHTS: partial-statement subtype of the
+  invisible-floor class; stamps need clearing edges; spend granted budgets.

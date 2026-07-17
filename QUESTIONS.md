@@ -62,6 +62,18 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
    semantics. Recommendation: tag v1.0.0 on the current shape first; land
    decomposition as the first post-1.0 milestone, evidence-gated by a
    two-scenario spike. **Default: nothing built until you gate it.**
+6c. **SKILL.md behavioral evals (your directive 2026-07-17)** — design
+   delivered: `docs/design/skill-behavioral-evals.md`. Headline: SKILL.md
+   is the highest-leverage prompt in the repo and the only one with zero
+   behavioral testing (static gates only; every eval tier tests the
+   fulfiller side, none the driver side). Proposal: `-m eval_skill` tier —
+   ~6 real-world scenarios (learn e2e, daily ritual, capture, task
+   protocol, failure recovery, refusal honesty), sandboxed store, driver
+   agent given SKILL.md + a user message + a shell; two-layer judgment
+   (deterministic store/transcript assertions FREE on every run; judged
+   rubric under the codex spend policy); per-(driver,judge) ratcheted
+   floors, same mechanics as the quality corpus. Holdout deferred until
+   the surface stabilizes. **Default: nothing built until you gate it.**
 7. **Growth strategy sign-off** — full researched strategy delivered at your
    direction: `docs/growth-strategy.md`. Headline: retention is already the
    product (the SRS community's documented abandonment causes map 1:1 onto

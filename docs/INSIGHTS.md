@@ -170,3 +170,23 @@ edge-tolerant comparison or ~15% of honest passes get discarded.
   deliberation weak models may need; "your final output is exactly this
   JSON (anything before it is ignored)" tells the extraction truth without
   inviting token burn. Empirical check owed via the Ollama pairs.
+
+## 2026-07-17 — learn-ride-along session learnings
+
+- **A rule that partially states a required object teaches omission.** The
+  plan template's rule 3 named only `min_attempts` for phase 1 while the
+  schema required `min_accuracy` → models dutifully omitted it (field
+  crash). The invisible-validation-floor class has a subtype: not just
+  caps never stated, but *statements that say less than the schema
+  requires*. The statement gate now also asserts the full criteria shape.
+- **A mode stamp without its clearing edge is a bug with a delay.** The
+  direct-create door stamped `strategy_profile.mode="diagnostic"`; nothing
+  anywhere cleared it (reflect writes only difficulty/scaffolding), so
+  such campaigns would replenish diagnostics forever. Found only because
+  the materialize fix was about to import the same stamp. Rule: every
+  state stamp lands in the same commit as the transition that clears it.
+- **Interactive flows must spend the budgets the contract already grants.**
+  `max_submissions=3` existed for I5, but drain_tasks gave up after one
+  rejection — an agent driving via SKILL would have retried; the human
+  flow silently threw the budget away. When a contract carries a retry
+  budget, every consumer either spends it or says why not.
