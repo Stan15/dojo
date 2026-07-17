@@ -72,6 +72,17 @@ class TestInventory:
             "a floor the model can trip must be visible in the prompt"
         )
 
+    def test_plan_template_states_full_calibration_criteria(self):
+        """A schema-required criteria field must be stated for EVERY phase the
+        rules describe: rule 3 naming only min_attempts for phase 1 taught
+        models to omit min_accuracy — the 2026-07-17 field crash, same
+        invisible-validation-floor class the cap gate above patrols."""
+        text = (_templates_dir() / "campaign_plan.md").read_text(encoding="utf-8")
+        assert re.search(r"min_attempts \d+, min_accuracy 0\b", text), (
+            "phase 1's stated criteria must include min_accuracy 0 — "
+            "calibration measures, it never gates"
+        )
+
     def test_no_stale_literal_numbers_for_declared_caps(self):
         """Belt and braces: a declared cap's literal value must not ALSO appear
         hard-coded next to 'words'/'topics' etc. in its template — that's the

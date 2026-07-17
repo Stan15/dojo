@@ -214,7 +214,7 @@ class TestEmptyInputIsNeverDestructive:
         # empty (accident) → hint + re-ask → '-' (deliberate skip) → decline create
         self.run_plan_flow(api, ["", "-", "n"])
         out = capsys.readouterr().out
-        assert "'-' to skip this question" in out, "the accidental Enter got a hint"
+        assert "'-' to skip" in out, "the accidental Enter got a hint"
         assert not api.store.campaigns.list(), "declined — nothing created"
 
     def test_real_answer_after_accidental_enter_still_lands(self, tmp_path: Path):
@@ -224,6 +224,189 @@ class TestEmptyInputIsNeverDestructive:
         replans = [t for t in api.store.tasks.list() if t.kind == "campaign.plan"]
         assert len(replans) == 2, "the answer triggered the re-plan"
         assert "climbing mostly" in replans[-1].prompt or "climbing mostly" in replans[0].prompt
+
+
+class TestRefinementBack:
+    """Owner field report 2026-07-17: '/back' typed at a refinement question
+    was shipped to the model as the literal answer — and there was no way to
+    revisit an earlier question at all."""
+
+    def _plan_api(self, tmp_path: Path, questions: list[str]) -> DojoAPI:
+        api = DojoAPI(tmp_path)
+        proposal = {
+            "mission": "Cook affordable meals reliably.",
+            "topics": [{"path": "cooking.rice", "kind": "skill", "summary": "doneness"}],
+            "phases": [{"topics": ["cooking.rice"],
+                        "criteria": {"min_attempts": 5, "min_accuracy": 0.0},
+                        "focus": "calibration"}],
+            "refinement_questions": questions,
+        }
+        api.store.configs.set_value("model.command", scripted_fulfiller(tmp_path, proposal))
+        return api
+
+    def _run(self, api, answers):
+        it = iter(answers)
+        from dojo.cli import _emit_plan_task, _materialize_core
+        with patch.object(interactive, "_input", lambda prompt: next(it)):
+            interactive.plan_flow(
+                api, goal="learn to cook", level=None, context=None,
+                emit_plan_task=lambda g, n: _emit_plan_task(api.store, g, n),
+                materialize=lambda tid: _materialize_core(api, tid, None),
+            )
+
+    def test_back_revisits_and_the_control_token_never_reaches_the_model(
+        self, tmp_path: Path, capsys
+    ):
+        api = self._plan_api(tmp_path, ["What cuisine?", "When does it matter?"])
+        # q1 'paris' → q2 '/back' → q1 again (replaces with 'tokyo') → q2 → decline
+        self._run(api, ["paris", "/back", "tokyo", "weekly", "n"])
+        out = capsys.readouterr().out
+        assert "previously: paris" in out, "revisiting shows the answer being replaced"
+        replans = [t for t in api.store.tasks.list() if t.kind == "campaign.plan"]
+        assert len(replans) == 2, "the answers triggered exactly one re-plan"
+        assert all("/back" not in t.prompt for t in replans), "control tokens are never answers"
+        assert any("tokyo" in t.prompt and "weekly" in t.prompt for t in replans)
+        assert all("paris" not in t.prompt for t in replans), "the replaced answer is gone"
+
+    def test_back_at_the_first_question_reasks(self, tmp_path: Path, capsys):
+        api = self._plan_api(tmp_path, ["What cuisine?"])
+        self._run(api, ["/back", "-", "n"])
+        out = capsys.readouterr().out
+        assert "first question" in out
+        replans = [t for t in api.store.tasks.list() if t.kind == "campaign.plan"]
+        assert len(replans) == 1, "everything skipped — no re-plan"
+
+
+class TestDrainUsesTheSubmissionBudget:
+    """Owner field report 2026-07-17: one rejected submission killed the whole
+    learn flow with two retries unspent, no reason a human could act on, and
+    no next step."""
+
+    GOOD = {
+        "mission": "Cook affordable meals reliably.",
+        "topics": [{"path": "cooking.rice", "kind": "skill", "summary": "doneness"}],
+        "phases": [{"topics": ["cooking.rice"],
+                    "criteria": {"min_attempts": 5, "min_accuracy": 0.0}}],
+        "refinement_questions": [],
+    }
+    # The exact field crash: phase criteria missing min_accuracy.
+    BAD = {**GOOD, "phases": [{"topics": ["cooking.rice"], "criteria": {"min_attempts": 5}}]}
+
+    def _flaky_fulfiller(self, tmp_path: Path) -> str:
+        """Rejects on the first call, succeeds on the second — sampling noise."""
+        marker = tmp_path / "tried_once"
+        script = tmp_path / "flaky.py"
+        script.write_text(
+            "import sys, os, json\n"
+            "sys.stdin.read()\n"
+            f"marker = {str(marker)!r}\n"
+            "if os.path.exists(marker):\n"
+            f"    print({json.dumps(self.GOOD)!r})\n"
+            "else:\n"
+            "    open(marker, 'w').close()\n"
+            f"    print({json.dumps(self.BAD)!r})\n",
+            encoding="utf-8",
+        )
+        return f"python {script}"
+
+    def _plan_ref(self, api) -> dict:
+        from dojo.cli import _emit_plan_task
+        return _emit_plan_task(api.store, "learn to cook", "")
+
+    def test_a_rejection_is_retried_within_the_budget(self, tmp_path: Path, capsys):
+        api = DojoAPI(tmp_path)
+        api.store.configs.set_value("model.command", self._flaky_fulfiller(tmp_path))
+        ref = self._plan_ref(api)
+        assert interactive.drain_tasks(api, [ref]) is True
+        out = capsys.readouterr().out
+        assert "retrying" in out
+        task = api.store.tasks.get(ref["id"])
+        assert task.status == "fulfilled" and task.submissions == 2
+
+    def test_exhausted_budget_fails_with_reason_and_next_step(self, tmp_path: Path, capsys):
+        api = DojoAPI(tmp_path)
+        api.store.configs.set_value("model.command", scripted_fulfiller(tmp_path, self.BAD))
+        ref = self._plan_ref(api)
+        assert interactive.drain_tasks(api, [ref]) is False
+        out = capsys.readouterr().out
+        task = api.store.tasks.get(ref["id"])
+        assert task.status == "failed" and task.submissions == task.max_submissions
+        assert "phases[0].criteria.min_accuracy" in out, "the precise reason, human-readable"
+        assert f"dojo task show {ref['id']} --trace" in out, "a next step, not a dead end"
+
+
+class TestPlanCreatedCampaignStartsInCalibration:
+    """Owner field report 2026-07-17: 'Start practicing it now?' → 'Nothing to
+    practice yet.' A plan-created campaign was never recognized as being in
+    calibration: its first generation compiled as ungated practice items that
+    landed as candidates, invisible to the session builder."""
+
+    PROPOSAL = {
+        "mission": "Cook affordable meals reliably.",
+        "topics": [
+            {"path": "cooking.rice", "kind": "skill", "summary": "doneness"},
+            {"path": "cooking.safety", "kind": "recall", "summary": "storage"},
+        ],
+        "phases": [
+            {"topics": ["cooking.rice"],
+             "criteria": {"min_attempts": 5, "min_accuracy": 0.6},  # normalizer zeroes this
+             "focus": "calibration"},
+            {"topics": ["cooking.rice", "cooking.safety"],
+             "criteria": {"min_attempts": 8, "min_accuracy": 0.7}},
+        ],
+        "refinement_questions": [],
+    }
+
+    def _materialized(self, tmp_path: Path) -> tuple[DojoAPI, str]:
+        import json as _json
+        from dojo.cli import _emit_plan_task, _materialize_core
+        from dojo.tasks import service as task_service
+        api = DojoAPI(tmp_path)
+        ref = _emit_plan_task(api.store, "learn to cook", "")
+        outcome = task_service.submit(api.store, ref["id"], _json.dumps(self.PROPOSAL))
+        assert outcome.ok, outcome.errors
+        return api, _materialize_core(api, ref["id"], None)["id"]
+
+    def test_materialize_stamps_diagnostic_mode_and_an_ungated_phase_one(self, tmp_path: Path):
+        api, cid = self._materialized(tmp_path)
+        camp = api.store.campaigns.get(cid)
+        assert camp.strategy_profile["mode"] == "diagnostic", "same stamp as the direct door"
+        assert camp.attack_plan[0].criteria.min_accuracy == 0.0, "normalized at the boundary"
+        assert camp.attack_plan[1].criteria.min_accuracy == 0.7
+
+    def test_virgin_start_requests_calibration_not_practice(self, tmp_path: Path):
+        api, cid = self._materialized(tmp_path)
+        res = api.start_practice_session(campaign_id=cid, reset=True)
+        assert res["session"] is None
+        task = api.store.tasks.get(res["tasks"][0]["id"])
+        assert task.kind == "exercise.diagnostic", (
+            "no evidence at all means calibrate first — never ungated practice items"
+        )
+
+    def test_warm_start_replenishment_auto_promotes(self, tmp_path: Path):
+        """Past calibration, start-path stock must be practicable immediately —
+        the same recorded I2 policy daily replenishment uses (J1)."""
+        from dojo.schemas import Attempt, Exercise
+        api, cid = self._materialized(tmp_path)
+        camp = api.store.campaigns.get(cid)
+        camp.strategy_profile["mode"] = "practice"
+        camp.active_phase_index = 1
+        api.store.campaigns.save(camp)
+        api.store.exercises.save(cid, Exercise(
+            id="ex_done", topic_path="cooking.rice", difficulty="beginner",
+            answer="x", prompt="old",
+        ))
+        api.store.attempts.save(cid, Attempt(
+            id="att_1", session_id="s1", exercise_id="ex_done", campaign_id=cid,
+            score=1.0, latency_seconds=5.0, user_answer="x",
+        ))
+        res = api.start_practice_session(campaign_id=cid, reset=True)
+        gen = [api.store.tasks.get(t["id"]) for t in res.get("tasks", [])]
+        gen = [t for t in gen if t.kind == "exercise.generate"]
+        assert gen, "thin stock emits replenishment"
+        assert gen[0].context.get("auto_promote") is True, (
+            "start-path stock lands practicable, never as invisible candidates"
+        )
 
 
 class TestFirstSessionAfterCreate:

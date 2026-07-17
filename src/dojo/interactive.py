@@ -88,7 +88,7 @@ def explain_no_fulfiller() -> None:
 PHASE_PHRASES: dict[str, list[str]] = {
     "campaign.plan": [
         "drawing the map…", "cutting scope like a ruthless editor…",
-        "negotiating with your ambitions…", "finding the shortest path to competent…",
+        "negotiating with your ambitions…", "finding the shortest path to competence…",
         "throwing out the boring chapters…",
     ],
     "exercise.generate": [
@@ -144,39 +144,60 @@ def drain_tasks(api: DojoAPI, task_refs: list[dict[str, Any]], *, timeout: int =
         if task.status != "pending":
             continue
         label = task.kind.replace(".", " · ")
-        result: dict[str, Any] = {}
 
-        def _run() -> None:
-            try:
-                result["proc"] = subprocess.run(
-                    shlex.split(command), input=task.prompt,
-                    capture_output=True, text=True, timeout=timeout,
-                )
-            except Exception as exc:  # timeout, missing binary, …
-                result["exc"] = exc
+        # A rejected submission gets the task's full budget (max_submissions,
+        # I5) before the flow gives up — a fresh sample usually clears a
+        # validation miss (owner field report 2026-07-17: one rejection killed
+        # the whole learn flow with two retries unspent, and no next step).
+        while True:
+            result: dict[str, Any] = {}
 
-        worker = threading.Thread(target=_run, daemon=True)
-        with console.status(
-            f"[cyan]{_phrase_for(task.kind)}[/cyan] [dim]({label})[/dim]",
-            spinner="dots",
-        ) as status:
-            worker.start()
-            while worker.is_alive():  # rotate the flavor while the model works
-                worker.join(timeout=4.0)
-                if worker.is_alive():
-                    status.update(
-                        f"[cyan]{_phrase_for(task.kind)}[/cyan] [dim]({label})[/dim]")
-            try:
-                if "exc" in result:
-                    raise result["exc"]
-                outcome = service.submit(api.store, task.id, result["proc"].stdout)
-            except Exception as exc:
-                console.print(f"  [red]✗ {task.id}: {str(exc)[:120]}[/red]")
-                ok = False
+            def _run() -> None:
+                try:
+                    result["proc"] = subprocess.run(
+                        shlex.split(command), input=task.prompt,
+                        capture_output=True, text=True, timeout=timeout,
+                    )
+                except Exception as exc:  # timeout, missing binary, …
+                    result["exc"] = exc
+
+            worker = threading.Thread(target=_run, daemon=True)
+            outcome = None
+            with console.status(
+                f"[cyan]{_phrase_for(task.kind)}[/cyan] [dim]({label})[/dim]",
+                spinner="dots",
+            ) as status:
+                worker.start()
+                while worker.is_alive():  # rotate the flavor while the model works
+                    worker.join(timeout=4.0)
+                    if worker.is_alive():
+                        status.update(
+                            f"[cyan]{_phrase_for(task.kind)}[/cyan] [dim]({label})[/dim]")
+                try:
+                    if "exc" in result:
+                        raise result["exc"]
+                    outcome = service.submit(api.store, task.id, result["proc"].stdout)
+                except Exception as exc:
+                    console.print(f"  [red]✗ {label} ({task.id}): {str(exc)[:120]}[/red]")
+                    console.print(
+                        "    [dim]nothing was submitted — check the model command "
+                        "(dojo config get model.command), then re-run this command[/dim]")
+                    ok = False
+            if outcome is None or outcome.ok:
+                break
+            error = "; ".join(outcome.errors[:2])[:160]
+            if outcome.status == "pending":  # budget remains — go again
+                fresh = api.store.tasks.get(task.id)
+                tries = f"{fresh.submissions}/{fresh.max_submissions}" if fresh else "?"
+                console.print(f"  [yellow]✗ {label} rejected (try {tries}):[/yellow] "
+                              f"[dim]{error}[/dim] — retrying")
                 continue
-        if not outcome.ok:
-            console.print(f"  [red]✗ {task.id}: {'; '.join(outcome.errors[:2])[:160]}[/red]")
+            console.print(f"  [red]✗ {label} ({task.id}) failed: {error}[/red]")
+            console.print(
+                f"    [dim]what the model sent each try: dojo task show {task.id} --trace"
+                " · re-running this command starts a fresh task[/dim]")
             ok = False
+            break
     return ok
 
 
@@ -536,8 +557,9 @@ def daily_flow(api: DojoAPI, size: Optional[int] = None, reset: bool = False,
     practice_loop(api, res["session"], r)
     if type(r) is SessionRenderer and not api.store.configs.get_value("ui.tip_screen_shown", ""):
         # One-time awareness (noise ruling: once, then never again).
-        console.print("[dim]tip: prefer a full-screen session view? "
-                      "dojo config set ui.mode screen  (shown once)[/dim]")
+        console.print("[dim]tip: prefer a full-screen session view? try it once: "
+                      "dojo daily --screen · keep it: dojo config set ui.mode screen  "
+                      "(shown once)[/dim]")
         api.save_config("ui.tip_screen_shown", "1")
     return 0
 
@@ -553,8 +575,12 @@ def _render_proposal(proposal: dict[str, Any]) -> None:
     lines.append("")
     for p in proposal["phases"]:
         crit = p["criteria"]
+        # A 0-accuracy phase is calibration: it measures, it never gates —
+        # "@ 0%" would read as a bug, so say what it actually means.
+        gate = (f"{crit['min_attempts']}+ attempts @ {crit['min_accuracy']:.0%}"
+                if crit["min_accuracy"] else f"{crit['min_attempts']}+ attempts, no accuracy gate")
         lines.append(f"  Phase {p['phase']}: {', '.join(p['topics'])} "
-                     f"[dim]({crit['min_attempts']}+ attempts @ {crit['min_accuracy']:.0%}"
+                     f"[dim]({gate}"
                      + (f" — {p['focus']}" if p.get("focus") else "") + ")[/dim]")
     console.print(Panel("\n".join(lines), title="[bold green]Proposed campaign[/bold green]",
                         border_style="green"))
@@ -585,22 +611,36 @@ def plan_flow(api: DojoAPI, *, goal: str, level: Optional[str], context: Optiona
     _render_proposal(proposal)
 
     questions = proposal.get("refinement_questions") or []
-    answers = []
+    replies: list[Optional[str]] = [None] * len(questions)
     if questions:
-        console.print("[bold]A few questions to sharpen this[/bold] [dim]('-' skips one)[/dim]")
-        for q in questions:
+        console.print("[bold]A few questions to sharpen this[/bold] "
+                      "[dim]('-' skips one · '/back' revisits the previous)[/dim]")
+        i = 0
+        while i < len(questions):
             # Blank line + styled question: the previous free-form answer can
             # be long, and the next question must not read as its tail.
-            console.print(f"\n  [bold cyan]?[/bold cyan] [bold]{q}[/bold]")
+            console.print(f"\n  [bold cyan]?[/bold cyan] [bold]{questions[i]}[/bold]")
+            if replies[i]:
+                console.print(f"  [dim]previously: {replies[i]}[/dim]")
             # Empty input is never destructive (owner ruling 2026-07-09): an
             # accidental Enter re-asks; skipping is the deliberate '-'.
             while True:
                 reply = _input("  [bold cyan]›[/bold cyan] ").strip()
                 if reply:
                     break
-                console.print("  [dim]type an answer, or '-' to skip this question[/dim]")
-            if reply != "-":
-                answers.append(f"{q} -> {reply}")
+                console.print("  [dim]type an answer, '-' to skip, or '/back' "
+                              "to revisit the previous question[/dim]")
+            if reply == "/back":
+                # Control tokens never become answers (owner field report
+                # 2026-07-17: '/back' was shipped to the model verbatim).
+                if i == 0:
+                    console.print("  [dim]this is the first question[/dim]")
+                else:
+                    i -= 1
+                continue
+            replies[i] = None if reply == "-" else reply
+            i += 1
+    answers = [f"{q} -> {r}" for q, r in zip(questions, replies) if r]
     if answers:
         task_ref = emit_plan_task(goal, "; ".join(filter(None, [notes, *answers])))
         if drain_tasks(api, [task_ref]):

@@ -448,3 +448,45 @@ class TestPhaseNumberingIsDeterministic:
             "reason": "r",
         })
         assert rev.phases[0].phase == 1
+
+
+class TestCalibrationNeverGates:
+    """Phase 1 of a FRESH plan is calibration, and calibration measures — it
+    never gates (owner ruling 2026-07-17; field crash: template rule 3 named
+    only min_attempts, so models omitted min_accuracy). Enforced at the
+    PlanResult boundary — every creation door consumes it — and deliberately
+    NOT on PlanRevision: position 1 of a live campaign's replacement plan is
+    not calibration, and the authority rail (criteria never rise) already
+    keeps an existing 0-gate at 0."""
+
+    def test_plan_result_zeroes_phase_one_accuracy(self):
+        from dojo.schemas import PlanResult
+
+        res = PlanResult.model_validate({
+            "mission": "m",
+            "topics": [{"path": "a.b", "kind": "skill", "summary": ""}],
+            "phases": [
+                {"topics": ["a.b"], "criteria": {"min_attempts": 5, "min_accuracy": 0.6}},
+                {"topics": ["a.b"], "criteria": {"min_attempts": 8, "min_accuracy": 0.7}},
+            ],
+        })
+        assert res.phases[0].criteria.min_accuracy == 0.0, "calibration measures, never gates"
+        assert res.phases[1].criteria.min_accuracy == 0.7, "later phases keep their gate"
+
+    def test_plan_revision_phase_one_keeps_its_gate(self):
+        from dojo.schemas import PlanRevision
+
+        rev = PlanRevision.model_validate({
+            "phases": [{"topics": ["x"], "criteria": {"min_attempts": 3, "min_accuracy": 0.6}}],
+            "reason": "r",
+        })
+        assert rev.phases[0].criteria.min_accuracy == 0.6
+
+    def test_validation_error_paths_are_human_readable(self):
+        """The owner saw ('phases', 0, 'criteria', 'min_accuracy') verbatim —
+        a pydantic internal, not an error message."""
+        from dojo.tasks.service import _loc_path
+
+        assert _loc_path(("phases", 0, "criteria", "min_accuracy")) == \
+            "phases[0].criteria.min_accuracy"
+        assert _loc_path(()) == "result"

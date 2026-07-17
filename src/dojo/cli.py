@@ -1011,6 +1011,12 @@ def _materialize_core(api: DojoAPI, task_id: str, name: str | None) -> dict[str,
     )
     campaign = api.store.campaigns.get(res["id"])
     campaign.attack_plan = [AttackPlanPhase.model_validate(p) for p in proposal["phases"]]
+    # Phase 1 of a fresh plan is calibration, so the campaign starts in
+    # diagnostic mode — same stamp the direct-create door sets (owner field
+    # report 2026-07-17: without it, the first practice generated ungated
+    # practice items that landed as invisible candidates). Advancement past
+    # phase 1 clears it.
+    campaign.strategy_profile = {**campaign.strategy_profile, "mode": "diagnostic"}
     # Topic kinds (recall vs skill) ride along for the M3 scheduler.
     campaign.topics = proposal["topics"]
     lines = [f"# {name}", "", proposal["mission"], ""]

@@ -370,6 +370,11 @@ class PlanResult(BaseModel):
         # Numbering is deterministic (position); models never emit it.
         for i, p in enumerate(self.phases):
             p.phase = i + 1
+        # Phase 1 is calibration, and calibration measures — it never gates
+        # (owner ruling 2026-07-17). The invariant is enforced here, not
+        # requested of the model: every creation door consumes PlanResult, so
+        # a plan whose first phase demands accuracy cannot exist.
+        self.phases[0].criteria.min_accuracy = 0.0
         declared = {t.path for t in self.topics}
         for phase in self.phases:
             for tp in phase.topics:

@@ -177,7 +177,7 @@ def _validate_and_apply(store, task: Task, raw: str) -> list[str]:
     try:
         result = schema.model_validate(data)
     except ValidationError as e:
-        return [f"{err['loc']}: {err['msg']}" for err in e.errors()[:8]]
+        return [f"{_loc_path(err['loc'])}: {err['msg']}" for err in e.errors()[:8]]
 
     applier = APPLIERS.get(task.kind)
     if applier is None:
@@ -188,6 +188,16 @@ def _validate_and_apply(store, task: Task, raw: str) -> list[str]:
         return list(e.reasons)
     task.context["_applied"] = applied
     return []
+
+
+def _loc_path(loc: tuple) -> str:
+    """('phases', 0, 'criteria', 'min_accuracy') → 'phases[0].criteria.min_accuracy'
+    — the raw tuple is a pydantic internal; the dotted path is what a human
+    (or a retrying model) can act on."""
+    out = ""
+    for part in loc:
+        out += f"[{part}]" if isinstance(part, int) else (f".{part}" if out else str(part))
+    return out or "result"
 
 
 class ApplyRejection(Exception):

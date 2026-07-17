@@ -301,3 +301,31 @@ class TestHeartbeat:
         assert api.store.campaigns.get(cid).active_phase_index == 1, (
             "criteria met → phase advances at the heartbeat, no reflect call needed"
         )
+
+    def test_calibration_mode_clears_when_phase_one_passes(self, tmp_path: Path):
+        """Nothing else ever clears the diagnostic stamp (reflect only writes
+        difficulty/scaffolding) — without this, a campaign replenishes
+        diagnostics forever (latent in the direct-create door, found via the
+        2026-07-17 materialize-stamp fix)."""
+        from dojo.schemas import Attempt, AttackPlanPhase, CriteriaEntry
+        api = DojoAPI(tmp_path)
+        cid = seed(api)
+        camp = api.store.campaigns.get(cid)
+        camp.strategy_profile["mode"] = "diagnostic"
+        camp.attack_plan = [
+            AttackPlanPhase(phase=1, topics=["french.vocab"],
+                            criteria=CriteriaEntry(min_attempts=2, min_accuracy=0.0)),
+            AttackPlanPhase(phase=2, topics=["french.oral"],
+                            criteria=CriteriaEntry(min_attempts=5, min_accuracy=0.7)),
+        ]
+        camp.active_phase_index = 0
+        api.store.campaigns.save(camp)
+        for i in range(2):
+            api.store.attempts.save(cid, Attempt(
+                id=f"att_c{i}", session_id="s1", exercise_id="ex_lapsed", campaign_id=cid,
+                score=1.0, grader="exact", latency_seconds=5.0, user_answer="oui",
+            ))
+        api.daily(reset=True)
+        camp = api.store.campaigns.get(cid)
+        assert camp.active_phase_index == 1
+        assert camp.strategy_profile["mode"] == "practice", "calibration over — mode follows"

@@ -1598,6 +1598,11 @@ class DojoAPI:
             is_diagnostic = (
                 strategy.get("mode") == "diagnostic"
                 or any(t.endswith(".diagnostic") for t in active_topics)
+                # No evidence at all means calibrate first — the same
+                # pedagogy-foundation rule the daily packet enforces
+                # (needs_generation); a mode stamp can be missing, the
+                # store's emptiness cannot.
+                or (not all_ex and not attempts)
             )
             target_topic = (
                 active_topics[0] if active_topics
@@ -1630,6 +1635,12 @@ class DojoAPI:
                 topic_path=target_topic,
                 n_items=2 if is_diagnostic else 3,  # calibration stays short (pedagogy: 1-3)
                 source_slice=source_slice, diagnostic=is_diagnostic,
+                # Same recorded I2 auto-accept policy as daily replenishment
+                # (J1): the learner asked to practice NOW — stock that lands
+                # as candidates is invisible to the session builder and
+                # starves the very session this task was emitted to feed
+                # (owner field report 2026-07-17).
+                auto_promote=not is_diagnostic,
             )
             pending_tasks.append(flows.task_ref(task))
             self.log.info(f"Queue low ({len(due_exercises)} due): emitted generation task {task.id}")
@@ -2376,6 +2387,11 @@ class DojoAPI:
 
             campaign.active_phase_index += 1
             advanced = True
+            if phase_idx == 0 and campaign.strategy_profile.get("mode") == "diagnostic":
+                # Calibration is over — nothing else ever clears the stamp
+                # (reflect only writes difficulty/scaffolding), and a campaign
+                # stuck in diagnostic mode replenishes diagnostics forever.
+                campaign.strategy_profile["mode"] = "practice"
             self.log.info(f"Campaign '{campaign.id}' ('{campaign.name}') advanced to phase {campaign.active_phase_index} (mastered phase {phase_idx})")
 
             # Lean entry (ADR 018): the trigger line carries the numbers; no
