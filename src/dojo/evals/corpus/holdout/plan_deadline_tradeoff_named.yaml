@@ -114,6 +114,7 @@ judge_rubric:
 references:
   good:
     mission: "Deliver a clear 12-minute investor demo with credible Q&A; defer humor and founder-story polish until after investor day."
+    name: "Investor Demo Sprint"
     topics:
       - path: speaking.demo.structure
         kind: skill
@@ -157,6 +158,7 @@ references:
     refinement_questions: []
   bad:
     mission: "Deliver the investor demo, master Q&A, add a funny cold open, and polish the founder story in 9 days."
+    name: "Full Investor Prep"
     topics:
       - path: speaking.demo.structure
         kind: skill

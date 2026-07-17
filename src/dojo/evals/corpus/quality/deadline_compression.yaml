@@ -32,6 +32,7 @@ judge_rubric:
       kubectl commands as skill/recall appropriately, not everything one kind)?"}
 references:
   good:
+    name: "CKAD in 14 Days"
     mission: "Pass CKAD in 14 days: drill the exam's core kubectl workflows and
       manifest patterns, deferring everything non-tested."
     topics:
@@ -50,6 +51,7 @@ references:
          criteria: {min_attempts: 12, min_accuracy: 0.7}, focus: "wiring patterns, timed"}
     refinement_questions: ["Which exam version/date exactly?", "Any topics your daily work already covers?"]
   bad:
+    name: "Kubernetes Mastery"
     mission: "Become a well-rounded Kubernetes expert with deep understanding of
       container orchestration theory and ecosystem history."
     topics:

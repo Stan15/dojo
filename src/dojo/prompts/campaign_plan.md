@@ -22,8 +22,12 @@ RULES
    scope cut, deadline). ≤ {{ max_questions }} questions, each
    ≤ {{ question_words }} words. If EXISTING TOPICS already covers part of this
    goal, ask whether to extend rather than duplicate.
-6. Write the mission and refinement questions in the learner's own language
-   (the language of GOAL); topic paths stay lowercase English identifiers.
+6. Write the name, mission, and refinement questions in the learner's own
+   language (the language of GOAL); topic paths stay lowercase English
+   identifiers.
+6b. Name the campaign: ≤ {{ new_name_words }} words, a label the learner
+   recognizes in a list — never the goal restated. Don't reuse a name from
+   EXISTING CAMPAIGNS.
 7. Vague goal? Do not survey the field to hide uncertainty. If GOAL is too vague
    to commit topics to (e.g. "get smarter"), return the smallest honest plan —
    a few calibration-oriented topics and ONE short diagnostic phase — and spend
@@ -36,13 +40,17 @@ RULES
 {{ level_feedback_exclusions_or_none }}
 ## EXISTING TOPICS
 {{ registry_topic_paths_or_none }}
+## EXISTING CAMPAIGNS
+{{ existing_campaign_names_or_none }}
 
 OUTPUT — your final output is exactly this JSON (anything before it is ignored):
 {
   "mission": "...",
+  "name": "≤ {{ new_name_words }} words — a label, not the goal",
   "topics": [{"path": "a.b.c", "kind": "recall|skill", "summary": "≤ {{ topic_summary_words }} words — a hook, not a syllabus"}],
   "phases": [{"topics": ["a.b"], "criteria": {"min_attempts": 5, "min_accuracy": 0.6}, "focus": "..."}],
   "refinement_questions": ["..."]
 }
 Check: ≤ {{ max_topics }} topics; every phase topic appears in topics; mission
-states ability, not coverage, in ≤ {{ mission_words }} words.
+states ability, not coverage, in ≤ {{ mission_words }} words; name is
+≤ {{ new_name_words }} words and not an EXISTING CAMPAIGNS entry.

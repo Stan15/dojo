@@ -37,6 +37,7 @@ judge_rubric:
       thumb independence / travis picking / arrangement), marked as skill?"}
 references:
   good:
+    name: "Fingerstyle Arrangements"
     mission: "Arrange and play fingerstyle versions of favorite songs, building on
       existing chord and rhythm foundations."
     topics:
@@ -55,6 +56,7 @@ references:
       - "Build on your existing chord work — how fluent are barre chords now?"
       - "Which two or three songs should we arrange first?"
   bad:
+    name: "Fingerstyle From Scratch"
     mission: "Become a complete fingerstyle guitarist from the ground up."
     topics:
       - {path: fingerstyle.basics.holding_the_guitar, kind: recall, summary: "posture"}

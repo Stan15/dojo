@@ -77,6 +77,7 @@ judge_rubric:
 references:
   good:
     mission: "Prevent allergen cross-contact at the soup-kitchen cold topping station this Saturday."
+    name: "Allergen Station Safety"
     topics:
       - path: allergen.station.labels
         kind: recall
@@ -112,6 +113,7 @@ references:
     refinement_questions: []
   bad:
     mission: "Learn kitchen food safety broadly before volunteering."
+    name: "Kitchen Food Safety"
     topics:
       - path: safety.pathogens.basics
         kind: recall

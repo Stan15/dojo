@@ -966,6 +966,7 @@ def cmd_campaign_plan(args: argparse.Namespace) -> int:
             context=getattr(args, "context", None),
             emit_plan_task=lambda goal, notes: _emit_plan_task(api.store, goal, notes),
             materialize=lambda task_id: _materialize_core(api, task_id, None),
+            mode=_display_mode(args),
         )
     notes = []
     if getattr(args, "level", None):
@@ -1002,7 +1003,10 @@ def _materialize_core(api: DojoAPI, task_id: str, name: str | None) -> dict[str,
 
     topic_paths = [t["path"] for t in proposal["topics"]]
     root = topic_paths[0].split(".")[0] if topic_paths else "general"
-    name = name or task.context.get("goal") or root
+    # The AI-generated label leads (owner directive 2026-07-15: the raw goal
+    # as a name/id was the bug — camp_i-have-terrible-memory); the goal
+    # stays verbatim in the task context and the mission carries the intent.
+    name = name or proposal.get("name") or task.context.get("goal") or root
 
     res = api.create_campaign(
         name=name,
@@ -2028,9 +2032,7 @@ def cmd_daily(args: argparse.Namespace) -> int:
     api = DojoAPI(_db_path(args))
     if not _use_json(args):
         from .interactive import daily_flow
-        mode = "screen" if getattr(args, "screen", False) else (
-            "transcript" if getattr(args, "transcript", False) else None)
-        return daily_flow(api, size=args.size, reset=args.reset, mode=mode)
+        return daily_flow(api, size=args.size, reset=args.reset, mode=_display_mode(args))
     res = api.daily(size=args.size, reset=args.reset)
     if _use_json(args):
         _print_json({"ok": True, **res})
@@ -2065,7 +2067,8 @@ def cmd_more(args: argparse.Namespace) -> int:
     api = DojoAPI(_db_path(args))
     if not _use_json(args):
         from .interactive import more_flow
-        return more_flow(api, force=bool(getattr(args, "force", False)))
+        return more_flow(api, force=bool(getattr(args, "force", False)),
+                         mode=_display_mode(args))
     res = api.more(force=bool(getattr(args, "force", False)))
     _print_json({"ok": True, **res})  # a refusal is an answer, not an error
     return 0
@@ -2159,6 +2162,7 @@ def cmd_learn(args: argparse.Namespace) -> int:
                 emit_plan_task=lambda g, n: _emit_plan_task(api.store, g, n),
                 materialize=lambda tid: _materialize_core(api, tid, None),
                 initial_task_ref=task_ref,
+                mode=_display_mode(args),
             )
 
         try:
@@ -2318,6 +2322,36 @@ def cmd_topic_revive(args: argparse.Namespace) -> int:
     return 0
 
 
+def _display_mode(args: argparse.Namespace) -> str | None:
+    """The app-wide display override: --screen / --transcript beat the
+    ui.mode config; absent both, the flows fall back to the config."""
+    if getattr(args, "screen", False):
+        return "screen"
+    if getattr(args, "transcript", False):
+        return "transcript"
+    return None
+
+
+def cmd_campaign_rename(args: argparse.Namespace) -> int:
+    """`dojo campaign rename <id> "<name>"`: fix a display name in place —
+    the id and its history stay (STATE 7f ride-along: paragraph-named
+    campaigns fixable without recreating)."""
+    api = DojoAPI(_db_path(args))
+    try:
+        res = api.rename_campaign(args.campaign_id, args.name)
+    except ValueError as exc:
+        if _use_json(args):
+            _print_json({"ok": False, "error": str(exc)})
+            return 1
+        raise SystemExit(f"error: {exc}")
+    if _use_json(args):
+        _print_json({"ok": True, **res})
+    else:
+        console.print(f"[green]✓ renamed[/green] [cyan]{res['old_name']}[/cyan] → "
+                      f"[bold cyan]{res['name']}[/bold cyan] [dim](id unchanged: {res['id']})[/dim]")
+    return 0
+
+
 def cmd_campaign_archive(args: argparse.Namespace) -> int:
     """`dojo campaign archive <id>`: leave rotation, accept forgetting — a
     human decision (TTY confirms; --json is the agent relaying the learner's
@@ -2388,6 +2422,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--json", action="store_true", help="output structured JSON instead of human-friendly text")
     parser.add_argument("--no-input", action="store_true", help="disable all interactive prompts")
     sub = parser.add_subparsers(dest="command", required=True)
+
+    # One display contract for every practice-bearing command (owner directive
+    # 2026-07-17: the screen/transcript choice is app-wide, not per-command).
+    display = argparse.ArgumentParser(add_help=False)
+    display.add_argument("--screen", action="store_true",
+                         help="full-screen session view for this run (default: ui.mode config, else transcript)")
+    display.add_argument("--transcript", action="store_true",
+                         help="classic scrollback view for this run, overriding ui.mode")
 
     p_export = sub.add_parser("export", help="write your entire store as a fresh markdown store at a destination (backend-blind)")
     p_export.add_argument("destination", help="empty or nonexistent directory to export into")
@@ -2577,20 +2619,17 @@ def build_parser() -> argparse.ArgumentParser:
     p_reflect.add_argument("--campaign")
     p_reflect.set_defaults(func=cmd_admin_consolidate)
 
-    p_daily = sub.add_parser("daily", help="build today's bounded, explained practice packet")
+    p_daily = sub.add_parser("daily", parents=[display],
+                             help="build today's bounded, explained practice packet")
     p_daily.add_argument("--size", type=int, help="override daily.packet_size (hard cap 8)")
     p_daily.add_argument("--reset", action="store_true", help="discard the active session and rebuild")
-    p_daily.add_argument("--screen", action="store_true",
-                         help="full-screen session view for this run (default: ui.mode config, else transcript)")
-    p_daily.add_argument("--transcript", action="store_true",
-                         help="classic scrollback view for this run, overriding ui.mode")
     p_daily.set_defaults(func=cmd_daily)
 
     p_why = sub.add_parser("why", help="explain every scheduling choice behind the current packet")
     p_why.set_defaults(func=cmd_why)
 
     p_more = sub.add_parser(
-        "more",
+        "more", parents=[display],
         help="ask for a bounded extra-practice top-up — granted only when your "
              "7-day review budget agrees; refusals show the projection",
     )
@@ -2599,7 +2638,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_more.set_defaults(func=cmd_more)
 
     p_learn = sub.add_parser(
-        "learn",
+        "learn", parents=[display],
         help="'I want to learn X' — routes the goal against your campaigns first "
              "(extend a near fit, or plan fresh); resolve a routed goal with "
              "`learn extend <task-id>` / `learn new <task-id>`",
@@ -2679,6 +2718,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_camp_archive.add_argument("campaign_id")
     p_camp_archive.set_defaults(func=cmd_campaign_archive)
 
+    p_camp_rename = p_camp_sub.add_parser("rename", help="fix a campaign's display name in place (id and history stay)")
+    p_camp_rename.add_argument("campaign_id")
+    p_camp_rename.add_argument("name")
+    p_camp_rename.set_defaults(func=cmd_campaign_rename)
+
     p_camp_boost = p_camp_sub.add_parser("boost", help="surface this CAMPAIGN more (or less) in daily packets")
     p_camp_boost.add_argument("campaign_id")
     p_camp_boost.add_argument("factor", type=float, help="1.0 = neutral, 2.0 = twice the priority, 0.5 = half")
@@ -2691,7 +2735,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_topic_boost.add_argument("--kind", choices=["recall", "skill"], help="lane when creating a new topic entry")
     p_topic_boost.set_defaults(func=cmd_topic_boost)
 
-    p_camp_plan = p_camp_sub.add_parser("plan")
+    p_camp_plan = p_camp_sub.add_parser("plan", parents=[display])
     p_camp_plan.add_argument("goal", help="The user's high-level learning goal or target skill")
     p_camp_plan.add_argument("--level", "-l", choices=["beginner", "intermediate", "advanced"])
     p_camp_plan.add_argument("--context", "-c", help="Constraints, deadlines, exclusions, preferences")

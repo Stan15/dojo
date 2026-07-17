@@ -35,6 +35,7 @@ judge_rubric:
 references:
   good:
     mission: "Leer y señalar NDAs y employment offers en el trabajo con confianza, sabiendo qué cláusulas muerden."
+    name: "Contratos en el trabajo"
     topics:
       - {path: law.contracts.formation, kind: recall, summary: "offer, acceptance, consideration"}
       - {path: law.contracts.ndas, kind: skill, summary: "scope, term, carve-outs, red flags"}
@@ -47,6 +48,7 @@ references:
     refinement_questions: ["¿Bajo qué jurisdicción están los contratos que revisas?"]
   bad:
     mission: "Become conversational in Spanish for professional legal settings."
+    name: "Professional Legal Spanish"
     topics:
       - {path: spanish.legal.vocabulary, kind: recall, summary: "legal terms in Spanish"}
       - {path: spanish.grammar.subjunctive, kind: recall, summary: "formal register"}

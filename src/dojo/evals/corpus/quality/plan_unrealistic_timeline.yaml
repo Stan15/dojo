@@ -33,6 +33,7 @@ judge_rubric:
       demanding 20+ attempts at 0.9 accuracy)?"}
 references:
   good:
+    name: "Trip-Ready Japanese"
     mission: "Three weeks won't make you fluent — it CAN make you trip-ready:
       survival phrases, ordering, transit, and asking for help with confidence."
     topics:
@@ -52,6 +53,7 @@ references:
       - "Fluency needs months; trip-survival fits 3 weeks — agreed on that scope?"
       - "Which trip situations matter most: food, transit, or socializing?"
   bad:
+    name: "Fluent in Three Weeks"
     mission: "Achieve conversational fluency in Japanese within three weeks through
       intensive immersion and disciplined daily grammar study."
     topics:

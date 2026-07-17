@@ -35,6 +35,7 @@ judge_rubric:
       standard (what 'improved' would look like)?"}
 references:
   good:
+    name: "Memory Calibration"
     mission: "Establish where memory actually fails for this learner, then train
       the one or two recall contexts that matter most."
     topics:
@@ -48,6 +49,7 @@ references:
       - "In which situations does forgetting actually cost you?"
       - "What would noticeably 'improved memory' look like for you?"
   bad:
+    name: "Elite Memory Mastery"
     mission: "Master the complete science and toolkit of human memory to achieve
       elite recall across all domains of life."
     topics:

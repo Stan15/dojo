@@ -54,8 +54,12 @@ def _input(prompt: str) -> str:
 
 
 def confirm(question: str, default: bool = True) -> bool:
-    """Y/n keypress with a default; empty input takes the default."""
-    suffix = "[Y/n]" if default else "[y/N]"
+    """Y/n keypress with a default; empty input takes the default.
+
+    The suffixes are markup-ESCAPED: rich's tag regex starts lowercase, so
+    un-escaped "[y/N]" was parsed as a tag and silently stripped — default-no
+    prompts showed no options at all (owner field report 2026-07-17)."""
+    suffix = r"\[Y/n]" if default else r"\[y/N]"
     answer = _input(f"{question} [bold]{suffix}[/bold] ").strip().lower()
     if not answer:
         return default
@@ -364,7 +368,10 @@ def practice_loop(api: DojoAPI, session: dict[str, Any],
             info = api.reveal_prompt(session_id=session["id"])
         except ValueError:
             break
-        done += 1
+        # Authoritative position, never a reveal count: a refused /back or an
+        # amend re-reveals the SAME exercise (owner field report 2026-07-17:
+        # the counter marched to "5 of 2" on one question).
+        done = info["index"] + 1
         if info.get("present"):
             # Deliberate encoding event (ADR 017): show the material, plain
             # Enter confirms — the ONE place empty input is a real action
@@ -396,7 +403,7 @@ def practice_loop(api: DojoAPI, session: dict[str, Any],
                        "or /skip <reason>, /why, /quit[/dim]")
                 hinted = True
             answer = got
-        if answer.strip() == "/quit":
+        if answer.strip() in ("/quit", "/exit"):  # /exit: owner ask 2026-07-17
             r.note("[dim]Paused — dojo daily resumes right here.[/dim]")
             _settle_grades(api, pending_grades)
             return
@@ -406,37 +413,65 @@ def practice_loop(api: DojoAPI, session: dict[str, Any],
             # pending grades amend; landed ones point at dojo correct.
             parts = answer.strip().split()
             steps = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 1
-            peek = api.amend_previous_answer("", session_id=session["id"],
-                                             steps_back=steps, peek=True)
-            if not peek.get("ok"):
-                hint = f" [dim]({peek['next']})[/dim]" if peek.get("next") else ""
-                r.note(f"  [yellow]{peek['error']}[/yellow]{hint}\n")
-                continue
-            r.amend_review(peek["prompt"], peek["current_answer"], steps)
-            new_ans = r.ask("[bold yellow]new answer ('-' keeps it) ›[/bold yellow] ").strip()
-            if new_ans and new_ans != "-":
-                amended = api.amend_previous_answer(
-                    new_ans, session_id=session["id"], steps_back=steps)
-                if amended.get("ok"):
-                    r.note("  [green]✓ amended — grades with the batch at the end[/green]\n")
-                    for pg in pending_grades:
-                        if pg.get("attempt_id") == amended["attempt_id"]:
-                            pg["tasks"] = amended["tasks"]  # stale grade task superseded
+            # '/back' at the review chains one question further (owner field
+            # report 2026-07-17: repeating /back cycled between the same two
+            # questions — the review prompt read it as the new ANSWER).
+            while True:
+                peek = api.amend_previous_answer("", session_id=session["id"],
+                                                 steps_back=steps, peek=True)
+                if not peek.get("ok"):
+                    hint = f" [dim]({peek['next']})[/dim]" if peek.get("next") else ""
+                    r.note(f"  [yellow]{peek['error']}[/yellow]{hint}\n")
+                    break
+                r.amend_review(peek["prompt"], peek["current_answer"], steps)
+                new_ans = r.ask("[bold yellow]new answer ('-' keeps it · '/back' "
+                                "reaches further back) ›[/bold yellow] ").strip()
+                if new_ans == "/back":
+                    steps += 1
+                    continue
+                if new_ans.startswith("/"):
+                    r.note("  [dim]commands don't amend — '-' keeps it, "
+                           "'/back' goes further back[/dim]\n")
+                    continue
+                if new_ans and new_ans != "-":
+                    amended = api.amend_previous_answer(
+                        new_ans, session_id=session["id"], steps_back=steps)
+                    if amended.get("ok"):
+                        r.note("  [green]✓ amended — grades with the batch at the end[/green]\n")
+                        for pg in pending_grades:
+                            if pg.get("attempt_id") == amended["attempt_id"]:
+                                pg["tasks"] = amended["tasks"]  # stale grade task superseded
+                    else:
+                        r.note(f"  [yellow]{amended['error']}[/yellow]\n")
                 else:
-                    r.note(f"  [yellow]{amended['error']}[/yellow]\n")
-            else:
-                r.note("  [dim]kept as it was[/dim]\n")
+                    r.note("  [dim]kept as it was[/dim]\n")
+                break
             continue
         if answer.strip().startswith("/skip"):
             parts = answer.strip().split()
             reason = parts[1] if len(parts) > 1 else "forgot"
             res = api.skip_active_exercise(reason, session_id=session["id"])
             r.note(f"  [yellow]skipped ({reason})[/yellow]\n")
+        elif answer.strip().startswith("/"):
+            # An unrecognized command must never become an answer (owner field
+            # report 2026-07-17: '/exit' was submitted and scored).
+            r.note("  [yellow]unknown command[/yellow] [dim]— /why · /back \\[n] · "
+                   "/skip <reason> · /quit[/dim]\n")
+            continue
         else:
             res = api.submit_answer(user_answer=answer, session_id=session["id"])
+            if res.get("not_an_answer"):
+                # Calibration junk screen: nothing recorded — re-ask.
+                r.note(f"  [yellow]that doesn't look like an answer[/yellow] "
+                       f"[dim]— {res['next']}[/dim]\n")
+                continue
             if res.get("pending_grade") and res.get("tasks"):
                 pending_grades.append(res)
                 r.note("  [dim]✓ recorded — scoring at the end[/dim]\n")
+            elif res.get("diagnostic"):
+                # Calibration measures, it doesn't grade — "correct" would be
+                # a lie in both directions (owner directive 2026-07-17).
+                r.note("  [cyan]✓ noted — calibration, not a test[/cyan]\n")
             else:
                 correct = res.get("correct_answer")
                 r.score(res["score"], None if res["score"] >= 1.0 else
@@ -582,12 +617,17 @@ def _render_proposal(proposal: dict[str, Any]) -> None:
         lines.append(f"  Phase {p['phase']}: {', '.join(p['topics'])} "
                      f"[dim]({gate}"
                      + (f" — {p['focus']}" if p.get("focus") else "") + ")[/dim]")
-    console.print(Panel("\n".join(lines), title="[bold green]Proposed campaign[/bold green]",
+    # The generated name is part of what the learner approves (STATE 7f).
+    title = "Proposed campaign"
+    if proposal.get("name"):
+        title += f": {proposal['name']}"
+    console.print(Panel("\n".join(lines), title=f"[bold green]{title}[/bold green]",
                         border_style="green"))
 
 
 def plan_flow(api: DojoAPI, *, goal: str, level: Optional[str], context: Optional[str],
-              emit_plan_task, materialize, initial_task_ref: Optional[dict] = None) -> int:
+              emit_plan_task, materialize, initial_task_ref: Optional[dict] = None,
+              mode: Optional[str] = None) -> int:
     """Plan → refine → create as one conversation: renders the proposal,
     walks the model's refinement questions (answers trigger one re-plan),
     and only materializes a campaign on explicit confirmation. Declining
@@ -626,10 +666,16 @@ def plan_flow(api: DojoAPI, *, goal: str, level: Optional[str], context: Optiona
             # accidental Enter re-asks; skipping is the deliberate '-'.
             while True:
                 reply = _input("  [bold cyan]›[/bold cyan] ").strip()
-                if reply:
+                # Only '-' and '/back' are commands here; any other slash
+                # token is a mistake, not an answer for the model.
+                if reply in ("-", "/back") or (reply and not reply.startswith("/")):
                     break
-                console.print("  [dim]type an answer, '-' to skip, or '/back' "
-                              "to revisit the previous question[/dim]")
+                if reply:
+                    console.print("  [dim]unknown command — '-' skips, '/back' "
+                                  "revisits the previous question[/dim]")
+                else:
+                    console.print("  [dim]type an answer, '-' to skip, or '/back' "
+                                  "to revisit the previous question[/dim]")
             if reply == "/back":
                 # Control tokens never become answers (owner field report
                 # 2026-07-17: '/back' was shipped to the model verbatim).
@@ -656,12 +702,12 @@ def plan_flow(api: DojoAPI, *, goal: str, level: Optional[str], context: Optiona
     result = materialize(task.id)
     console.print(f"[bold green]Campaign created:[/bold green] {result['id']}")
     if confirm("Start practicing it now?"):
-        return first_session_flow(api, result["id"])
+        return first_session_flow(api, result["id"], mode=mode)
     console.print("[dim]When you're ready: dojo daily.[/dim]")
     return 0
 
 
-def first_session_flow(api: DojoAPI, campaign_id: str) -> int:
+def first_session_flow(api: DojoAPI, campaign_id: str, mode: Optional[str] = None) -> int:
     """The first practice right after creating a campaign practices THAT
     campaign — its calibration questions — never the general daily (owner
     field report 2026-07-13: "Start practicing now?" resumed an unrelated
@@ -682,7 +728,7 @@ def first_session_flow(api: DojoAPI, campaign_id: str) -> int:
         console.print("[yellow]Nothing to practice yet — fulfill the pending "
                       "task(s), then run dojo daily.[/yellow]")
         return 0
-    practice_loop(api, res["session"], _session_renderer(api))
+    practice_loop(api, res["session"], _session_renderer(api, mode))
     return 0
 
 
@@ -703,7 +749,7 @@ def _print_done_for_today() -> None:
 # More: the capacity channel, at the learner's request only
 # ------------------------------------------------------------------
 
-def more_flow(api: DojoAPI, *, force: bool = False) -> int:
+def more_flow(api: DojoAPI, *, force: bool = False, mode: Optional[str] = None) -> int:
     """The human `dojo more`: grants the bounded top-up and runs it as a
     normal practice loop, or relays the honest refusal with the 7-day
     projection and the debt-free alternative. One inline drain covers the
@@ -716,7 +762,10 @@ def more_flow(api: DojoAPI, *, force: bool = False) -> int:
                 f"  [dim]{res['projected_due_7d']} review(s) due in the next 7 days · "
                 f"capacity {res['capacity_7d']}[/dim]"
             )
-            console.print(f"  [dim]{res['alternative']}[/dim]")
+            # Human surface: never point a person at the agent envelope
+            # commands (owner field report 2026-07-17: "dojo ready" sent a
+            # human into the machine-dialect prompt).
+            console.print(f"  [dim]{res.get('alternative_interactive') or res['alternative']}[/dim]")
             return 0
         if res.get("session") is not None:
             break
@@ -732,7 +781,7 @@ def more_flow(api: DojoAPI, *, force: bool = False) -> int:
         console.print(f"[yellow]{res['warning']}[/yellow]")
     console.print(f"[bold]Extension granted[/bold] — {res['granted']} new item(s), "
                   "labeled so tomorrow's schedule stays honest.")
-    practice_loop(api, res["session"], _session_renderer(api))
+    practice_loop(api, res["session"], _session_renderer(api, mode))
     return 0
 
 

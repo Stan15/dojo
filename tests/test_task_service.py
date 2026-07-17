@@ -292,6 +292,7 @@ class TestPlanApplier:
         before = len(store.campaigns.list())
         outcome = service.submit(store, task_id, json.dumps({
             "mission": "Debug and operate compose stacks during on-call.",
+            "name": "Docker Compose",
             "topics": [
                 {"path": "docker.compose.services", "kind": "skill", "summary": "define and wire services"},
                 {"path": "docker.compose.volumes", "kind": "recall", "summary": "volume syntax"},
@@ -432,6 +433,7 @@ class TestPhaseNumberingIsDeterministic:
 
         res = PlanResult.model_validate({
             "mission": "m",
+            "name": "n",
             "topics": [{"path": "a.b", "kind": "skill", "summary": ""}],
             "phases": [
                 {"topics": ["a.b"], "criteria": {"min_attempts": 5, "min_accuracy": 0.6}},
@@ -464,6 +466,7 @@ class TestCalibrationNeverGates:
 
         res = PlanResult.model_validate({
             "mission": "m",
+            "name": "n",
             "topics": [{"path": "a.b", "kind": "skill", "summary": ""}],
             "phases": [
                 {"topics": ["a.b"], "criteria": {"min_attempts": 5, "min_accuracy": 0.6}},

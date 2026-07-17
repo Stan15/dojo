@@ -74,6 +74,31 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
    rubric under the codex spend policy); per-(driver,judge) ratcheted
    floors, same mechanics as the quality corpus. Holdout deferred until
    the surface stabilizes. **Default: nothing built until you gate it.**
+6d. **Display-system unification (your directives 2026-07-17)** — shipped
+   now: --screen/--transcript are an app-wide flag pair (shared parser
+   parent) on every practice-bearing command (daily, more, learn,
+   campaign plan), threaded to every practice loop; ui.mode config stays
+   the persistent choice. NOT yet screen-aware: the conversational
+   surfaces themselves (plan proposal/refinement, capture, inbox) — they
+   render transcript-style in both modes. Full unification needs the
+   SessionRenderer abstraction extended to conversations. Your in-place
+   question: a hybrid is feasible — a bounded live region that redraws
+   the CURRENT card in place (cursor-up + erase, no alt-screen) and
+   collapses finished cards into normal scrollback, so the terminal
+   stays usable and history stays scrollable. Line-based input makes
+   Enter tractable (we know the card's height); the REAL risk is
+   wrap/resize arithmetic (a mid-card terminal resize breaks
+   line-counting and erases the wrong rows) — needs width-aware
+   re-measure on every redraw. **Default: design doc before any build.**
+6e. **Calibration junk detection depth (your directive 2026-07-17)** —
+   shipped now: deterministic screen (slash-tokens, symbol-only input
+   refused without recording; everything real scores full; display says
+   "noted", never "correct"). NOT covered: fluent-looking mash ("asdf
+   jkl") passes the screen and scores full. The next rung is an AI
+   reality-check per diagnostic answer (~2KB grade call each) — costs
+   tokens on every calibration answer for a rare case reflection already
+   sees in the raw rows. **Default: deterministic screen only; escalate
+   only on field evidence of mash answers polluting calibration.**
 7. **Growth strategy sign-off** — full researched strategy delivered at your
    direction: `docs/growth-strategy.md`. Headline: retention is already the
    product (the SRS community's documented abandonment causes map 1:1 onto

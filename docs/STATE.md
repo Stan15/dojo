@@ -207,8 +207,19 @@ committed work, not proposals awaiting an answer. Item numbering is stable
    prompt work was pending (freeze predates the leak); item 7d MUST be
    executed by a fresh session. Non-prompt work (benchmark runs, gate,
    relaying blind-subagent reports) unaffected.
-7f. **DIRECTED 2026-07-15 (owner; PROMPT-WORK HALF for the fresh session):
-   generated campaign names.** `dojo learn "<long goal>"` currently makes
+7f. ✓ **DONE 2026-07-17 — generated campaign names + ride-alongs shipped**
+   per the owner-reviewed design below: PlanResult requires `name`
+   (≤ ROUTE_NEW_NAME_WORDS via TEMPLATE_CAPS placeholder), payload lists
+   existing campaign names (SECTION_BUDGETS +300B), template rule 6b +
+   skeleton + Check line, proposal panel titles with the name, materialize
+   prefers it (raw goal only as fallback), `dojo campaign rename` (display
+   name only, collision-refusing), learn-extend hint distinguishes
+   already-active (topic-boost) from scheduled-later (start --topic).
+   Visible plan references gained exemplar names; the three HOLDOUT plan
+   scenarios were name-patched by a cold-context subagent under the blind
+   protocol (filenames-only report; this session read nothing). Plan
+   footprint 2540→2848 (deliberate). Owner must `sh install.sh` to get it.
+   _Original directive:_ `dojo learn "<long goal>"` currently makes
    the raw goal the campaign name+id (owner's store: camp_i-have-terrible-
    memory). Design (owner-reviewed in conversation): PlanResult gains
    `name` (≤ ROUTE_NEW_NAME_WORDS=4, same cap as route new_name), one
@@ -356,3 +367,14 @@ committed work, not proposals awaiting an answer. Item numbering is stable
   uncommitted → 0610a03. SKILL.md behavioral evals designed for gate
   (7h / QUESTIONS 6c). INSIGHTS: partial-statement subtype of the
   invisible-floor class; stamps need clearing edges; spend granted budgets.
+- 07-17 (second wave, same owner drive): 7f generated-names shipped (see
+  7f) + calibration command/junk discipline (unknown slash-commands and
+  /exit never submit; junk refused unrecorded; "noted" not "correct";
+  /back counter uses authoritative index — was marching to "5 of 2"),
+  confirm() '[y/N]' rich-markup swallow fixed, display flags app-wide
+  (QUESTIONS 6d; conversational-surface screen unification + in-place
+  live-region hybrid ledgered there), junk-detection depth ledgered
+  (QUESTIONS 6e), '/back' at the amend review chains further back (was
+  cycling), more's open-session refusal speaks human at a TTY
+  (alternative_interactive: dojo daily, never the agent envelope).
+  706 tests green.

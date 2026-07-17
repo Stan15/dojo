@@ -105,6 +105,7 @@ TEMPLATE_CAPS: dict[str, dict[str, int]] = {
         "question_words": PLAN_QUESTION_WORDS,
         "mission_words": PLAN_MISSION_WORDS,
         "topic_summary_words": PLAN_TOPIC_SUMMARY_WORDS,
+        "new_name_words": ROUTE_NEW_NAME_WORDS,  # campaign name is a label; same cap as route
     },
     "capture.route": {
         "reason_words": ROUTE_REASON_WORDS,

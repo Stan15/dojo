@@ -345,6 +345,11 @@ class PlanResult(BaseModel):
     refinement questions back to the learner."""
 
     mission: str = Field(min_length=1)
+    name: str = Field(
+        min_length=1,
+        description="Campaign display name — a short label, never the goal restated "
+                    "(owner directive 2026-07-15: the raw goal as a name/id is the bug).",
+    )
     topics: List[PlanTopic] = Field(min_length=1, max_length=_limits.PLAN_MAX_TOPICS)
     phases: List[AttackPlanPhase] = Field(
         min_length=_limits.PLAN_MIN_PHASES, max_length=_limits.PLAN_MAX_PHASES
@@ -355,6 +360,9 @@ class PlanResult(BaseModel):
 
     _cap_mission = field_validator("mission")(
         _cap_words("mission", _limits.PLAN_MISSION_WORDS)
+    )
+    _cap_name = field_validator("name")(
+        _cap_words("name", _limits.ROUTE_NEW_NAME_WORDS)
     )
 
     @field_validator("refinement_questions")

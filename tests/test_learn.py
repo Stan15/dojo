@@ -206,6 +206,26 @@ class TestLearnExtend:
         assert len(api.store.campaigns.get(CAMP_ID).attack_plan) == 1
         assert "topic-boost" in res["next"], "boosting, not restructuring"
 
+    def test_attach_covered_by_a_later_phase_points_at_start_not_boost(self, api):
+        """STATE 7f ride-along (owner field flow 2026-07-15): topic-boost is
+        phase-gated — for a not-yet-active phase it silently does nothing, so
+        the hint must open the door that works today: dojo start --topic."""
+        camp = api.store.campaigns.get(CAMP_ID)
+        camp.topics.append({"path": "french.writing", "kind": "skill", "summary": ""})
+        camp.attack_plan.append(AttackPlanPhase(
+            phase=2, topics=["french.writing"],
+            criteria={"min_attempts": 5, "min_accuracy": 0.7},
+        ))
+        api.store.campaigns.save(camp)
+        task_id = routed_task(api, "get better at written French",
+                              route_payload("attach", campaign=CAMP_ID, topic="french.writing"))
+        res = api.learn_extend(task_id)
+        assert res["already_covered"] is True and res["phase"] == 2
+        assert "start --topic french.writing" in res["next"]
+        assert "topic-boost" not in res["next"].split("(")[0], (
+            "the working door leads; the phase-gated one is only explained"
+        )
+
     def test_attach_to_completed_topic_appends_a_refocus_phase(self, api):
         camp = api.store.campaigns.get(CAMP_ID)
         camp.active_phase_index = 1  # phase 1 done; french.oral is behind the learner

@@ -31,6 +31,7 @@ judge_rubric:
 references:
   good:
     mission: "Recall all 26 NATO phonetic words instantly, in and out of order."
+    name: "NATO Phonetic Alphabet"
     topics:
       - {path: phonetic.alphabet.letters, kind: recall, summary: "Alfa through Zulu"}
     phases:
@@ -39,6 +40,7 @@ references:
     refinement_questions: ["Letters only, or also the digit words (niner, fife)?"]
   bad:
     mission: "Master aviation radio communications from phonetics to full procedural fluency."
+    name: "Aviation Radio Mastery"
     topics:
       - {path: aviation.phonetic.letters, kind: recall, summary: "the alphabet"}
       - {path: aviation.radio.procedure, kind: skill, summary: "standard calls"}

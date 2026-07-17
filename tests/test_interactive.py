@@ -190,6 +190,7 @@ class TestEmptyInputIsNeverDestructive:
         api = DojoAPI(tmp_path)
         proposal = {
             "mission": "Tie the six knots that cover 95% of situations.",
+            "name": "Essential Knots",
             "topics": [{"path": "knots.core", "kind": "skill", "summary": "the six"}],
             "phases": [{"phase": 1, "topics": ["knots.core"],
                         "criteria": {"min_attempts": 5, "min_accuracy": 0.6},
@@ -235,6 +236,7 @@ class TestRefinementBack:
         api = DojoAPI(tmp_path)
         proposal = {
             "mission": "Cook affordable meals reliably.",
+            "name": "Home Cooking",
             "topics": [{"path": "cooking.rice", "kind": "skill", "summary": "doneness"}],
             "phases": [{"topics": ["cooking.rice"],
                         "criteria": {"min_attempts": 5, "min_accuracy": 0.0},
@@ -284,6 +286,7 @@ class TestDrainUsesTheSubmissionBudget:
 
     GOOD = {
         "mission": "Cook affordable meals reliably.",
+        "name": "Home Cooking",
         "topics": [{"path": "cooking.rice", "kind": "skill", "summary": "doneness"}],
         "phases": [{"topics": ["cooking.rice"],
                     "criteria": {"min_attempts": 5, "min_accuracy": 0.0}}],
@@ -343,6 +346,7 @@ class TestPlanCreatedCampaignStartsInCalibration:
 
     PROPOSAL = {
         "mission": "Cook affordable meals reliably.",
+        "name": "Home Cooking",
         "topics": [
             {"path": "cooking.rice", "kind": "skill", "summary": "doneness"},
             {"path": "cooking.safety", "kind": "recall", "summary": "storage"},
@@ -407,6 +411,134 @@ class TestPlanCreatedCampaignStartsInCalibration:
         assert gen[0].context.get("auto_promote") is True, (
             "start-path stock lands practicable, never as invisible candidates"
         )
+
+
+class TestPracticeLoopCommandDiscipline:
+    """Owner field reports 2026-07-17: '/exit' was submitted and scored
+    '✓ correct'; a refused /back marched the counter to '5 of 2'; junk must
+    never become calibration evidence (calibration measures, never grades)."""
+
+    def _session_api(self, tmp_path: Path) -> tuple[DojoAPI, dict]:
+        from dojo.schemas import PracticeSession
+        api = DojoAPI(tmp_path)
+        cid = api.create_campaign(name="Juggling", topic_path="juggling",
+                                  mission="Cascade three balls.")["id"]
+        for i in range(2):
+            api.store.exercises.save(cid, Exercise(
+                id=f"ex_d{i}", topic_path="juggling", difficulty="beginner",
+                quality="diagnostic", prompt=f"diagnostic question {i}?",
+            ))
+        session = PracticeSession(id="sess_t", exercise_ids=["ex_d0", "ex_d1"])
+        api.store.sessions.save_active(session)
+        return api, session.model_dump(), cid
+
+    def test_commands_and_junk_never_become_answers_and_the_counter_holds(
+        self, tmp_path: Path, capsys
+    ):
+        api, session, cid = self._session_api(tmp_path)
+        answers = iter([
+            "/back",                    # refused (nothing before) — re-asks
+            "/oops",                    # unknown command — re-asks
+            "...",                      # calibration junk — refused, re-asks
+            "juggled a bit as a kid",   # real response — full score, 'noted'
+            "/exit",                    # alias of /quit — pauses
+        ])
+        with patch.object(interactive, "_input", lambda prompt: next(answers)):
+            interactive.practice_loop(api, session)
+        out = capsys.readouterr().out
+        assert "3 of 2" not in out, "re-asks must never inflate the position counter"
+        assert "unknown command" in out
+        assert "doesn't look like an answer" in out
+        assert "noted — calibration" in out
+        assert "✓ correct" not in out, "calibration never claims correctness"
+        assert "Paused" in out, "/exit works like /quit"
+        attempts = api.store.attempts.list(cid)
+        assert len(attempts) == 1, "commands and junk recorded nothing"
+        assert attempts[0].user_answer == "juggled a bit as a kid"
+        assert attempts[0].score == 1.0, "a real response earns full score"
+
+
+class TestBackChainsThroughHistory:
+    """Owner field report 2026-07-17: repeating /back cycled between the same
+    two questions — the amend-review prompt swallowed '/back' as the new
+    answer. Each additional /back must reach one question further back."""
+
+    def test_repeated_back_walks_to_earlier_answers(self, tmp_path: Path, capsys):
+        from dojo.schemas import PracticeSession
+        api = DojoAPI(tmp_path)
+        cid = api.create_campaign(name="Chem", topic_path="chem", mission="m")["id"]
+        for i in range(3):
+            api.store.exercises.save(cid, Exercise(
+                id=f"ex_r{i}", topic_path="chem", difficulty="beginner",
+                answer=f"secret{i}", rubric="- exactness", prompt=f"question {i}?",
+            ))
+        session = PracticeSession(id="sess_b", exercise_ids=["ex_r0", "ex_r1", "ex_r2"])
+        api.store.sessions.save_active(session)
+        answers = iter([
+            "a0", "a1",            # two answers land (pending grades)
+            "/back",               # at q3: review q2's answer
+            "/back",               # chain: review q1's answer (NOT a new answer)
+            "a0-fixed",            # amend the first answer
+            "a2",                  # answer q3; session completes
+        ])
+        with patch.object(interactive, "_input", lambda prompt: next(answers)):
+            interactive.practice_loop(api, session.model_dump())
+        by_ex = {a.exercise_id: a for a in api.store.attempts.list(cid)}
+        assert by_ex["ex_r0"].user_answer == "a0-fixed", "the chained /back reached q1"
+        assert by_ex["ex_r1"].user_answer == "a1", "q2's answer stayed as it was"
+
+
+class TestCampaignRename:
+    """STATE 7f ride-along: paragraph-named campaigns are fixable in place —
+    the id and history stay, only the label moves."""
+
+    def test_rename_changes_label_only_and_refuses_collisions(self, tmp_path: Path):
+        api = DojoAPI(tmp_path)
+        cid = api.create_campaign(name="how to umm do that thing with balls",
+                                  topic_path="juggling", mission="m")["id"]
+        api.create_campaign(name="French", topic_path="french", mission="m2")
+        res = api.rename_campaign(cid, "Juggling")
+        camp = api.store.campaigns.get(cid)
+        assert camp.name == "Juggling" and camp.id == cid == res["id"]
+        with pytest.raises(ValueError, match="already belongs"):
+            api.rename_campaign(cid, "french")  # case-insensitive collision
+        with pytest.raises(ValueError, match="empty"):
+            api.rename_campaign(cid, "   ")
+
+
+class TestDisplayModeIsAppWide:
+    """Owner directive 2026-07-17: the screen/transcript choice is one
+    app-wide contract — every practice-bearing command accepts the flags."""
+
+    @pytest.mark.parametrize("argv", [
+        ["daily", "--screen"],
+        ["more", "--screen"],
+        ["learn", "juggle", "--screen"],
+        ["more", "--transcript"],
+        ["campaign", "plan", "juggle", "--screen"],
+    ])
+    def test_practice_commands_accept_display_flags(self, argv):
+        from dojo.cli import build_parser
+        args = build_parser().parse_args(argv)  # SystemExit would fail the test
+        assert getattr(args, "screen", False) or getattr(args, "transcript", False)
+
+
+class TestConfirmShowsItsOptions:
+    """Owner field report 2026-07-17: rich parsed '[y/N]' as a markup tag and
+    silently stripped it — default-no prompts showed no options at all."""
+
+    def test_default_no_prompt_carries_visible_options(self, tmp_path: Path):
+        prompts: list[str] = []
+
+        def fake_input(prompt: str) -> str:
+            prompts.append(prompt)
+            return ""
+
+        from rich.text import Text
+        with patch.object(interactive, "_input", fake_input):
+            assert interactive.confirm("Remove dojo?", default=False) is False
+        rendered = Text.from_markup(prompts[0]).plain
+        assert "[y/N]" in rendered, "the options must survive markup rendering"
 
 
 class TestFirstSessionAfterCreate:

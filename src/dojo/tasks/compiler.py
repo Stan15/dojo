@@ -52,6 +52,7 @@ SECTION_BUDGETS: dict[str, dict[str, int]] = {
         "goal_and_why": 400,
         "level_feedback_exclusions_or_none": 400,
         "registry_topic_paths_or_none": 800,
+        "existing_campaign_names_or_none": 300,  # ~4-word labels; dupe prevention (STATE 7f)
     },
     "capture.route": {
         "text_and_learner_note": 600,
@@ -551,12 +552,16 @@ def compile_reflect(store, campaign: Campaign, *, window_n: int = 15) -> Compile
 
 def compile_plan(store, *, goal: str, context_notes: str = "", existing_topics: str = "") -> CompiledTask:
     """Payload for `campaign.plan`: the learner's goal verbatim, optional
-    level/constraint notes, and existing topic paths so a new plan extends
-    the registry instead of duplicating it."""
+    level/constraint notes, existing topic paths so a new plan extends the
+    registry instead of duplicating it, and existing campaign names so the
+    generated name doesn't collide (the deterministic suffix floor still
+    catches whatever slips through)."""
+    names = ", ".join(sorted(c.name for c in store.campaigns.list())) or "(none)"
     values = {
         "goal_and_why": goal,
         "level_feedback_exclusions_or_none": context_notes or "(none)",
         "registry_topic_paths_or_none": existing_topics or "(none)",
+        "existing_campaign_names_or_none": names,
     }
     return _compile(store, "campaign.plan", values, {"goal": goal})
 

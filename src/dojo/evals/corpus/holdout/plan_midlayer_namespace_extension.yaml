@@ -67,6 +67,7 @@ judge_rubric:
 references:
   good:
     mission: "Diagnose common houseplant leaf symptoms and choose practical care responses."
+    name: "Houseplant Leaf Diagnosis"
     topics:
       - path: gardening.plant.diagnosis
         kind: skill
@@ -97,6 +98,7 @@ references:
     refinement_questions: []
   bad:
     mission: "Diagnose common houseplant leaf symptoms and choose practical care responses."
+    name: "Houseplant Symptom Care"
     topics:
       - path: houseplants.plant.diagnosis
         kind: skill

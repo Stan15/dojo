@@ -407,7 +407,10 @@ class DojoAPI:
             return {
                 "extension_available": False, **projection,
                 "reason": "a session is already open — finish it first",
+                # Two audiences (owner field report 2026-07-17): the agent
+                # drives ready/answer envelopes; a human resumes via daily.
                 "alternative": "dojo ready continues the current session",
+                "alternative_interactive": "dojo daily continues the current session",
             }
 
         today = now.date().isoformat()
@@ -1052,14 +1055,25 @@ class DojoAPI:
             }
         for i, phase in enumerate(campaign.attack_plan):
             if i >= campaign.active_phase_index and topic_path in phase.topics:
+                # STATE 7f ride-along (owner field flow 2026-07-15): the right
+                # door differs — topic-boost is PHASE-GATED, so for a later
+                # phase it silently does nothing until that phase activates.
+                if i == campaign.active_phase_index:
+                    hint = (
+                        f"already active (phase {phase.phase}) — "
+                        f"dojo campaign topic-boost {campaign.id} {topic_path} 2.0 "
+                        "prioritizes it"
+                    )
+                else:
+                    hint = (
+                        f"already scheduled for phase {phase.phase}, which isn't "
+                        f"active yet — dojo start --topic {topic_path} practices "
+                        "it now (topic-boost would wait for that phase)"
+                    )
                 return {
                     "campaign_id": campaign.id, "topic_path": topic_path,
                     "already_covered": True, "phase": phase.phase,
-                    "next": (
-                        f"already in the plan (phase {phase.phase}) — "
-                        f"dojo campaign topic-boost {campaign.id} {topic_path} 2.0 "
-                        "prioritizes it"
-                    ),
+                    "next": hint,
                 }
 
         now = datetime.now(timezone.utc).isoformat()
@@ -1681,6 +1695,37 @@ class DojoAPI:
         ps = self.store.sessions.get_active()
         return ps.model_dump() if ps else None
 
+    def rename_campaign(self, campaign_id: str, name: str) -> dict[str, Any]:
+        """Renames a campaign's display name in place (STATE 7f ride-along,
+        owner directive 2026-07-15: paragraph-named campaigns must be fixable
+        without recreating). The id — and every reference to it — stays; only
+        the label changes. A name already carried by ANY other campaign
+        (archived included) is refused: the creation doors keep names unique
+        and renaming must not reintroduce collisions.
+
+        Raises:
+            ValueError: unknown campaign, empty name, or name taken.
+        """
+        name = (name or "").strip()
+        if not name:
+            raise ValueError("a campaign name cannot be empty")
+        campaign = self.store.campaigns.get(campaign_id)
+        if campaign is None:
+            raise ValueError(f"no such campaign: {campaign_id}")
+        taken = {
+            c.name.strip().lower()
+            for c in self.store.campaigns.list() if c.id != campaign_id
+        }
+        if name.lower() in taken:
+            raise ValueError(f"the name {name!r} already belongs to another campaign")
+        old = campaign.name
+        campaign.name = name
+        campaign.updated_at = datetime.now(timezone.utc).isoformat()
+        self.store.campaigns.save(campaign)
+        self.log.info(f"Campaign '{campaign.id}' renamed: {old!r} → {name!r}")
+        return {"id": campaign.id, "old_name": old, "name": name,
+                "next": "the label is fixed; the id and history are untouched"}
+
     def reveal_prompt(self, session_id: str | None = None) -> dict[str, Any]:
         """Reveals the current exercise's prompt and STARTS THE CLOCK:
         `started_at` is stamped on the session, and `submit_answer` measures
@@ -1831,6 +1876,21 @@ class DojoAPI:
         user_ans = user_answer.strip()
         correct_ans = ex.answer
 
+        # Calibration junk screen (owner directive 2026-07-17): a slash-token
+        # or symbol-only line is not an answer — refuse WITHOUT recording, the
+        # flow re-asks. Anything real earns full score ("I don't know" is
+        # calibration gold); detail is never graded — follow-ups are the
+        # system's job, not the learner's burden.
+        if ex.quality == "diagnostic" and (
+            user_ans.startswith("/") or not any(c.isalnum() for c in user_ans)
+        ):
+            return {
+                "not_an_answer": True,
+                "session_id": target_session.id,
+                "exercise_id": exercise_id,
+                "next": "give a real answer — 'I don't know' counts; /skip <reason> to pass",
+            }
+
         # Deterministic scoring floor (I4); AI grading is an emitted task, never a block.
         pending_grade_task = None
         if ex.kind == "present":
@@ -1909,6 +1969,7 @@ class DojoAPI:
             "score": score,
             "grader": grader,
             "pending_grade": pending_grade_task is not None,
+            "diagnostic": ex.quality == "diagnostic",
             "tasks": [pending_grade_task] if pending_grade_task else [],
             "latency_seconds": latency,
             "user_answer": user_ans,
