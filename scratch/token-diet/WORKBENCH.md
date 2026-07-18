@@ -131,6 +131,15 @@ field-shapes, enum-echo one level up). All kinds SLOWER (plan 114→179s,
 base2. Likely armJ rev: route example non-null values or a Field-rules
 line stating per-action required fields.
 
+**SAME-DRIVER VERDICT #1 (qwen35_4b, 2026-07-18): armJ net-negative
+overall (26/59=44% vs base2 30/64=47%) but per-kind ledger is decisive:
+grade +8pp, plan +14pp, generate +11pp REAL wins; route −25pp/goal −100
+(null-anchoring) and reflect −11pp (placeholder omission) are exactly the
+armJ2 fixes. Endpoint switch alone tripled base grade (7→21%) — driver
+was a real chunk of armJ's apparent grade rescue. secs deltas across
+batteries are unreliable (server restarted between; latency compares only
+within one battery). armJ is SUPERSEDED by armJ2 pending its battery.**
+
 **Exact next actions:**
 1. armJ battery done → snapshot commit (armJ tree + results), then restore
    base templates (git checkout src/dojo/prompts) and rerun base batteries
