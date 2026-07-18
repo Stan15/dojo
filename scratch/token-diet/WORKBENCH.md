@@ -1,4 +1,17 @@
-# Token-diet workbench (dev/token-diet) — session continuation state
+# Token-diet workbench — session continuation state
+
+**PHASE: ACCUMULATE (branch dev/token-accumulate, 2026-07-18).** The main
+campaign MERGED to main (03402c4, owner-gated): winner armJ5S, full story
+in REPORT.md. This branch carries the sanctioned post-main batch:
+output-budget ratchet SHIPPED (6e71306); IN FLIGHT: fulfiller driver-docs
+(delegated to a sonnet subagent, review-gated, docs-only); NEXT: armACC-in
+(input-side Field-rules compression, measured trio battery, decision rule
+binds — template hash coherence gate now forces same-commit output-budget
+rebuild on any template edit); THEN: ArmA compact-JSON + ArmD omit-nulls
+as small measured arms; qwen3:4b think-off robustness point (soft-switch).
+Owner directives added: delegate-to-cheaper-models standing rule (STATE).
+
+--- (historical campaign log below) ---
 
 **Directive (owner, 2026-07-17):** on this dev branch, massively reduce token
 usage — output tokens above all — via prompts incl. SKILL.md. Binding
