@@ -5,10 +5,16 @@ the terminal."""
 from __future__ import annotations
 
 import logging
+import os
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-DEFAULT_DOJO_DIR = Path.home() / ".local" / "share" / "dojo"
+# DOJO_HOME redirects the whole store: the skill behavioral evals sandbox
+# their driver agents with it (the real store must be unreachable), and it
+# is the standard escape hatch for keeping the store somewhere else.
+DEFAULT_DOJO_DIR = Path(
+    os.environ.get("DOJO_HOME") or Path.home() / ".local" / "share" / "dojo"
+)
 _loggers: dict[tuple[str, str], logging.Logger] = {}
 
 

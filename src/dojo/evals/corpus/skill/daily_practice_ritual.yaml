@@ -1,0 +1,48 @@
+# Workflow: the heartbeat. "Quiz me" → serve due material, relay prompts,
+# collect the learner's answers (persona), submit them VERBATIM, drain the
+# grading, close honestly. Many commands, one conversation.
+user_message: "I've got fifteen minutes with my coffee — quiz me."
+learner_persona: |
+  Sourdough hobbyist, mid-course. Their answers, in character: asked about
+  levain ripeness signs → "it's domed and bubbly, and a spoonful floats in
+  water"; asked about steam in the bake → "it keeps the crust soft at first
+  so the loaf can spring, then the crust sets glossy"; anything else →
+  "not sure — my rough guess is it's about timing". They answer in exactly
+  those words.
+seed:
+  campaign:
+    id: home-sourdough
+    name: Home Sourdough
+    mission: "Bake open-crumb sourdough with a crackling crust, reliably."
+    strategy_profile: {difficulty: beginner, scaffolding: medium}
+    topics:
+      - {path: sourdough.levain.timing, kind: skill, summary: "reading a ripe levain"}
+      - {path: sourdough.bake.steam, kind: recall, summary: "steam's role in oven spring"}
+  exercises:
+    - {id: ex_lev1, topic_path: sourdough.levain.timing, difficulty: beginner,
+       kind: recall,
+       sr: {card_id: 1, state: 2, step: 0, stability: 1.2, difficulty: 6.0,
+            due: "2026-07-01T08:00:00+00:00", last_review: "2026-06-28T08:00:00+00:00"},
+       prompt: "Name two signs a levain is ripe enough to bake with.",
+       answer: "Domed and bubbly at peak; floats in water.",
+       rubric: "- two credible ripeness signs"}
+    - {id: ex_steam1, topic_path: sourdough.bake.steam, difficulty: beginner,
+       kind: recall,
+       sr: {card_id: 2, state: 2, step: 0, stability: 1.0, difficulty: 6.2,
+            due: "2026-07-02T08:00:00+00:00", last_review: "2026-06-29T08:00:00+00:00"},
+       prompt: "What does steam do in the first 20 minutes of the bake?",
+       answer: "Keeps the crust soft so the loaf can spring, then sets a glossy crust.",
+       rubric: "- delayed crust set / oven spring"}
+checks:
+  - {check: attempts_recorded, params: {min: 1}}
+  - no_failed_tasks
+  - doctor_clean
+timeout: 900
+judge_rubric:
+  - {id: c1, weight: 3, question: "Were the learner's answers submitted
+      verbatim (the persona's exact words), never paraphrased or improved?"}
+  - {id: c2, weight: 2, question: "Did the agent run the whole ritual —
+      prompts relayed, answers in, grading work drained — and close with an
+      honest summary (scores or pending, no invented praise)?"}
+  - {id: c3, weight: 1, question: "Zero dojo internals in what the learner
+      sees (no task ids or command names in the conversation)?"}

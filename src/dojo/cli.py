@@ -1824,6 +1824,50 @@ def cmd_benchmark(args: argparse.Namespace) -> int:
         or driver
     )
 
+    if getattr(args, "skill", False):
+        # The OTHER axis, in isolation (owner directive 2026-07-18): "how
+        # well does this agent execute dojo WORKFLOWS through SKILL.md?" —
+        # distinct from "how well does it fulfill dojo tasks". A user who
+        # only plans to coordinate with a model benchmarks just this;
+        # deterministic outcome checks only, so no judge spend.
+        from .evals.skill_runner import load_skill_corpus, run_skill_scenario
+
+        scenarios = load_skill_corpus()
+        results = []
+        with tempfile.TemporaryDirectory(prefix="dojo-skill-") as workdir:
+            for sc in scenarios:
+                if not _use_json(args):
+                    console.print(f"  [dim]· workflow · {sc['name']}[/dim]")
+                try:
+                    results.append(run_skill_scenario(
+                        sc, Path(workdir) / sc["name"], driver,
+                        timeout=args.timeout,
+                    ))
+                except Exception as exc:
+                    results.append({"name": sc["name"], "score": 0.0,
+                                    "checks": {}, "error": str(exc)[:200]})
+        scored = [r for r in results if "error" not in r]
+        overall = (sum(r["score"] for r in scored) / len(scored)) if scored else None
+        if _use_json(args):
+            _print_json({"ok": True, "tier": "skill", "driver": driver,
+                         "overall": overall, "scenarios": results})
+            return 0
+        console.print("\n[bold]🥋 Skill workflows[/bold] "
+                      "[dim](driver-side: SKILL.md coordination, outcome checks)[/dim]")
+        for r in results:
+            bar = "[red]✗[/red]" if r.get("error") or r["score"] < 1.0 else "[green]✓[/green]"
+            console.print(f"  {bar} {r['name']:<28} {r['score']:.2f}"
+                          + (f"  [red]{r['error']}[/red]" if r.get("error") else ""))
+            for cname, c in r.get("checks", {}).items():
+                if not c["ok"]:
+                    console.print(f"      [dim]{cname}: {c['detail'][:90]}[/dim]")
+        if overall is not None:
+            console.print(f"\n  [bold]workflow score {overall:.2f}[/bold] over "
+                          f"{len(scored)} scenario(s)"
+                          + (f" · {len(results) - len(scored)} errored" if len(results) != len(scored) else ""))
+        console.print("  [dim]fulfiller-side pedagogy: dojo benchmark -d <model cmd> (separate axis)[/dim]")
+        return 0
+
     if getattr(args, "holdout", False):
         # Release gate: structurally aggregate-only (owner ruling — holdout
         # data must never optimize prompts; the tool can't show what the
@@ -2532,6 +2576,10 @@ def build_parser() -> argparse.ArgumentParser:
         help="evaluator command grading output quality (default: benchmark.judge config if set, else --driver)",
     )
     p_bench.add_argument("--tier", choices=["all", "compliance", "quality"], default="all")
+    p_bench.add_argument("--skill", action="store_true",
+                         help="benchmark the DRIVER axis in isolation: can this agent "
+                              "execute dojo workflows through SKILL.md? (-d is the agent "
+                              "command; outcome checks, no judge spend)")
     p_bench.add_argument("--holdout", action="store_true",
                          help="release gate: run the HOLDOUT corpus and print the aggregate "
                               "only — per-scenario data is never surfaced (anti-reward-hacking)")

@@ -1,0 +1,42 @@
+# Workflow: continuity. Yesterday's session left AI work half-done (a
+# generation and a grade pending); the learner only knows "something got cut
+# off". The agent must find the loose ends and finish every one through the
+# proper door — nothing left pending, nothing failed, grade landed.
+user_message: "My session got cut off yesterday and I think something was left half-finished — can you pick up where we left off and wrap it all up?"
+learner_persona: |
+  Sourdough hobbyist. If asked what they were doing: "practicing, and I
+  answered something about levain ripeness right at the end". They have no
+  idea what remains — finding out is the agent's job.
+seed:
+  campaign:
+    id: home-sourdough
+    name: Home Sourdough
+    mission: "Bake open-crumb sourdough with a crackling crust, reliably."
+    strategy_profile: {difficulty: beginner, scaffolding: high}
+    topics:
+      - {path: sourdough.levain.timing, kind: skill, summary: "reading a ripe levain"}
+  exercises:
+    - {id: ex_lev1, topic_path: sourdough.levain.timing, difficulty: beginner,
+       prompt: "Name two signs a levain is ripe enough to bake with.",
+       answer: "Domed and bubbly at peak; floats in water; smells tangy-sweet.",
+       rubric: "- two credible ripeness signs"}
+  attempts:
+    - {id: att_lev1, session_id: s1, exercise_id: ex_lev1, score: 0.0,
+       latency_seconds: 30.0, grader: null,
+       prompt: "Name two signs a levain is ripe enough to bake with.",
+       user_answer: "it looks bubbly and it floats when you drop some in water"}
+pre_emit:
+  - {fn: generate, topic_path: sourdough.levain.timing, n_items: 2, difficulty: beginner}
+  - {fn: grade, attempt_id: att_lev1}
+checks:
+  - no_pending_tasks
+  - no_failed_tasks
+  - doctor_clean
+timeout: 900
+judge_rubric:
+  - {id: c1, weight: 3, question: "Did the agent discover ALL the unfinished
+      work itself and finish each piece through the proper submission flow?"}
+  - {id: c2, weight: 2, question: "Is the grade consistent with the learner's
+      recorded answer (bubbly + floats are credible ripeness signs)?"}
+  - {id: c3, weight: 1, question: "Did the wrap-up tell the learner what had
+      been left and what's now done, in their terms?"}

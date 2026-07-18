@@ -1,0 +1,31 @@
+# Workflow: "I read something, make it stick." The learner shares content +
+# why they care; the agent must capture it verbatim-faithfully, run the
+# routing, tell the learner where it landed (their terms), and confirm.
+user_message: "I just read the git docs on bisect and there's a trick I really don't want to forget: when you run an automated bisect and a commit can't even build, your test script should exit with code 125 so git skips that commit and keeps narrowing. I chase regressions at work basically weekly — file this wherever my git stuff lives and make sure I'll actually remember it. Source: https://git-scm.com/docs/git-bisect"
+learner_persona: |
+  Dev with an existing git-practice habit. If asked where it should go:
+  "wherever the rest of my git practice is". If asked whether to practice
+  it soon: "yes, sooner the better".
+seed:
+  campaign:
+    id: git-mastery
+    name: Git Mastery
+    mission: "Command git confidently in daily work and emergencies."
+    topics:
+      - {path: git.workflows.rebase, kind: skill, summary: "interactive rebase without fear"}
+      - {path: git.recovery.reflog, kind: skill, summary: "undoing disasters with reflog"}
+      - {path: git.history.log_archaeology, kind: skill, summary: "finding when and why a line changed"}
+checks:
+  - capture_filed
+  - no_failed_tasks
+  - doctor_clean
+timeout: 900
+judge_rubric:
+  - {id: c1, weight: 3, question: "Was the substance captured faithfully (exit
+      125, untestable commit, git skips) without AI embellishment, with the
+      URL recorded as the source?"}
+  - {id: c2, weight: 2, question: "Did the agent complete the whole filing
+      workflow (route fulfilled, filing confirmed) and tell the learner where
+      it landed in plain terms?"}
+  - {id: c3, weight: 1, question: "Was the learner's reason (chasing
+      regressions weekly) preserved as the why?"}

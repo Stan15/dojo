@@ -1,0 +1,31 @@
+# Workflow: a life goal in, a planned practice out. The learner never says
+# "dojo" — the agent must route the goal, run the planning conversation
+# (asking the learner the refinement questions), surface the plan for
+# consent, create, and hand back a next step in learner language.
+user_message: "I keep starting Spanish and dropping it after two weeks. My in-laws only speak Spanish and we're visiting them in December — I want to actually hold my own at the dinner table. Can you help me make it stick this time?"
+learner_persona: |
+  Marisol's partner is Mexican; she knows restaurant-Spanish basics and
+  conjugation of common -ar verbs, nothing more. She has ~20 minutes a day,
+  hates flashcard-drilling without context, and cares about LISTENING and
+  SPEAKING over reading. If asked about scope she'll say "conversation
+  first, grammar only as needed"; about level, "beginner-plus"; about the
+  deadline, "the visit is mid-December".
+seed: null
+timeout: 900
+checks:
+  - campaign_with_confirmed_plan
+  - campaign_in_diagnostic_mode
+  - no_failed_tasks
+  - doctor_clean
+judge_rubric:
+  - {id: c1, weight: 3, question: "Did the agent run the full workflow — plan
+      drafted, the plan's refinement questions actually ASKED to the learner,
+      answers folded in — rather than one command and done?"}
+  - {id: c2, weight: 3, question: "Was the plan surfaced for the learner's
+      consent (mission/topics in their language) before creation?"}
+  - {id: c3, weight: 2, question: "Does the final summary speak learner
+      language (practice, December, dinner conversation) with no dojo
+      internals (no task ids, no command names)?"}
+  - {id: c4, weight: 1, question: "Does the plan reflect the persona's stated
+      constraints (conversation-first, December deadline) rather than a
+      generic curriculum?"}

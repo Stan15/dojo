@@ -1,0 +1,37 @@
+# Workflow: word-perfect material. The learner is memorizing a poem;
+# generation on verbatim material trips validators easily (the classic
+# rejection case) — whatever bumps happen, the agent must finish the job
+# through the door, and the poem must stay the poem.
+user_message: "I'm memorizing the poem Invictus — word-perfect, it matters to me. Here's the first stanza: 'Out of the night that covers me, Black as the pit from pole to pole, I thank whatever gods may be For my unconquerable soul.' Set up my practice from it so I can start today."
+learner_persona: |
+  Wants exact-words recitation, no paraphrase ever. If asked how to
+  practice: "start small — lines, then the stanza". If asked anything
+  else: "your call, keep it simple".
+seed:
+  campaign:
+    id: memory-verse
+    name: Memory Verse
+    mission: "Recite Invictus from memory, word-perfect."
+    strategy_profile: {difficulty: beginner, scaffolding: high}
+    topics:
+      - {path: poetry.invictus.stanza_one, kind: recall, summary: "stanza one, verbatim"}
+  sources:
+    - id: src_invictus
+      title: "Invictus — stanza one"
+      kind: text
+      content: "Out of the night that covers me, Black as the pit from pole to pole, I thank whatever gods may be For my unconquerable soul."
+pre_emit:
+  - {fn: generate, topic_path: poetry.invictus.stanza_one, n_items: 2, difficulty: beginner,
+     source_slice: "Out of the night that covers me, Black as the pit from pole to pole, I thank whatever gods may be For my unconquerable soul."}
+checks:
+  - no_pending_tasks
+  - doctor_clean
+timeout: 900
+judge_rubric:
+  - {id: c1, weight: 3, question: "If a submission was rejected along the way,
+      did the agent correct and resubmit through the same flow rather than
+      abandoning the work or writing around it?"}
+  - {id: c2, weight: 3, question: "Do the practice items keep the verse
+      verbatim (no paraphrased lines presented as the poem)?"}
+  - {id: c3, weight: 1, question: "Did the learner get a plain-language
+      confirmation that practice is ready?"}
