@@ -1110,9 +1110,14 @@ def cmd_campaign_create(args: argparse.Namespace) -> int:
         if not temp_slug:
             temp_slug = f"topic_{uuid.uuid4().hex[:8]}"
 
-        # 3. Create campaign
+        # 3. Create campaign — labels stay short (owner directive 2026-07-15:
+        # the raw goal as a name/id is the bug). With no AI in the loop at this
+        # door, the fallback is mechanical: the goal's first few words, same
+        # cap as AI-generated labels; the full goal stays verbatim in mission.
+        from . import limits as _limits
+        fallback_label = " ".join(args.goal.split()[: _limits.ROUTE_NEW_NAME_WORDS])
         res = api.create_campaign(
-            name=args.name or f"Learning Campaign: {args.goal}",
+            name=args.name or fallback_label or "New Campaign",
             topic_path=temp_slug,
             mission=args.goal,
             source_id=source_id
@@ -2274,7 +2279,13 @@ def cmd_campaign_list(args: argparse.Namespace) -> int:
         ret = "—" if c["estimated_retention"] is None else f"{c['estimated_retention']:.0%}"
         idle = "—" if c["days_idle"] is None else f"{c['days_idle']:.0f}d"
         status = c["status"] + (" ✓" if c["complete"] else "")
-        table.add_row(c["campaign_id"], status, c["phase"], ret, str(c["due_now"]), idle)
+        # The human dashboard leads with the display NAME (owner field report
+        # 2026-07-18: the id column exposed slugged-prompt ids); clipped so a
+        # legacy long name can't wreck the table. The id rides dimmed — it is
+        # what archive/rename/extend commands take.
+        label = c["name"] if len(c["name"]) <= 40 else c["name"][:39] + "…"
+        table.add_row(f"{label} [dim]{c['campaign_id']}[/dim]",
+                      status, c["phase"], ret, str(c["due_now"]), idle)
     console.print(table)
     console.print(f"  [dim]*estimates · {res['next']}[/dim]")
     return 0

@@ -536,7 +536,8 @@ def _session_summary(api: DojoAPI) -> None:
     for c in stats["campaigns"]:
         ret = "—" if c["estimated_retention"] is None else f"{c['estimated_retention']:.0%}"
         acc = "—" if c["recent_accuracy"] is None else f"{c['recent_accuracy']:.0%}"
-        table.add_row(c["name"], ret, f"{c['due_now']}/{c['active_exercises']}", acc)
+        label = c["name"] if len(c["name"]) <= 40 else c["name"][:39] + "…"
+        table.add_row(label, ret, f"{c['due_now']}/{c['active_exercises']}", acc)
     console.print(table)
     console.print("  [dim]*estimated recall odds · dojo why explains today's picks[/dim]")
 

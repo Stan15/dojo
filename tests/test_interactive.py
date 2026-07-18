@@ -378,6 +378,24 @@ class TestPlanCreatedCampaignStartsInCalibration:
         assert camp.attack_plan[0].criteria.min_accuracy == 0.0, "normalized at the boundary"
         assert camp.attack_plan[1].criteria.min_accuracy == 0.7
 
+    def test_direct_create_door_never_uses_the_whole_goal_as_name(self, tmp_path: Path):
+        """Same bug class at the AI-free door: with no --name, the default was
+        'Learning Campaign: <whole goal>' — slugged into the id. The fallback
+        label is now capped at the same word count as AI-generated names."""
+        import argparse
+        from dojo import limits
+        from dojo.cli import cmd_campaign_create
+        args = argparse.Namespace(
+            goal="umm im not really sure what i want to learn umm maybe how to sing",
+            name=None, source=None, level="beginner", db=str(tmp_path), json=True,
+        )
+        cmd_campaign_create(args)
+        api = DojoAPI(tmp_path)
+        camps = api.store.campaigns.list()
+        assert len(camps) == 1
+        assert len(camps[0].name.split()) <= limits.ROUTE_NEW_NAME_WORDS
+        assert "how-to-sing" not in camps[0].id, "id no longer slugs the prompt tail"
+
     def test_materialize_uses_the_plans_generated_name_not_the_goal(self, tmp_path: Path):
         """Owner field report 2026-07-18: 'Campaign created:' showed the whole
         slugged prompt. apply_plan dropped PlanResult.name from _applied, so
