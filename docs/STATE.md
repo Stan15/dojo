@@ -318,6 +318,20 @@ committed work, not proposals awaiting an answer. Item numbering is stable
    continuation detail: WORKBENCH.md same dir.** Accumulate-batch of
    deferred marginal wins ledgered there. Merge to main is owner-gated.
 
+## RELEASE GATE STATUS (2026-07-18) + CONTAMINATION HANDOFF
+
+The v1.0.0 holdout release gate was RUN (owner-approved) and FAILED — v1.0.0
+tag WITHHELD. That fact is the only consumable output. The session that ran
+it saw pytest's per-scenario failure ids (a leak since fixed: the gate is
+now a single aggregate test, total-blindness assertion messages) and is
+therefore DISQUALIFIED from prompt/corpus work. Remedy per protocol, for a
+FRESH session only: broaden the VISIBLE corpus evenly across ALL categories
+(no holdout-informed targeting is possible or permitted), iterate prompts
+on visible evidence under the token-shape gates, then owner re-triggers the
+release gate. Holdout blindness is TOTAL (owner ruling 2026-07-18): names,
+counts, scores, files under corpus/holdout/, evals/baselines/*__holdout*,
+evals/reports/holdout-* — all off-limits to any prompt-work context.
+
 ## Standing owner directives (must survive every session)
 
 - No context bloat; token spend is the owner's money — budgets are tested.
@@ -350,9 +364,11 @@ committed work, not proposals awaiting an answer. Item numbering is stable
   with the token-diet winner commit (dev/token-diet; see WORKBENCH step 5).
   A change that wins on one axis by losing the other is a regression, full
   stop.
-- **NEVER optimize prompts on holdout-set data** (absolute, 2026-07-09):
-  one consumable bit per holdout run (aggregate gap); bad gap → broaden the
-  visible corpus, iterate there. Applies to every contributor, human or AI.
+- **NEVER optimize prompts on holdout-set data** (absolute, 2026-07-09;
+  TIGHTENED 2026-07-18: blindness is TOTAL — names and counts included,
+  not just content; the gate emits pass/fail + aggregate gap and nothing
+  else). One consumable bit per run; bad gap → broaden the visible corpus,
+  iterate there. Applies to every contributor, human or AI.
 
 ## Session changelog (compressed; git log has the story)
 

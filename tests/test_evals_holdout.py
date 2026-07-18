@@ -104,49 +104,58 @@ def holdout_card():
     merge_holdout_baseline(card, EVALS_DIR / "baselines" / f"{pair_slug()}__holdout.json")
 
 
-@pytest.mark.parametrize("scenario_path", SCENARIOS, ids=lambda p: p.stem)
-def test_holdout_quality_meets_baseline(scenario_path: Path, tmp_path: Path, holdout_card):
-    scenario = yaml.safe_load(scenario_path.read_text(encoding="utf-8"))
-    criteria = scenario["judge_rubric"]
-    context = scenario["scenario_context"].strip()
+def test_holdout_release_gate(tmp_path_factory, holdout_card):
+    """ONE test, ONE utterance (owner ruling 2026-07-18: total blindness).
 
-    problem = calibration_gate(JUDGE, context, scenario["references"], criteria, TIMEOUT)
-    if problem:
-        pytest.fail(f"{scenario_path.stem}: {problem}")
-
-    trace_log: list = []
-    try:
-        output_text = execute_quality_scenario(
-            scenario, tmp_path, DRIVER, TIMEOUT, trace_log=trace_log)
-    except ComplianceFailure as e:
-        # Error strings only — no traces (protocol rule 4). A failing holdout
-        # scenario gets burnt (migrated to visible) before anyone triages it.
-        holdout_card.setdefault("failures", {})[scenario_path.stem] = {
-            "errors": e.errors[:3],
-        }
-        pytest.fail("holdout: driver failed compliance (details withheld — "
-                    "burn the scenario per protocol rule 5 before triaging)")
-    result = judge_output(JUDGE, context, output_text, criteria, TIMEOUT)
-
-    # Bare score only (protocol rule 4): verdicts, judge output, and traces
-    # are deliberately NOT persisted for holdout — optimizing on them would
-    # void the tier, so they never reach disk.
-    holdout_card["scenarios"][scenario_path.stem] = {
-        "quality": result["score"],
-    }
-
+    The old per-scenario parametrization let pytest's own FAILED lines leak
+    scenario names into whichever context ran the gate — defeating this
+    module's careful withholding. Now every scenario runs inside a single
+    node; per-scenario detail exists only in the card/baseline files (bare
+    scores, which the ratchet needs and prompt-workers must never read),
+    and the console sees exactly one line: the aggregate gap and a verdict.
+    Even failure COUNTS are withheld from the assertion message."""
     baseline_file = EVALS_DIR / "baselines" / f"{pair_slug()}__holdout.json"
-    if baseline_file.exists():
-        baseline = json.loads(baseline_file.read_text(encoding="utf-8"))
-        floor = baseline["scenarios"].get(scenario_path.stem, {}).get("quality", 0.0)
-        margin = baseline.get("margin", MARGIN)
-        assert result["score"] >= floor - margin, (
-            f"{scenario_path.stem}: holdout quality {result['score']:.2f} fell below "
-            f"baseline {floor:.2f} − margin {margin:.2f} — the prompts may have "
-            "overfit the visible corpus. Do NOT read this scenario's data: return "
-            "to the visible corpus, broaden it, iterate there (owner ruling)."
-        )
-    else:
-        assert result["score"] > 0.0, (
-            f"{scenario_path.stem}: zero quality on the holdout bootstrap; refusing a zero baseline."
-        )
+    baseline = (json.loads(baseline_file.read_text(encoding="utf-8"))
+                if baseline_file.exists() else None)
+    unhealthy = 0
+    for i, scenario_path in enumerate(SCENARIOS):
+        scenario = yaml.safe_load(scenario_path.read_text(encoding="utf-8"))
+        criteria = scenario["judge_rubric"]
+        context = scenario["scenario_context"].strip()
+
+        if calibration_gate(JUDGE, context, scenario["references"], criteria, TIMEOUT):
+            unhealthy += 1
+            continue
+        try:
+            output_text = execute_quality_scenario(
+                scenario, tmp_path_factory.mktemp(f"h{i}"), DRIVER, TIMEOUT,
+                trace_log=[])
+        except ComplianceFailure as e:
+            # Error strings only — no traces (protocol rule 4). Burn-and-
+            # replace happens via the card file, never via console triage.
+            holdout_card.setdefault("failures", {})[scenario_path.stem] = {
+                "errors": e.errors[:3],
+            }
+            unhealthy += 1
+            continue
+        result = judge_output(JUDGE, context, output_text, criteria, TIMEOUT)
+
+        # Bare score only (protocol rule 4): verdicts, judge output, and
+        # traces never reach disk — optimizing on them would void the tier.
+        holdout_card["scenarios"][scenario_path.stem] = {
+            "quality": result["score"],
+        }
+        if baseline is not None:
+            floor = baseline["scenarios"].get(scenario_path.stem, {}).get("quality", 0.0)
+            if result["score"] < floor - baseline.get("margin", MARGIN):
+                unhealthy += 1
+        elif result["score"] <= 0.0:  # bootstrap: refuse zero floors
+            unhealthy += 1
+
+    assert unhealthy == 0, (
+        "HOLDOUT RELEASE GATE FAILED — all detail withheld (owner ruling: "
+        "total blindness; even names and counts are off-limits to a "
+        "prompt-work context). The one consumable fact is the aggregate "
+        "gap printed at session end. Remedy: broaden the VISIBLE corpus "
+        "and iterate there, in a FRESH session."
+    )
