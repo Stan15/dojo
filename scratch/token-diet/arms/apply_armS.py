@@ -84,12 +84,12 @@ sub("src/dojo/schemas.py",
 
 # 6. Grade template: the cap is no longer a trippable floor; state intent only.
 sub("src/dojo/prompts/attempt_grade.md",
-    "3. `evidence` is a COPY, never a description: a short verbatim quote from\n"
-    "   ANSWER (≤ {{ evidence_words }} words) that justifies the band. Your\n"
-    "   reasoning does not go there — only the learner's own words.",
-    "3. `evidence` is a COPY, never a description: a short verbatim quote from\n"
-    "   ANSWER (a few words, not sentences) that justifies the band. Your\n"
-    "   reasoning does not go there — only the learner's own words.",
+    "3. `evidence` is a COPY, never a description: ≤ {{ evidence_words }} words\n"
+    "   copied from ANSWER character-for-character, with no added quotation marks.\n"
+    "   Your reasoning does not go there — only the learner's own words.",
+    "3. `evidence` is a COPY, never a description: a few words (not sentences)\n"
+    "   copied from ANSWER character-for-character, with no added quotation marks.\n"
+    "   Your reasoning does not go there — only the learner's own words.",
     must=False)
 
 print("ArmS applied.")

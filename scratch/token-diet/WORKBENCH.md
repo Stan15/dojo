@@ -82,22 +82,33 @@ corrupted output — benchmark/driver guidance must say use the API.
   but-sound wins are deferred to a cheap post-main pass, not discarded —
   and not investigated mid-campaign).
 
-**State: baselines** — DONE: gemma1b (2/63), lfm (7/64), gemma4b (39/63,
-62%). DNF: qwen3:4b think-on (all timeouts; see thinking ruling). RUNNING
-(background, 2026-07-17b): qwen3.5:0.8b, qwen3.5:4b, qwen3:4b — all
-`--think=false`. Aggregate insight from the three DONE baselines: enum-echo
-+ field-omission are cross-caliber (gemma4b: capture.route 0% ok on
-action-enum echo; skill omissions persist at 4B) — armJ targets confirmed.
-New armS candidate found: 3/5 gemma4b plan failures = refinement_questions
-15-word cap on well-formed questions (user-facing → needs judged check,
-not just clip).
+**State: baselines DONE (5)** — gemma1b 2/63 · lfm 7/64 · gemma4b 39/63
+(62%) · qwen35_08b 4/64 (6%) · qwen35_4b 27/62 (44%). DNF/deferred:
+qwen3:4b — think-on all-timeouts (kept as evidence); think-off DEFERRED to
+post-main (its API think=false does not bind even via /api/chat — old qwen3
+needs a model-specific soft-switch; marginal robustness point, not worth
+mid-campaign debugging). Cross-caliber taxonomy: enum-echo + field-omission
+at every caliber (capture.route 0% at gemma4b); qwen35_4b UNIQUE mode:
+evidence quote-wrapping — added quote chars defeat the verbatim-substring
+check AND leak escapes that break the whole JSON (7/8 of its no-JSON rows);
+its profile is inverted (plan 86%/generate 80% BEST of all, grade 7%).
+armJ grade template updated in response: "copied character-for-character,
+no added quotation marks" (apply_armS.py anchor 6 kept coherent). New armS
+candidates ledgered: refinement_questions cap (3/5 gemma4b plan failures,
+user-facing → judged check required); H-K(b) quote-stripping tolerant
+extraction now justified by the CLASS-VERDICT model, not just 1B.
+
+**RUNNING (2026-07-18): armJ battery** — templates overlaid UNCOMMITTED on
+src/dojo/prompts (restore via git checkout if armJ loses); battery order:
+qwen35_08b, qwen35_4b, gemma1b, lfm, gemma4b (all API driver; qwens
+--no-think). Tree stays QUIET until ALL_BATTERIES_DONE.
 
 **Exact next actions:**
-1. When the qwen batteries exit: analyze.py all six baselines; sanity-check
-   qwen3.5 ok-rates (think=false quality must hold — probes were clean).
-2. Apply armJ templates → `run_battery.sh armJ` (at minimum the two qwen3.5
-   calibers + gemma1b; weaker models as robustness points; ALL qwen runs
-   --think=false).
+1. armJ battery done → analyze.py armJ_* vs base_*: ok-rate must rise
+   sharply; raw bytes/successful task must fall; skill/action distributions
+   must not skew (content-bleed check); qwen35_4b pre_bytes watch
+   (rumination on caps embedded in generate/diagnostic skeleton values).
+2. armS on top (arms/apply_armS.py) → armJS battery, same comparisons.
    Compare with analyze.py: ok-rate must rise sharply; raw bytes per
    SUCCESSFUL task must fall; skill/action distributions must not skew.
 3. Apply armS on top → `run_battery.sh armJS`. Same comparisons.
