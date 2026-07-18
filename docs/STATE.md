@@ -318,6 +318,47 @@ committed work, not proposals awaiting an answer. Item numbering is stable
    continuation detail: WORKBENCH.md same dir.** Accumulate-batch of
    deferred marginal wins ledgered there. Merge to main is owner-gated.
 
+10. **DONE 2026-07-18 — release-gate remedy iteration (fresh session;
+   holdout blindness intact throughout).**
+   a. Visible corpus 64→79, broadened EVENLY (every category +1; routing +2,
+      planning +2; thinnest kinds lifted most: diagnostic 2→3, goal_route
+      1→2, route 4→6, plan 7→9; opposite-branch controls for one-way-
+      rewarded behaviors — propose-new / minimal-restructure / no-present /
+      no-retirement-as-escape; +2 prose-feedback discernment scenarios from
+      the owner's story — grade meta-feedback-in-answer, reflect
+      confusion-is-item-signal). 15 fresh domains; floors ratcheted
+      (aec60a2, f1bf792).
+   b. Prompt iteration on VISIBLE evidence only (committed baseline weak
+      floors + 2026-07-10/11 report verdicts; 43e4e48's three unmeasured
+      fixes left alone): reflect [extension]-discount rule (binge 0.0×2 —
+      marker shown, never defined) + voiced-scope-fidelity sentence;
+      generate downward-calibration branch (0.3×2); plan 1-N phases
+      sized-to-goal (template contradicted PLAN_MIN_PHASES=1; 0.44×2).
+      Token gates re-established by real local re-measure over 79 scenarios:
+      qwen3.5:4b every kind ok same-or-better; gemma3:4b 63/77 with reflect
+      UP 11/20→17/22 and reflect bytes median DOWN 756→537; output-budget +
+      footprint + golden updated same commit (cc654cc). 765 tests green.
+   c. Owner-directed ride-alongs, all shipped+pushed: campaign-name
+      propagation root fix (9c5abdd — apply_plan dropped PlanResult.name;
+      every campaign fell back to the slugged goal), name-first UI surfaces
+      (75f8f6c), README rebuilt per growth principles then cut to
+      simplicity-first (30d5d2c; insights receipts shown with real output,
+      no-guilt said aloud, capture-links validated live before claiming,
+      measured small-model guidance), SKILL why-directed extraction
+      (292a0e3), OPEN-PROBLEMS 16-18, QUESTIONS 6f (vault export) /
+      6g (capture core-need: why→generation + planned-campaign-from-capture,
+      owner-gated) / 6h (quit-as-evidence design).
+   d. **BLOCKED on owner: the codex validation run** (permission classifier
+      requires explicit named authorization). Command, from repo root:
+      `DOJO_EVAL_DRIVER="codex exec --skip-git-repo-check -s read-only"
+      python -m pytest -m eval -q` — bootstraps the 15 new visible floors,
+      measures the 7 pending prompt fixes, ratchet updates land in that
+      commit. AFTER it reads healthy, the owner re-triggers the holdout
+      release gate (never this session).
+   e. The uncommitted `evals/baselines/*__holdout*.json` modification left
+      by the disqualified gate session remains untouched and unread by this
+      session — owner dispositions it (commit or discard).
+
 ## RELEASE GATE STATUS (2026-07-18) + CONTAMINATION HANDOFF
 
 The v1.0.0 holdout release gate was RUN (owner-approved) and FAILED — v1.0.0
