@@ -206,6 +206,19 @@ _Statuses: `[x]` shipped · `[~]` standing/in-progress · `[?]` blocked-on-owner
    no-guilt rules — quitting must never read as failure. **Default: not
    built; needs a design that records without judging.**
 
+7b. **HN pulse readiness + repo description (your asks 2026-07-18).**
+   "Pedagogy harness" goes in your HN post (your call, recorded). Timing
+   recommendation delivered in-session: a SEQUENCE, not a date — v1.0.0
+   tagged (drops→holdout gate) → repo public + docs hosted + demo GIF
+   (Phase 0) → Phase 1 soft channels breathing for weeks → pulse; ideally
+   with Anki A1 so the r/Anki post rides the same week (growth §6: the
+   pulse is deliberately last; ~one shot per 12-18 months). Heuristic: when
+   someone you didn't recruit files an issue or posts a scorecard, launch.
+   Repo DESCRIPTION (dev-skewed surface, good home for the term), proposed
+   copy: "Your AI can teach you anything. Dojo makes it stick — a
+   deterministic pedagogy harness for whatever model you already run."
+   **Default: I set it via gh on your word; nothing published before Q7/#3.**
+
 7. **Growth strategy sign-off** — full researched strategy delivered at your
    direction: `docs/growth-strategy.md`. Headline: retention is already the
    product (the SRS community's documented abandonment causes map 1:1 onto
