@@ -206,10 +206,10 @@ dojo benchmark -d "codex exec" --detail
 dojo benchmark --skill -d "<agent command>"
 ```
 
-The two are independent, so you can mix: your everyday agent uses the CLI
-for you (`dojo install claude`), while a small local model quietly does
-the AI work (`dojo config set model.command "…"`) — private, and free
-after the download.
+The two are independent, so you can mix: your everyday assistant uses the
+CLI for you (`dojo install hermes`), while a small local model quietly
+does the AI work (`dojo config set model.command "…"`) — private, and
+free after the download.
 
 ```text
 Overall  ████████░░ 0.84   (79 scenarios)

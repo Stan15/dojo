@@ -237,3 +237,13 @@ fragment that leads with the create-op example when the store has zero
 active insights — branching in the compiler, never the model (craft rule 5).
 Codex/gpt-5.5 landed the same payload first try; visible-corpus reflect
 ok-rates for 4B models (~27% qwen) already price this in.
+
+## 2026-07-18 — near-empty registries bait URL syntax into route topic paths
+gpt-5.5, routing a capture whose locator was a URL into a campaign with NO
+listed topics (root only): three straight rejections proposing slash-bearing
+leaves ('git/bisect run', 'git/bisect') then new_topic for the existing
+root. With a realistic topic registry the same model routed first-try. Two
+reads: the locator's path syntax bleeds into topic_path when the registry
+offers no path-shaped exemplars to imitate; and the near-empty-registry
+case (fresh direct-door campaigns) is the hostile edge for routers. Not
+corpus-covered; candidate visible scenario for a future (fresh) session.

@@ -41,6 +41,14 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
 3. **Repo visibility** — the repo is private by your choice; the README's
    curl one-liner activates only when public. Any timeline?
    **Default: stays private; no action.**
+3b. **Docs hosting (your question 2026-07-18).** Answered in-session:
+   `mise run docs` already emits a static site/; GitHub Pages via a ~20-line
+   Actions workflow is the standard route but needs a paid plan while
+   private AND publishes the docs publicly either way — effectively part of
+   the go-public decision (#3, growth Phase 0). Cloudflare/Netlify free
+   tiers build from private repos if you want it sooner. **Default: I add
+   the dormant Pages workflow + README docs link in one commit when you
+   flip #3 (or on your word before that).**
 4. **Weak-floor iteration budget** — honest weak floors on the visible
    corpus, all with driver traces recorded for analysis: reflect_learner_
    language 0.10, generate_downward_calibration 0.30, reflect_diagnostic_
