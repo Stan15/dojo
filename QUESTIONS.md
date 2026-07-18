@@ -123,6 +123,27 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
    projection to a snapshot folder. **Default: design doc first; nothing
    built until you gate it.**
 
+6g. **Capture core-need audit (your user story 2026-07-18: URL + why →
+   agent grabs the transcript → source → plan-aware, why-scoped quizzing).**
+   Validated live: the chain URL→fetch→source-with-provenance→route→seeded
+   grounded generation EXISTS and works; why rides as Source.mission.
+   Three gaps found, in leverage order:
+   (1) SKILL.md said "capture the key content" — not "extract what the WHY
+   names; one section of a long video is the right scope". FIXED in-session
+   (the extraction step is where whole-video-quizzing is actually avoided).
+   (2) The why never reaches generation: compile_generate's payload has
+   campaign mission + SOURCE slice; Source.mission (your why) is absent —
+   why-scoped quizzing currently depends entirely on extraction quality.
+   Proposal: capture-seeded generations inject one line beside the slice
+   ("why the learner saved this: ..."), budget-visible (~100B), template
+   stating it. (3) file_capture's propose_campaign creates a BARE campaign:
+   no plan, no calibration phase, no diagnostic-mode stamp (parity gap with
+   every other creation door). Proposal: chain the learn machinery — a
+   campaign.plan task seeded with why + captured content, review-before-
+   trust as always; amends ADR 013's "captures are material, not goals"
+   stance for the case where the why IS a goal. **Default: (2)+(3) await
+   your gate; nothing built.**
+
 7. **Growth strategy sign-off** — full researched strategy delivered at your
    direction: `docs/growth-strategy.md`. Headline: retention is already the
    product (the SRS community's documented abandonment causes map 1:1 onto

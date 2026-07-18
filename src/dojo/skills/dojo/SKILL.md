@@ -55,8 +55,10 @@ Follow each envelope's `next` hint. `dojo <cmd> --help` is the manual.
 ## Remember something ("TIL…", "remember this", "add this to my practice")
 
 1. `dojo capture "<the thing>" --why "<their stated reason>" [--locator "<url>"]`
-   — for an article/video link: fetch it yourself, capture the key content as
-   text, and pass the link as `--locator` (dojo never fetches URLs).
+   — for an article/video link: fetch it yourself and capture, as text, the
+   content their WHY points at (one section of a long piece is the right
+   scope — the rest doesn't belong); pass the link as `--locator`
+   (dojo never fetches URLs).
 2. Fulfill the route task → tell the user where it proposes to file it
 3. They agree → `dojo inbox confirm <capture-id>`; they don't → ask where, or
    `dojo inbox dismiss <capture-id>`.
