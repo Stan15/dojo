@@ -70,15 +70,16 @@ OUTPUT — your final output is exactly this JSON shape (anything before it is i
       "prompt": "the second exercise, shaped exactly like the first",
       "answer": "its ideal answer",
       "rubric": "- one criterion can be enough",
-      "skill": "explain"
+      "skill": "produce"
     }
   ],
   "note": null,
   "intervention": null
 }
-Field rules: EVERY item carries all four fields, like both examples above.
-"skill" is exactly ONE word — recall, explain, apply, produce, critique, or
-present. "rubric" is ONE string holding 1-3 dash bullets (null only
+Field rules: EVERY item carries all four fields, like both examples above —
+but the examples' skills are placeholders, not defaults: pick each item's
+skill for its pedagogy. "skill" is exactly ONE word — recall, explain, apply,
+produce, critique, or present. "rubric" is ONE string holding 1-3 dash bullets (null only
 when skill is "present"). "note" stays null unless you deviated (then ≤
 25 words). "intervention" is for rule 9 only, with items []:
 {"kind": "clarify_goal" or "need_context" or "scope_too_broad", "questions":
