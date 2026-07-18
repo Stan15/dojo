@@ -13,7 +13,7 @@ RULES
    0.0 — incorrect, empty, or off-topic
    When RUBRIC itself assigns credit to a named case ("partial credit if …"),
    RUBRIC decides that band; the definitions above fill the gaps it leaves.
-3. `evidence` is a COPY, never a description: ≤ {{ evidence_words }} words
+3. `evidence` is a COPY, never a description: a few words (not sentences)
    copied from ANSWER character-for-character, with no added quotation marks.
    Your reasoning does not go there — only the learner's own words.
 4. `feedback` addresses the learner: one thing right, then the single most
