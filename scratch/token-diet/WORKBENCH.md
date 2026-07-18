@@ -25,12 +25,20 @@ qwen3:4b (thinking arrives on stdout → pre_bytes).
 model of each resource class** — users run the strongest model their hardware
 allows. Best-in-class as of 2026-07: qwen3.5:0.8b (~1GB tier) and qwen3.5:4b
 (~3.4GB tier), official ollama tags. gemma3:1b/lfm/gemma3:4b/qwen3:4b stay as
-robustness points only. BLOCKER: installed ollama 0.13.4 is too old to pull
-qwen3.5 (registry refuses); brew bottle 0.32.1 is pre-fetched — upgrade +
-server restart (OLLAMA_NUM_PARALLEL=4 OLLAMA_MAX_LOADED_MODELS=1) must wait
-until no battery is in flight (brew's auto-cleanup deletes the running
-server's keg). Smoke-probe qwen3.5 output shape (thinking? stdout format?)
-before committing to full batteries.
+robustness points only. ollama upgraded 0.13.4→0.32.1 (older client can't
+pull qwen3.5); both models pulled.
+
+**Thinking-mode ruling (probed 2026-07-17b, decisive):** qwen3.5 thinks on
+stdout by default and is single-shot-UNUSABLE that way: trivial one-field
+JSON probe = 121s/17.7KB (0.8b), 164s/1.2KB (4b); with `--think=false`: 1-2s,
+22 bytes, correct. qwen3:4b base battery DNF'd the same way (every completed
+row a 240s driver timeout — kept as base_qwen4b.DNF-think-timeouts.jsonl).
+So ALL qwen batteries run `--think=false` (driver-side flag; prompt text
+untouched per reasoning-neutrality; the flag pipes fine in 0.32.1). H-B
+deliverable: fulfiller docs must say think-off for local thinking models.
+NOTE: 0.32.1 renders thinking with ANSI erase junk on stdout — old baselines
+verified clean (0/64 rows); think=false output is junk-free, so measure.py
+stays untouched and cross-baseline comparability holds.
 
 **Findings so far (evidence in baselines/base_gemma1b.jsonl):**
 - gemma3:1b single-shot pass: 2/63. The failure is SKELETON SYNTAX, not
@@ -63,18 +71,22 @@ before committing to full batteries.
 - ArmA (compact JSON) / ArmD (omit nulls) — NOT built; only if armJ/armS
   leave material waste (owner: no tiny gains).
 
-**State: baselines** — gemma1b DONE (base_gemma1b.jsonl). lfm DONE
-2026-07-17b (base_lfm.jsonl, 7/64 ok — delete the stale PARTIAL file).
-gemma3:4b, qwen3:4b running in a background battery this session.
-qwen3.5:0.8b/4b baselines PENDING the ollama upgrade above.
+**State: baselines** — DONE: gemma1b (2/63), lfm (7/64), gemma4b (39/63,
+62%). DNF: qwen3:4b think-on (all timeouts; see thinking ruling). RUNNING
+(background, 2026-07-17b): qwen3.5:0.8b, qwen3.5:4b, qwen3:4b — all
+`--think=false`. Aggregate insight from the three DONE baselines: enum-echo
++ field-omission are cross-caliber (gemma4b: capture.route 0% ok on
+action-enum echo; skill omissions persist at 4B) — armJ targets confirmed.
+New armS candidate found: 3/5 gemma4b plan failures = refinement_questions
+15-word cap on well-formed questions (user-facing → needs judged check,
+not just clip).
 
 **Exact next actions:**
-1. When the running battery exits: `brew upgrade ollama`, restart server
-   (parallel env), pull qwen3.5:0.8b + qwen3.5:4b, smoke-probe, then run
-   their baselines (add lines to run_battery.sh). These two are the
-   class-verdict calibers for every arm comparison from here on.
+1. When the qwen batteries exit: analyze.py all six baselines; sanity-check
+   qwen3.5 ok-rates (think=false quality must hold — probes were clean).
 2. Apply armJ templates → `run_battery.sh armJ` (at minimum the two qwen3.5
-   calibers; weaker models as robustness points).
+   calibers + gemma1b; weaker models as robustness points; ALL qwen runs
+   --think=false).
    Compare with analyze.py: ok-rate must rise sharply; raw bytes per
    SUCCESSFUL task must fall; skill/action distributions must not skew.
 3. Apply armS on top → `run_battery.sh armJS`. Same comparisons.
