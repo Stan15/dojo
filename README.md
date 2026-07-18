@@ -212,9 +212,23 @@ meta-learning        ██████░░░░ 0.55  knows when to ask inst
 
 Running local? **gemma3:4b** (~3.3 GB) is the smallest model we've measured
 as consistently helpful (80%+ of tasks accepted first try; built-in retries
-absorb most of the rest). Smaller than ~4B, current models miss the output
-contracts too often — but the benchmark measures any model in one command,
-so check yours.
+absorb most of the rest). Here's what that means concretely — a real grade,
+run locally by gemma3:4b through the production pipeline, first try,
+verbatim:
+
+```console
+exercise: Translate "I am tired today."     learner: "Yo soy cansado hoy"
+
+{"score": 0.0, "evidence": "Yo soy cansado hoy",
+ "feedback": "Incorrect verb conjugation. Use 'estar' for temporary states.",
+ "error_tag": "verb conjugation", "knowledge_gap": false}
+```
+
+Grading, routing, and exercise generation all run at that reliability on a
+laptop; reflection (distilling insights like the ones above) is the hardest
+task and wants a stronger model. Smaller than ~4B, current models miss the
+output contracts too often — but the benchmark measures any model in one
+command, so check yours.
 
 ## Under the hood, in one paragraph
 
