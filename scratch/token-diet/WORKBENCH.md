@@ -122,6 +122,14 @@ armJ 0.8b interim (confounded): 1/64 vs base 4/64; no-JSON down 17→11,
 ws% down, BUT items[N].skill omissions up (13×) — possible armJ design
 risk: single fully-populated example item may read as first-item-only
 pattern at 0.8b.
+armJ qwen35_4b (confounded): 26/59 vs base 27/62 — FLAT overall; grade
+7→29% (quote fix works), generate 80→86% (bytes −8%), BUT plan 86→71%,
+capture.route 50→0% (NEW mechanism: models copying the attach-example's
+null new_name/new_mission into propose_campaign — example values teach
+field-shapes, enum-echo one level up). All kinds SLOWER (plan 114→179s,
+5 timeouts vs 2) — chat-endpoint vs Field-rules-prose split lands with
+base2. Likely armJ rev: route example non-null values or a Field-rules
+line stating per-action required fields.
 
 **Exact next actions:**
 1. armJ battery done → snapshot commit (armJ tree + results), then restore
