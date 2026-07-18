@@ -95,7 +95,20 @@ not just clip).
    total bytes. Deliverable is DOCS/benchmark guidance only — never prompt text.
 5. Winner → repo: template edits + schema/limits/service edits (from
    apply_armS.py) + tests for coercion/clip + golden/footprint updates +
-   TEMPLATE_CAPS coherence, full pytest gate. Baseline cards: quality floors
+   TEMPLATE_CAPS coherence, full pytest gate. **PLUS the bidirectional
+   regression gates (owner directive 2026-07-17c, standing in STATE):**
+   (a) static shape-lint tests in test_prompts.py, default gate — no
+   `a|b|c` enum strings as skeleton values, no `//` comments in skeletons,
+   no numeric constraints inside skeleton string values (constraints live
+   in rules/Field-rules lines); templates and lint made coherent in the
+   same commit (campaign_plan's summary value + generate/diagnostic prompt
+   values currently embed caps — resolve per the armJ qwen rumination
+   data); (b) ratcheted output-bytes-per-successful-task baseline per
+   driver (evals/baselines/), asserted in the opt-in real-model marker the
+   way quality floors are; (c) docs/design/prompts.md §1 rule 7 rewritten
+   to the armJ-proven skeleton style + a token-shape rules subsection, so
+   future prompt editors inherit the awareness (that doc is mandatory-open
+   for template edits). Baseline cards: quality floors
    for (codex,codex) may shift — owner-authorized validation run at the end:
    ONE `-m eval -q` with the codex low-effort driver, update ratchets same
    commit if moved.

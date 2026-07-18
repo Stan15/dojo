@@ -334,6 +334,18 @@ committed work, not proposals awaiting an answer. Item numbering is stable
   an arbitrary same-footprint pick misstates the real-world floor. Class
   verdicts come from the best-in-class (2026-07: qwen3.5:0.8b ~1GB,
   qwen3.5:4b ~3.4GB); weaker same-class models are robustness points only.
+- **Prompt work and token work are mutually non-regressing, and BOTH
+  directions are tested** (owner, 2026-07-17): every future prompt/quality
+  optimization must preserve token-diet gains (output-shape discipline,
+  rejection-retry elimination, thinking-cost awareness), and every token
+  optimization must preserve quality — each side runs the other side's
+  gates. Quality direction: corpus floors + ratcheted eval baselines +
+  release-gate holdout (exist today). Token direction: static template
+  shape-lints (weak-model-hostile patterns) in the default gate + ratcheted
+  output-bytes-per-successful-task baselines for real-model runs — landing
+  with the token-diet winner commit (dev/token-diet; see WORKBENCH step 5).
+  A change that wins on one axis by losing the other is a regression, full
+  stop.
 - **NEVER optimize prompts on holdout-set data** (absolute, 2026-07-09):
   one consumable bit per holdout run (aggregate gap); bad gap → broaden the
   visible corpus, iterate there. Applies to every contributor, human or AI.
