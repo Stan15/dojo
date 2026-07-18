@@ -329,6 +329,10 @@ committed work, not proposals awaiting an answer. Item numbering is stable
 - Eval/benchmark: fulfiller-agnostic, per-(driver,judge) baselines, reproducible;
   codex is locally available for real runs — never hardcoded.
 - Serious, VARIED corpus; benchmark results grouped by category for users.
+- Delegate to cheaper models where quality is provably unaffected
+  (owner, 2026-07-18): mechanical script execution, verifiable-number
+  aggregation, reviewed docs drafting. Never: prompt-template wording,
+  decision verdicts, unreviewed merge-destined code.
 - Weak-model benchmark calibers = the BEST model of each resource class
   (2026-07-17): local users run the strongest model their hardware allows, so
   an arbitrary same-footprint pick misstates the real-world floor. Class

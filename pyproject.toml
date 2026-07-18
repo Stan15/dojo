@@ -46,5 +46,6 @@ testpaths = ["tests"]
 markers = [
     "eval: real-model prompt evals (ADR 016); needs DOJO_EVAL_FULFILLER",
     "eval_holdout: HOLDOUT prompt evals — run only at release gates, never during prompt iteration (anti-reward-hacking)",
+    "eval_tokens: real-model output-byte ratchet (token-diet); needs DOJO_TOKEN_DRIVER + local ollama",
 ]
-addopts = "-m 'not eval and not eval_holdout'"
+addopts = "-m 'not eval and not eval_holdout and not eval_tokens'"

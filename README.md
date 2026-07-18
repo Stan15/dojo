@@ -83,7 +83,7 @@ Then just tell your agent what you want to learn.
 a response — one string, no wrapper scripts:
 
 ```bash
-dojo config set model.command "codex exec"        # or "ollama run llama3", …
+dojo config set model.command "codex exec"        # local ollama? use the API — see docs/api-specification.md
 dojo task run                                     # drain pending AI work
 ```
 
@@ -265,7 +265,7 @@ category-by-category profile — personalization, calibration, planning,
 grading integrity, knowing-when-to-ask, domain breadth:
 
 ```bash
-dojo benchmark -d "ollama run qwen3:4b"        # grades with your configured judge
+dojo benchmark -d "python api_driver.py qwen3.5:4b --no-think"  # ollama via API; piped `ollama run` corrupts JSON on ≥0.32
 dojo benchmark -d "codex exec" --detail        # per-criterion verdicts
 ```
 
