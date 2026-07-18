@@ -2,6 +2,44 @@
 
 Non-blocking. Each open question has the default I will proceed on if unanswered.
 
+## PROGRESS BOARD (method §7) — owner-directed work, status per item
+
+_Statuses: `[x]` shipped · `[~]` standing/in-progress · `[?]` blocked-on-owner ·
+`[ ]` queued (fresh session). Updated 2026-07-18 session end._
+
+- [x] Release-gate remedy: corpus 64→79 even + 4 prompt fixes + validation
+      run (3 fixes measurably landed; mean 0.833→0.855). aec60a2…643d9ec.
+- [x] Name-leak field fixes (applier root cause + all UI surfaces) · capture
+      core-need (why→extraction→generation→plan chain, 6g) · OP #16-18.
+- [x] README, all directives: growth restructure, receipts headlined with
+      real model-tagged output, no-guilt, capture transcript, small-model
+      guidance + gemma grade showcase, what-dojo-is-not, two-axes benchmark
+      in plain words, hermes framing, prereq line, 100%-truthful examples.
+- [x] SKILL behavioral tier (learner-speak workflows, personas, outcome
+      checks + judge rubrics) + `dojo benchmark --skill` isolation.
+- [~] **Weak-model insights demo for the README** (your ask: "even better
+      if weak models produce the demo insights" — under the honest-trials
+      bound). Attempted: qwen3.5:4b and gemma3:4b each got two full
+      production task budgets on the demo scenario; all 12 single-shots
+      failed on JSON shape (content was often right). Demo stayed gpt-5.5
+      per your fallback. **REOPENS when reflect improves for weak models —
+      first candidate: the empty-INSIGHTS skeleton fix (INSIGHTS
+      2026-07-18: compiler leads with the create-op example when the store
+      has zero insights). After any such fix lands: retry within the same
+      bound (≤2 budgets/model), and if a 4B lands it, swap/augment the
+      README demo with its exact model tag.**
+      NOTES:
+- [ ] Fresh session (prompt authority; this one holdout-disqualified,
+      STATE 10f): diagnose 5 stable ratchet drops + 3 unmoved weak floors
+      from the two runs' traces; includes the empty-INSIGHTS compiler
+      candidate and the near-empty-registry route bleed (INSIGHTS).
+- [?] Holdout release gate re-trigger (you; after the drops are
+      dispositioned) · uncommitted __holdout baseline disposition (you).
+- [?] First real `-m eval_skill` run — needs your driver-agent command
+      pick (STATE 10d2). · Docs hosting workflow on your word / go-public
+      (Q 3b). · Gated designs: 6b reflect decomposition, 6d display
+      unification, 6f vault export, 6h quit-as-evidence.
+
 ## Open — decisions actually waiting on you
 
 0. **Token-diet: 4-scenario codex bootstrap recheck (2026-07-18).** The
