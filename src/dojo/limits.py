@@ -83,7 +83,6 @@ TEMPLATE_CAPS: dict[str, dict[str, int]] = {
         "diagnostic_prompt_words": DIAGNOSTIC_PROMPT_WORDS,
     },
     "attempt.grade": {
-        "evidence_words": GRADE_EVIDENCE_WORDS,
         "feedback_words": GRADE_FEEDBACK_WORDS,
         "error_tag_words": GRADE_ERROR_TAG_WORDS,
     },
