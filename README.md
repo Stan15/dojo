@@ -153,6 +153,18 @@ Future exercises target these beliefs; resolving one redirects your practice
 immediately. Your word is always the higher authority: the machine holds
 hypotheses, you hold the truth.
 
+Most of the model builds itself from evidence — but you can also just *tell
+it things*, and your words are read verbatim by the next reflection:
+
+```bash
+dojo feedback "the subjunctive drills read like riddles — I can't tell what's being asked"
+dojo skip --feedback "too abstract, give me a concrete sentence to fix"
+```
+
+Confusing questions get rewritten, not held against you: "I didn't
+understand the question" is a signal about the *material*, and the system
+is benchmarked on telling that apart from a knowledge gap.
+
 The same receipts run through everything: `dojo why` explains today's picks
 in one sentence each, `dojo stats` tags estimates as estimates, and every
 AI-derived score traces back to the model's own words (`dojo task show

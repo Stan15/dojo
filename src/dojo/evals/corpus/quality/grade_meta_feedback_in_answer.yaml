@@ -1,0 +1,66 @@
+# Grading discernment: the answer wraps a REAL attempt in prose
+# meta-feedback ("not sure what this is asking… if it means X, then…").
+# Strong grading finds and scores the attempt, answers the confusion in
+# feedback, and tags the pattern; weak grading scores the confusion — 0.0
+# "didn't answer" for an answer whose core is right.
+category: grading-integrity
+domain: knot_tying
+scenario_context: |
+  The exercise asks when a bowline beats a clove hitch. The learner's answer
+  opens with honest confusion about what the question wants — then answers
+  it anyway, correctly: a bowline for a fixed loop that won't slip under
+  load, a clove hitch for tying off to a post but vulnerable when the pull
+  direction shifts. It omits the rubric's ease-of-untying point. Strong
+  output: 0.7 — the core distinction is right with a minor gap; evidence
+  quotes the substantive part, not the confusion; feedback briefly answers
+  what the question wanted, then the one correction; the error_tag reflects
+  the prompt-confusion pattern, not a knowledge failure. Weak output: 0.0
+  for "expressing confusion instead of answering" — punishing the
+  meta-prose while a correct answer sits inside it.
+seed:
+  campaign:
+    id: practical-knots
+    name: Practical Knots
+    mission: Tie the right knot for the job, reliably, from memory.
+  exercises:
+    - id: ex_bowline
+      topic_path: knots.loops.bowline
+      difficulty: intermediate
+      prompt: "When is a bowline preferable to a clove hitch?"
+      answer: "When you need a fixed loop that will not slip under load and unties easily afterward; a clove hitch suits tying off to a post but can slip as pull direction shifts."
+      rubric: "1.0 names the fixed non-slipping loop AND easy untying after load. 0.7 has the core loop-vs-hitch distinction with one element missing. 0.3 relevant but the core distinction wrong or missing. 0.0 unrelated or no attempt."
+  attempts:
+    - id: att_bowline_1
+      session_id: s7
+      exercise_id: ex_bowline
+      score: 0.0
+      latency_seconds: 88.0
+      user_answer: "Honestly I'm not sure what this question is asking - preferable how, for what job? If it means which one gives a fixed loop that won't slip under load, then the bowline; a clove hitch is more for tying off to a post and it can slip when the pull direction keeps changing."
+steps:
+  - compile:
+      fn: grade
+      attempt_id: att_bowline_1
+judge_rubric:
+  - {id: c1, weight: 4, question: "Does the grade score the real attempt inside
+      the answer at 0.7 (core distinction right, minor gap) rather than 0.0 for
+      the expressed confusion?"}
+  - {id: c2, weight: 3, question: "Does the evidence quote the substantive part
+      of the answer (the bowline/clove-hitch content), not the confusion
+      prose?"}
+  - {id: c3, weight: 2, question: "Does the feedback briefly resolve what the
+      question wanted (acknowledging the stated confusion) before or alongside
+      the correction?"}
+  - {id: c4, weight: 1, question: "Does the error_tag reflect the
+      question-comprehension pattern rather than inventing a knowledge
+      deficit?"}
+references:
+  good:
+    score: 0.7
+    evidence: "the bowline; a clove hitch is more for tying off to a post"
+    feedback: "The question wanted exactly the comparison you made — and you got it right. Missing piece: a loaded bowline still unties easily."
+    error_tag: prompt felt ambiguous
+  bad:
+    score: 0.0
+    evidence: "Honestly I'm not sure what this question is asking"
+    feedback: "You expressed confusion instead of answering. Review the difference between a bowline and a clove hitch and try again."
+    error_tag: no answer

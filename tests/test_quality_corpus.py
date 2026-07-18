@@ -41,7 +41,7 @@ class TestCorpusCoverage:
     breadth is a ratcheted invariant, not an aspiration. These floors may only
     ever go UP; raising them is how the corpus grows deliberately."""
 
-    MIN_TOTAL = 77
+    MIN_TOTAL = 79  # +2 2026-07-18: prose-feedback discernment (owner story) — grade meta-feedback-in-answer, reflect confusion-is-item-signal
     MIN_PER_CATEGORY = {
         # +13 2026-07-18 (release-gate remedy): every category +1 (routing and
         # planning +2), thin task kinds lifted most (diagnostic, goal_route,
@@ -49,9 +49,9 @@ class TestCorpusCoverage:
         # only rewarded one way (propose-new, minimal restructure, no-present,
         # no-retirement). No holdout-informed targeting — blindness is total.
         "personalization": 6,
-        "calibration": 16,  # +3 2026-07-11: insight-resolution breadth (mixed adjudication, gloomy-window resolve, premature-resolve control)
+        "calibration": 17,  # +3 2026-07-11 insight-resolution breadth; +1 2026-07-18 confusion-is-item-signal
         "planning": 9,
-        "grading-integrity": 9,  # +2 ADR 017: knowledge_gap honest/adversarial
+        "grading-integrity": 10,  # +2 ADR 017 knowledge_gap; +1 2026-07-18 meta-feedback-in-answer
         "meta-learning": 4,
         "domain-breadth": 5,
         "change-authority": 4,

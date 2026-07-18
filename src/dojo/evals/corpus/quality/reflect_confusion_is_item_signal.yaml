@@ -1,0 +1,90 @@
+# Reflection discernment: prose feedback says the QUESTIONS are confusing —
+# and the same content, asked plainly, scores 1.0 in the same window. The
+# barrier is item wording, not learner ability. Strong reflection captures a
+# wording insight (generation reads insights — this is how the next batch
+# gets clearer) and leaves difficulty alone; weak reflection converts
+# confusion into a learner deficit and drops difficulty.
+category: calibration
+domain: weather_forecasting
+scenario_context: |
+  A forecasting learner working on reading skew-T charts. Three attempts on
+  riddle-worded chart questions score 0.3, each with the learner's own
+  feedback naming question confusion ("I don't understand what this is
+  asking", "reads like a riddle"). One plainly-worded attempt on the SAME
+  topic scores 1.0, fast. Strong output: an insight naming the
+  question-wording barrier (citing the confused attempts), difficulty
+  unchanged (the plain-worded success proves the content is within reach —
+  scaffolding may rise with a wording-specific reason), journal naming the
+  learner's feedback as the signal. Weak output: difficulty lowered and/or
+  an insight framing a learner deficit ("struggles with chart reading")
+  when the in-window evidence shows the content lands fine once the
+  question is clear.
+seed:
+  campaign:
+    id: weather-reading
+    name: Weather Reading
+    mission: Read soundings and surface charts well enough to brief a flight.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+  exercises:
+    - {id: ex_sk1, topic_path: weather.charts.skew_t, difficulty: intermediate,
+       prompt: "Given the trace's dance between the dry adiabat and its moist cousin, where does the parcel's ambition exhaust itself?",
+       answer: "At the equilibrium level, where parcel and environment temperatures meet.",
+       rubric: "- names the equilibrium level"}
+    - {id: ex_sk2, topic_path: weather.charts.skew_t, difficulty: intermediate,
+       prompt: "If the sounding's elbow whispers of an inversion, what fate befalls the morning cumulus?",
+       answer: "The inversion caps convection; cumulus stay shallow or dissolve.",
+       rubric: "- capping inversion suppresses convection"}
+    - {id: ex_sk3, topic_path: weather.charts.skew_t, difficulty: intermediate,
+       prompt: "Where the dewpoint and temperature traces flirt closely, what does the layer confess?",
+       answer: "Near-saturation: likely cloud or fog in that layer.",
+       rubric: "- small dewpoint spread means moisture/cloud"}
+    - {id: ex_sk4, topic_path: weather.charts.skew_t, difficulty: intermediate,
+       prompt: "On a skew-T, what does a small temperature-dewpoint spread in a layer indicate?",
+       answer: "The layer is near saturation - expect cloud or fog there.",
+       rubric: "- near saturation means cloud/fog"}
+  attempts:
+    - {id: att_sk1, session_id: s8, exercise_id: ex_sk1, score: 0.3, latency_seconds: 120.0,
+       feedback: "I don't understand what this question is asking at all",
+       user_answer: "Where it stops rising? I genuinely can't tell what 'ambition' means here."}
+    - {id: att_sk2, session_id: s8, exercise_id: ex_sk2, score: 0.3, latency_seconds: 95.0,
+       feedback: "this one reads like a riddle, not a weather question",
+       user_answer: "Something about the inversion stopping clouds, but I'm guessing at the metaphor."}
+    - {id: att_sk3, session_id: s9, exercise_id: ex_sk3, score: 0.3, latency_seconds: 100.0,
+       feedback: "again no idea what is actually being asked",
+       user_answer: "Flirting traces?? Maybe humidity is high there?"}
+    - {id: att_sk4, session_id: s9, exercise_id: ex_sk4, score: 1.0, latency_seconds: 14.0,
+       user_answer: "Small spread means the layer is near saturation, so cloud or fog is likely."}
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - {id: c1, weight: 4, question: "Does the output create an insight naming the
+      question-WORDING barrier (citing the confused attempts' feedback), rather
+      than a learner-deficit insight about chart-reading ability?"}
+  - {id: c2, weight: 3, question: "Is difficulty left unchanged, honoring the
+      fast 1.0 on the plainly-worded question of the same topic?"}
+  - {id: c3, weight: 2, question: "If scaffolding or any dial changes, does the
+      reason name the wording/comprehension signal specifically (not general
+      struggle)?"}
+  - {id: c4, weight: 1, question: "Does the journal attribute the signal to the
+      learner's own feedback about the questions?"}
+references:
+  good:
+    insight_updates:
+      - {op: create, id: null, key: items.riddle_wording_barrier,
+         text: "Figurative question wording blocks answers; plainly-worded skew-T questions score perfectly.",
+         evidence: [att_sk1, att_sk2, att_sk3], reason: "three confusion feedbacks beside a fast plain-worded 1.0"}
+    strategy: null
+    plan_revision: null
+    questions: []
+    topic_retirements: []
+    journal: "Learner's feedback names riddle-like wording; plain question scored 1.0 fast. Wording insight recorded; dials held."
+  bad:
+    insight_updates:
+      - {op: create, id: null, key: charts.skew_t_weakness,
+         text: "Learner struggles to interpret skew-T charts and needs easier material.",
+         evidence: [att_sk1, att_sk2, att_sk3], reason: "three low scores on chart questions"}
+    strategy: {difficulty: beginner, scaffolding: high, reason: "repeated low scores on skew-T questions"}
+    plan_revision: null
+    questions: []
+    topic_retirements: []
+    journal: "Lowered difficulty after repeated chart-reading failures."
