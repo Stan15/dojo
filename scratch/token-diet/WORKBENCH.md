@@ -110,12 +110,28 @@ attributable (armJ vs base; armJS vs armJ = armS marginal); snapshots make
 every battery reproducible via git checkout. Losing arms are reverted by
 the winner commit — git is the archive.
 
+**CONFOUND CAUGHT (2026-07-18): driver is part of measurement config.**
+qwen3.5 base batteries used /api/generate; armJ battery uses /api/chat
+(endpoint switched for qwen3:4b think-binding). armJ-vs-base is NOT clean
+for the qwen3.5 calibers until base is rerun on the chat driver. RULE: never
+change driver/endpoint between batteries you intend to compare. gemma/lfm
+base batteries used the 0.13.4 CLI — same caveat applies to their armJ
+comparison (CLI internally = chat-style template; treat their deltas as
+indicative, decide on same-driver pairs).
+armJ 0.8b interim (confounded): 1/64 vs base 4/64; no-JSON down 17→11,
+ws% down, BUT items[N].skill omissions up (13×) — possible armJ design
+risk: single fully-populated example item may read as first-item-only
+pattern at 0.8b.
+
 **Exact next actions:**
-1. armJ battery done → analyze.py armJ_* vs base_*: ok-rate must rise
-   sharply; raw bytes/successful task must fall; skill/action distributions
-   must not skew (content-bleed check); qwen35_4b pre_bytes watch
-   (rumination on caps embedded in generate/diagnostic skeleton values).
-2. armS on top (arms/apply_armS.py) → armJS battery, same comparisons.
+1. armJ battery done → snapshot commit (armJ tree + results), then restore
+   base templates (git checkout src/dojo/prompts) and rerun base batteries
+   on the CHAT driver for both qwen3.5 calibers (base2_*) → THEN compare
+   armJ vs base2 same-driver: ok-rate must rise sharply; raw bytes per
+   successful task must fall; skill/action distributions must not skew;
+   qwen35_4b pre_bytes watch (rumination on caps in skeleton values).
+2. armS on top (arms/apply_armS.py, after re-overlaying armJ) → armJS
+   battery, same comparisons.
    Compare with analyze.py: ok-rate must rise sharply; raw bytes per
    SUCCESSFUL task must fall; skill/action distributions must not skew.
 3. Apply armS on top → `run_battery.sh armJS`. Same comparisons.
