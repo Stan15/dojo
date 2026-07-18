@@ -195,18 +195,21 @@ local and asleep until called.
 
 ## Benchmark your model
 
-Under the hood there are two AI jobs, and they don't have to be the same
-brain. One **drives**: your everyday agent coordinating the whole flow
-(that's the installed skill). One **fulfills**: writing exercises, grading
-answers, reflecting (that's `model.command`). A sweet setup: your everyday
-agent drives, and a small local model does the routine fulfillment —
-private, and free after the download. Benchmark exactly the side you plan
-to use:
+Two different questions, measured separately — run whichever matches how
+you use dojo:
 
 ```bash
-dojo benchmark -d "codex exec" --detail       # fulfilling: how well does it run dojo's pedagogy?
-dojo benchmark --skill -d "<agent command>"   # driving: can it run whole workflows through the skill?
+# How well does this model run dojo's AI work — the exercises, grading, pedagogy?
+dojo benchmark -d "codex exec" --detail
+
+# Using dojo through an agent? How well does that agent use the dojo CLI for you?
+dojo benchmark --skill -d "<agent command>"
 ```
+
+The two are independent, so you can mix: your everyday agent uses the CLI
+for you, while a small local model quietly does the AI work
+(`dojo config set model.command "…"`) — private, and free after the
+download.
 
 ```text
 Overall  ████████░░ 0.84   (79 scenarios)
