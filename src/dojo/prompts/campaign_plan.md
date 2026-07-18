@@ -45,12 +45,13 @@ RULES
 
 OUTPUT — your final output is exactly this JSON (anything before it is ignored):
 {
-  "mission": "...",
+  "mission": "the goal restated as one testable sentence",
   "name": "≤ {{ new_name_words }} words — a label, not the goal",
-  "topics": [{"path": "a.b.c", "kind": "recall|skill", "summary": "≤ {{ topic_summary_words }} words — a hook, not a syllabus"}],
-  "phases": [{"topics": ["a.b"], "criteria": {"min_attempts": 5, "min_accuracy": 0.6}, "focus": "..."}],
-  "refinement_questions": ["..."]
+  "topics": [{"path": "a.b.c", "kind": "recall", "summary": "≤ {{ topic_summary_words }} words — a hook, not a syllabus"}],
+  "phases": [{"topics": ["a.b"], "criteria": {"min_attempts": 5, "min_accuracy": 0.6}, "focus": "what this phase builds"}],
+  "refinement_questions": ["one sharp question, only if truly needed?"]
 }
+Field rules: "kind" is one word — recall or skill.
 Check: ≤ {{ max_topics }} topics; every phase topic appears in topics; mission
 states ability, not coverage, in ≤ {{ mission_words }} words; name is
 ≤ {{ new_name_words }} words and not an EXISTING CAMPAIGNS entry.

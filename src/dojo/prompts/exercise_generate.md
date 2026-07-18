@@ -55,19 +55,32 @@ RULES
 {{ recent_rows }}
 {{ source_section }}
 
-OUTPUT — your final output is exactly this JSON (anything before it is ignored):
+OUTPUT — your final output is exactly this JSON shape (anything before it is ignored):
 {
   "items": [
     {
-      "prompt": "...",       // the exercise, ≤ {{ prompt_words }} words, markdown allowed
-      "answer": "...",       // ideal answer, ≤ {{ answer_words }} words
-      "rubric": "- ...",     // 1-3 scoring criteria (null for skill "present")
-      "skill": "recall|explain|apply|produce|critique|present"
+      "prompt": "the exercise text, ≤ {{ prompt_words }} words",
+      "answer": "the ideal answer, ≤ {{ answer_words }} words",
+      "rubric": "- first scoring criterion\n- second scoring criterion",
+      "skill": "recall"
+    },
+    {
+      "prompt": "the second exercise, shaped exactly like the first",
+      "answer": "its ideal answer",
+      "rubric": "- one criterion can be enough",
+      "skill": "explain"
     }
   ],
-  "note": null,              // ≤ {{ note_words }} words, only if you had to deviate (e.g. source too thin)
-  "intervention": null       // rule 9 only: {"kind": "clarify_goal|need_context|scope_too_broad",
-                             //  "questions": ["...?"], "reason": "≤ {{ intervention_reason_words }} words"} — with items []
+  "note": null,
+  "intervention": null
 }
+Field rules: EVERY item carries all four fields, like both examples above.
+"skill" is exactly ONE word — recall, explain, apply, produce, critique, or
+present. "rubric" is ONE string holding 1-3 dash bullets (null only
+when skill is "present"). "note" stays null unless you deviated (then ≤
+{{ note_words }} words). "intervention" is for rule 9 only, with items []:
+{"kind": "clarify_goal" or "need_context" or "scope_too_broad", "questions":
+["your sharp question?"], "reason": "≤ {{ intervention_reason_words }} words"}.
 Check before returning: valid JSON; exactly {{ n_items }} items (or fewer + note,
-or none + intervention); every prompt self-contained; no prompt reveals its answer.
+or none + intervention); every item has all four fields; every prompt
+self-contained; no prompt reveals its answer.

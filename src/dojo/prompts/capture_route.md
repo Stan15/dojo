@@ -10,9 +10,8 @@ RULES
 3. Fits no campaign → "propose_campaign" (name ≤ {{ new_name_words }} words,
    mission ≤ {{ new_mission_words }} words). Never force a bad fit.
 4. Torn between two homes → choose the better one, set confidence "low".
-5. "seed": true ONLY if the capture itself carries enough substance to write
-   an exercise from (a stated fact, rule, or technique — not a bare topic
-   mention); when the campaign's normal replenishment would cover it, false.
+5. "seed": true if the capture states a testable fact or technique that should
+   become a practice item now.
 
 ## CAPTURE
 {{ text_and_learner_note }}
@@ -20,8 +19,11 @@ RULES
 {{ campaign_lines_and_topic_paths }}
 
 OUTPUT — your final output is exactly this JSON (anything before it is ignored):
-{"action": "attach|new_topic|propose_campaign|stay_inbox", "campaign": null,
- "topic_path": null, "new_name": null, "new_mission": null,
- "confidence": "high|low", "reason": "≤ {{ reason_words }} words", "seed": false}
+{"action": "attach", "campaign": null, "topic_path": null, "new_name": null,
+ "new_mission": null, "confidence": "high", "reason": "≤ {{ reason_words }} words", "seed": false}
+Field rules: "action" is one word — attach, new_topic, propose_campaign, or
+stay_inbox. attach and new_topic need campaign + topic_path; propose_campaign
+needs new_name + new_mission; the fields your action does not use stay null.
+"confidence" is high or low.
 Check: campaign and topic_path copied verbatim from REGISTRY (only a new_topic
 leaf or a proposed campaign may be new text); reason ≤ {{ reason_words }} words.
