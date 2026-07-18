@@ -202,6 +202,16 @@ _Statuses: `[x]` shipped · `[~]` standing/in-progress · `[?]` blocked-on-owner
    no-guilt rules — quitting must never read as failure. **Default: not
    built; needs a design that records without judging.**
 
+7c. **Blog strategy delivered (your directive 2026-07-18):**
+   `docs/growth-blog-plan.md` — six posts in your voice with the standing
+   honesty frame (AI wrote the diffs under your method; the decisions,
+   rulings, and receipts are yours), mined from the 85 owner-ruling
+   commits, the ADR arc, and the archived implementation. P1 method-meta ·
+   P2 blind holdout · P3 keys-taken-back arc · P4 no-guilt (Show HN
+   anchor) · P5 receipts (your avoidance-insight story) · P6 weak-model
+   failure modes. Sequenced against growth §6. **Default: drafts are
+   yours to write; I can draft any post's skeleton on your word.**
+
 7b. **HN pulse readiness + repo description (your asks 2026-07-18).**
    "Pedagogy harness" goes in your HN post (your call, recorded). Timing
    recommendation delivered in-session: a SEQUENCE, not a date — v1.0.0
