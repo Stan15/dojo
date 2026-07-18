@@ -162,6 +162,15 @@ was a real chunk of armJ's apparent grade rescue. secs deltas across
 batteries are unreliable (server restarted between; latency compares only
 within one battery). armJ is SUPERSEDED by armJ2 pending its battery.**
 
+**PENDING armJ4 (queued behind the in-flight codex eval run):** lfm
+reflect 7/20→0/20 regressed at armJ3 — the reflect example's reason text
+("same slip in att_2 and att_5") bleeds id-like tokens (lfm copies att_2
+into id, 5x) and lfm truncates the 2nd example op's trailing reason field.
+Fix: reason values with no id-like tokens ("the same slip appears twice");
+verify via reflect-filtered mini-batteries (lfm+gemma4b+qwen35_4b) that
+gemma4b's 14/20 holds. Templates frozen until the eval run completes
+(process snapshot contamination risk).
+
 **Exact next actions:**
 1. armJ battery done → snapshot commit (armJ tree + results), then restore
    base templates (git checkout src/dojo/prompts) and rerun base batteries
