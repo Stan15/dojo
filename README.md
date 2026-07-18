@@ -119,7 +119,7 @@ french-conversation
     ins_a3f21c88_0 grammar.aux_choice_motion — Picks avoir over être for motion verbs in the passé composé.
       4 answer(s) behind it · 6d old · updated 2026-07-16
   process
-    ins_c9d04e12_1 process.avoidance_when_unsure — Skips or quits when unsure instead of attempting a rough answer; subjunctive prompts especially.
+    ins_c9d04e12_1 process.avoidance_when_unsure — Skips or answers "I give up" rather than attempting when unsure; subjunctive prompts especially.
       4 answer(s) behind it · 2d old · updated 2026-07-17
   preference
     ins_e5b19f03_2 preference.dialogue_examples — Retains phrases better from short dialogues than isolated vocab.
@@ -129,10 +129,10 @@ these are plain markdown files under campaigns/*/insights/ — editing them dire
 ```
 
 Notice what's in there: a grammar misconception distilled from graded
-mistakes, a *behavior* nobody would tell you about themselves — the skips
-and quits are evidence too, and dodging practice when unsure is exactly
-what kills retention — and a preference inferred from what actually
-sticks. Every belief opens into its receipts:
+mistakes, a *behavior* nobody would tell you about themselves — your skips,
+and what you type instead of an answer, are evidence too, and dodging
+practice when unsure is exactly what kills retention — and a preference
+inferred from what actually sticks. Every belief opens into its receipts:
 
 ```text
 $ dojo insights show ins_a3f21c88_0

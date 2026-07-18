@@ -144,6 +144,15 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
    stance for the case where the why IS a goal. **Default: (2)+(3) await
    your gate; nothing built.**
 
+6h. **Session abandonment as evidence (found 2026-07-18, README-truthfulness
+   check).** `/quit`//`/exit` pause the session and leave NO attempt row —
+   reflection cannot see abandonment patterns (your real avoidance insight
+   only exists because you typed "exit" as an ANSWER). If quits carried an
+   honest, non-punitive event row (never a score), avoidance-when-unsure
+   would be detectable without the learner mistyping. Tension to weigh:
+   no-guilt rules — quitting must never read as failure. **Default: not
+   built; needs a design that records without judging.**
+
 7. **Growth strategy sign-off** — full researched strategy delivered at your
    direction: `docs/growth-strategy.md`. Headline: retention is already the
    product (the SRS community's documented abandonment causes map 1:1 onto
