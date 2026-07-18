@@ -32,9 +32,19 @@ money, and pedagogy must survive weak execution:
 6. **Every prompt has a structured escape hatch** (`note`, `stay_inbox`,
    `plan_revision: null`, "return fewer and say why"). A model with no valid way to
    express uncertainty fabricates to comply. The hatch is how we prevent that.
-7. **Example skeleton, not JSON Schema.** The output contract is a literal JSON
-   skeleton with inline `//` constraints — cheaper than a `model_json_schema()`
-   dump and more reliably followed. Formal validation stays server-side.
+7. **Example skeleton, not JSON Schema — with realistic literal values.**
+   The output contract is a literal JSON skeleton — cheaper than a
+   `model_json_schema()` dump and more reliably followed; formal validation
+   stays server-side. Skeletons obey the measured token-shape rules
+   (src/dojo/prompts/README.md, lint-enforced in tests/test_prompts.py):
+   every skeleton value is a REALISTIC, cap-compliant literal — never
+   `"a|b|c"` option strings, never `//` comments, never `"..."` (≤4B models
+   copy skeleton text as content, omit comment-crowded fields, and imitate
+   example length and format — demonstrate compliance, don't describe it);
+   option lists and per-variant field requirements live in a prose "Field
+   rules" block after the skeleton; when items repeat, show TWO complete
+   examples (a single example teaches first-item-only field patterns); rule
+   statements match the schema exactly (understatement teaches omission).
    Skeletons anchor with "your final output is exactly this JSON (anything
    before it is ignored)" — format-anchored but REASONING-NEUTRAL (owner
    ruling 2026-07-11): never invite deliberation (weak models burn tokens),
@@ -86,6 +96,19 @@ Anything that is neither must not clip capability. Two mechanisms guarantee that
 Discrete grading bands are kept even for strong models deliberately: the scheduler
 needs *cross-model consistency* of the score signal more than resolution, and
 band definitions are the only grading language every caliber executes identically.
+
+## 1c. Token-shape rules are tested — both directions
+
+The skeleton patterns in rule 7 are enforced mechanically: shape-lints in
+tests/test_prompts.py reject enum-pipe strings, `//` comments, and `"..."`
+placeholder values in any template's OUTPUT block (each measured to cause
+rejection-retries — the dominant weak-model token cost; evidence:
+dev/token-diet campaign, scratch/token-diet/). Semantic-only validation
+(tests/test_semantic_validation.py) is the server-side half: formatting
+variance is coerced, display-only overflow is clipped, and only semantic
+wrongness rejects. Prompt-quality work and token work are mutually
+non-regressing (STATE standing directive 2026-07-17): whichever side you
+touch, run the other side's gates.
 
 ## 2. Compiled-payload budgets
 

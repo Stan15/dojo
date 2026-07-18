@@ -37,6 +37,35 @@ class TestInventory:
     def test_template_exists(self, name: str):
         assert (_templates_dir() / name).exists(), f"missing template: {name}"
 
+    @pytest.mark.parametrize("name", TASK_TEMPLATES)
+    def test_output_skeletons_avoid_weak_model_hostile_patterns(self, name: str):
+        """Shape-lints (token-diet campaign, dev/token-diet): these patterns
+        were MEASURED to cause rejection-retries — the dominant weak-model
+        token cost. Full catalog: src/dojo/prompts/README.md items 1/2 + the
+        armJ "..." finding; numeric-in-value stays advisory (README item 6).
+        - enum-pipe: "a|b|c" skeleton values get copied verbatim as the value
+        - //-comments: copied into output (unparseable) or crowd out fields
+        - "...": teaches nothing; models omit the field or echo the dots
+        """
+        text = (_templates_dir() / name).read_text(encoding="utf-8")
+        m = re.search(r"^OUTPUT\b.*$", text, re.M)
+        block = text[m.start():] if m else text
+        enum_pipe = re.search(r'"[a-z_]+(\|[a-z_]+)+"', block)
+        assert not enum_pipe, (
+            f"{name}: enum-pipe skeleton value {enum_pipe.group(0)!r} — weak "
+            "models copy it as the value; show one realistic literal and list "
+            "options in a Field rules line"
+        )
+        assert "//" not in block, (
+            f"{name}: // comment in the output block — models copy comments "
+            "into their JSON or omit the fields they crowd"
+        )
+        dots = re.search(r':\s*"\.\.\."|\["\.\.\."\]|"\.\.\.\?"', block)
+        assert not dots, (
+            f"{name}: \"...\" placeholder value — demonstrate a realistic, "
+            "cap-compliant value instead (README failure mode 9)"
+        )
+
     def test_editor_guard_doc_present_and_never_a_template(self):
         """src/dojo/prompts/README.md carries the measured weak-model failure
         modes every template editor must see (owner directive 2026-07-18:
