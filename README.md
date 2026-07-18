@@ -110,11 +110,47 @@ dojo insights resolve ins_xxx --because "I know this — I was rushing"
                                  # your words, stored verbatim, outrank the evidence
 ```
 
-Every insight — "confuses `por`/`para` under time pressure", "prefers code
-examples over prose" — cites the actual attempts that earned it, down to your
-own words. Future exercises target these beliefs; resolving one redirects
-your practice immediately. Your word is always the higher authority: the
-machine holds hypotheses, you hold the truth.
+`dojo insights` reads like this — every belief earned from your actual
+practice, nothing you had to write down yourself:
+
+```text
+french-conversation
+  grammar
+    ins_a3f21c88_0 grammar.aux_choice_motion — Picks avoir over être for motion verbs in the passé composé.
+      4 answer(s) behind it · 6d old · updated 2026-07-16
+  process
+    ins_c9d04e12_1 process.fast_wrong_gender — Answers noun-gender questions fast and wrong: guessing, not recalling.
+      3 answer(s) behind it · 2d old · updated 2026-07-17
+  preference
+    ins_e5b19f03_2 preference.dialogue_examples — Retains phrases better from short dialogues than isolated vocab.
+      2 answer(s) behind it · 9d old · updated 2026-07-11
+
+these are plain markdown files under campaigns/*/insights/ — editing them directly is first-class
+```
+
+Notice what's in there: a grammar misconception distilled from graded
+mistakes, a *process* read (fast + wrong = guessing — the seconds are
+evidence too), and a preference inferred from what actually sticks. And
+every belief opens into its receipts:
+
+```text
+$ dojo insights show ins_a3f21c88_0
+
+grammar.aux_choice_motion (ins_a3f21c88_0, active)
+Picks avoir over être for motion verbs in the passé composé.
+
+Why we believe this — your own answers:
+  2026-07-14 · Traduisez : She went to the market yesterday.
+    › "elle a allé au marché hier" — score 0.3 (graded by ai, aux choice)
+  2026-07-16 · Traduisez : We arrived before the rain.
+    › "nous avons arrivé avant la pluie" — score 0.3 (graded by ai, aux choice)
+
+Effect: 3 exercise(s) generated to target this (2 in the last 7 days)
+```
+
+Future exercises target these beliefs; resolving one redirects your practice
+immediately. Your word is always the higher authority: the machine holds
+hypotheses, you hold the truth.
 
 The same receipts run through everything: `dojo why` explains today's picks
 in one sentence each, `dojo stats` tags estimates as estimates, and every
