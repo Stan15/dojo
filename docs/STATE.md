@@ -307,6 +307,17 @@ committed work, not proposals awaiting an answer. Item numbering is stable
    share tuning (wants real usage data); OP #13 snapshot-undo. (ADR 005
    maintenance: shipped in item 3b; OP #14: fixed 2026-07-09.)
 
+9. **IN FLIGHT (dev/token-diet branch, owner-directed 2026-07-17): token-diet
+   engagement.** Massive output-token reduction WITHOUT any performance loss
+   (same-or-better everywhere; weak-model floor = Pi-5/4B class; whole-trace
+   metric incl. thinking; no tiny gains; never reward-hack; holdout never
+   read). **Full continuation state, findings, staged arms, and exact next
+   actions: `scratch/token-diet/WORKBENCH.md` — read it before anything.**
+   Headline finding: weak-model failures are skeleton-syntax misreads
+   (enum-echo, comment-omission, evidence-as-analysis) → rejection retries
+   are the dominant token cost; fixing them raises quality AND cuts tokens.
+   Merge to main is owner-gated.
+
 ## Standing owner directives (must survive every session)
 
 - No context bloat; token spend is the owner's money — budgets are tested.
