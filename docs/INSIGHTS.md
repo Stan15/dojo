@@ -201,3 +201,27 @@ edge-tolerant comparison or ~15% of honest passes get discarded.
   the real floor model doesn't have. Re-survey the model landscape before
   each benchmarking campaign (it moves fast); keep weaker same-class models
   only as robustness points. (Owner directive; standing in STATE.)
+- **Example values anchor everything: length, format, field presence, AND
+  content distribution.** The campaign's central discovery, measured four
+  independent ways: descriptive values teach cap-breaking (reflect 11/20→0
+  when the journal example said "2-4 sentences" into a 30-word cap);
+  id-like tokens in example prose get copied into id fields; example skills
+  skew the generated-skill distribution (recall+explain 24%→58%) and an
+  example null suppresses plan revisions even at codex tier; trailing
+  example fields get truncated by small models (required fields first).
+  Skeletons must DEMONSTRATE compliance with content orthogonal to real
+  decisions. Lint-enforced: src/dojo/prompts/README.md item 9.
+- **A shape-pass can be a vacuous pass — read the passing outputs too.**
+  lfm's 7/20 baseline reflect "successes" were all empty-op no-ops;
+  hardened templates converted hollow compliance into honest capability
+  failures that LOOK like a regression. Before calling a regression, check
+  what the old passes actually contained.
+- **Single-run deltas need a variance floor.** Identical templates, driver,
+  and corpus re-ran at ±3/kind and ±3 overall (4B): replicate before
+  adjudicating small deltas; ±1-scenario noise bands are fantasy at this
+  scale. Bonus: shape-hardening itself collapsed run sd 3.2→0.6 —
+  determinism is a measurable product win.
+- **The driver is part of the measurement.** Endpoint (generate vs chat),
+  CLI version (0.32 rewrap junk in piped stdout), and think-binding
+  differences each produced fake deltas bigger than most real effects.
+  Never compare batteries across driver configs; re-baseline instead.

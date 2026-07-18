@@ -307,16 +307,16 @@ committed work, not proposals awaiting an answer. Item numbering is stable
    share tuning (wants real usage data); OP #13 snapshot-undo. (ADR 005
    maintenance: shipped in item 3b; OP #14: fixed 2026-07-09.)
 
-9. **IN FLIGHT (dev/token-diet branch, owner-directed 2026-07-17): token-diet
-   engagement.** Massive output-token reduction WITHOUT any performance loss
-   (same-or-better everywhere; weak-model floor = Pi-5/4B class; whole-trace
-   metric incl. thinking; no tiny gains; never reward-hack; holdout never
-   read). **Full continuation state, findings, staged arms, and exact next
-   actions: `scratch/token-diet/WORKBENCH.md` — read it before anything.**
-   Headline finding: weak-model failures are skeleton-syntax misreads
-   (enum-echo, comment-omission, evidence-as-analysis) → rejection retries
-   are the dominant token cost; fixing them raises quality AND cuts tokens.
-   Merge to main is owner-gated.
+9. **CAMPAIGN COMPLETE — AWAITING OWNER MERGE GATE (dev/token-diet,
+   2026-07-18): token-diet.** Winner `armJ5S` shipped on-branch, 722 tests
+   green: shape-hardened templates + semantic-only validation + permanent
+   bidirectional gates (shape-lints, semantic-validation tests, prompts.md
+   rule 7 + §1c, guard README chain). Results: class-verdict qwen3.5:4b
+   26.3±3.2 → 33-35/64 with 5× variance collapse; gemma3:4b 28 → 50-53;
+   lfm 11 → 21; floors unchanged; judged quality parity; skill-bleed found
+   and de-anchored. **Full story: `scratch/token-diet/REPORT.md`;
+   continuation detail: WORKBENCH.md same dir.** Accumulate-batch of
+   deferred marginal wins ledgered there. Merge to main is owner-gated.
 
 ## Standing owner directives (must survive every session)
 
