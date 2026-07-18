@@ -26,7 +26,7 @@ OUTPUT — your final output is exactly this JSON (anything before it is ignored
 {
   "items": [
     {
-      "prompt": "one diagnostic question, ≤ {{ diagnostic_prompt_words }} words",
+      "prompt": "...",       // one diagnostic question, ≤ {{ diagnostic_prompt_words }} words
       "answer": null,
       "rubric": null,
       "skill": "diagnostic"
@@ -34,7 +34,5 @@ OUTPUT — your final output is exactly this JSON (anything before it is ignored
   ],
   "note": null
 }
-Field rules: in EVERY item, "skill" is exactly the word diagnostic, and
-"answer" and "rubric" stay null.
 Check before returning: valid JSON; exactly {{ n_items }} items; every skill is
 "diagnostic"; answers and rubrics are null.
