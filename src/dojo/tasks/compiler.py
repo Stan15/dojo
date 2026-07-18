@@ -327,11 +327,18 @@ def trend_rows(store, campaign: Campaign) -> str:
     return "\n".join(rows) if rows else "(no topics registered)"
 
 
-def source_section(source_slice: Optional[str]) -> str:
+def source_section(source_slice: Optional[str], source_why: Optional[str] = None) -> str:
     """Wraps a grounding slice under a `## SOURCE` heading; empty when
-    generation is synthetic."""
+    generation is synthetic. `source_why` carries the learner's own stated
+    reason for saving the material (capture --why) — the generation aims at
+    what THEY care about in it, not the material generally (owner core-need
+    audit 2026-07-18, QUESTIONS 6g): why-scoped quizzing becomes structural
+    instead of depending entirely on how narrowly the agent extracted."""
     if not source_slice:
         return ""
+    if source_why:
+        return (f"## SOURCE (the learner saved this because: {source_why} — "
+                f"aim the practice at that)\n{source_slice}")
     return f"## SOURCE\n{source_slice}"
 
 
@@ -347,6 +354,7 @@ def compile_generate(
     n_items: int,
     difficulty: str,
     source_slice: Optional[str] = None,
+    source_why: Optional[str] = None,
 ) -> CompiledTask:
     """Payload for `exercise.generate`: mission + strategy + insights digest +
     recent evidence rows, with the grounding rule chosen by whether a source
@@ -365,7 +373,7 @@ def compile_generate(
         "strategy_line": strategy_line(campaign),
         "insights_digest": insights_digest(store, campaign.id, topic_path=topic_path),
         "recent_rows": recent_rows(store, campaign.id, topic_path=topic_path),
-        "source_section": source_section(source_slice),
+        "source_section": source_section(source_slice, source_why),
     }
     context = {
         "campaign_id": campaign.id,

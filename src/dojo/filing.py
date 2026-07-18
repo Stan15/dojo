@@ -77,6 +77,10 @@ def file_capture(store, capture: Capture, proposal: dict[str, Any]) -> dict[str,
         task = flows.request_generation(
             store, campaign,
             topic_path=topic_path, n_items=1, source_slice=capture.text,
+            # The learner's stated reason travels into the generation payload:
+            # practice aims at what THEY care about in the material, not the
+            # material generally (owner core-need audit 2026-07-18, Q 6g).
+            source_why=capture.why,
         )
         task_refs.append(flows.task_ref(task))
 

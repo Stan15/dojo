@@ -65,6 +65,7 @@ def request_generation(
     n_items: int,
     difficulty: Optional[str] = None,
     source_slice: Optional[str] = None,
+    source_why: Optional[str] = None,
     diagnostic: bool = False,
     auto_promote: bool = False,
 ) -> Task:
@@ -81,6 +82,7 @@ def request_generation(
             topic_path=topic_path, n_items=n_items,
             difficulty=difficulty or campaign.strategy_profile.get("difficulty", "intermediate"),
             source_slice=source_slice,
+            source_why=source_why,
         )
         if auto_promote:
             compiled.context["auto_promote"] = True

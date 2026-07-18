@@ -117,6 +117,36 @@ class TestConfirmByDefault:
         assert cap.status == "filed"
         assert outcome.applied["filed"]["tasks"], "seed=true emits a generation task"
 
+    def test_seeded_generation_carries_the_learners_why(self, api: DojoAPI):
+        """Owner core-need audit 2026-07-18 (QUESTIONS 6g): the capture's WHY
+        must reach the seeded generation payload, so practice aims at what
+        the learner cares about in the material — not the material generally."""
+        cid = api._test_campaign_id
+        res = api.capture(
+            "Motion verbs take être in past conditional",
+            why="I keep saying 'aurait venu' to my tutor",
+        )
+        outcome = service.submit(api.store, res["tasks"][0]["id"], route_payload(
+            campaign=cid, topic_path="french.grammar.conditional", seed=True,
+        ))
+        filed = api.inbox_confirm(res["capture_id"])
+        task = api.store.tasks.get(filed["tasks"][0]["id"])
+        assert "aurait venu" in task.prompt, "the learner's why is in the payload"
+        assert "aim the practice at that" in task.prompt
+
+    def test_seeded_generation_without_why_is_unchanged(self, api: DojoAPI):
+        """No why → the SOURCE section renders exactly as before (golden
+        safety: the why line appears only when a why exists)."""
+        cid = api._test_campaign_id
+        res = api.capture("Motion verbs take être in past conditional")
+        service.submit(api.store, res["tasks"][0]["id"], route_payload(
+            campaign=cid, topic_path="french.grammar.conditional", seed=True,
+        ))
+        filed = api.inbox_confirm(res["capture_id"])
+        task = api.store.tasks.get(filed["tasks"][0]["id"])
+        assert "## SOURCE\n" in task.prompt
+        assert "saved this because" not in task.prompt
+
     def test_low_confidence_never_autofiles(self, api: DojoAPI):
         api.store.configs.set_value("capture.autofile", "true")
         cid = api._test_campaign_id
