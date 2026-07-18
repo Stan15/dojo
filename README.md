@@ -131,10 +131,28 @@ dojo why       # every scheduling choice explained, one sentence each
 dojo stats     # retention estimates, due counts, AI token spend
 ```
 
-Learned something in the wild? `dojo capture "<the thing>"` saves it now,
-files it later. Links too: hand your agent a URL and it captures what your
-*why* points at, source recorded — dojo itself never fetches (that keeps
-the injection surface closed).
+### Caught something in the wild? Capture it
+
+One utterance, no filing questions — real run, verbatim (routing by
+gpt-5.5 via the codex CLI):
+
+```console
+$ dojo capture "git bisect run scripts exit 125 to mark a commit untestable - git skips it and keeps bisecting" \
+      --why "chasing regressions at work faster" --locator "https://git-scm.com/docs/git-bisect"
+
+✓ captured (cap_bd2a1b31)
+  File under git-mastery › git.history.log_archaeology? [Y/n] y
+  ✓ filed — it can ground practice now
+```
+
+The text is saved *before* any AI runs. The AI only proposes the home — in
+this run it slotted a bisect trick into the existing git campaign's
+history-archaeology topic, and one keypress accepted. The reason you gave
+(`--why`) and the link travel with it: the source stays traceable, and the
+practice generated from it aims at the reason you cared. Reading a long
+article or watching a video? Tell your agent — it captures the relevant
+part using its own access and passes the link along (dojo itself never
+fetches URLs; that keeps the injection surface closed).
 
 ## No guilt, by design
 
