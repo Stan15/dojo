@@ -108,6 +108,21 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
    tokens on every calibration answer for a rare case reflection already
    sees in the raw rows. **Default: deterministic screen only; escalate
    only on field evidence of mash answers polluting calibration.**
+6f. **Readable vault export + name-based links (your directive 2026-07-18).**
+   You want export to open in Obsidian as genuinely readable notes — headers,
+   prose, markdown links (standard links, Obsidian-compatible) with readable
+   names instead of ids. Assessment delivered in-session: GOOD idea, wrong to
+   pay for it with the lossless export. Recommendation: keep `dojo export`
+   lossless (the escape-hatch/trust contract, I7-tested); add a PROJECTION
+   export (`dojo export --vault`): notes named by display names, insights
+   with receipts inline, standard markdown links between notes — regenerated,
+   never parsed back (the journal.md pattern, ADR 018). This composes with
+   ADR 018's deferred phase 2 (id↔filename harmonization): land name-based
+   links in the LIVE store's projected files too, and the store itself opens
+   in Obsidian as a hand-made-looking vault; --vault export becomes the same
+   projection to a snapshot folder. **Default: design doc first; nothing
+   built until you gate it.**
+
 7. **Growth strategy sign-off** — full researched strategy delivered at your
    direction: `docs/growth-strategy.md`. Headline: retention is already the
    product (the SRS community's documented abandonment causes map 1:1 onto
