@@ -21,6 +21,17 @@ holds pre-registered hypotheses + the anti-reward-hack decision rule — READ IT
 FIRST. Ollama models: gemma3:1b, LiquidAI/lfm2.5-1.2b-instruct, gemma3:4b,
 qwen3:4b (thinking arrives on stdout → pre_bytes).
 
+**Caliber ruling (owner, 2026-07-17b): class verdicts come from the BEST
+model of each resource class** — users run the strongest model their hardware
+allows. Best-in-class as of 2026-07: qwen3.5:0.8b (~1GB tier) and qwen3.5:4b
+(~3.4GB tier), official ollama tags. gemma3:1b/lfm/gemma3:4b/qwen3:4b stay as
+robustness points only. BLOCKER: installed ollama 0.13.4 is too old to pull
+qwen3.5 (registry refuses); brew bottle 0.32.1 is pre-fetched — upgrade +
+server restart (OLLAMA_NUM_PARALLEL=4 OLLAMA_MAX_LOADED_MODELS=1) must wait
+until no battery is in flight (brew's auto-cleanup deletes the running
+server's keg). Smoke-probe qwen3.5 output shape (thinking? stdout format?)
+before committing to full batteries.
+
 **Findings so far (evidence in baselines/base_gemma1b.jsonl):**
 - gemma3:1b single-shot pass: 2/63. The failure is SKELETON SYNTAX, not
   capability: models copy `"a|b|c"` enum strings as values (reflect op 33×,
@@ -40,19 +51,30 @@ qwen3:4b (thinking arrives on stdout → pre_bytes).
   src/dojo/prompts/): realistic literal skeleton values, no `//` comments, no
   enum-in-string; constraints in a "Field rules" block. Watch for content
   bleed: skill/action distribution vs baseline (example values could bias).
+  AUDIT NOTE (2026-07-17b): exercise_generate/exercise_diagnostic moved
+  numeric caps (≤ {{ prompt_words }} etc.) from // comments INTO skeleton
+  string values — a potential rumination focal point; if thinking-model
+  pre_bytes balloons on those kinds under armJ, move the caps to the Field
+  rules block. armS anchors verified against current source (5 hit src, 1
+  correctly targets the armJ grade template post-copy).
 - `arms/apply_armS.py` — semantic-only validation (apply AFTER armJ): evidence
   cap rejection dropped (substring invariant stays; storage clipped), rubric
   list→string coercion, summary clip-not-reject. Verified anchors.
 - ArmA (compact JSON) / ArmD (omit nulls) — NOT built; only if armJ/armS
   leave material waste (owner: no tiny gains).
 
-**State: baselines** — gemma1b DONE (base_gemma1b.jsonl). lfm PARTIAL
-(~54/64, base_lfm.PARTIAL.jsonl — rerun it). gemma3:4b, qwen3:4b NOT run.
+**State: baselines** — gemma1b DONE (base_gemma1b.jsonl). lfm DONE
+2026-07-17b (base_lfm.jsonl, 7/64 ok — delete the stale PARTIAL file).
+gemma3:4b, qwen3:4b running in a background battery this session.
+qwen3.5:0.8b/4b baselines PENDING the ollama upgrade above.
 
 **Exact next actions:**
-1. Restart ollama parallel (see run_battery.sh header), finish baselines:
-   `zsh scratch/token-diet/run_battery.sh base` (comment out the gemma1b line).
-2. Apply armJ templates → `run_battery.sh armJ` (at minimum gemma1b + one 4B).
+1. When the running battery exits: `brew upgrade ollama`, restart server
+   (parallel env), pull qwen3.5:0.8b + qwen3.5:4b, smoke-probe, then run
+   their baselines (add lines to run_battery.sh). These two are the
+   class-verdict calibers for every arm comparison from here on.
+2. Apply armJ templates → `run_battery.sh armJ` (at minimum the two qwen3.5
+   calibers; weaker models as robustness points).
    Compare with analyze.py: ok-rate must rise sharply; raw bytes per
    SUCCESSFUL task must fall; skill/action distributions must not skew.
 3. Apply armS on top → `run_battery.sh armJS`. Same comparisons.

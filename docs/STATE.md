@@ -329,6 +329,11 @@ committed work, not proposals awaiting an answer. Item numbering is stable
 - Eval/benchmark: fulfiller-agnostic, per-(driver,judge) baselines, reproducible;
   codex is locally available for real runs — never hardcoded.
 - Serious, VARIED corpus; benchmark results grouped by category for users.
+- Weak-model benchmark calibers = the BEST model of each resource class
+  (2026-07-17): local users run the strongest model their hardware allows, so
+  an arbitrary same-footprint pick misstates the real-world floor. Class
+  verdicts come from the best-in-class (2026-07: qwen3.5:0.8b ~1GB,
+  qwen3.5:4b ~3.4GB); weaker same-class models are robustness points only.
 - **NEVER optimize prompts on holdout-set data** (absolute, 2026-07-09):
   one consumable bit per holdout run (aggregate gap); bad gap → broaden the
   visible corpus, iterate there. Applies to every contributor, human or AI.

@@ -190,3 +190,14 @@ edge-tolerant comparison or ~15% of honest passes get discarded.
   rejection — an agent driving via SKILL would have retried; the human
   flow silently threw the budget away. When a contract carries a retry
   budget, every consumer either spends it or says why not.
+
+## 2026-07-17 — token-diet session learnings
+
+- **A benchmark caliber is a resource class, and its representative must be
+  the best of that class.** Nobody running locally picks a weaker model at
+  the same footprint, so anchoring the "1B story" on gemma3:1b when
+  qwen3.5:0.8b exists at the same ~1GB misstates the floor the product
+  actually faces — and can misdirect prompt-shape work toward failure modes
+  the real floor model doesn't have. Re-survey the model landscape before
+  each benchmarking campaign (it moves fast); keep weaker same-class models
+  only as robustness points. (Owner directive; standing in STATE.)
