@@ -53,8 +53,8 @@ models, leaving, taking your data: [docs](docs/api-specification.md).)
 ## Why it works (and why another flashcard app doesn't)
 
 - **Evidence, not vibes.** Every answer records score, latency, error
-  patterns, and your feedback — distilled into explicit insights that future
-  exercises target.
+  patterns, and your feedback — distilled into explicit, auditable insights
+  that future exercises target.
 - **Your sources, with receipts.** Exercises stay traceable to the material
   they came from; AI drafts wait for your review before they become practice.
 - **A deterministic core the AI can't corrupt.** Models fulfill
@@ -68,41 +68,45 @@ models, leaving, taking your data: [docs](docs/api-specification.md).)
 ## The learner model — every belief, with receipts
 
 Dojo maintains an explicit model of you, earned from your actual practice —
-and you can read it, trace it, and overrule it:
+and you can read it, trace it, and overrule it. This is real output from
+the author's own store, verbatim:
 
 ```text
 $ dojo insights
 
-french-conversation
-  grammar
-    ins_a3f21c88_0 grammar.aux_choice_motion — Picks avoir over être for motion verbs in the passé composé.
-      4 answer(s) behind it · 6d old · updated 2026-07-16
-  process
-    ins_c9d04e12_1 process.avoidance_when_unsure — Skips or answers "I give up" rather than attempting when unsure.
-      4 answer(s) behind it · 2d old · updated 2026-07-17
-  preference
-    ins_e5b19f03_2 preference.dialogue_examples — Retains phrases better from short dialogues than isolated vocab.
-      2 answer(s) behind it · 9d old · updated 2026-07-11
+i-have-terrible-memory
+  memory
+    ins_7693e749_0 memory.needs_mechanism_before_labels — Needs explicit mechanism/binding pattern before
+      naming memory rules; otherwise answers become unsure or generic.
+      4 answer(s) behind it · 9d old · updated 2026-07-16
+  practice
+    ins_9ac6a689_2 practice.avoidance_when_unsure — When unsure, I sometimes exit or say I do not want
+      to practice instead of attempting a rough answer.
+      4 answer(s) behind it · 2d old · updated 2026-07-16
+  tasks
+    ins_a84d06ee_1 tasks.capture_needs_action_context — Capture entries need action and context; bare
+      nouns become vague and hard to commit.
+      3 answer(s) behind it · 9d old · updated 2026-07-16
 ```
 
-A misconception from graded mistakes; a *behavior* nobody would tell you
-about themselves (your skips — and what you type instead of an answer — are
-evidence too); a preference inferred from what actually sticks. Every
-belief opens into its receipts:
+Notice what it caught: *how* this learner learns (rules don't stick until
+the mechanism is understood), a behavior nobody would report about
+themselves, and a hygiene pattern in their captures. Every belief opens
+into its receipts — here are two of the four behind that middle one, still
+verbatim:
 
 ```text
-$ dojo insights show ins_a3f21c88_0
+$ dojo insights show ins_9ac6a689_2
 
-grammar.aux_choice_motion (ins_a3f21c88_0, active)
-Picks avoir over être for motion verbs in the passé composé.
+practice.avoidance_when_unsure (ins_9ac6a689_2, active)
+When unsure, I sometimes exit or say I do not want to practice instead of
+attempting a rough answer.
 
 Why we believe this — your own answers:
-  2026-07-14 · Traduisez : She went to the market yesterday.
-    › "elle a allé au marché hier" — score 0.3 (graded by ai, aux choice)
-  2026-07-16 · Traduisez : We arrived before the rain.
-    › "nous avons arrivé avant la pluie" — score 0.3 (graded by ai, aux choice)
-
-Effect: 3 exercise(s) generated to target this (2 in the last 7 days)
+  2026-07-13 · You are walking from the kitchen to your desk and remember:
+    › "/exit" — score 0.0 (graded by ai)
+  2026-07-13 · A learner says: “I wrote ‘stuff for office’ in my notes, so
+    › "i don't wanna practice this anymore." — score 0.0 (graded by ai, avoidance response)
 ```
 
 Disagree? `dojo insights resolve ins_xxx --because "I know this — I was
@@ -124,7 +128,7 @@ the schedule instead of punishing you.
 
 ```bash
 dojo daily     # the whole ritual — the one command to remember
-dojo why       # "weakest memory here (~38% recall odds) · French: 6 due…"
+dojo why       # every scheduling choice explained, one sentence each
 dojo stats     # retention estimates, due counts, AI token spend
 ```
 
