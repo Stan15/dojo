@@ -134,8 +134,10 @@ line stating per-action required fields.
 **Exact next actions:**
 1. armJ battery done → snapshot commit (armJ tree + results), then restore
    base templates (git checkout src/dojo/prompts) and rerun base batteries
-   on the CHAT driver for both qwen3.5 calibers (base2_*) → THEN compare
-   armJ vs base2 same-driver: ok-rate must rise sharply; raw bytes per
+   on the CHAT driver for ALL FIVE models (base2_*) — gemma1b armJ showed
+   the chat endpoint alone adds preamble prose (pre_max 8→1514B) so every
+   caliber's comparison needs a same-driver base → THEN compare armJ vs
+   base2 same-driver: ok-rate must rise sharply; raw bytes per
    successful task must fall; skill/action distributions must not skew;
    qwen35_4b pre_bytes watch (rumination on caps in skeleton values).
 2. armS on top (arms/apply_armS.py, after re-overlaying armJ) → armJS
