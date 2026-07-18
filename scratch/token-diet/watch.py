@@ -7,7 +7,7 @@ import time
 
 N = 64  # scenarios per full battery (one driven step each)
 # Campaign plan: batteries expected per phase (denominator for the total line).
-PLAN = {"base": 5, "armJ": 5, "base2": 5, "armJS": 5}
+PLAN = {"base": 5, "armJ": 5, "base2": 5, "armJ2": 5, "armJS": 5}
 
 print(time.strftime("%H:%M:%S"), "— scenarios per battery:", N)
 done_runs = 0

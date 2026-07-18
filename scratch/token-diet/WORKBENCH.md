@@ -140,8 +140,17 @@ line stating per-action required fields.
    base2 same-driver: ok-rate must rise sharply; raw bytes per
    successful task must fall; skill/action distributions must not skew;
    qwen35_4b pre_bytes watch (rumination on caps in skeleton values).
-2. armS on top (arms/apply_armS.py, after re-overlaying armJ) → armJS
-   battery, same comparisons.
+2. arms/armJ2/ STAGED (2026-07-18 overnight): armJ + fixes for its two
+   measured defects + two latent ones — generate skeleton shows TWO complete
+   items (single example taught first-item-only field patterns: 31× lfm,
+   13× qwen35_08b skill omissions); route templates state per-action
+   required fields (null-anchoring: attach example's nulls copied into
+   propose_campaign); reflect skeleton drops leftover "..." placeholders
+   (journal omission 14× gemma1b) and Field rules state that EVERY op needs
+   reason (schema requires it; the rules understated — README failure mode
+   7 inside our own arm). After base2: overlay armJ2 → battery ×5.
+3. armS on top of armJ2 (arms/apply_armS.py; its grade anchor text is
+   unchanged in armJ2) → armJS battery, same comparisons.
    Compare with analyze.py: ok-rate must rise sharply; raw bytes per
    SUCCESSFUL task must fall; skill/action distributions must not skew.
 3. Apply armS on top → `run_battery.sh armJS`. Same comparisons.
