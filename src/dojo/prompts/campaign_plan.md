@@ -11,10 +11,13 @@ RULES
    level-{{ topic_depth }} leaf (a.b.c.d_e), never nest past {{ topic_depth }}.
 2. Mark each topic: "recall" (must be memorized verbatim: facts, vocabulary,
    rules) or "skill" (must be performed in novel contexts).
-3. 3-{{ max_phases }} phases. Phase 1 is always a short calibration (diagnostic;
-   criteria: min_attempts 5, min_accuracy 0 — calibration measures, it never
-   gates). Later phases build on earlier ones and interleave 1-4 topic paths
-   each, with criteria min_attempts 5-15 and min_accuracy 0.6-0.8.
+3. 1-{{ max_phases }} phases, sized to the goal: a single-list or single-fact
+   goal needs only calibration plus a drill phase or two — never pad phases
+   or topics to fill a range. Phase 1 is always a short calibration
+   (diagnostic; criteria: min_attempts 5, min_accuracy 0 — calibration
+   measures, it never gates). Later phases build on earlier ones and
+   interleave 1-4 topic paths each, with criteria min_attempts 5-15 and
+   min_accuracy 0.6-0.8.
 4. If GOAL implies a deadline, compress hard: aim for ≤ 10 topics (well under
    the cap), highest-leverage only, lower min_attempts, and note the trade-off
    in the mission.

@@ -22,7 +22,10 @@ RULES
 2. Self-contained: answerable from the prompt text alone. No references to files,
    worksheets, links, or earlier exercises.
 3. Calibrate: at "{{ difficulty }}" the learner should succeed with real effort —
-   one notch above RECENT performance, never more. Scaffolding is ITEM
+   one notch above RECENT performance, never more. When RECENT shows repeated
+   struggle at this difficulty (low scores, slow, too_hard skips), go one
+   notch GENTLER than the dial: scaffolded entry items that rebuild the
+   decision rule before asking application. Scaffolding is ITEM
    DESIGN: high → build support into the prompt (guided steps, a worked
    fragment, a hint); low → bare tasks. Verbatim material (poems, quotes,
    exact lists) stays verbatim under every cue: cloze, next-line, whole —

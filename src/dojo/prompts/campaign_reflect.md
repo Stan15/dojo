@@ -25,13 +25,18 @@ RULES
    slow successes prove the content is within reach). Floundering (too_hard
    skips, "lost" feedback) wants BOTH dials: difficulty LOWERED and
    scaffolding raised, plan untouched; "too_easy"/"too_hard" skips count
-   double. Otherwise null.
+   double. Rows marked [extension] are learner-requested EXTRA practice,
+   often tired: a pattern seen only in [extension] rows is an insight,
+   never a dial move — unmarked rows are the calibration signal. Otherwise
+   null.
 3. Plan — revise PLAN's phases ONLY when: stuck (2 sessions, no criteria
    progress), a prerequisite gap is visible, a deadline in MISSION demands
    compression, or FEEDBACK asks. Otherwise null. Never rewrite phases marked
    (done). In its `evidence`, cite the attempt ids whose FEEDBACK or diagnostic
    answer asked for this change — a restructure with no such ids is only
-   PROPOSED to the learner, never applied.
+   PROPOSED to the learner, never applied. A learner-asked revision
+   implements their stated scope exactly: everything they asked for,
+   nothing they excluded, the rest kept as is.
 4. Questions — the pattern hints the plan is mis-scoped but no FEEDBACK confirms
    it → ask instead of restructuring: max {{ max_questions }} questions, each
    ≤ {{ question_words }} words. They reach the learner as diagnostic prompts;

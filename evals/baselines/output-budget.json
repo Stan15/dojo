@@ -1,86 +1,86 @@
 {
   "note": "output bytes per successful task (whole trace) + single-shot ok-rates, per driver; ratchet gates in tests/test_output_budget.py",
-  "template_hash": "177c27a30558212f",
+  "template_hash": "fc5e8c7cf898b6b6",
   "ok_noise_band": 3,
   "bytes_tolerance": 0.1,
   "drivers": {
     "api-chat/qwen3.5:4b/--no-think": {
-      "source_battery": "armJ4S_qwen35_4b.jsonl",
+      "source_battery": "iterV_qwen35_4b.jsonl",
       "kinds": {
         "attempt.grade": {
-          "n": 14,
-          "ok": 8,
-          "bytes_ok_median": 223
+          "n": 15,
+          "ok": 10,
+          "bytes_ok_median": 221
         },
         "campaign.plan": {
-          "n": 7,
-          "ok": 4,
-          "bytes_ok_median": 1103
+          "n": 9,
+          "ok": 5,
+          "bytes_ok_median": 949
         },
         "campaign.reflect": {
-          "n": 20,
-          "ok": 5,
-          "bytes_ok_median": 490
+          "n": 22,
+          "ok": 6,
+          "bytes_ok_median": 617
         },
         "capture.route": {
-          "n": 4,
+          "n": 6,
           "ok": 1,
-          "bytes_ok_median": 231
+          "bytes_ok_median": 228
         },
         "exercise.diagnostic": {
-          "n": 2,
-          "ok": 2,
-          "bytes_ok_median": 960
+          "n": 3,
+          "ok": 3,
+          "bytes_ok_median": 802
         },
         "exercise.generate": {
-          "n": 16,
-          "ok": 14,
-          "bytes_ok_median": 1437
+          "n": 20,
+          "ok": 17,
+          "bytes_ok_median": 1397
         },
         "goal.route": {
-          "n": 1,
+          "n": 2,
           "ok": 1,
-          "bytes_ok_median": 251
+          "bytes_ok_median": 253
         }
       }
     },
     "api-chat/gemma3:4b": {
-      "source_battery": "armJ4S_gemma4b.jsonl",
+      "source_battery": "iterV_gemma3_4b.jsonl",
       "kinds": {
         "attempt.grade": {
-          "n": 14,
-          "ok": 12,
-          "bytes_ok_median": 198
+          "n": 15,
+          "ok": 13,
+          "bytes_ok_median": 224
         },
         "campaign.plan": {
-          "n": 7,
-          "ok": 6,
-          "bytes_ok_median": 1024
+          "n": 9,
+          "ok": 5,
+          "bytes_ok_median": 1139
         },
         "campaign.reflect": {
-          "n": 20,
-          "ok": 11,
-          "bytes_ok_median": 756
+          "n": 22,
+          "ok": 17,
+          "bytes_ok_median": 537
         },
         "capture.route": {
-          "n": 4,
-          "ok": 4,
+          "n": 6,
+          "ok": 6,
           "bytes_ok_median": 245
         },
         "exercise.diagnostic": {
-          "n": 2,
-          "ok": 2,
-          "bytes_ok_median": 964
+          "n": 3,
+          "ok": 3,
+          "bytes_ok_median": 914
         },
         "exercise.generate": {
-          "n": 16,
-          "ok": 15,
-          "bytes_ok_median": 1460
+          "n": 20,
+          "ok": 18,
+          "bytes_ok_median": 1469
         },
         "goal.route": {
-          "n": 1,
-          "ok": 0,
-          "bytes_ok_median": null
+          "n": 2,
+          "ok": 1,
+          "bytes_ok_median": 239
         }
       }
     }
