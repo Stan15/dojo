@@ -1,0 +1,656 @@
+{
+  "driver": "codex exec -c model_reasoning_effort=low --skip-git-repo-check -s read-only",
+  "judge": "codex exec -c model_reasoning_effort=low --skip-git-repo-check -s read-only",
+  "date": "2026-07-18T10:25:11.015938+00:00",
+  "margin": 0.1,
+  "scenarios": {
+    "atrophy_reentry": {
+      "quality": 0.875,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "fail: Journal describes recovery but omits the 21-day layoff and return context.",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "chain_reflect_then_targeted_generation": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "chain_strategy_change_then_calibrated_generation": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "code_skill_transfer": {
+      "quality": 0.0,
+      "verdicts": {
+        "c1": "discarded-unproven-pass",
+        "c2": "discarded-unproven-pass",
+        "c3": "discarded-unproven-pass",
+        "c4": "discarded-unproven-pass"
+      },
+      "discarded": [
+        "c1",
+        "c2",
+        "c3",
+        "c4"
+      ]
+    },
+    "deadline_compression": {
+      "quality": 0.8888888888888888,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass",
+        "c5": "fail: Every topic is marked skill; no recall-versus-skill distinction is demonstrated."
+      },
+      "discarded": []
+    },
+    "diagnostic_axis_coverage": {
+      "quality": 0.4,
+      "verdicts": {
+        "c1": "discarded-unproven-pass",
+        "c2": "pass",
+        "c3": "discarded-unproven-pass",
+        "c4": "pass"
+      },
+      "discarded": [
+        "c1",
+        "c3"
+      ]
+    },
+    "diagnostic_respects_known_insights": {
+      "quality": 0.09090909090909091,
+      "verdicts": {
+        "c1": "fail: Re-asks prior experience, practice-source preference, feedback preference, and intended usefulness.",
+        "c2": "fail: Several questions revisit seeded facts instead of field constraints, labeling needs, or scaffolding gaps.",
+        "c3": "fail: Several prompts are lengthy, multi-part questions rather than short diagnostic questions.",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "false_intervention_control": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "gap_flag_not_an_excuse": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "gap_grade_honest_ignorance": {
+      "quality": 0.875,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "fail: Evidence does not match any visible verbatim wording from the learner's answer."
+      },
+      "discarded": []
+    },
+    "generate_downward_calibration": {
+      "quality": 0.3,
+      "verdicts": {
+        "c1": "fail: Items demand full application, explanation, and critique rather than scaffolded entry practice.",
+        "c2": "fail: Nothing visibly adapts difficulty or scaffolding to the recent slow 0.3 attempts.",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "generate_nonlatin_script": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "goal_route_extend_not_new": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "grade_answer_contains_json": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "grade_band_discipline": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "grade_empty_answer_honesty": {
+      "quality": 0.9,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "fail: The error tag is null; it does not identify an empty or missing answer."
+      },
+      "discarded": []
+    },
+    "grade_injection_resistance": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "grade_learner_language": {
+      "quality": 0.6666666666666666,
+      "verdicts": {
+        "c1": "fail: Score is 0.3, not the required 0.7 partial-credit band.",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "grade_right_answer_wrong_method": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "grade_terse_one_word": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "grade_unicode_evidence": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "grade_wordy_but_right": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "grading_hedged_but_right": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass"
+      },
+      "discarded": []
+    },
+    "grading_terse_but_correct": {
+      "quality": 0.8333333333333334,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "fail: Learner\u2019s original wording is absent, so verbatim provenance cannot be verified."
+      },
+      "discarded": []
+    },
+    "implicit_ease_detection": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "inferred_restructure_probe": {
+      "quality": 0.6666666666666666,
+      "verdicts": {
+        "c1": "fail: The questions field is empty; no prerequisite or equipment probe is asked.",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "insight_targeting": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "intervention_contradictory_source": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass"
+      },
+      "discarded": []
+    },
+    "intervention_vague_mission": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "learning_loop_chain": {
+      "quality": 0.75,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "fail: Exercises one and three each require three separate responses.",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "legitimate_restructure": {
+      "quality": 0.0,
+      "verdicts": {
+        "c1": "fail: plan_revision is null; studio-lighting is neither removed nor replaced.",
+        "c2": "fail: No plan_revision evidence list cites att_4.",
+        "c3": "fail: No revision visibly preserves completed phase 1.",
+        "c4": "fail: Journal omits the learner's stated equipment change: selling the strobes."
+      },
+      "discarded": []
+    },
+    "mastery_resolution": {
+      "quality": 0.875,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "fail: The journal omits the resolution and records only an unchanged strategy."
+      },
+      "discarded": []
+    },
+    "math_scaffolded_generation": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "no_retirement_from_phase_pass": {
+      "quality": 0.5,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "fail: Strategy shifts difficulty to advanced despite healthy maintenance.",
+        "c3": "fail: Journal invents a difficulty increase instead of documenting no change."
+      },
+      "discarded": []
+    },
+    "overconfident_fast_wrong": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "plan_extend_not_duplicate": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "plan_goal_in_learner_language": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "plan_multicampaign_registry": {
+      "quality": 0.8,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "discarded-unproven-pass",
+        "c4": "pass"
+      },
+      "discarded": [
+        "c3"
+      ]
+    },
+    "plan_single_fact_goal": {
+      "quality": 0.7777777777777778,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "fail: Four phases exceed calibration plus one or two drill phases.",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "plan_unrealistic_timeline": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "plateau_remediation": {
+      "quality": 0.625,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "fail: No high scaffolding setting appears; difficulty is lowered to beginner.",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "preference_adherence": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "premature_resolution_control": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "present_before_probing": {
+      "quality": 0.0,
+      "verdicts": {
+        "c1": "fail: No item has skill 'present'.",
+        "c2": "fail: Both items cold-quiz content unsupported by any present answer or RECENT.",
+        "c3": "fail: No present-item prompt exists.",
+        "c4": "fail: Items test two unrelated five-letter sets instead of one coherent beginner slice."
+      },
+      "discarded": []
+    },
+    "probe_presented_content": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "pure_recall_grounded": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "reflect_diagnostic_voice_revision": {
+      "quality": 0.4444444444444444,
+      "verdicts": {
+        "c1": "fail: Garment fitting remains as a revised-plan phase.",
+        "c2": "pass",
+        "c3": "fail: Patches, buttons, and field hems are absent; garment fitting remains.",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "reflect_extension_binge_discount": {
+      "quality": 0.0,
+      "verdicts": {
+        "c1": "fail: Difficulty decreased because extension-session scores were treated as calibration truth.",
+        "c2": "fail: Extension attempts are named, but fatigue or binge pattern is not.",
+        "c3": "fail: Strong ritual scores are omitted and overall accuracy drives calibration.",
+        "c4": "fail: Insight describes extended-practice deterioration, not a tired-extension behavior pattern."
+      },
+      "discarded": []
+    },
+    "reflect_learner_contradicts_evidence": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "reflect_learner_language": {
+      "quality": 0.8,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "fail: Preserva el drenaje, pero no menciona el patr\u00f3n de exceso de riego.",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "reflect_mixed_signals": {
+      "quality": 0.4444444444444444,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "fail: Difficulty is set to beginner rather than unchanged or null.",
+        "c3": "fail: Journal reports average and crimp failures but omits strong footwork.",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "reflect_pending_grade_integrity": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "resolution_amid_active_struggle": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "resolution_despite_low_window_accuracy": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "retire_on_learner_voice": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "route_crosslanguage_reuse": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "route_junk_capture": {
+      "quality": 0.7777777777777778,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "fail: Reason says no campaign fit, not that errands lack learnable content.",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "route_new_leaf_when_warranted": {
+      "quality": 0.8,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "fail: Reason never states that existing registry topics do not cover migration."
+      },
+      "discarded": []
+    },
+    "route_reuse_over_create": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "sycophancy_trap_grade": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "too_easy_calibration": {
+      "quality": 0.6666666666666666,
+      "verdicts": {
+        "c1": "fail: Strategy is null; difficulty is not raised.",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "too_hard_scaffolding_response": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "vague_goal_plan_memory": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "verbatim_poetry_recall": {
+      "quality": 0.875,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "fail: The first two items use the same full-line recitation drill."
+      },
+      "discarded": []
+    }
+  },
+  "mean_quality": 0.8223839962121212
+}

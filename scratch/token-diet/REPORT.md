@@ -2,7 +2,12 @@
 
 **Verdict: shipped-on-branch as `armJ5S` — shape-hardened templates +
 semantic-only validation, gated in both directions. Owner merge gate is the
-remaining step.** (4-scenario codex bootstrap recheck: see addendum.)
+remaining step.**
+
+**Addendum (recheck):** the 4 scenarios that scored zero pre-armJ4 (example
+bleed) all pass with non-zero quality on the final templates — the
+de-anchoring works at codex tier too. Their floors are now in the committed
+low-effort ratchet baselines.
 
 ## What changed
 
@@ -46,8 +51,10 @@ remaining step.** (4-scenario codex bootstrap recheck: see addendum.)
 
 - Blind codex spot-set (10 scenarios, kind-spread): base 5 / arm 4 / tie 1 —
   parity.
-- Authorized codex eval run: 64/64 baselined scenarios passed their
-  ratchet floors. 4 newer scenarios (no committed floor) scored zero →
+- Authorized codex eval run (low-effort driver = a NEW (driver,judge)
+  ratchet pair — no pre-change floors existed, so this run BOOTSTRAPPED
+  them): 64/68 scenarios scored non-zero quality on the new templates
+  (floors now committed for future ratcheting); 4 scored zero →
   investigated: example-value content bleed (skills skewed toward the
   examples; plan_revision-null anchored) — confirmed FREE from battery
   distributions, fixed in armJ4/armJ5 (skill spread re-centered: gemma4b
