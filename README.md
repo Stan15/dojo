@@ -41,12 +41,12 @@ dojo learn "I want to learn Japanese"   # start something — dojo plans it with
 dojo daily                              # a few minutes of practice — the habit
 ```
 
-**That's the whole product.** Using an AI coding agent? Install the skill
-and you're done — no API keys, no configuration; your agent does dojo's AI
-work itself:
+**That's the whole product.** Using an AI agent — Hermes, Claude Code,
+whatever you already live in? Install the skill and you're done — no API
+keys, no configuration; your agent does dojo's AI work itself:
 
 ```bash
-dojo install claude   # or: dojo install --dest <your agent's skills dir>
+dojo install hermes   # or: claude, codex, --dest <your agent's skills dir>
 ```
 
 No agent? Point dojo at any command that reads stdin and prints a response:
