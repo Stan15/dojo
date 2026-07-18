@@ -37,6 +37,23 @@ class TestInventory:
     def test_template_exists(self, name: str):
         assert (_templates_dir() / name).exists(), f"missing template: {name}"
 
+    def test_editor_guard_doc_present_and_never_a_template(self):
+        """src/dojo/prompts/README.md carries the measured weak-model failure
+        modes every template editor must see (owner directive 2026-07-18:
+        findings must be structurally unmissable). It lives beside the
+        templates so any agent opening this directory reads it — and must
+        never leak into the runtime snapshot or a compiled payload."""
+        guard = _templates_dir() / "README.md"
+        assert guard.exists(), "editor guard doc deleted — failure-mode knowledge lost"
+        text = guard.read_text(encoding="utf-8")
+        assert "failure modes" in text and "Enum-echo" in text, (
+            "guard doc no longer documents the measured failure modes"
+        )
+        from dojo.prompts import all_templates
+        assert "README.md" not in all_templates(), (
+            "guard doc must be excluded from the template snapshot"
+        )
+
     @pytest.mark.parametrize("name", TASK_TEMPLATES)
     def test_task_templates_demand_json_only_output(self, name: str):
         text = (_templates_dir() / name).read_text(encoding="utf-8")

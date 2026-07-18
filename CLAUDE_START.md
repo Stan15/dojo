@@ -91,6 +91,9 @@ too: quoting holdout material into a working session contaminates it.
 
 ## Ground rules specific to this repo
 
+- **Prompt templates:** `src/dojo/prompts/README.md` is mandatory reading
+  before editing ANY template (measured weak-model failure modes;
+  test-enforced). `docs/design/prompts.md` stays open during the edit.
 - Commit every completed logical unit immediately; conventional messages; never batch.
 - Push to origin main when a chunk is done — the owner installs from this repo
   (`sh install.sh` uses the CHECKOUT, uncommitted tree included: never leave it broken).

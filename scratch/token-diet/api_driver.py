@@ -16,16 +16,25 @@ import sys
 import urllib.request
 
 model = sys.argv[1]
-body = {"model": model, "prompt": sys.stdin.read(), "stream": False}
+# /api/chat, not /api/generate: only the chat endpoint applies the model's
+# chat template, which is where think=false actually disables deliberation
+# (verified on qwen3:4b 2026-07-18 — /api/generate with think=false still
+# emitted full reasoning ending in a stray </think>, timing out batteries).
+body = {
+    "model": model,
+    "messages": [{"role": "user", "content": sys.stdin.read()}],
+    "stream": False,
+}
 if "--no-think" in sys.argv[2:]:
     body["think"] = False
 req = urllib.request.Request(
-    "http://localhost:11434/api/generate",
+    "http://localhost:11434/api/chat",
     json.dumps(body).encode("utf-8"),
     {"Content-Type": "application/json"},
 )
 resp = json.load(urllib.request.urlopen(req, timeout=1800))
-out = resp.get("response", "")
-if resp.get("thinking"):
-    out = resp["thinking"] + "\n" + out
+msg = resp.get("message", {})
+out = msg.get("content", "")
+if msg.get("thinking"):
+    out = msg["thinking"] + "\n" + out
 print(out)

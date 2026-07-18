@@ -41,6 +41,7 @@ def all_templates() -> dict[str, str]:
         _snapshot = {
             str(p.relative_to(base)): p.read_text(encoding="utf-8")
             for p in sorted(base.rglob("*.md"))
+            if p.name != "README.md"  # editor guard doc, never a template
         }
     return _snapshot
 

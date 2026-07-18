@@ -1,5 +1,9 @@
 # Agent guidance
 
+**HARD RULE — prompt templates:** before editing ANY file under
+`src/dojo/prompts/`, read `src/dojo/prompts/README.md` (measured weak-model
+failure modes; test-enforced). This binds every agent, every framework.
+
 Before implementing or changing Dojo, read these in order:
 
 1. [`docs/product-north-star.md`](docs/product-north-star.md) — vision, north star, source problem, MVP loop, and success signals.
