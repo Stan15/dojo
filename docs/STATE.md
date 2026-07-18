@@ -358,6 +358,20 @@ committed work, not proposals awaiting an answer. Item numbering is stable
    e. The uncommitted `evals/baselines/*__holdout*.json` modification left
       by the disqualified gate session remains untouched and unread by this
       session — owner dispositions it (commit or discard).
+   f. **CONTAMINATION EVENT 2026-07-18 (this session, late):** a harness
+      change (shared seed_store gaining `sources` support for the new skill
+      tier) broke holdout scenario execution in the DEFAULT suite, and
+      TestCorpusIntegrity's name-bearing pytest ids printed failing holdout
+      stems into this session's context (4 ids; 2 were read). Per the
+      total-blindness ruling this session is now DISQUALIFIED from further
+      fulfiller-template / visible-quality-corpus work (all such work above
+      predates the leak). Remedied BLIND: seed_store reverted (source
+      seeding moved into the skill harness), holdout integrity re-green
+      without reading any content, and the vector closed — holdout ids are
+      now opaque (`holdout_NN`) in the default suite. Driver-side skill
+      tier, README, STATE, and mechanical ratchet bootstraps remain in
+      scope; any further template/corpus iteration belongs to a fresh
+      session.
 
 ## RELEASE GATE STATUS (2026-07-18) + CONTAMINATION HANDOFF
 

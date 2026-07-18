@@ -102,7 +102,17 @@ class TestCorpusCoverage:
         ), "no plan-elucidation scenario"
 
 
-@pytest.mark.parametrize("path", QUALITY_SCENARIOS + HOLDOUT_SCENARIOS, ids=lambda p: p.stem)
+def _blind_id(path: Path) -> str:
+    """Total holdout blindness (owner ruling 2026-07-18) binds the DEFAULT
+    suite too: a failing integrity test must never print a holdout stem into
+    a prompt-work context (exactly that leaked 2026-07-18 when a harness
+    change broke holdout seeds — the ids were the exposure)."""
+    if path in HOLDOUT_SCENARIOS:
+        return f"holdout_{HOLDOUT_SCENARIOS.index(path):02d}"
+    return path.stem
+
+
+@pytest.mark.parametrize("path", QUALITY_SCENARIOS + HOLDOUT_SCENARIOS, ids=_blind_id)
 class TestCorpusIntegrity:
     def test_shape(self, path: Path):
         sc = load(path)
