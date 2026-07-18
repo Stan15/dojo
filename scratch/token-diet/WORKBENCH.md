@@ -187,8 +187,10 @@ within one battery). armJ is SUPERSEDED by armJ2 pending its battery.**
    commit if moved.
 6. Judged spot-set (cheap codex judge, ~8-10 scenarios spanning categories)
    comparing old vs new templates on QUALITY — the same-or-better proof.
-7. SKILL.md content-preserving trim last; static gates bind (60 lines,
-   needles, footprint ±5% — deliberate change updates baseline same commit).
+7. SKILL.md trim: ATTEMPTED 2026-07-18 (drafts/SKILL.trimmed.md) — only
+   2% (85B) removable content-preservingly; below materiality → moved to
+   the accumulate batch, likely dropped. SKILL.md was already byte-budgeted
+   at authoring; no fat found.
 8. Report: byte deltas per kind × caliber (whole trace), pass-rate deltas,
    spend ledger; STATE update; commits on dev/token-diet only — owner gates
    the merge.
