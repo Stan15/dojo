@@ -36,9 +36,18 @@ row a 240s driver timeout — kept as base_qwen4b.DNF-think-timeouts.jsonl).
 So ALL qwen batteries run `--think=false` (driver-side flag; prompt text
 untouched per reasoning-neutrality; the flag pipes fine in 0.32.1). H-B
 deliverable: fulfiller docs must say think-off for local thinking models.
-NOTE: 0.32.1 renders thinking with ANSI erase junk on stdout — old baselines
-verified clean (0/64 rows); think=false output is junk-free, so measure.py
-stays untouched and cross-baseline comparability holds.
+**Driver ruling (2026-07-18, supersedes the note above): `ollama run` piped
+is UNUSABLE on 0.32.x** — the CLI writes its word-rewrap rendering into
+non-TTY stdout: ANSI erase sequences + re-printed word fragments INSIDE JSON
+string values, even doubled closing quotes (breaks balance). Short outputs
+don't wrap, so smoke probes lied; the first qwen3.5:0.8b battery came back
+0/64 with 48× "no JSON found" purely from driver junk. TERM=dumb does not
+help. All batteries now drive via `api_driver.py` (HTTP /api/generate,
+stream=false, optional --no-think; prints thinking then response = whole-
+trace stdout parity). Old 0.13.4-CLI baselines verified clean (0/64 rows
+with ESC) so they stay comparable. PRODUCT IMPLICATION for H-B docs
+deliverable: any fulfiller config using piped `ollama run` on ≥0.32 submits
+corrupted output — benchmark/driver guidance must say use the API.
 
 **Findings so far (evidence in baselines/base_gemma1b.jsonl):**
 - gemma3:1b single-shot pass: 2/63. The failure is SKELETON SYNTAX, not
