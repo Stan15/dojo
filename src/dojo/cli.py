@@ -988,10 +988,14 @@ def cmd_campaign_plan(args: argparse.Namespace) -> int:
     return 0
 
 
-def _materialize_core(api: DojoAPI, task_id: str, name: str | None) -> dict[str, Any]:
+def _materialize_core(api: DojoAPI, task_id: str, name: str | None,
+                      into: str | None = None) -> dict[str, Any]:
     """Deterministic creation from a fulfilled campaign.plan task (I2:
     review-before-trust — the human said yes before this runs). Shared by the
-    agent envelope path and the interactive flow."""
+    agent envelope path and the interactive flow. `into` initializes a BARE
+    campaign (capture-born, Q 6g) with the proposal instead of creating a new
+    one; campaigns that already have a plan refuse — established plans change
+    only through reflection + change authority."""
     task = api.store.tasks.get(task_id)
     if task is None or task.kind != "campaign.plan":
         raise SystemExit(f"error: {task_id} is not a campaign.plan task")
@@ -1000,6 +1004,9 @@ def _materialize_core(api: DojoAPI, task_id: str, name: str | None) -> dict[str,
     proposal = (task.context or {}).get("_applied")
     if not proposal:
         raise SystemExit(f"error: task {task_id} carries no applied proposal")
+
+    if into:
+        return _materialize_into(api, into, proposal)
 
     topic_paths = [t["path"] for t in proposal["topics"]]
     root = topic_paths[0].split(".")[0] if topic_paths else "general"
@@ -1048,9 +1055,51 @@ def _materialize_core(api: DojoAPI, task_id: str, name: str | None) -> dict[str,
     }
 
 
+def _materialize_into(api: DojoAPI, campaign_id: str, proposal: dict[str, Any]) -> dict[str, Any]:
+    """Applies a fulfilled plan proposal ONTO an existing bare campaign: the
+    consent step for capture-born campaigns (the learner reviewed the plan
+    and named the target). Initialization only — a non-empty attack_plan
+    means the campaign is established and refuses."""
+    from datetime import datetime, timezone
+    from .tasks import authority
+
+    campaign = api.store.campaigns.get(campaign_id)
+    if campaign is None:
+        raise SystemExit(f"error: campaign {campaign_id!r} not found")
+    if campaign.attack_plan:
+        raise SystemExit(
+            f"error: {campaign_id} already has a plan — plan changes go through "
+            "reflection and dojo plan confirm, never --into"
+        )
+    campaign.mission = proposal["mission"]
+    known = {t.get("path") for t in campaign.topics}
+    campaign.topics.extend(t for t in proposal["topics"] if t["path"] not in known)
+    campaign.attack_plan = [AttackPlanPhase.model_validate(p) for p in proposal["phases"]]
+    campaign.strategy_profile = {**campaign.strategy_profile, "mode": "diagnostic"}
+    lines = [f"# {campaign.name}", "", proposal["mission"], ""]
+    for t in proposal["topics"]:
+        lines.append(f"- `{t['path']}` ({t['kind']}): {t.get('summary', '')}")
+    campaign.syllabus_markdown = "\n".join(lines)
+    campaign.pedagogical_journal.append({
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "action": authority.PLAN_CONFIRMED,
+        "trigger": "campaign create --from-task --into (learner approved the plan for this campaign)",
+        "hypothesis": "initial plan confirmed for a capture-born campaign",
+        "status": "applied",
+        "plan_snapshot": [p.model_dump() for p in campaign.attack_plan],
+    })
+    api.store.campaigns.save(campaign)
+    return {
+        "campaign": api.store.campaigns.get(campaign_id).model_dump(),
+        "id": campaign_id,
+        "refinement_questions": proposal.get("refinement_questions", []),
+    }
+
+
 def _materialize_campaign_from_task(args: argparse.Namespace) -> int:
     api = DojoAPI(_db_path(args))
-    result = _materialize_core(api, args.from_task, getattr(args, "name", None))
+    result = _materialize_core(api, args.from_task, getattr(args, "name", None),
+                               into=getattr(args, "into", None))
     _print_json({
         "ok": True,
         "type": "campaign_created",
@@ -2755,6 +2804,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_camp_create = p_camp_sub.add_parser("create")
     p_camp_create.add_argument("goal", nargs="?", help="The user's high-level learning goal or target skill")
     p_camp_create.add_argument("--from-task", dest="from_task", help="Materialize a fulfilled campaign.plan task")
+    p_camp_create.add_argument("--into", help="Apply the plan onto an existing BARE campaign (capture-born) instead of creating one")
     p_camp_create.add_argument("--level", "-l", default="intermediate", choices=["beginner", "intermediate", "advanced"], help="Initial comfort level")
     p_camp_create.add_argument("--name", "-n", help="Optional override for the campaign name")
     p_camp_create.add_argument("--exclude", "-e", help="Optional skills or areas to defer/exclude")

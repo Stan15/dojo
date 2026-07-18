@@ -42,7 +42,10 @@ def file_capture(store, capture: Capture, proposal: dict[str, Any]) -> dict[str,
                 name=proposal["new_name"],
                 mission=proposal["new_mission"],
                 topic_path=slugify(proposal["new_name"]).replace("-", "_"),
-                strategy_profile={"difficulty": "intermediate", "scaffolding": "medium"},
+                # Parity with every other creation door (owner audit
+                # 2026-07-18, Q 6g): a brand-new campaign starts calibrating.
+                strategy_profile={"difficulty": "intermediate",
+                                  "scaffolding": "medium", "mode": "diagnostic"},
             )
         topic_path = proposal.get("topic_path") or campaign.topic_path
     else:
@@ -73,6 +76,24 @@ def file_capture(store, capture: Capture, proposal: dict[str, Any]) -> dict[str,
     store.campaigns.save(campaign)
 
     task_refs = []
+    next_hint = None
+    if action == "propose_campaign":
+        # A capture-born campaign no longer dead-ends bare (owner core-need
+        # 2026-07-18, Q 6g): chain the same plan pipeline `dojo learn` uses,
+        # seeded with the router's mission and the learner's why + material.
+        # Review-before-trust holds: the plan applies nothing until the
+        # learner materializes it INTO this campaign.
+        why_bit = f" (why it matters to the learner: {capture.why})" if capture.why else ""
+        plan_task = flows.request_plan(
+            store, goal=proposal["new_mission"],
+            context_notes=f"planned from a captured note{why_bit}: {capture.text[:400]}",
+            existing_topics=flows.registry_topic_paths(store),
+        )
+        task_refs.append(flows.task_ref(plan_task))
+        next_hint = (
+            f"fulfill the plan task, review it (dojo task show {plan_task.id}), "
+            f"then: dojo campaign create --from-task {plan_task.id} --into {campaign.id}"
+        )
     if proposal.get("seed"):
         task = flows.request_generation(
             store, campaign,
@@ -95,4 +116,5 @@ def file_capture(store, capture: Capture, proposal: dict[str, Any]) -> dict[str,
         "campaign_id": campaign.id,
         "topic_path": topic_path,
         "tasks": task_refs,
+        **({"next": next_hint} if next_hint else {}),
     }

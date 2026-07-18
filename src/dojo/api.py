@@ -658,7 +658,10 @@ class DojoAPI:
             raise ValueError(f"capture {capture_id} has no route proposal yet — fulfill its route task first")
         filed = file_capture(self.store, cap, cap.proposal)
         self.log.info(f"Capture {capture_id} filed into {filed['campaign_id']}")
-        return {**filed, "next": "the note is now a source; exercises can ground on it"}
+        # Filing's own next (e.g. the plan-chain consent step, Q 6g) outranks
+        # the generic line — never bury a specific action under a platitude.
+        return {"next": "the note is now a source; exercises can ground on it",
+                **filed}
 
     def inbox_dismiss(self, capture_id: str) -> dict[str, Any]:
         """Marks a capture dismissed. The file stays in the store (git is the

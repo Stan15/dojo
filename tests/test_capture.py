@@ -147,6 +147,78 @@ class TestConfirmByDefault:
         assert "## SOURCE\n" in task.prompt
         assert "saved this because" not in task.prompt
 
+    def test_propose_campaign_chains_a_plan_task_and_stamps_diagnostic(self, api: DojoAPI):
+        """Q 6g item 3: a capture-born campaign no longer dead-ends bare —
+        filing emits a campaign.plan task seeded with the router's mission +
+        the learner's why, and the campaign starts in calibration like every
+        other creation door."""
+        res = api.capture("Bees fan their wings to cool the hive below 36C",
+                          why="starting two hives next spring")
+        outcome = service.submit(api.store, res["tasks"][0]["id"], route_payload(
+            action="propose_campaign", campaign=None, topic_path=None,
+            new_name="Backyard Beekeeping", new_mission="Keep two hives alive through the seasons.",
+        ))
+        assert outcome.ok
+        filed = api.inbox_confirm(res["capture_id"])
+        camp = api.store.campaigns.get(filed["campaign_id"])
+        assert camp.strategy_profile.get("mode") == "diagnostic", "same stamp as other doors"
+        plan_refs = [t for t in filed["tasks"]]
+        plan_task = api.store.tasks.get(plan_refs[0]["id"])
+        assert plan_task.kind == "campaign.plan"
+        assert "starting two hives next spring" in plan_task.prompt, "the why seeds the plan"
+        assert f"--into {camp.id}" in filed["next"], "the consent step is named"
+
+    def test_materialize_into_initializes_a_bare_campaign_and_refuses_established(self, api: DojoAPI, tmp_path):
+        """--into applies a reviewed proposal onto the bare capture-born
+        campaign (topics, phases, mission, PLAN_CONFIRMED journal); a campaign
+        that already has a plan refuses — those change through authority."""
+        import json as _json
+        from dojo.cli import _materialize_core
+        from dojo.tasks import flows as _flows
+        from dojo.tasks import authority
+
+        res = api.capture("Bees fan their wings to cool the hive below 36C",
+                          why="starting two hives next spring")
+        service.submit(api.store, res["tasks"][0]["id"], route_payload(
+            action="propose_campaign", campaign=None, topic_path=None,
+            new_name="Backyard Beekeeping", new_mission="Keep two hives alive through the seasons.",
+        ))
+        filed = api.inbox_confirm(res["capture_id"])
+        plan_task_id = filed["tasks"][0]["id"]
+        proposal = {
+            "mission": "Keep two hives healthy from install to spring.",
+            "name": "Backyard Beekeeping",
+            "topics": [
+                {"path": "beekeeping.inspection.brood", "kind": "skill", "summary": "reading brood frames"},
+                {"path": "beekeeping.winter.prep", "kind": "recall", "summary": "winterization checklist"},
+            ],
+            "phases": [
+                {"topics": ["beekeeping.inspection.brood"],
+                 "criteria": {"min_attempts": 5, "min_accuracy": 0.0}, "focus": "calibration"},
+                {"topics": ["beekeeping.inspection.brood", "beekeeping.winter.prep"],
+                 "criteria": {"min_attempts": 10, "min_accuracy": 0.7}, "focus": "core husbandry"},
+            ],
+            "refinement_questions": [],
+        }
+        outcome = service.submit(api.store, plan_task_id, _json.dumps(proposal))
+        assert outcome.ok, outcome.errors
+        result = _materialize_core(api, plan_task_id, None, into=filed["campaign_id"])
+        camp = api.store.campaigns.get(filed["campaign_id"])
+        assert camp.mission == "Keep two hives healthy from install to spring."
+        assert len(camp.attack_plan) == 2 and camp.attack_plan[0].criteria.min_accuracy == 0.0
+        assert any(t["path"] == "beekeeping.winter.prep" for t in camp.topics)
+        assert camp.pedagogical_journal[-1]["action"] == authority.PLAN_CONFIRMED
+        assert result["id"] == filed["campaign_id"]
+
+        # Established campaigns refuse --into.
+        second = _flows.request_plan(api.store, goal="more bees",
+                                     context_notes="", existing_topics="")
+        outcome2 = service.submit(api.store, second.id, _json.dumps(proposal))
+        assert outcome2.ok
+        import pytest as _pytest
+        with _pytest.raises(SystemExit, match="already has a plan"):
+            _materialize_core(api, second.id, None, into=filed["campaign_id"])
+
     def test_low_confidence_never_autofiles(self, api: DojoAPI):
         api.store.configs.set_value("capture.autofile", "true")
         cid = api._test_campaign_id
