@@ -378,6 +378,17 @@ class TestPlanCreatedCampaignStartsInCalibration:
         assert camp.attack_plan[0].criteria.min_accuracy == 0.0, "normalized at the boundary"
         assert camp.attack_plan[1].criteria.min_accuracy == 0.7
 
+    def test_materialize_uses_the_plans_generated_name_not_the_goal(self, tmp_path: Path):
+        """Owner field report 2026-07-18: 'Campaign created:' showed the whole
+        slugged prompt. apply_plan dropped PlanResult.name from _applied, so
+        the materializer's goal fallback ALWAYS won — through the real
+        emit→submit→materialize path, the AI label must reach the campaign."""
+        api, cid = self._materialized(tmp_path)
+        camp = api.store.campaigns.get(cid)
+        assert camp.name == "Home Cooking", "the plan's name, never the raw goal"
+        assert "learn to cook" not in camp.name
+        assert "learn-to-cook" not in cid, "id derives from the label, not the prompt"
+
     def test_virgin_start_requests_calibration_not_practice(self, tmp_path: Path):
         api, cid = self._materialized(tmp_path)
         res = api.start_practice_session(campaign_id=cid, reset=True)

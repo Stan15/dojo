@@ -670,6 +670,10 @@ def apply_plan(store, task: Task, result: PlanResult) -> dict[str, Any]:
     deterministically after the learner confirms."""
     return {
         "mission": result.mission,
+        # The AI-generated label the materializer prefers (owner field report
+        # 2026-07-18: the applier dropped it, so every campaign fell back to
+        # the raw goal and the id became the slugged prompt).
+        "name": result.name,
         "topics": [t.model_dump() for t in result.topics],
         "phases": [p.model_dump() for p in result.phases],
         "refinement_questions": result.refinement_questions,

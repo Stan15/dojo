@@ -700,7 +700,9 @@ def plan_flow(api: DojoAPI, *, goal: str, level: Optional[str], context: Optiona
         console.print(f"[dim]Kept as a proposal — dojo campaign create --from-task {task.id}[/dim]")
         return 0
     result = materialize(task.id)
-    console.print(f"[bold green]Campaign created:[/bold green] {result['id']}")
+    created_name = (result.get("campaign") or {}).get("name") or result["id"]
+    console.print(f"[bold green]Campaign created:[/bold green] {created_name}  "
+                  f"[dim]({result['id']})[/dim]")
     if confirm("Start practicing it now?"):
         return first_session_flow(api, result["id"], mode=mode)
     console.print("[dim]When you're ready: dojo daily.[/dim]")
