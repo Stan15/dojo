@@ -30,6 +30,10 @@ agent:  dojo campaign create --from-task tsk_a1b2c3d4
 curl -fsSL https://raw.githubusercontent.com/Stan15/dojo/main/install.sh | sh
 ```
 
+The only prerequisite is Python 3.11+ (already on most machines; otherwise
+`brew install python` or your package manager). Git is optional — with it,
+your learning store gets automatic version history.
+
 Your entire life with dojo is two commands:
 
 ```bash
