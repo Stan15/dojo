@@ -59,6 +59,35 @@ Every JSON response may carry:
 | `dojo config set|show` | Key-value config: `daily.packet_size`, `fulfiller.command`, `fulfiller.tier` (frugal/standard/rich context budgets), `capture.autofile`. |
 | `dojo install [<agent>|--dest] [--argv]` / `dojo uninstall [<agent>|--dest|--self]` | Skill install into an agent's directory / removal (ownership-guarded; learning data never touched). |
 
+## Local fulfiller driver guidance
+
+Configuring `fulfiller.command` or `dojo benchmark --driver` against a local
+ollama model? Three rulings from the token-diet measurement campaign
+(2026-07-18; full evidence in `scratch/token-diet/REPORT.md` and
+`WORKBENCH.md`):
+
+- **Do not pipe `ollama run` on ollama ≥0.32.** The CLI writes its terminal
+  word-rewrap rendering into non-TTY stdout — ANSI erase sequences,
+  re-printed word fragments, even doubled closing quotes — landing inside
+  JSON string values and corrupting the payload. Short responses don't wrap
+  so a quick smoke test can look clean while a real battery comes back
+  0/64 on "no JSON found." `TERM=dumb` does not help. Drive the model
+  through the HTTP API instead (`POST /api/chat`, `stream: false`);
+  `scratch/token-diet/api_driver.py` is the reference implementation.
+- **Disable thinking for thinking-class models (qwen3.5 etc.).** Left on,
+  a trivial one-field JSON task took 121-164s and up to 17.7KB of
+  rumination; with thinking off, 1-2s. Set `"think": false` in the
+  `/api/chat` request body — this is the only endpoint where the flag
+  binds. `/api/generate` with `think: false` still emits full reasoning
+  (verified on qwen3:4b). Old (non-.5) qwen3 needs a model-specific
+  soft-switch instead of the `think` field; that variant is not yet
+  supported and is deferred.
+- **Best-in-class local models as of 2026-07:** `qwen3.5:0.8b` (~1GB tier)
+  and `qwen3.5:4b` (~3.4GB tier). Benchmark calibers are the strongest
+  model per resource class, not an arbitrary same-footprint pick, so a
+  local scorecard reflects the floor a real user on that hardware actually
+  gets (`docs/STATE.md` standing directive).
+
 ## Python API
 
 `dojo.api.DojoAPI(dojo_dir=None)` mirrors the CLI: `daily()`, `why()`,
