@@ -225,3 +225,15 @@ edge-tolerant comparison or ~15% of honest passes get discarded.
   CLI version (0.32 rewrap junk in piped stdout), and think-binding
   differences each produced fake deltas bigger than most real effects.
   Never compare batteries across driver configs; re-baseline instead.
+
+## 2026-07-18 — empty-INSIGHTS reflect payloads bait update-ops from 4B models
+Nine consecutive single-shot failures (qwen3.5:4b ×6, gemma3:4b ×3) on a
+reflect payload whose INSIGHTS section was empty: the models repeatedly
+emitted `op: "update"` (with attempt ids or prose stuffed into `id`) though
+there was nothing to update. The skeleton's FIRST example is an update op —
+example-bleed (README failure mode 9) makes it the default move even when
+the context forbids it. Candidate future arm (not shipped): compiler-side
+fragment that leads with the create-op example when the store has zero
+active insights — branching in the compiler, never the model (craft rule 5).
+Codex/gpt-5.5 landed the same payload first try; visible-corpus reflect
+ok-rates for 4B models (~27% qwen) already price this in.
