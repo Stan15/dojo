@@ -80,7 +80,7 @@ present. "rubric" is ONE string holding 1-3 dash bullets (null only
 when skill is "present"). "note" stays null unless you deviated (then ≤
 {{ note_words }} words). "intervention" is for rule 9 only, with items []:
 {"kind": "clarify_goal" or "need_context" or "scope_too_broad", "questions":
-["...?"], "reason": "≤ {{ intervention_reason_words }} words"}.
+["your sharp question?"], "reason": "≤ {{ intervention_reason_words }} words"}.
 Check before returning: valid JSON; exactly {{ n_items }} items (or fewer + note,
 or none + intervention); every item has all four fields; every prompt
 self-contained; no prompt reveals its answer.

@@ -88,12 +88,12 @@ Field rules: "op" is one word — create, update, or resolve. create needs key
 (dotted lowercase, e.g. technique.strumming.timing) + text + evidence; update
 needs id + text; resolve needs id; EVERY op also needs its reason, and
 "journal" is never empty. A non-null strategy is {"difficulty": one of beginner/intermediate/
-advanced, "scaffolding": one of high/medium/low, "reason": "..."} with at
+advanced, "scaffolding": one of high/medium/low, "reason": "why the dial moves"} with at
 least one dial set. A topic retirement (rule 5 only) is {"path": "a.b",
-"reason": "...", "evidence": []}. A non-null plan_revision carries the FULL
+"reason": "why done", "evidence": []}. A non-null plan_revision carries the FULL
 phase list (never a diff), each phase shaped exactly: {"phases": [{"topics":
-["a.b"], "criteria": {"min_attempts": 5, "min_accuracy": 0.6}, "focus": "..."}],
-"evidence": ["att_id"], "reason": "..."} — phases are numbered by position.
+["a.b"], "criteria": {"min_attempts": 5, "min_accuracy": 0.6}, "focus": "what this phase builds"}],
+"evidence": ["att_id"], "reason": "why restructure"} — phases are numbered by position.
 Check: nulls wherever nothing changed; ≤ {{ max_new_insights }} creates (each with
 a key); ≤ {{ max_questions }} questions; every cited attempt id (insights AND plan)
 exists in ATTEMPTS; new phase topics: lowercase dotted, ≤ {{ topic_depth }} levels.

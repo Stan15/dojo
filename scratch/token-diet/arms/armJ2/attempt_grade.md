@@ -33,6 +33,6 @@ RULES
 {{ user_answer }}
 
 OUTPUT — your final output is exactly this JSON (anything before it is ignored):
-{"score": 0.0, "evidence": "a few words copied verbatim from ANSWER", "feedback": "...", "error_tag": null, "knowledge_gap": false}
+{"score": 0.0, "evidence": "a few words copied verbatim from ANSWER", "feedback": "one thing right, then the most important correction", "error_tag": null, "knowledge_gap": false}
 Check: score is one of 1.0/0.7/0.3/0.0; evidence is copied from ANSWER with
 no added quotation marks — none of your own words.
