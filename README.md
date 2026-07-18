@@ -246,7 +246,10 @@ FSRS-6 spaced repetition (the algorithm behind Anki) for facts; skills
 always get *novel* exercises. The scheduler is pure, deterministic code —
 no model ever decides what you practice. AI work happens through budgeted,
 schema-validated task files (3–7 KB; your context window and bill are
-treated as precious). Start at the [system blueprint](docs/design/blueprint.md).
+treated as precious). In one phrase: dojo is a **deterministic pedagogy
+harness** for whatever model shows up — the harness owns correctness and
+the learning science, the model supplies judgment, and neither can break
+the other. Start at the [system blueprint](docs/design/blueprint.md).
 
 ## What dojo is not
 

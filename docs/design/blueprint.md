@@ -43,6 +43,11 @@ via `dojo correct`), or an invalid payload (rejected at the boundary). It cannot
 mis-schedule, overflow a queue, lose provenance, or corrupt the store. That is the
 "strong guarantees even with weak models" property, located in one place.
 
+In one phrase, this split is what dojo *is*: a **deterministic pedagogy
+harness** for whatever model shows up — the harness owns correctness, state,
+and the learning science; the model supplies judgment through a narrow,
+validated seam; and neither can break the other.
+
 ## 3. Concepts — eight, no more
 
 1. **Source** — trusted material with provenance. Any size: a book chapter, an
