@@ -77,8 +77,10 @@ corrupted output — benchmark/driver guidance must say use the API.
 - `arms/apply_armS.py` — semantic-only validation (apply AFTER armJ): evidence
   cap rejection dropped (substring invariant stays; storage clipped), rubric
   list→string coercion, summary clip-not-reject. Verified anchors.
-- ArmA (compact JSON) / ArmD (omit nulls) — NOT built; only if armJ/armS
-  leave material waste (owner: no tiny gains).
+- ArmA (compact JSON) / ArmD (omit nulls) — NOT built during main work; they
+  are the accumulate-after batch (owner clarification 2026-07-18: marginal-
+  but-sound wins are deferred to a cheap post-main pass, not discarded —
+  and not investigated mid-campaign).
 
 **State: baselines** — DONE: gemma1b (2/63), lfm (7/64), gemma4b (39/63,
 62%). DNF: qwen3:4b think-on (all timeouts; see thinking ruling). RUNNING

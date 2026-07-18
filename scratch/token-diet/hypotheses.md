@@ -99,8 +99,13 @@ A candidate ships only if, across ≥3 calibers and the full battery:
   re-emits the whole output).
 
 ## OWNER CONSTRAINTS (2026-07-17, binding)
-- No tiny gains: a change must be MATERIAL (retry elimination, thinking-class
-  waste, ≥~10% body cuts). Marginal candidates are discarded, not shipped.
+- No tiny gains — CLARIFIED (owner, 2026-07-18): a prioritization rule, not a
+  ban. Main-work focus goes to MATERIAL levers (retry elimination,
+  thinking-class waste, ≥~10% body cuts); do NOT spend tokens investigating
+  or optimizing marginal candidates mid-campaign. BUT logically-sound,
+  clearly-correct marginal wins are DEFERRED, not discarded: accumulate them
+  in a cheap batch after the main work ships (e.g. ArmA compact-JSON /
+  ArmD omit-nulls style items), still subject to the same-or-better floor.
 - Performance floor is ABSOLUTE: same or better on every kind, every caliber,
   every category. Any regression anywhere kills the candidate.
 - H-C (cap tightening) DROPPED: it is the only lever that trades quality for
