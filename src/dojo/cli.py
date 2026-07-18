@@ -1154,8 +1154,11 @@ def cmd_campaign_create(args: argparse.Namespace) -> int:
             )
             source_id = source_res["source_id"]
 
-        # 2. Derive topic path
-        temp_slug = "".join(c for c in args.goal.lower() if c.isalnum() or c == " ").strip().replace(" ", ".")[:25]
+        # 2. Derive topic path — a SINGLE-segment root (OP #17: dotting the
+        # goal's words minted a 5-level root from a 5-word goal, past the
+        # depth cap, making every later new_topic leaf off it unroutable).
+        words = "".join(c for c in args.goal.lower() if c.isalnum() or c == " ").split()
+        temp_slug = "_".join(words[:3])[:25].rstrip("_")
         if not temp_slug:
             temp_slug = f"topic_{uuid.uuid4().hex[:8]}"
 
@@ -1300,10 +1303,14 @@ def cmd_campaign_create(args: argparse.Namespace) -> int:
             # JSON mode: start the session to trigger diagnostic task emission,
             # then hand the agent everything it needs in one envelope.
             sess_res = api.start_practice_session(campaign_id=campaign_id)
+            # OP #16: echo the campaign AS SAVED (diagnostic stamp, ungated
+            # phase 1) — the creation-time snapshot predates the overwrite
+            # and misreported mode/criteria to agents.
+            fresh = api.store.campaigns.get(campaign_id)
             _print_json({
                 "ok": True,
                 "type": "campaign_created",
-                "data": res,
+                "data": {**res, **(fresh.model_dump() if fresh else {})},
                 "session": sess_res.get("session"),
                 "tasks": sess_res.get("tasks", []),
                 "next": sess_res.get("next") or "run dojo ready to reveal the first prompt",
@@ -2072,12 +2079,19 @@ def cmd_inbox(args: argparse.Namespace) -> int:
     if not _use_json(args) and not args.inbox_command:
         from .interactive import inbox_flow
         return inbox_flow(api)
-    if args.inbox_command == "confirm":
-        _print_json({"ok": True, **api.inbox_confirm(args.capture_id)})
-    elif args.inbox_command == "dismiss":
-        _print_json({"ok": True, **api.inbox_dismiss(args.capture_id)})
-    else:
-        _print_json({"ok": True, **api.inbox()})
+    # OP #18: a misordered call (confirm before the route is fulfilled) is an
+    # honest refusal on the agent door, never a traceback.
+    try:
+        if args.inbox_command == "confirm":
+            _print_json({"ok": True, **api.inbox_confirm(args.capture_id)})
+        elif args.inbox_command == "dismiss":
+            _print_json({"ok": True, **api.inbox_dismiss(args.capture_id)})
+        else:
+            _print_json({"ok": True, **api.inbox()})
+    except ValueError as exc:
+        _print_json({"ok": False, "error": str(exc),
+                     "next": "dojo inbox lists captures and their route status"})
+        return 1
     return 0
 
 

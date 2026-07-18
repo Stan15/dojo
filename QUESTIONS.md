@@ -141,8 +141,15 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
    every other creation door). Proposal: chain the learn machinery — a
    campaign.plan task seeded with why + captured content, review-before-
    trust as always; amends ADR 013's "captures are material, not goals"
-   stance for the case where the why IS a goal. **Default: (2)+(3) await
-   your gate; nothing built.**
+   stance for the case where the why IS a goal.
+   → **(2)+(3) SHIPPED 2026-07-18** under your parting authorization
+   ("continue... we need to improve that part"): why→generation (9257ea0,
+   renders only when a why exists — payloads otherwise byte-identical) and
+   the plan chain for capture-born campaigns (99ec3a2: propose_campaign
+   emits a seeded campaign.plan task; consent = `campaign create
+   --from-task <tsk> --into <campaign>`, initialization-only, established
+   plans refuse). Interactive-flow surfacing of the plan chain rides with
+   display unification (6d).
 
 6h. **Session abandonment as evidence (found 2026-07-18, README-truthfulness
    check).** `/quit`//`/exit` pause the session and leave NO attempt row —

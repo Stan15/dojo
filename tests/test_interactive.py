@@ -378,6 +378,42 @@ class TestPlanCreatedCampaignStartsInCalibration:
         assert camp.attack_plan[0].criteria.min_accuracy == 0.0, "normalized at the boundary"
         assert camp.attack_plan[1].criteria.min_accuracy == 0.7
 
+    def test_direct_create_json_envelope_reports_saved_state_and_flat_root(self, tmp_path: Path, capsys):
+        """OP #16 + #17: the agent envelope must echo the campaign AS SAVED
+        (diagnostic mode, ungated phase 1 — not the pre-overwrite snapshot),
+        and the derived topic root is a single segment (a 5-word goal used to
+        mint a 5-level root past the depth cap, unroutable for new_topic)."""
+        import argparse, json as _json
+        from dojo.cli import cmd_campaign_create
+        args = argparse.Namespace(
+            goal="git internals and daily workflows",
+            name="Git Mastery", source=None, level="beginner",
+            db=str(tmp_path), json=True,
+        )
+        cmd_campaign_create(args)
+        out = _json.loads(capsys.readouterr().out.strip().splitlines()[-1])
+        assert out["data"]["strategy_profile"]["mode"] == "diagnostic"
+        assert out["data"]["attack_plan"][0]["criteria"]["min_accuracy"] == 0.0
+        assert "." not in out["data"]["topic_path"].rstrip(".diagnostic").split(".")[0]
+        api = DojoAPI(tmp_path)
+        camp = api.store.campaigns.list()[0]
+        assert "." not in camp.topic_path, "root is one segment; leaves hang off it"
+
+    def test_inbox_confirm_before_route_is_an_honest_refusal(self, tmp_path: Path, capsys):
+        """OP #18: confirm before the route task is fulfilled returns an
+        ok:false envelope with a next step — never a traceback."""
+        import argparse, json as _json
+        from dojo.cli import cmd_inbox
+        api = DojoAPI(tmp_path)
+        res = api.capture("halloumi is cooked in whey before salting")
+        args = argparse.Namespace(db=str(tmp_path), json=True,
+                                  inbox_command="confirm",
+                                  capture_id=res["capture_id"])
+        code = cmd_inbox(args)
+        out = _json.loads(capsys.readouterr().out.strip().splitlines()[-1])
+        assert code == 1 and out["ok"] is False
+        assert "route" in out["error"] and out["next"]
+
     def test_direct_create_door_never_uses_the_whole_goal_as_name(self, tmp_path: Path):
         """Same bug class at the AI-free door: with no --name, the default was
         'Learning Campaign: <whole goal>' — slugged into the id. The fallback
