@@ -226,7 +226,11 @@ gemma4b's 14/20 holds. Templates frozen until the eval run completes
    spend ledger; STATE update; commits on dev/token-diet only — owner gates
    the merge.
 
-**Gotchas:** run measure.py from repo root (imports dojo from src via the
+**Gotchas (hard-won):** ONE battery at a time — OLLAMA_MAX_LOADED_MODELS=1
+means a concurrent run thrashes model swaps into 240s timeouts on both
+sides; template overlays ONLY between batteries (measure.py snapshots
+templates per process at first compile — a mid-flight cp makes the running
+battery a mixed tree). Run measure.py from repo root (imports dojo from src via the
 venv); the tree must be QUIET during a battery (template edits contaminate
 in-flight arms); `timeout` doesn't exist in this zsh; ollama spinner junk goes
 to stderr (harmless); extraction reads the LAST balanced JSON object.
