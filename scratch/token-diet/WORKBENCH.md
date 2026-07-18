@@ -112,6 +112,14 @@ demonstrate, don't describe) → armJ3 reflect skeleton shows short
 cap-compliant values + a create op with dotted key. armJ3 = candidate
 winner if reflect recovers with no regressions; then armS stacks on it.
 
+**VARIANCE DISCOVERY (2026-07-18, armJ3 qwen35_4b):** plan fell 4/7→1/7
+between armJ2 and armJ3 with BYTE-IDENTICAL plan templates — kind-level
+rerun variance at 4B is ±3, overall-level ±2-4. The decision rule's ±1
+noise band is too tight for single runs. Protocol: class-verdict claims
+need REPLICATE batteries (base2b + armJ3b at qwen35_4b queued); kind-level
+single-run deltas under ±3 are not evidence. gemma4b's +8..+15 and lfm's
++5..+10 overall deltas exceed the band and stand.
+
 **SUPERSEDED: armJ battery** — templates overlaid UNCOMMITTED on
 src/dojo/prompts; battery order: qwen35_08b, qwen35_4b, gemma1b, lfm,
 gemma4b (all API driver; qwens --no-think). Tree stays QUIET until
