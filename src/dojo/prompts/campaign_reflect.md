@@ -75,19 +75,22 @@ OUTPUT — your final output is exactly this JSON (anything before it is ignored
 {
   "insight_updates": [
     {"op": "update", "id": "the insight's id", "key": null,
-     "text": "the revised insight wording", "evidence": ["att_id"],
-     "reason": "why the evidence forces this edit"}
+     "text": "rushes multi-step problems", "evidence": ["att_id"],
+     "reason": "same slip in att_2 and att_5"},
+    {"op": "create", "id": null, "key": "process.skips_checking",
+     "text": "submits without re-reading the prompt", "evidence": ["att_id"],
+     "reason": "pattern across two attempts"}
   ],
   "strategy": null,
   "plan_revision": null,
   "questions": [],
   "topic_retirements": [],
-  "journal": "2-4 sentences: what this cycle showed and what to watch next"
+  "journal": "accuracy held; rushing pattern repeats; watching pace"
 }
 Field rules: "op" is one word — create, update, or resolve. create needs key
-(dotted lowercase, e.g. technique.strumming.timing) + text + evidence; update
-needs id + text; resolve needs id; EVERY op also needs its reason, and
-"journal" is never empty. A non-null strategy is {"difficulty": one of beginner/intermediate/
++ text + evidence; update needs id + text; resolve needs id; EVERY op needs a
+reason. Match the examples' brevity — text, reason, and journal all have hard
+word caps (rules 1 and 6). "journal" is never empty. A non-null strategy is {"difficulty": one of beginner/intermediate/
 advanced, "scaffolding": one of high/medium/low, "reason": "why the dial moves"} with at
 least one dial set. A topic retirement (rule 5 only) is {"path": "a.b",
 "reason": "why done", "evidence": []}. A non-null plan_revision carries the FULL
