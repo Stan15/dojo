@@ -64,6 +64,14 @@ dojo config set model.command "codex exec"
 dojo task run                             # drain pending AI work
 ```
 
+Running local? Honest, measured guidance: **gemma3:4b** (~3.3 GB) is the
+smallest model we've found consistently helpful — over 80% of dojo's AI
+tasks accepted first try on our benchmark corpus, and dojo's built-in
+retries absorb most of the rest. **qwen3.5:4b** (thinking off) also works,
+leaning harder on retries. Below the ~4B class, current models miss dojo's
+output contracts too often to recommend as your daily fulfiller — but
+`dojo benchmark` measures any model in one command, so check yours.
+
 (Prefer to inspect before piping to `sh`? `git clone
 https://github.com/Stan15/dojo && cd dojo && sh install.sh` — same installer.
 Local ollama, leaving, or taking your data with you:
@@ -136,7 +144,12 @@ Inside a session: type your answer, or `/why`, `/back` to amend, `/skip
 too_easy`, `/quit`. Through an agent you don't even need these — say "let's
 practice" and it runs the same machinery. One-off things you just learned go
 straight in from anywhere: `dojo capture "<the thing>"` saves first, files
-later — [capture & inbox](docs/design/blueprint.md).
+later. **Links work too**: hand your agent an article or video URL and it
+captures the key content using its own access — the link rides along as
+provenance (`--locator`), and exercises generated from it stay traceable to
+it. (Dojo itself never fetches URLs — your agent's reach is the reach, which
+is also what keeps the injection surface closed.) Details:
+[capture & inbox](docs/design/blueprint.md).
 
 ## No guilt, by design
 
