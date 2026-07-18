@@ -117,6 +117,28 @@ class TestConfirmByDefault:
         assert cap.status == "filed"
         assert outcome.applied["filed"]["tasks"], "seed=true emits a generation task"
 
+    def test_route_next_binds_the_agent_to_ask_the_learner(self, api: DojoAPI):
+        """Owner ruling 2026-07-18: the envelope's next must direct the agent
+        to ASK the learner before confirming — a new campaign especially is
+        never auto-confirmed. Belt to SKILL.md's suspenders."""
+        cid = api._test_campaign_id
+        res = api.capture("Motion verbs take être in past conditional")
+        outcome = service.submit(api.store, res["tasks"][0]["id"], route_payload(
+            campaign=cid, topic_path="french.grammar.conditional",
+        ))
+        nxt = outcome.applied["next"]
+        assert "ask" in nxt and "french.grammar.conditional" in nxt
+        assert "on their yes" in nxt
+
+        res2 = api.capture("Beeswax melts at 62-64C")
+        outcome2 = service.submit(api.store, res2["tasks"][0]["id"], route_payload(
+            action="propose_campaign", campaign=None, topic_path=None,
+            new_name="Candle Making", new_mission="Pour clean-burning candles at home.",
+        ))
+        nxt2 = outcome2.applied["next"]
+        assert "ASK the learner" in nxt2 and "Candle Making" in nxt2
+        assert "Only on their yes" in nxt2
+
     def test_seeded_generation_carries_the_learners_why(self, api: DojoAPI):
         """Owner core-need audit 2026-07-18 (QUESTIONS 6g): the capture's WHY
         must reach the seeded generation payload, so practice aims at what

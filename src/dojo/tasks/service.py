@@ -758,13 +758,21 @@ def apply_route(store, task: Task, result: RouteResult) -> dict[str, Any]:
         filed = file_capture(store, capture, proposal)
         return {"routed": proposal, "filed": filed}
 
+    # The consent step binds the AGENT too (owner ruling 2026-07-18): tell
+    # the learner where this would file — a NEW campaign especially is
+    # their call, never auto-confirmed — and only run confirm on their yes.
+    if result.action == "propose_campaign":
+        ask = (f"ASK the learner: nothing existing fits — create a new campaign "
+               f"\"{result.new_name}\" for it? Only on their yes: dojo inbox confirm "
+               f"{capture.id} (no → dismiss, or ask where they'd file it)")
+    else:
+        ask = (f"tell the learner where this would file ({result.campaign} › "
+               f"{result.topic_path}) and ask; on their yes: dojo inbox confirm "
+               f"{capture.id} (or dismiss / re-route)")
     return {
         "routed": proposal,
         "filed": None,
-        "next": (
-            "the route awaits the learner's confirmation: dojo inbox confirm "
-            f"{capture.id} (or dismiss / re-route)"
-        ) if capture.status == "proposed" else "capture stays in the inbox",
+        "next": ask if capture.status == "proposed" else "capture stays in the inbox",
     }
 
 
