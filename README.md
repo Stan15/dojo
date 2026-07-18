@@ -68,45 +68,44 @@ models, leaving, taking your data: [docs](docs/api-specification.md).)
 ## The learner model — every belief, with receipts
 
 Dojo maintains an explicit model of you, earned from your actual practice —
-and you can read it, trace it, and overrule it. This is real output from
-the author's own store, verbatim:
+and you can read it, trace it, and overrule it.
 
-```text
+Real, unedited output: we seeded a store with one week of a Spanish
+learner's practice — a few wrong answers, one skip, one typed "no idea, I
+give up on this one" — and ran dojo's actual reflection task once, with
+**gpt-5.5** (via the codex CLI). First try, it caught both patterns:
+
+```console
 $ dojo insights
 
-i-have-terrible-memory
-  memory
-    ins_7693e749_0 memory.needs_mechanism_before_labels — Needs explicit mechanism/binding pattern before
-      naming memory rules; otherwise answers become unsure or generic.
-      4 answer(s) behind it · 9d old · updated 2026-07-16
-  practice
-    ins_9ac6a689_2 practice.avoidance_when_unsure — When unsure, I sometimes exit or say I do not want
-      to practice instead of attempting a rough answer.
-      4 answer(s) behind it · 2d old · updated 2026-07-16
-  tasks
-    ins_a84d06ee_1 tasks.capture_needs_action_context — Capture entries need action and context; bare
-      nouns become vague and hard to commit.
-      3 answer(s) behind it · 9d old · updated 2026-07-16
+conversational-spanish
+  grammar
+    ins_92803075_0 grammar.ser_estar_states — Confuses ser and estar for
+      temporary physical states and conditions.
+      3 answer(s) behind it · 0d old · updated 2026-07-18
+  process
+    ins_92803075_1 process.subjunctive_give_up — Gives up on subjunctive
+      triggers when prompts feel too hard.
+      2 answer(s) behind it · 0d old · updated 2026-07-18
 ```
 
-Notice what it caught: *how* this learner learns (rules don't stick until
-the mechanism is understood), a behavior nobody would report about
-themselves, and a hygiene pattern in their captures. Every belief opens
-into its receipts — here are two of the four behind that middle one, still
-verbatim:
+A classic grammar confusion — and a *behavior*: the skips and what you type
+instead of an answer are evidence too, and dodging practice when unsure is
+exactly what kills retention. Every belief opens into its receipts:
 
-```text
-$ dojo insights show ins_9ac6a689_2
+```console
+$ dojo insights show ins_92803075_0
 
-practice.avoidance_when_unsure (ins_9ac6a689_2, active)
-When unsure, I sometimes exit or say I do not want to practice instead of
-attempting a rough answer.
+grammar.ser_estar_states (ins_92803075_0, active)
+Confuses ser and estar for temporary physical states and conditions.
 
 Why we believe this — your own answers:
-  2026-07-13 · You are walking from the kitchen to your desk and remember:
-    › "/exit" — score 0.0 (graded by ai)
-  2026-07-13 · A learner says: “I wrote ‘stuff for office’ in my notes, so
-    › "i don't wanna practice this anymore." — score 0.0 (graded by ai, avoidance response)
+  2026-07-18 · Translate: "I am tired today."
+    › “Yo soy cansado hoy” — score 0.3 (graded by ai, ser estar mixup)
+  2026-07-18 · Translate: "My sister is sick this week."
+    › “Mi hermana es enferma esta semana” — score 0.3 (graded by ai, ser estar mixup)
+  2026-07-18 · Ser or estar? "La sopa ___ fría." Say the sentence and why.
+    › “es fria? because the soup is cold right now I think” — score 0.3 (graded by ai, ser estar mixup)
 ```
 
 Disagree? `dojo insights resolve ins_xxx --because "I know this — I was
