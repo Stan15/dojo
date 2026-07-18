@@ -22,8 +22,9 @@ with deterministic completion → ADR 005 maintenance), **provenance traces**
 housekeeping**, and the **anti-reward-hacking eval program** (55-scenario
 visible corpus + 19-scenario blind holdout with structural isolation).
 **522 tests green** + eval-marked tiers.
-Repo is PRIVATE (owner's choice) — install via checkout `sh install.sh`;
-owner's machine runs the current build.
+Repo is PUBLIC (owner confirmed 2026-07-18); docs site auto-deploys to
+https://stan15.github.io/dojo/ on main pushes; owner's machine runs the
+current build via checkout `sh install.sh`.
 
 ## What the system is now (one paragraph)
 

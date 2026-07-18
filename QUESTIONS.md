@@ -76,17 +76,13 @@ _Statuses: `[x]` shipped · `[~]` standing/in-progress · `[?]` blocked-on-owner
    them). Recommendation: A1 import first, then A2 defaulting to satellite
    with --handoff as the explicit exit; ADR 017 amends 015 to "no
    SYMMETRIC sync". **Default: parked until you promote it.**
-3. **Repo visibility** — the repo is private by your choice; the README's
-   curl one-liner activates only when public. Any timeline?
-   **Default: stays private; no action.**
-3b. **Docs hosting (your question 2026-07-18).** Answered in-session:
-   `mise run docs` already emits a static site/; GitHub Pages via a ~20-line
-   Actions workflow is the standard route but needs a paid plan while
-   private AND publishes the docs publicly either way — effectively part of
-   the go-public decision (#3, growth Phase 0). Cloudflare/Netlify free
-   tiers build from private repos if you want it sooner. **Default: I add
-   the dormant Pages workflow + README docs link in one commit when you
-   flip #3 (or on your word before that).**
+3. **Repo visibility** → **PUBLIC (you, confirmed 2026-07-18).** The README
+   curl one-liner and the skill's bootstrap line are now live paths;
+   private-era fallback language removed from the skill.
+3b. **Docs hosting** → **DONE 2026-07-18** per the recorded default, on
+   your #3 flip: Pages enabled (build_type=workflow, via gh api),
+   .github/workflows/docs.yml builds ProperDocs on every main push, site at
+   https://stan15.github.io/dojo/ (README links it; mkdocs site_url set).
 4. **Weak-floor iteration budget** — honest weak floors on the visible
    corpus, all with driver traces recorded for analysis: reflect_learner_
    language 0.10, generate_downward_calibration 0.30, reflect_diagnostic_

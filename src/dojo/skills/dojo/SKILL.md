@@ -10,7 +10,7 @@ metadata:
 Local learning engine. **ALWAYS pass `--json` on every command** — without it,
 interactive human flows may open and block forever on an agent.
 No `dojo` binary on this machine? Bootstrap it first (needs Python 3.11+):
-`curl -fsSL https://raw.githubusercontent.com/Stan15/dojo/main/install.sh | sh` — if that 404s (private beta), ask the user where their checkout of the repo lives and run `sh install.sh` there.
+`curl -fsSL https://raw.githubusercontent.com/Stan15/dojo/main/install.sh | sh`
 
 ## Two iron rules
 

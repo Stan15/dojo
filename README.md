@@ -280,6 +280,7 @@ Anki import that honors your existing memory state.
 - [System blueprint](docs/design/blueprint.md) — invariants, architecture, the task contract
 - [Prompt design](docs/design/prompts.md) — how unknown-caliber models are kept honest
 - [Decision records](docs/adr/) — every architectural "why"
-- **Docs site** — `pip install -e ".[docs]" && mise run docs-serve`
+- **Docs site** — [stan15.github.io/dojo](https://stan15.github.io/dojo/)
+  (or locally: `pip install -e ".[docs]" && mise run docs-serve`)
 
 *Local-first. Markdown-native. Model-agnostic. Yours.*

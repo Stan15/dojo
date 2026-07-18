@@ -1,5 +1,6 @@
 site_name: Dojo
 site_description: Local-first source-to-practice learning app
+site_url: https://stan15.github.io/dojo/
 repo_url: https://github.com/Stan15/dojo
 docs_dir: docs
 
