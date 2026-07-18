@@ -307,6 +307,17 @@ committed work, not proposals awaiting an answer. Item numbering is stable
    share tuning (wants real usage data); OP #13 snapshot-undo. (ADR 005
    maintenance: shipped in item 3b; OP #14: fixed 2026-07-09.)
 
+9. **CAMPAIGN COMPLETE — AWAITING OWNER MERGE GATE (dev/token-diet,
+   2026-07-18): token-diet.** Winner `armJ5S` shipped on-branch, 722 tests
+   green: shape-hardened templates + semantic-only validation + permanent
+   bidirectional gates (shape-lints, semantic-validation tests, prompts.md
+   rule 7 + §1c, guard README chain). Results: class-verdict qwen3.5:4b
+   26.3±3.2 → 33-35/64 with 5× variance collapse; gemma3:4b 28 → 50-53;
+   lfm 11 → 21; floors unchanged; judged quality parity; skill-bleed found
+   and de-anchored. **Full story: `scratch/token-diet/REPORT.md`;
+   continuation detail: WORKBENCH.md same dir.** Accumulate-batch of
+   deferred marginal wins ledgered there. Merge to main is owner-gated.
+
 ## Standing owner directives (must survive every session)
 
 - No context bloat; token spend is the owner's money — budgets are tested.
@@ -318,6 +329,23 @@ committed work, not proposals awaiting an answer. Item numbering is stable
 - Eval/benchmark: fulfiller-agnostic, per-(driver,judge) baselines, reproducible;
   codex is locally available for real runs — never hardcoded.
 - Serious, VARIED corpus; benchmark results grouped by category for users.
+- Weak-model benchmark calibers = the BEST model of each resource class
+  (2026-07-17): local users run the strongest model their hardware allows, so
+  an arbitrary same-footprint pick misstates the real-world floor. Class
+  verdicts come from the best-in-class (2026-07: qwen3.5:0.8b ~1GB,
+  qwen3.5:4b ~3.4GB); weaker same-class models are robustness points only.
+- **Prompt work and token work are mutually non-regressing, and BOTH
+  directions are tested** (owner, 2026-07-17): every future prompt/quality
+  optimization must preserve token-diet gains (output-shape discipline,
+  rejection-retry elimination, thinking-cost awareness), and every token
+  optimization must preserve quality — each side runs the other side's
+  gates. Quality direction: corpus floors + ratcheted eval baselines +
+  release-gate holdout (exist today). Token direction: static template
+  shape-lints (weak-model-hostile patterns) in the default gate + ratcheted
+  output-bytes-per-successful-task baselines for real-model runs — landing
+  with the token-diet winner commit (dev/token-diet; see WORKBENCH step 5).
+  A change that wins on one axis by losing the other is a regression, full
+  stop.
 - **NEVER optimize prompts on holdout-set data** (absolute, 2026-07-09):
   one consumable bit per holdout run (aggregate gap); bad gap → broaden the
   visible corpus, iterate there. Applies to every contributor, human or AI.

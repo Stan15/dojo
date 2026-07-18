@@ -103,6 +103,18 @@ class GeneratedItem(BaseModel):
     rubric: Optional[str] = None
     skill: Literal["recall", "explain", "apply", "produce", "critique", "diagnostic", "present"]
 
+    @field_validator("rubric", mode="before")
+    @classmethod
+    def _rubric_tolerates_lists(cls, v):
+        """A list of criterion strings carries the same information as the
+        dash-bullet string the contract asks for — coerce instead of burning
+        a full re-generation on formatting variance (ArmS 2026-07-17)."""
+        if isinstance(v, list) and v and all(isinstance(x, str) for x in v):
+            return "\n".join(
+                x.strip() if x.strip().startswith("-") else f"- {x.strip()}" for x in v
+            )
+        return v
+
     _cap_prompt = field_validator("prompt")(
         _cap_words("prompt", _limits.GENERATE_PROMPT_WORDS)
     )
@@ -176,9 +188,6 @@ class GradeResult(BaseModel):
             raise ValueError(f"score must be one of {_limits.GRADE_BANDS}, got {v}")
         return v
 
-    _cap_evidence = field_validator("evidence")(
-        _cap_words("evidence", _limits.GRADE_EVIDENCE_WORDS)
-    )
     _cap_feedback = field_validator("feedback")(
         _cap_words("feedback", _limits.GRADE_FEEDBACK_WORDS)
     )
@@ -327,9 +336,15 @@ class PlanTopic(BaseModel):
     kind: Literal["recall", "skill"]
     summary: str = ""
 
-    _cap_summary = field_validator("summary")(
-        _cap_words("summary", _limits.PLAN_TOPIC_SUMMARY_WORDS)
-    )
+    @field_validator("summary")
+    @classmethod
+    def _clip_summary(cls, v):
+        """Display-only hook text: overflow is clipped, never rejected — a
+        rejection costs a whole re-generation to save a few words
+        (ArmS 2026-07-17)."""
+        if v and _limits.word_count(v) > _limits.PLAN_TOPIC_SUMMARY_WORDS:
+            return " ".join(v.split()[: _limits.PLAN_TOPIC_SUMMARY_WORDS])
+        return v
 
     @field_validator("path")
     @classmethod

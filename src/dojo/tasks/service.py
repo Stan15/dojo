@@ -390,7 +390,11 @@ def apply_grade(store, task: Task, result: GradeResult) -> dict[str, Any]:
     attempt.score = result.score
     attempt.grader = "exposure" if is_exposure else "ai"
     attempt.grade_run = task.id  # provenance: the trace behind this score
-    attempt.grade_evidence = result.evidence
+    # Storage stays bounded without ever rejecting an honest quote: a
+    # verbatim quote's prefix is still verbatim (ArmS 2026-07-17).
+    attempt.grade_evidence = " ".join(
+        result.evidence.split()[: limits.GRADE_EVIDENCE_WORDS * 3]
+    )
     attempt.grade_feedback = result.feedback
     attempt.error_tag = result.error_tag
     if is_exposure:

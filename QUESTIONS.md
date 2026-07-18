@@ -4,6 +4,15 @@ Non-blocking. Each open question has the default I will proceed on if unanswered
 
 ## Open — decisions actually waiting on you
 
+0. **Token-diet: 4-scenario codex bootstrap recheck (2026-07-18).** The
+   authorized eval run passed 64/64 baselined scenarios but four newer
+   scenarios (no committed floor for this driver pair) scored ZERO —
+   two look example-bleed-related and armJ4 targets exactly that. To
+   bootstrap their floors and confirm the fix at the strong tier, one
+   4-scenario codex mini-run (~8 calls) is needed after armJ4 verifies
+   locally. **Default: run it once armJ4S passes the local trio; it is
+   the same-commit ratchet-bootstrap the eval protocol already expects.**
+
 1. **v1.0.0** — your stated condition (quality iteration) is met: visible
    corpus 55 scenarios, floors ratcheted, holdout standing. Remaining step:
    run the holdout release gate once (first run = floor bootstrap + gap

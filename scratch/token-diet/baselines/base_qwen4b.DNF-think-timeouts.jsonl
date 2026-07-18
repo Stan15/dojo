@@ -1,0 +1,6 @@
+{"scenario": "atrophy_reentry", "step": 0, "kind": "campaign.reflect", "error": "driver: Command '['ollama', 'run', 'qwen3:4b']' timed out after 240 seconds"}
+{"scenario": "chain_strategy_change_then_calibrated_generation", "step": 1, "kind": "exercise.generate", "error": "driver: Command '['ollama', 'run', 'qwen3:4b']' timed out after 240 seconds"}
+{"scenario": "chain_reflect_then_targeted_generation", "step": 1, "kind": "exercise.generate", "error": "driver: Command '['ollama', 'run', 'qwen3:4b']' timed out after 240 seconds"}
+{"scenario": "code_skill_transfer", "step": 0, "kind": "exercise.generate", "error": "driver: Command '['ollama', 'run', 'qwen3:4b']' timed out after 240 seconds"}
+{"scenario": "deadline_compression", "step": 0, "kind": "campaign.plan", "error": "driver: Command '['ollama', 'run', 'qwen3:4b']' timed out after 240 seconds"}
+{"scenario": "diagnostic_axis_coverage", "step": 0, "kind": "exercise.diagnostic", "error": "driver: Command '['ollama', 'run', 'qwen3:4b']' timed out after 240 seconds"}
