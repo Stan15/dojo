@@ -98,7 +98,21 @@ candidates ledgered: refinement_questions cap (3/5 gemma4b plan failures,
 user-facing → judged check required); H-K(b) quote-stripping tolerant
 extraction now justified by the CLASS-VERDICT model, not just 1B.
 
-**RUNNING (2026-07-18): armJ battery** — templates overlaid UNCOMMITTED on
+**ARM LEDGER (same-driver, ok/64):**
+| model | base2 | armJ | armJ2 | armJ3 |
+|---|---|---|---|---|
+| qwen35_4b | 30 | 26 | 28 | running |
+| gemma4b | 28 | 43 | 36 | running |
+| lfm | 11 | 16 | 21 | running |
+| qwen35_08b | 2 | 1 | 2 | (floor, skipped) |
+| gemma1b | 0 | 0 | 0 | (floor, skipped) |
+armJ2 proved two-item generate (gemma4b 15/16) + per-action route rules
+(4/4) but its reflect example values broke caps (README failure mode 9:
+demonstrate, don't describe) → armJ3 reflect skeleton shows short
+cap-compliant values + a create op with dotted key. armJ3 = candidate
+winner if reflect recovers with no regressions; then armS stacks on it.
+
+**SUPERSEDED: armJ battery** — templates overlaid UNCOMMITTED on
 src/dojo/prompts; battery order: qwen35_08b, qwen35_4b, gemma1b, lfm,
 gemma4b (all API driver; qwens --no-think). Tree stays QUIET until
 ALL_BATTERIES_DONE.
