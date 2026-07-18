@@ -99,9 +99,16 @@ user-facing → judged check required); H-K(b) quote-stripping tolerant
 extraction now justified by the CLASS-VERDICT model, not just 1B.
 
 **RUNNING (2026-07-18): armJ battery** — templates overlaid UNCOMMITTED on
-src/dojo/prompts (restore via git checkout if armJ loses); battery order:
-qwen35_08b, qwen35_4b, gemma1b, lfm, gemma4b (all API driver; qwens
---no-think). Tree stays QUIET until ALL_BATTERIES_DONE.
+src/dojo/prompts; battery order: qwen35_08b, qwen35_4b, gemma1b, lfm,
+gemma4b (all API driver; qwens --no-think). Tree stays QUIET until
+ALL_BATTERIES_DONE.
+
+**Arm-snapshot convention (owner, 2026-07-18):** when an arm's battery
+completes, commit the EXACT measured tree + its result jsonls as an "arm
+snapshot" wip commit before applying the next arm on top. Stacked arms stay
+attributable (armJ vs base; armJS vs armJ = armS marginal); snapshots make
+every battery reproducible via git checkout. Losing arms are reverted by
+the winner commit — git is the archive.
 
 **Exact next actions:**
 1. armJ battery done → analyze.py armJ_* vs base_*: ok-rate must rise
