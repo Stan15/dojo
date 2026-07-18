@@ -1,0 +1,70 @@
+# The mirror of goal_route_extend_not_new: a goal that genuinely is a new
+# practice must get propose_campaign — the corpus otherwise only ever rewards
+# extending, and a ratchet that never rewards the other branch teaches
+# force-fitting (the ossification bias, routing edition). The trap is baited:
+# an adjacent-sounding campaign (orchard care; bees pollinate orchards) makes
+# the wrong extend feel plausible.
+category: routing
+domain: beekeeping
+scenario_context: |
+  The learner states a new goal: "start keeping two beehives and get them
+  through their first winter". The REGISTRY holds "backyard-orchard"
+  (mission: prune and maintain backyard fruit trees; topics under orchard.*)
+  and "watercolor-landscapes" (painting). Beekeeping is husbandry of a
+  different organism with its own practice — inspections, disease, feeding,
+  overwintering — not orchard care, even though bees and orchards are
+  ecologically adjacent. Strong output: action "propose_campaign" with a
+  short name and mission for the new practice. Weak output: action
+  "new_topic" wedging beekeeping under the orchard campaign because bees
+  help fruit trees — semantic force-fitting that buries a distinct practice
+  inside an unrelated plan.
+seed:
+  campaign:
+    id: backyard-orchard
+    name: Backyard Orchard
+    mission: "Prune and maintain backyard fruit trees through the seasons."
+    topics:
+      - {path: orchard.pruning.winter, kind: skill, summary: "dormant structural pruning"}
+      - {path: orchard.pests.codling_moth, kind: recall, summary: "codling moth lifecycle and controls"}
+      - {path: orchard.soil.mulching, kind: skill, summary: "mulch rings and feeding"}
+  campaigns:
+    - id: watercolor-landscapes
+      name: Watercolor Landscapes
+      mission: "Paint loose, luminous landscape studies in watercolor."
+      topics:
+        - {path: watercolor.washes.graded, kind: skill, summary: "smooth graded washes"}
+        - {path: watercolor.composition.thumbnails, kind: skill, summary: "value thumbnails before painting"}
+steps:
+  - compile:
+      fn: goal_route
+      goal: "start keeping two beehives and get them through their first winter"
+judge_rubric:
+  - {id: c1, weight: 4, question: "Does the route propose a NEW campaign
+      (action \"propose_campaign\") rather than wedging beekeeping into the
+      orchard or watercolor campaigns?"}
+  - {id: c2, weight: 3, question: "Are the proposed name (a few words) and
+      mission actually about keeping bees alive through winter, matching the
+      stated goal?"}
+  - {id: c3, weight: 2, question: "Does the output avoid creating any orchard.*
+      bee topic (no orchard.pollinators.bees or similar force-fit)?"}
+  - {id: c4, weight: 1, question: "Does the reason say why this is its own
+      practice rather than a facet of orchard care?"}
+references:
+  good:
+    action: propose_campaign
+    campaign: null
+    topic_path: null
+    new_name: "Backyard Beekeeping"
+    new_mission: "Keep two hives healthy and bring them through their first winter."
+    confidence: high
+    reason: "beekeeping is its own practice, not orchard care"
+    seed: false
+  bad:
+    action: new_topic
+    campaign: backyard-orchard
+    topic_path: orchard.pollinators.bees
+    new_name: null
+    new_mission: null
+    confidence: high
+    reason: "bees support orchard pollination"
+    seed: false

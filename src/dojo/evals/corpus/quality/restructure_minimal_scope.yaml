@@ -1,0 +1,78 @@
+# Change authority, the PROPORTIONALITY side: the learner's voice mandates
+# ONE specific change ("drop the media phase, keep the rest"). The mandate is
+# a scope, not a license — strong reflection makes exactly the asked change;
+# weak reflection uses the citation as cover to rewrite the whole plan
+# (over-restructure: evidence present, scope exceeded).
+category: change-authority
+domain: italian
+scenario_context: |
+  Italian learner, October trip booked. PLAN has four phases: phase 1 (done)
+  foundations; phase 2 (active) core grammar; phase 3 media listening;
+  phase 4 travel conversation. The learner's attempt feedback says,
+  verbatim: "drop the media phase please - I only need conversation for my
+  trip in October, keep the rest as is" (attempt att_4). Performance is
+  fine. Strong output: a plan_revision that removes ONLY the media phase,
+  preserves phases 1, 2, and 4 as they are, and cites att_4. Weak output:
+  no change at all, or a wholesale rewrite — new topics, reshuffled
+  criteria, renamed focus everywhere — far beyond what the learner asked,
+  even while citing their feedback.
+seed:
+  campaign:
+    id: italian-trip
+    name: Italian for October
+    mission: Handle travel conversation in Italy comfortably by October.
+    topic_path: italian
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+    active_phase_index: 1
+    attack_plan:
+      - {phase: 1, topics: [italian.foundations], criteria: {min_attempts: 5, min_accuracy: 0.0}, focus: "calibration and survival basics"}
+      - {phase: 2, topics: [italian.grammar.core], criteria: {min_attempts: 10, min_accuracy: 0.7}, focus: "present and past tenses"}
+      - {phase: 3, topics: [italian.media.listening], criteria: {min_attempts: 8, min_accuracy: 0.7}, focus: "films and podcasts"}
+      - {phase: 4, topics: [italian.conversation.travel], criteria: {min_attempts: 12, min_accuracy: 0.7}, focus: "restaurants, transit, small talk"}
+  attempts:
+    - {id: att_1, session_id: s1, exercise_id: ex_1, score: 0.7, latency_seconds: 30.0,
+       user_answer: "ho mangiato, sono andato - avere for most, essere for movement"}
+    - {id: att_2, session_id: s1, exercise_id: ex_2, score: 1.0, latency_seconds: 22.0,
+       user_answer: "vorrei un tavolo per due, per favore"}
+    - {id: att_3, session_id: s2, exercise_id: ex_3, score: 0.7, latency_seconds: 35.0,
+       user_answer: "il passato prossimo with essere agrees in gender and number"}
+    - {id: att_4, session_id: s2, exercise_id: ex_4, score: 1.0, latency_seconds: 25.0,
+       user_answer: "quanto costa il biglietto per Roma?",
+       feedback: "drop the media phase please - I only need conversation for my trip in October, keep the rest as is"}
+steps:
+  - compile: {fn: reflect, window_n: 15}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Does the plan_revision remove the media
+      phase (italian.media.listening no longer scheduled)?"}
+  - {id: c2, weight: 3, question: "Are the other phases preserved essentially
+      as they were — same topics and criteria for foundations, core grammar,
+      and travel conversation — with no wholesale rewrite beyond the ask?"}
+  - {id: c3, weight: 2, question: "Does the revision's evidence cite att_4, the
+      attempt carrying the learner's request?"}
+  - {id: c4, weight: 1, question: "Does the journal attribute the change to the
+      learner's request and note the rest was deliberately kept?"}
+references:
+  good:
+    insight_updates: []
+    strategy: null
+    plan_revision:
+      phases:
+        - {phase: 1, topics: [italian.foundations], criteria: {min_attempts: 5, min_accuracy: 0.0}, focus: "calibration and survival basics"}
+        - {phase: 2, topics: [italian.grammar.core], criteria: {min_attempts: 10, min_accuracy: 0.7}, focus: "present and past tenses"}
+        - {phase: 3, topics: [italian.conversation.travel], criteria: {min_attempts: 12, min_accuracy: 0.7}, focus: "restaurants, transit, small talk"}
+      evidence: [att_4]
+      reason: "learner asked to drop media only; everything else kept as is"
+    questions: []
+    journal: "Dropped the media phase at the learner's request (att_4); foundations, grammar, and travel conversation kept unchanged."
+  bad:
+    insight_updates: []
+    strategy: null
+    plan_revision:
+      phases:
+        - {phase: 1, topics: [italian.conversation.travel], criteria: {min_attempts: 8, min_accuracy: 0.8}, focus: "immersive conversation bootcamp"}
+        - {phase: 2, topics: [italian.grammar.core, italian.conversation.travel], criteria: {min_attempts: 20, min_accuracy: 0.8}, focus: "grammar through dialogue only"}
+        - {phase: 3, topics: [italian.conversation.travel, italian.pronunciation.drills], criteria: {min_attempts: 15, min_accuracy: 0.9}, focus: "accent polish and speed rounds"}
+      evidence: [att_4]
+      reason: "learner wants conversation, so the whole plan now centers on it"
+    questions: []
+    journal: "Rebuilt the entire plan around conversation with tighter criteria and new pronunciation drills."

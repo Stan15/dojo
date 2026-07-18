@@ -1,0 +1,63 @@
+# The seed flag is a contracted judgment call the corpus never measured: a
+# capture stating a crisp, testable mechanism should become a practice item
+# NOW (seed: true). Failure mode: filing the note correctly but letting the
+# fact rot as reference material — captured, never practiced.
+category: routing
+domain: cheesemaking
+scenario_context: |
+  A capture about why halloumi doesn't melt must be filed into a
+  home-cheesemaking campaign whose registry lists
+  cheesemaking.brined.halloumi, cheesemaking.fresh.ricotta, and
+  cheesemaking.aging.washed_rind. The capture states a concrete, testable
+  mechanism (cooking the curd in hot whey denatures the proteins so the
+  cheese holds shape when grilled). Strong output: attach to
+  cheesemaking.brined.halloumi copied exactly, AND seed true — the capture
+  is a testable fact that should become a practice item now. Weak output:
+  the same attach but seed false, treating a crisp mechanism as mere
+  background reading, or minting a duplicate topic.
+seed:
+  campaign:
+    id: home-cheesemaking
+    name: Home Cheesemaking
+    mission: "Make fresh and brined cheeses reliably in a home kitchen."
+    topics:
+      - {path: cheesemaking.brined.halloumi, kind: skill, summary: "halloumi from curd to grill"}
+      - {path: cheesemaking.fresh.ricotta, kind: skill, summary: "whey and whole-milk ricotta"}
+      - {path: cheesemaking.aging.washed_rind, kind: skill, summary: "washed-rind care and smearing"}
+  captures:
+    - id: cap_halloumi
+      text: "Halloumi keeps its shape on the grill because the curds are cooked in near-boiling whey before salting - the heat denatures the proteins so the cheese won't melt later."
+steps:
+  - compile:
+      fn: route
+      capture_id: cap_halloumi
+      capture_text: "Halloumi keeps its shape on the grill because the curds are cooked in near-boiling whey before salting - the heat denatures the proteins so the cheese won't melt later."
+judge_rubric:
+  - {id: c1, weight: 4, question: "Is seed true — recognizing the capture as a
+      testable fact that should become a practice item now?"}
+  - {id: c2, weight: 3, question: "Does the route attach to
+      cheesemaking.brined.halloumi with campaign and path copied exactly as
+      listed?"}
+  - {id: c3, weight: 2, question: "Does the output avoid minting a near-duplicate
+      leaf (no new halloumi/melting topic)?"}
+  - {id: c4, weight: 1, question: "Does the reason name the fit (halloumi
+      technique) concisely?"}
+references:
+  good:
+    action: attach
+    campaign: home-cheesemaking
+    topic_path: cheesemaking.brined.halloumi
+    new_name: null
+    new_mission: null
+    confidence: high
+    reason: "testable halloumi mechanism fits the listed topic"
+    seed: true
+  bad:
+    action: attach
+    campaign: home-cheesemaking
+    topic_path: cheesemaking.brined.halloumi
+    new_name: null
+    new_mission: null
+    confidence: high
+    reason: "background reading about halloumi"
+    seed: false

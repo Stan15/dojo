@@ -1,0 +1,82 @@
+# Domain breadth: a PHYSICAL skill practiced through a text channel. The
+# system can only serve prompts answerable in text — so good items drill the
+# skill's decision layer (fault diagnosis, correction cues), which transfers
+# to the hands. Failure modes both ways: "go perform and report back" items
+# no text answer can satisfy, or retreating to history trivia that isn't the
+# skill at all.
+category: domain-breadth
+domain: juggling
+scenario_context: |
+  A learner working on the three-ball cascade, with real practice history
+  (drops from forward drift, uneven throw heights). Practice happens
+  through text: an item must be answerable from its prompt alone, in words.
+  Strong output: drills on the cascade's decision layer — diagnosing a
+  described fault, naming the standard correction cue, choosing what to fix
+  first — each with a gradeable text answer. Weak output: performance
+  instructions no text answer can satisfy ("juggle for 60 seconds and
+  report"), or juggling-history trivia that abandons the skill.
+seed:
+  campaign:
+    id: juggling-basics
+    name: Juggling Basics
+    mission: Run a stable three-ball cascade for a full minute.
+    strategy_profile: {difficulty: beginner, scaffolding: high}
+    topics:
+      - {path: juggling.cascade.three_ball, kind: skill, summary: "the basic cascade pattern"}
+  exercises:
+    - {id: ex_jug1, topic_path: juggling.cascade.three_ball, difficulty: beginner,
+       prompt: "You keep stepping forward to catch. What throw fault causes this?",
+       answer: "Throws are drifting forward instead of staying in the frontal plane.",
+       rubric: "- names forward drift"}
+    - {id: ex_jug2, topic_path: juggling.cascade.three_ball, difficulty: beginner,
+       prompt: "Where should each throw peak in a three-ball cascade?",
+       answer: "Around eye level, on the opposite side, inside a consistent frontal plane.",
+       rubric: "- eye-level peak - opposite side"}
+  attempts:
+    - {id: att_jug1, session_id: s1, exercise_id: ex_jug1, score: 0.7, latency_seconds: 30.0,
+       user_answer: "I'm throwing too far out in front of me."}
+    - {id: att_jug2, session_id: s1, exercise_id: ex_jug2, score: 0.3, latency_seconds: 48.0,
+       error_tag: uneven_heights,
+       user_answer: "As high as feels comfortable, different for each hand maybe."}
+steps:
+  - compile:
+      fn: generate
+      topic_path: juggling.cascade.three_ball
+      n_items: 2
+      difficulty: beginner
+judge_rubric:
+  - {id: c1, weight: 4, question: "Is every prompt answerable in text from the
+      prompt alone — no item demands physical performance or 'practice and
+      report back' as its answer?"}
+  - {id: c2, weight: 3, question: "Do the items drill the cascade's decision
+      layer (fault diagnosis, correction cues, what to fix first) rather than
+      history or trivia about juggling?"}
+  - {id: c3, weight: 2, question: "Does each item carry a gradeable answer and
+      rubric a text grader can score?"}
+  - {id: c4, weight: 1, question: "Do the items connect to the evidenced faults
+      (forward drift, uneven throw heights) at beginner level?"}
+references:
+  good:
+    items:
+      - prompt: "Mid-run, your throws get higher and higher until the pattern collapses. What is the standard correction cue, and why does it work?"
+        answer: "Fix a consistent eye-level peak height; a fixed visual target stops the creeping escalation because every throw is checked against it."
+        rubric: "- names a fixed peak-height cue\n- explains why it stabilizes the pattern"
+        skill: explain
+      - prompt: "A juggler drops because their left-hand throws peak higher than their right. Which single drill should they do first, and what does it isolate?"
+        answer: "Two-ball exchanges focusing on matching peak heights; it isolates throw consistency without the third ball's timing pressure."
+        rubric: "- picks a two-ball height drill\n- says what it isolates"
+        skill: apply
+    note: null
+    intervention: null
+  bad:
+    items:
+      - prompt: "Juggle three balls for 60 seconds right now and report how many drops you had."
+        answer: "Fewer than five drops."
+        rubric: "- reports a drop count"
+        skill: apply
+      - prompt: "In which century did toss juggling first appear in European circus programs?"
+        answer: "The 18th century."
+        rubric: "- correct century"
+        skill: recall
+    note: null
+    intervention: null

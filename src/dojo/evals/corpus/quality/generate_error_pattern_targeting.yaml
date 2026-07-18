@@ -1,0 +1,98 @@
+# Personalization from the RECENT rows alone: no insight exists yet, but the
+# attempt window repeats one error_tag (reaching for boosts instead of cuts).
+# Strong generation reads the rows and drills the pattern; weak generation
+# emits generic topic practice as if the window were empty. This is the
+# evidence-use skill one step EARLIER than insight targeting — before
+# reflection has distilled anything.
+category: personalization
+domain: audio_engineering
+scenario_context: |
+  A mixing-fundamentals learner practicing subtractive EQ. There are NO
+  insights yet, but the recent attempts repeat one pattern: three rows carry
+  error_tag "boost_first" — answers that reach for a boost where the craft
+  answer is a cut (muddiness, boxiness, masking). Strong output: three
+  exercises that put the learner at boost-vs-cut decision points (a muddy
+  mix, a harsh vocal, masking between kick and bass) so the repeated error
+  is confronted directly. Weak output: three generic EQ questions
+  (definitions, frequency trivia) that ignore what the recent rows show.
+seed:
+  campaign:
+    id: mixing-fundamentals
+    name: Mixing Fundamentals
+    mission: Mix a small band recording to a clean, balanced rough mix.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+    topics:
+      - {path: audio.eq.subtractive, kind: skill, summary: "cut-first equalization decisions"}
+  exercises:
+    - {id: ex_eq1, topic_path: audio.eq.subtractive, difficulty: intermediate,
+       prompt: "A male vocal sounds muddy against the mix. What is your first EQ move?",
+       answer: "Cut low-mid buildup around 200-400 Hz on the vocal or competing tracks.",
+       rubric: "- cut-first move in the low mids"}
+    - {id: ex_eq2, topic_path: audio.eq.subtractive, difficulty: intermediate,
+       prompt: "The acoustic guitar sounds boxy. Which EQ decision addresses boxiness?",
+       answer: "A cut in the 300-500 Hz region where boxiness lives.",
+       rubric: "- identifies a cut in the low mids"}
+    - {id: ex_eq3, topic_path: audio.eq.subtractive, difficulty: intermediate,
+       prompt: "Kick and bass are masking each other. Describe one EQ strategy to separate them.",
+       answer: "Cut each where the other's fundamental lives - carve complementary pockets.",
+       rubric: "- complementary cuts, not stacked boosts"}
+  attempts:
+    - {id: att_eq1, session_id: s1, exercise_id: ex_eq1, score: 0.3, latency_seconds: 50.0,
+       error_tag: boost_first,
+       user_answer: "Boost the presence around 5k so the vocal cuts through the mud."}
+    - {id: att_eq2, session_id: s1, exercise_id: ex_eq2, score: 0.3, latency_seconds: 55.0,
+       error_tag: boost_first,
+       user_answer: "Boost the top end to add air so it sounds less boxy."}
+    - {id: att_eq3, session_id: s2, exercise_id: ex_eq3, score: 0.3, latency_seconds: 70.0,
+       error_tag: boost_first,
+       user_answer: "Boost the kick at 60 Hz and the bass at 100 Hz so both get louder."}
+steps:
+  - compile:
+      fn: generate
+      topic_path: audio.eq.subtractive
+      n_items: 3
+      difficulty: intermediate
+judge_rubric:
+  - {id: c1, weight: 4, question: "Do the items put the learner at boost-vs-cut
+      decision points that confront the repeated boost_first error from the
+      recent attempts?"}
+  - {id: c2, weight: 3, question: "Does the output show it read the recent
+      evidence (targeting the pattern, or a note naming it) rather than
+      generating generic EQ practice?"}
+  - {id: c3, weight: 2, question: "Are the items concrete mixing situations
+      requiring a decision and short justification, not definition trivia?"}
+  - {id: c4, weight: 1, question: "Do all items stay on subtractive EQ with
+      gradeable answers and rubrics?"}
+references:
+  good:
+    items:
+      - prompt: "A snare feels thin, and your instinct is to boost 200 Hz. Name the cut-first alternative you should try before any boost, and why."
+        answer: "Cut the frequencies masking the snare's body on competing tracks (e.g. guitars around 200-400 Hz); masking, not absence, usually causes thinness."
+        rubric: "- proposes a cut before any boost\n- names masking as the cause"
+        skill: apply
+      - prompt: "The chorus turns muddy when all instruments enter. Describe your first two EQ moves, stating for each whether it is a cut or a boost."
+        answer: "Two cuts: low-mid cuts (200-400 Hz) on the densest tracks, and a high-pass on parts with no useful low end."
+        rubric: "- both moves are cuts\n- targets low-mid buildup"
+        skill: produce
+      - prompt: "A bandmate says 'just boost the vocal presence at 5k' to fix a harsh, crowded mix. Explain what a cut-first approach would do instead."
+        answer: "Cut the harsh region and the instruments crowding the vocal; boosting presence on top of a crowded mix adds harshness."
+        rubric: "- rejects the boost as first move\n- explains cuts reducing crowding"
+        skill: explain
+    note: "Recent rows repeat boost_first; these drill cut-first decisions."
+    intervention: null
+  bad:
+    items:
+      - prompt: "What frequency range is generally considered the low mids?"
+        answer: "Roughly 200-500 Hz."
+        rubric: "- correct range"
+        skill: recall
+      - prompt: "Define the difference between a shelf filter and a bell filter."
+        answer: "A shelf raises or lowers everything past a corner frequency; a bell affects a band around a center."
+        rubric: "- both filter shapes correct"
+        skill: recall
+      - prompt: "Name one common use of a high-pass filter in mixing."
+        answer: "Removing rumble or unneeded low end from non-bass tracks."
+        rubric: "- valid use named"
+        skill: recall
+    note: null
+    intervention: null

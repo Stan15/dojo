@@ -1,0 +1,57 @@
+# Meta-learning, the scope_too_broad hatch: the mission is clearly worded but
+# names an entire FIELD. Distinct from the vague-mission scenario — nothing is
+# ambiguous, it is just unboundedly large. Strong output intervenes with
+# narrowing choices; weak output confidently serves survey trivia as if a
+# field could be practiced whole.
+category: meta-learning
+domain: philosophy
+scenario_context: |
+  A campaign exists with mission "understand philosophy" and topic path
+  "philosophy". No insights, no attempts, no source, no context. Generation
+  was asked for 3 intermediate exercises on "philosophy". The mission is not
+  ambiguous — it is unboundedly broad: no tradition, era, thinker, or
+  purpose. Strong output: an intervention (zero items) whose questions offer
+  concrete NARROWING choices (which tradition or era, which thinkers or
+  problems, for what use — reading, writing, an exam) so a scoped plan can
+  follow. Weak output: three survey-trivia items (the cave, the cogito, the
+  trolley) presented as personalized practice of "philosophy".
+seed:
+  campaign:
+    id: philosophy-broad
+    name: Philosophy
+    mission: understand philosophy
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+steps:
+  - compile: {fn: generate, topic_path: philosophy, n_items: 3, difficulty: intermediate}
+judge_rubric:
+  - {id: c1, weight: 3, question: "Is the output an intervention with zero
+      exercises (items empty), rather than generated survey practice?"}
+  - {id: c2, weight: 3, question: "Do the questions offer concrete narrowing
+      choices — naming traditions, eras, thinkers, or problem areas to pick
+      among — instead of asking generically what the learner wants?"}
+  - {id: c3, weight: 2, question: "Does at least one question probe the purpose
+      or standard (reading originals, writing essays, an exam, personal
+      clarity)?"}
+  - {id: c4, weight: 1, question: "Does the reason name the field-sized scope
+      (not vagueness of wording) as the blocker?"}
+references:
+  good:
+    items: []
+    note: null
+    intervention:
+      kind: scope_too_broad
+      questions:
+        - "Which area first — ethics, epistemology, political philosophy, philosophy of mind, or a historical era?"
+        - "Any thinkers or works you specifically want to engage: Plato, Kant, Nietzsche, the Stoics?"
+        - "What is this for — reading originals, writing essays, an exam, or personal clarity?"
+      reason: "philosophy is a whole field; a scoped slice must be chosen before practice can mean anything"
+  bad:
+    items:
+      - {prompt: "Summarize Plato's allegory of the cave.", answer: "Prisoners mistake shadows for reality; the philosopher escapes to see the true forms.",
+         rubric: "- shadows vs reality - the ascent", skill: explain}
+      - {prompt: "What does Descartes' cogito establish?", answer: "That the thinking self indubitably exists: I think, therefore I am.",
+         rubric: "- doubt survives itself - existence of the thinker", skill: recall}
+      - {prompt: "State the trolley problem in one sentence.", answer: "Whether to divert a runaway trolley to kill one person instead of five.",
+         rubric: "- correct dilemma", skill: recall}
+    note: null
+    intervention: null

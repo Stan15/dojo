@@ -1,0 +1,77 @@
+# Diagnostic calibration must be anchored to THIS mission, not generic
+# study-habits surveying. Failure mode: the mission (a dated exam, a specific
+# jurisdiction) vanishes and the diagnostic becomes a reusable learning-style
+# questionnaire that calibrates nothing the plan can use.
+category: calibration
+domain: driving_theory
+scenario_context: |
+  New campaign: pass the German car driving-theory exam, first try, in six
+  weeks. No prior evidence; the diagnostic should calibrate before practice.
+  Strong output: short, low-pressure questions anchored to THIS mission —
+  prior exposure to German road rules specifically, driving experience
+  elsewhere (rules transfer partially), the exam timeline/language, and how
+  they'd like to practice. Weak output: a generic study-habits survey
+  (favorite media, time of day, note-taking style) that could precede any
+  campaign whatsoever and pins down nothing about this learner's distance
+  from this exam.
+seed:
+  campaign:
+    id: german-driving-theory
+    name: German Driving Theory
+    mission: Pass the German car driving-theory exam on the first attempt, six weeks from now.
+    strategy_profile: {difficulty: beginner, scaffolding: high}
+steps:
+  - compile: {fn: diagnostic, topic_path: driving_theory.diagnostic, n_items: 4}
+judge_rubric:
+  - {id: c1, weight: 4, question: "Are the questions anchored to this specific
+      mission (German road rules, the theory exam, its timeline) rather than
+      generic study-habits questions that fit any campaign?"}
+  - {id: c2, weight: 3, question: "Do the questions span at least three distinct
+      calibration axes (current ability, prior exposure, goal specifics,
+      preferred practice)?"}
+  - {id: c3, weight: 2, question: "Are all prompts short, low-pressure diagnostic
+      questions (skill diagnostic, null answer/rubric) answerable in one
+      sentence, not a graded quiz?"}
+  - {id: c4, weight: 1, question: "Does at least one question probe transferable
+      prior experience (driving or traffic rules learned elsewhere)?"}
+references:
+  good:
+    items:
+      - prompt: "Have you studied any German traffic rules before, or is this your first contact with them?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "Do you already drive in another country? If so, roughly how long?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "Is your exam date fixed within the six weeks, and will you take it in German or English?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "Would you rather drill official-style exam questions, or build up rule by rule first?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+    note: null
+    intervention: null
+  bad:
+    items:
+      - prompt: "Do you prefer learning from videos, books, or podcasts?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "Are you more of a morning or an evening learner?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "How do you usually take notes when studying something new?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "On a scale of 1-10, how motivated are you feeling about this goal?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+    note: null
+    intervention: null

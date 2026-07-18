@@ -1,0 +1,83 @@
+# Encoding-stage CONTROL: the topic has real graded history — the learner has
+# met this material. Strong generation serves normal retrieval practice; weak
+# generation burns a slot re-presenting known material as a study card
+# (present-move over-application: the encoding stage is for first contact,
+# and a control scenario is what keeps the ratchet honest about that).
+category: encoding
+domain: morse_code
+scenario_context: |
+  A Morse-code learner with real practice history on morse.letters.core:
+  multiple graded attempts, mixed scores, clearly past first contact.
+  Generation was asked for 2 intermediate items. Strong output: two normal
+  retrieval/application items (decode, encode, timing decisions) with no
+  present items — this learner needs practice, not introduction. Weak
+  output: a skill "present" study card re-showing the letter table the
+  learner demonstrably already practices, wasting an encoding slot on
+  encoded material.
+seed:
+  campaign:
+    id: morse-code
+    name: Morse Code
+    mission: Copy and send common words in Morse at conversational beginner speed.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+    topics:
+      - {path: morse.letters.core, kind: skill, summary: "the common letters by sound pattern"}
+  exercises:
+    - {id: ex_m1, topic_path: morse.letters.core, difficulty: intermediate,
+       prompt: "Decode: .... . .-.. .-.. ---", answer: "HELLO", rubric: "- correct word"}
+    - {id: ex_m2, topic_path: morse.letters.core, difficulty: intermediate,
+       prompt: "Encode the word CAT in Morse.", answer: "-.-. .- -", rubric: "- three correct patterns"}
+    - {id: ex_m3, topic_path: morse.letters.core, difficulty: intermediate,
+       prompt: "Which letters are easily confused with S (...) at speed?", answer: "H (....) and I (..) - same element, different counts.",
+       rubric: "- names a dot-count neighbor"}
+  attempts:
+    - {id: att_m1, session_id: s1, exercise_id: ex_m1, score: 1.0, latency_seconds: 20.0,
+       user_answer: "HELLO"}
+    - {id: att_m2, session_id: s1, exercise_id: ex_m2, score: 0.7, latency_seconds: 40.0,
+       user_answer: "-.-. .- - I think, C is the long one"}
+    - {id: att_m3, session_id: s2, exercise_id: ex_m3, score: 0.3, latency_seconds: 50.0,
+       error_tag: dot_count,
+       user_answer: "maybe O? not sure which ones have three dots"}
+steps:
+  - compile:
+      fn: generate
+      topic_path: morse.letters.core
+      n_items: 2
+      difficulty: intermediate
+judge_rubric:
+  - {id: c1, weight: 4, question: "Does the output contain ZERO skill-'present'
+      items, since the attempt history shows this material is already being
+      practiced?"}
+  - {id: c2, weight: 3, question: "Are both items retrieval or application
+      practice (decoding, encoding, discriminating similar letters) rather than
+      study cards or introductions?"}
+  - {id: c3, weight: 2, question: "Do the items respond to the evidence (e.g.
+      the dot-count confusion in the recent rows) or otherwise practice at the
+      demonstrated level?"}
+  - {id: c4, weight: 1, question: "Is every prompt self-contained with a
+      gradeable answer and rubric?"}
+references:
+  good:
+    items:
+      - prompt: "Decode this and name the one letter pair you had to discriminate by count: ... .... .. .--."
+        answer: "SHIP - S (...) versus H (....) is the count discrimination."
+        rubric: "- correct word\n- names the S/H count pair"
+        skill: apply
+      - prompt: "Encode the word SHE, then say which of its letters differ only in element count."
+        answer: "... .... . - S and H differ only in dot count."
+        rubric: "- correct encoding\n- names S/H"
+        skill: produce
+    note: null
+    intervention: null
+  bad:
+    items:
+      - prompt: "Study card - the core Morse letters you will use most. Review them before practicing."
+        answer: "E . , T - , A .- , N -. , I .. , M -- , S ... , H .... , O ---"
+        rubric: null
+        skill: present
+      - prompt: "From the table you just reviewed: what is the pattern for A?"
+        answer: ".-"
+        rubric: "- correct pattern"
+        skill: recall
+    note: null
+    intervention: null

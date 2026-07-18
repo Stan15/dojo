@@ -1,0 +1,62 @@
+# The recall/skill marking feeds the two scheduling lanes (ADR 012) at the
+# moment the plan is born: facts that must be memorized verbatim go to the
+# FSRS recall lane; judgment performed in novel contexts goes to the
+# topic-scheduled skill lane. Failure mode: lane collapse — everything marked
+# "skill", so safety-critical facts never enter verbatim repetition.
+category: planning
+domain: mushroom_foraging
+scenario_context: |
+  The goal: "learn to confidently identify the five common edible mushrooms
+  where I live and always rule out their toxic look-alikes". This mixes two
+  kinds of material: hard facts to memorize verbatim (each species' key
+  features, each toxic look-alike pair and its tells) and a judgment skill
+  (deciding, for a described specimen, edible or not — in novel contexts).
+  Strong output: species features and look-alike tells marked "recall";
+  identification decisions marked "skill"; small honest scope; phases that
+  drill facts before decisions. Weak output: every topic marked "skill" (or
+  everything "recall") — collapsing the two lanes so the safety-critical
+  facts never get verbatim repetition, or the decision practice never gets
+  novel contexts.
+seed:
+  campaign:
+    id: placeholder
+    name: placeholder
+    mission: placeholder
+steps:
+  - compile:
+      fn: plan
+      goal: "learn to confidently identify the five common edible mushrooms where I live and always rule out their toxic look-alikes"
+judge_rubric:
+  - {id: c1, weight: 4, question: "Are the fact-heavy topics (species key
+      features, toxic look-alike tells) marked kind \"recall\"?"}
+  - {id: c2, weight: 3, question: "Is the identification-decision work marked
+      kind \"skill\" (performed on novel described specimens), so the plan uses
+      both lanes rather than one?"}
+  - {id: c3, weight: 2, question: "Is the scope small and honest (roughly 2-4
+      topics), matching the five-species goal without a mycology survey?"}
+  - {id: c4, weight: 1, question: "Do the phases drill the recall material
+      before or alongside the decision practice, with sensible criteria?"}
+references:
+  good:
+    mission: "Identify the five target edible species with confidence, and always rule out their toxic look-alikes before anything is eaten."
+    name: "Edible Mushroom ID"
+    topics:
+      - {path: foraging.species.key_features, kind: recall, summary: "each species' defining field marks"}
+      - {path: foraging.species.toxic_lookalikes, kind: recall, summary: "look-alike pairs and their tells"}
+      - {path: foraging.id.field_decisions, kind: skill, summary: "edible-or-not calls on described specimens"}
+    phases:
+      - {phase: 1, topics: [foraging.species.key_features], criteria: {min_attempts: 5, min_accuracy: 0.0}, focus: "calibration"}
+      - {phase: 2, topics: [foraging.species.key_features, foraging.species.toxic_lookalikes], criteria: {min_attempts: 15, min_accuracy: 0.9}, focus: "verbatim species facts and tells"}
+      - {phase: 3, topics: [foraging.id.field_decisions, foraging.species.toxic_lookalikes], criteria: {min_attempts: 12, min_accuracy: 0.8}, focus: "decisions on novel specimen descriptions"}
+    refinement_questions: ["Which region are you foraging in, and which five species?"]
+  bad:
+    mission: "Become skilled at mushroom foraging and identification in the field."
+    name: "Mushroom Foraging"
+    topics:
+      - {path: foraging.species.key_features, kind: skill, summary: "getting a feel for species"}
+      - {path: foraging.species.toxic_lookalikes, kind: skill, summary: "sensing when something is off"}
+      - {path: foraging.id.field_decisions, kind: skill, summary: "field identification practice"}
+    phases:
+      - {phase: 1, topics: [foraging.species.key_features], criteria: {min_attempts: 5, min_accuracy: 0.0}, focus: "calibration"}
+      - {phase: 2, topics: [foraging.species.key_features, foraging.species.toxic_lookalikes, foraging.id.field_decisions], criteria: {min_attempts: 10, min_accuracy: 0.7}, focus: "holistic identification feel"}
+    refinement_questions: []

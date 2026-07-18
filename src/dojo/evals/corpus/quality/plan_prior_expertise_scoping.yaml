@@ -1,0 +1,67 @@
+# Planning must honor DECLARED prior expertise: an expert asking for a narrow
+# extension gets a plan scoped to the gap, not the field's beginner
+# curriculum. Failure mode: level-blindness — the goal's own "I already have
+# full fluency" is overridden by a default survey-from-zero plan.
+category: planning
+domain: legal_translation
+scenario_context: |
+  The goal: "I'm a professional Spanish-English translator with full general
+  fluency; I need to get competent specifically in Mexican legal-contract
+  vocabulary and boilerplate formulas for my new job." Strong output: a
+  small plan scoped entirely to the declared gap — legal-contract
+  terminology (recall), standard boilerplate formulas (recall), reading real
+  contract clauses (skill) — with a mission honest about the narrow scope
+  and at most a couple of sharpening questions (which contract types,
+  deadline). Weak output: a general Spanish curriculum (grammar review,
+  conversation practice, general vocabulary) wrapped around a professional
+  who explicitly declared full general fluency.
+seed:
+  campaign:
+    id: placeholder
+    name: placeholder
+    mission: placeholder
+steps:
+  - compile:
+      fn: plan
+      goal: "I'm a professional Spanish-English translator with full general fluency; I need to get competent specifically in Mexican legal-contract vocabulary and boilerplate formulas for my new job."
+judge_rubric:
+  - {id: c1, weight: 4, question: "Is the plan scoped to the declared gap only
+      (legal-contract vocabulary, boilerplate, contract reading), with no
+      general-Spanish topics like grammar review or conversation?"}
+  - {id: c2, weight: 3, question: "Does the plan treat the learner as the expert
+      they declared themselves to be (no beginner phases, no
+      basics-first ramp)?"}
+  - {id: c3, weight: 2, question: "Is the topic tree small (roughly 2-5 topics)
+      with terminology/formulas marked recall and contract-reading work marked
+      skill?"}
+  - {id: c4, weight: 1, question: "If refinement questions appear, do they sharpen
+      this narrow scope (contract types, jurisdiction, deadline) rather than
+      probe general ability?"}
+references:
+  good:
+    mission: "Read and translate Mexican legal contracts confidently: command the standard vocabulary and boilerplate formulas of the genre."
+    name: "Mexican Legal Spanish"
+    topics:
+      - {path: legal_spanish.contracts.terminology, kind: recall, summary: "core contract terms and their English equivalents"}
+      - {path: legal_spanish.contracts.boilerplate, kind: recall, summary: "standard clause formulas and set phrases"}
+      - {path: legal_spanish.contracts.clause_reading, kind: skill, summary: "parsing and rendering real clauses"}
+    phases:
+      - {phase: 1, topics: [legal_spanish.contracts.terminology], criteria: {min_attempts: 5, min_accuracy: 0.0}, focus: "calibration on real contract language"}
+      - {phase: 2, topics: [legal_spanish.contracts.terminology, legal_spanish.contracts.boilerplate], criteria: {min_attempts: 12, min_accuracy: 0.8}, focus: "vocabulary and formula fluency"}
+      - {phase: 3, topics: [legal_spanish.contracts.clause_reading, legal_spanish.contracts.boilerplate], criteria: {min_attempts: 10, min_accuracy: 0.7}, focus: "full clauses under working conditions"}
+    refinement_questions: ["Which contract types first: employment, real estate, or commercial?"]
+  bad:
+    mission: "Build strong all-round Spanish skills from grammar to conversation, with some legal vocabulary along the way."
+    name: "Spanish Mastery Path"
+    topics:
+      - {path: spanish.grammar.review, kind: skill, summary: "refresh core grammar"}
+      - {path: spanish.vocabulary.general, kind: recall, summary: "high-frequency vocabulary"}
+      - {path: spanish.conversation.practice, kind: skill, summary: "everyday speaking confidence"}
+      - {path: spanish.culture.mexico, kind: recall, summary: "Mexican culture and customs"}
+      - {path: spanish.legal.terms, kind: recall, summary: "some legal words"}
+    phases:
+      - {phase: 1, topics: [spanish.grammar.review], criteria: {min_attempts: 5, min_accuracy: 0.0}, focus: "calibration"}
+      - {phase: 2, topics: [spanish.grammar.review, spanish.vocabulary.general], criteria: {min_attempts: 12, min_accuracy: 0.7}, focus: "foundations"}
+      - {phase: 3, topics: [spanish.conversation.practice, spanish.culture.mexico], criteria: {min_attempts: 12, min_accuracy: 0.7}, focus: "fluency and context"}
+      - {phase: 4, topics: [spanish.legal.terms], criteria: {min_attempts: 8, min_accuracy: 0.7}, focus: "legal vocabulary"}
+    refinement_questions: ["How would you rate your current Spanish level overall?"]

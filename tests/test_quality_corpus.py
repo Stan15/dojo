@@ -41,21 +41,26 @@ class TestCorpusCoverage:
     breadth is a ratcheted invariant, not an aspiration. These floors may only
     ever go UP; raising them is how the corpus grows deliberately."""
 
-    MIN_TOTAL = 64
+    MIN_TOTAL = 77
     MIN_PER_CATEGORY = {
-        "personalization": 5,
-        "calibration": 15,  # +3 2026-07-11: insight-resolution breadth (mixed adjudication, gloomy-window resolve, premature-resolve control)
-        "planning": 7,
-        "grading-integrity": 8,  # +2 ADR 017: knowledge_gap honest/adversarial
-        "meta-learning": 3,
-        "domain-breadth": 4,
-        "change-authority": 3,
-        "routing": 5,
-        "robustness": 10,
-        "encoding": 2,   # ADR 017: present-before-probing, history-sighted probes
-        "care-exit": 2,  # ADR 017 §6: retirement on voice / never on phase-pass
+        # +13 2026-07-18 (release-gate remedy): every category +1 (routing and
+        # planning +2), thin task kinds lifted most (diagnostic, goal_route,
+        # route, plan), with opposite-branch controls for behaviors the corpus
+        # only rewarded one way (propose-new, minimal restructure, no-present,
+        # no-retirement). No holdout-informed targeting — blindness is total.
+        "personalization": 6,
+        "calibration": 16,  # +3 2026-07-11: insight-resolution breadth (mixed adjudication, gloomy-window resolve, premature-resolve control)
+        "planning": 9,
+        "grading-integrity": 9,  # +2 ADR 017: knowledge_gap honest/adversarial
+        "meta-learning": 4,
+        "domain-breadth": 5,
+        "change-authority": 4,
+        "routing": 7,
+        "robustness": 11,
+        "encoding": 3,   # ADR 017: present-before-probing, history-sighted probes; +control
+        "care-exit": 3,  # ADR 017 §6: retirement on voice / never on phase-pass / never as escape
     }
-    MIN_DISTINCT_DOMAINS = 14
+    MIN_DISTINCT_DOMAINS = 20
 
     def _scenarios(self) -> list[dict]:
         return [load(p) for p in QUALITY_SCENARIOS]
