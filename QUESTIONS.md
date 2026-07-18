@@ -214,10 +214,10 @@ _Statuses: `[x]` shipped · `[~]` standing/in-progress · `[?]` blocked-on-owner
    with Anki A1 so the r/Anki post rides the same week (growth §6: the
    pulse is deliberately last; ~one shot per 12-18 months). Heuristic: when
    someone you didn't recruit files an issue or posts a scorecard, launch.
-   Repo DESCRIPTION (dev-skewed surface, good home for the term), proposed
-   copy: "Your AI can teach you anything. Dojo makes it stick — a
-   deterministic pedagogy harness for whatever model you already run."
-   **Default: I set it via gh on your word; nothing published before Q7/#3.**
+   Repo DESCRIPTION → **SET 2026-07-18 on your word** (gh repo edit):
+   "Your AI can teach you anything. Dojo makes it stick — a deterministic
+   pedagogy harness for whatever model you already run." Same phrase now
+   spans README capstone · blueprint §2 · repo card · your future HN post.
 
 7. **Growth strategy sign-off** — full researched strategy delivered at your
    direction: `docs/growth-strategy.md`. Headline: retention is already the
