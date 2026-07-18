@@ -51,6 +51,13 @@ Mandatory companions to any edit here:
 8. **Anchors are reasoning-neutral** (owner ruling 2026-07-11): "your final
    output is exactly this JSON (anything before it is ignored)" — never
    invite deliberation, never suppress it.
+9. **Example values anchor LENGTH and FORMAT, not just presence —
+   demonstrate, never describe.** A journal value reading "2-4 sentences:
+   what this cycle showed" made 4B models write 2-4 sentences into a
+   30-WORD-capped field: reflect collapsed 11/20 → 0/20 (armJ2 battery).
+   The example IS the instruction: skeleton values must be short, realistic,
+   cap-compliant text a model can safely imitate (and where a format is
+   validated — dotted keys — one example op must demonstrate it).
 
 ## Before you commit
 
