@@ -195,10 +195,17 @@ local and asleep until called.
 
 ## Benchmark your model
 
-How well does *your* model run dojo's pedagogy?
+Under the hood there are two AI jobs, and they don't have to be the same
+brain. One **drives**: your everyday agent coordinating the whole flow
+(that's the installed skill). One **fulfills**: writing exercises, grading
+answers, reflecting (that's `model.command`). A sweet setup: your everyday
+agent drives, and a small local model does the routine fulfillment —
+private, and free after the download. Benchmark exactly the side you plan
+to use:
 
 ```bash
-dojo benchmark -d "codex exec" --detail
+dojo benchmark -d "codex exec" --detail       # fulfilling: how well does it run dojo's pedagogy?
+dojo benchmark --skill -d "<agent command>"   # driving: can it run whole workflows through the skill?
 ```
 
 ```text
@@ -237,6 +244,20 @@ always get *novel* exercises. The scheduler is pure, deterministic code —
 no model ever decides what you practice. AI work happens through budgeted,
 schema-validated task files (3–7 KB; your context window and bill are
 treated as precious). Start at the [system blueprint](docs/design/blueprint.md).
+
+## What dojo is not
+
+- **Not another engagement app.** No streaks, no notifications, no
+  solicitation — ever, as policy.
+- **Not a cloud service.** No accounts, no telemetry, no phone-home. Your
+  data is markdown on your disk, and leaving is `dojo export`.
+- **Not an AI with the keys.** Models propose; deterministic code and your
+  consent dispose. No model ever schedules your reviews or edits your data
+  directly.
+- **Not a content library.** Dojo has no courses to sell you — it turns
+  *your* goals and *your* material into practice.
+- **Not a second subscription.** No API keys, no bundled model bill — the
+  intelligence is whatever you already run.
 
 ## Status
 
