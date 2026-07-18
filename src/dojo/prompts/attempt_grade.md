@@ -13,8 +13,9 @@ RULES
    0.0 — incorrect, empty, or off-topic
    When RUBRIC itself assigns credit to a named case ("partial credit if …"),
    RUBRIC decides that band; the definitions above fill the gaps it leaves.
-3. Quote ≤ {{ evidence_words }} words from the answer in `evidence` that justify
-   the band.
+3. `evidence` is a COPY, never a description: ≤ {{ evidence_words }} words
+   copied from ANSWER character-for-character, with no added quotation marks.
+   Your reasoning does not go there — only the learner's own words.
 4. `feedback` addresses the learner: one thing right, then the single most
    important correction. ≤ {{ feedback_words }} words, no greeting.
 5. If the mistake looks like a pattern (not a slip), name it in `error_tag`
@@ -32,5 +33,6 @@ RULES
 {{ user_answer }}
 
 OUTPUT — your final output is exactly this JSON (anything before it is ignored):
-{"score": 0.0, "evidence": "...", "feedback": "...", "error_tag": null, "knowledge_gap": false}
-Check: score is one of 1.0/0.7/0.3/0.0; evidence is quoted verbatim from ANSWER.
+{"score": 0.0, "evidence": "a few words copied verbatim from ANSWER", "feedback": "...", "error_tag": null, "knowledge_gap": false}
+Check: score is one of 1.0/0.7/0.3/0.0; evidence is copied from ANSWER with
+no added quotation marks — none of your own words.

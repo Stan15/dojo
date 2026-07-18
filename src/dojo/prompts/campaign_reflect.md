@@ -74,19 +74,23 @@ RULES
 OUTPUT — your final output is exactly this JSON (anything before it is ignored):
 {
   "insight_updates": [
-    {"op": "create|update|resolve", "id": null, "key": "dotted.lowercase.label",
-     "text": "...", "evidence": ["att_id"], "reason": "..."}
+    {"op": "update", "id": "the insight's id", "key": null, "text": "...",
+     "evidence": ["att_id"], "reason": "..."}
   ],
-  "strategy": null,      // or {"difficulty": "beginner|intermediate|advanced",
-                         //     "scaffolding": "high|medium|low", "reason": "..."}
+  "strategy": null,
   "plan_revision": null,
   "questions": [],
-  "topic_retirements": [],  // rule 5 only: [{"path": "a.b", "reason": "...", "evidence": []}]
+  "topic_retirements": [],
   "journal": "..."
 }
-A non-null plan_revision carries the FULL phase list (never a diff), each
-phase shaped exactly: {"phases": [{"topics": ["a.b"], "criteria":
-{"min_attempts": 5, "min_accuracy": 0.6}, "focus": "..."}],
+Field rules: "op" is one word — create, update, or resolve. create needs key
+(dotted lowercase label) + text + evidence; update needs id + text; resolve
+needs id. A non-null strategy is {"difficulty": one of beginner/intermediate/
+advanced, "scaffolding": one of high/medium/low, "reason": "..."} with at
+least one dial set. A topic retirement (rule 5 only) is {"path": "a.b",
+"reason": "...", "evidence": []}. A non-null plan_revision carries the FULL
+phase list (never a diff), each phase shaped exactly: {"phases": [{"topics":
+["a.b"], "criteria": {"min_attempts": 5, "min_accuracy": 0.6}, "focus": "..."}],
 "evidence": ["att_id"], "reason": "..."} — phases are numbered by position.
 Check: nulls wherever nothing changed; ≤ {{ max_new_insights }} creates (each with
 a key); ≤ {{ max_questions }} questions; every cited attempt id (insights AND plan)

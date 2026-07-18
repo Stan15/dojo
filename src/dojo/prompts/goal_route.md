@@ -20,8 +20,10 @@ RULES
 {{ campaign_lines_and_topic_paths }}
 
 OUTPUT — your final output is exactly this JSON (anything before it is ignored):
-{"action": "attach|new_topic|propose_campaign", "campaign": null,
+{"action": "attach", "campaign": null,
  "topic_path": null, "new_name": null, "new_mission": null,
- "confidence": "high|low", "reason": "≤ {{ reason_words }} words", "seed": false}
+ "confidence": "high", "reason": "≤ {{ reason_words }} words", "seed": false}
+Field rules: "action" is one word — attach, new_topic, or propose_campaign.
+"confidence" is high or low.
 Check: campaign and topic_path copied verbatim from REGISTRY (only a new_topic
 leaf or a proposed campaign may be new text); reason ≤ {{ reason_words }} words.
