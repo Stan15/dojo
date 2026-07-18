@@ -348,13 +348,34 @@ committed work, not proposals awaiting an answer. Item numbering is stable
       (292a0e3), OPEN-PROBLEMS 16-18, QUESTIONS 6f (vault export) /
       6g (capture core-need: why→generation + planned-campaign-from-capture,
       owner-gated) / 6h (quit-as-evidence design).
-   d. **BLOCKED on owner: the codex validation run** (permission classifier
-      requires explicit named authorization). Command, from repo root:
-      `DOJO_EVAL_DRIVER="codex exec --skip-git-repo-check -s read-only"
-      python -m pytest -m eval -q` — bootstraps the 15 new visible floors,
-      measures the 7 pending prompt fixes, ratchet updates land in that
-      commit. AFTER it reads healthy, the owner re-triggers the holdout
-      release gate (never this session).
+   d. ✓ **Codex validation run DONE 2026-07-18 (owner-authorized)**: 77/83
+      pass, mean 0.833→0.855; ratchets committed (643d9ec — 23 floors
+      bootstrapped, 15 raised). The remedy iteration MEASURABLY landed:
+      binge-discount 0.0→1.0, learner-language 0.1→0.8, single-fact-goal
+      0.44→1.0; partial voice-revision 0.33→0.44; unmoved:
+      downward-calibration 0.3, grade_learner_language 0.67, diagnostic
+      pair ~0.6. **FIVE STABLE DROPS vs pre-iteration floors (failed BOTH
+      samples; floors NOT lowered, multi-sample rule):**
+      inferred_restructure_probe 0.89→0.67/0.67 · learning_loop_chain
+      0.75→?/0.62 · mastery_resolution 1.0→?/0.88 · plan_extend_not_
+      duplicate 0.67→?/— · reflect_mixed_signals 1.0→?/0.67 (sample-2
+      verdict: difficulty moved when the rubric wants dials held — smells
+      like the floundering-both-dials wording era, NOT diagnosed).
+      verbatim_poetry_recall recovered (0.5→1.0, noise).
+      present_before_probing scored 0 once — floorless, undiagnosed.
+      Both runs' full traces are in evals/reports/ (local).
+      **NEXT (fresh session with prompt authority — this one is
+      disqualified, 10f): diagnose the five drops + the three unmoved weak
+      floors from the traces, iterate on visible evidence, THEN the owner
+      re-triggers the holdout release gate.**
+   d2. **SKILL behavioral tier shipped (7551ad7; owner-approved), first
+      REAL run still owed**: harness + 6 learner-speak workflow scenarios +
+      deterministic checks + judge rubrics + `dojo benchmark --skill` are
+      in, proven with scripted drivers only. Next spend (owner-authorized):
+      pick a driver-agent command with shell access, run `-m eval_skill`
+      once to smoke the battery and bootstrap deterministic floors; judged
+      rubric floors ride the next authorized judge spend (design doc
+      §Recommendation).
    e. The uncommitted `evals/baselines/*__holdout*.json` modification left
       by the disqualified gate session remains untouched and unread by this
       session — owner dispositions it (commit or discard).
