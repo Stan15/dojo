@@ -374,3 +374,18 @@ keeps `pipx install --force` from ever seeing real state.
   the churn and became the next arm (W2 coercion). Corollary: kind-level
   variance bands measured on stable kinds understate unstable ones — the
   reflect kind's churn was format-lottery variance, not model instability.
+- **Caliber-class verdicts EXPIRE — re-survey the model landscape before
+  trusting one (2026-07-19, sub-4B bake-off).** The sub-4B line ("~6-14%,
+  capability floor") was true of the models we happened to have pulled and
+  false of the class: a deep-research pass + 7-model bake-off found
+  lfm2.5-thinking:1.2b landing 51% single-shot at 730MB — 5× the old
+  representative at smaller footprint, with near-4B plan (11/13) and
+  diagnostic (7/7) cells. Two corollaries measured the same day: (a)
+  vendor families are wildly non-uniform below 4B (qwen3.5: 59% at 4b,
+  23% at 2b, 10% at 0.8b; granite4:1b bf16 57% but its 1.5B-h-q8 sibling
+  30%), so interpolating a family's small end from its big end is
+  invalid; (b) per-kind profiles differ MORE than totals (lfm-instruct:
+  best route in table, 0/27 reflect; lfm-thinking: 85% plan, 0/11 route)
+  — a class representative is per-KIND, and mixed-model deployments are
+  a real design option the compiler's per-caliber fragments already
+  anticipate.
