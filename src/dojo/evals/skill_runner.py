@@ -92,20 +92,83 @@ def driver_prompt(user_message: str, persona: Optional[str] = None) -> str:
     )
 
 
+_FRESH_EXCLUDE = {"dojo", "pipx"}
+
+
+def _fresh_machine_env(workdir: Path, base_env: Optional[dict] = None) -> dict[str, str]:
+    """An environment where `dojo` genuinely does not resolve — the
+    fresh-machine premise for bootstrap scenarios (SKILL.md's install line).
+
+    Both isolations are shadow-shaped (replace the dir, re-link everything
+    except the excluded names) because wholesale removal breaks bystanders:
+
+    - PATH: every entry carrying `dojo` (or `pipx`) is replaced by ONE
+      shadow dir of first-wins symlinks to everything else in it — the
+      driver agent's own binary often lives BESIDE dojo (~/.local/bin), so
+      dropping the entry would kill the driver. pipx is scrubbed with dojo:
+      under it the install path is machine-dependent, and `pipx install
+      --force` must never be able to touch real pipx state; without it
+      install.sh deterministically takes its venv route.
+    - HOME: install.sh writes $HOME/.dojo and $HOME/.local/bin, and its
+      rollback is `rm -rf` — against the real home that could clobber the
+      owner's live install. The sandbox home re-links every other top-level
+      entry (agent auth/config like ~/.claude keep working) but never
+      `.dojo` or `.local`, so every install write lands in the sandbox.
+    """
+    env = dict(base_env if base_env is not None else os.environ)
+    shadow = workdir / "fresh-bin"
+    shadow.mkdir(parents=True, exist_ok=True)
+    entries: list[str] = []
+    for entry in env.get("PATH", "").split(os.pathsep):
+        p = Path(entry) if entry else None
+        try:
+            names = {c.name for c in p.iterdir()} if p else set()
+        except OSError:
+            names = set()
+        if names & _FRESH_EXCLUDE:
+            for child in sorted(p.iterdir()):
+                if child.name in _FRESH_EXCLUDE:
+                    continue
+                link = shadow / child.name
+                if not link.exists() and not link.is_symlink():
+                    link.symlink_to(child)
+            if str(shadow) not in entries:
+                entries.append(str(shadow))
+        elif entry:
+            entries.append(entry)
+    home = workdir / "home"
+    home.mkdir(parents=True, exist_ok=True)
+    real_home = Path(env.get("HOME", str(Path.home())))
+    if real_home.is_dir():
+        for child in sorted(real_home.iterdir()):
+            if child.name in {".dojo", ".local"}:
+                continue
+            link = home / child.name
+            if not link.exists() and not link.is_symlink():
+                link.symlink_to(child)
+    env["PATH"] = os.pathsep.join(entries)
+    env["HOME"] = str(home)
+    return env
+
+
 def run_driver(command: str, prompt: str, *, store_root: Path, workdir: Path,
-               timeout: int) -> str:
+               timeout: int, fresh_machine: bool = False) -> str:
     """Runs the driver agent with DOJO_HOME sandboxed. Returns its full
     stdout (the transcript the judged layer reads). The driver never sees
     the real store: DOJO_HOME is read at dojo's import, and each dojo
     invocation is a fresh subprocess of the agent's shell."""
     import sys
-    env = {
-        **os.environ,
-        "DOJO_HOME": str(store_root),
-        # The driver's shell must resolve `dojo` — the running interpreter's
-        # bin dir carries the console script when running from the venv.
-        "PATH": f"{Path(sys.executable).parent}{os.pathsep}{os.environ.get('PATH', '')}",
-    }
+    if fresh_machine:
+        env = _fresh_machine_env(workdir)
+    else:
+        env = {
+            **os.environ,
+            # The driver's shell must resolve `dojo` — the running
+            # interpreter's bin dir carries the console script when running
+            # from the venv.
+            "PATH": f"{Path(sys.executable).parent}{os.pathsep}{os.environ.get('PATH', '')}",
+        }
+    env["DOJO_HOME"] = str(store_root)
     proc = subprocess.run(
         shlex.split(command) + [prompt],
         capture_output=True, text=True, timeout=timeout, env=env, cwd=workdir,
@@ -193,7 +256,21 @@ def _check_doctor_clean(store, transcript, params):
     return not structural, f"structural issues: {structural[:3] or 'none'}"
 
 
+def _check_dojo_binary_installed(store, transcript, params):
+    """Bootstrap (fresh_machine scenarios): an executable `dojo` now exists
+    under the sandbox home — install.sh's two in-home landing spots. PATH
+    wiring afterwards is the agent's problem to solve (install.sh warns
+    about it out loud); WHERE the binary landed is the deterministic fact."""
+    home = store.engine.dojo_dir.parent.parent / "home"
+    spots = [home / ".local" / "bin" / "dojo",
+             home / ".dojo" / "venv" / "bin" / "dojo"]
+    found = [str(p.relative_to(home)) for p in spots
+             if p.exists() and os.access(p, os.X_OK)]
+    return bool(found), f"installed in sandbox home: {found or 'nowhere'}"
+
+
 CHECKS: dict[str, Callable] = {
+    "dojo_binary_installed": _check_dojo_binary_installed,
     "campaign_with_confirmed_plan": _check_campaign_with_confirmed_plan,
     "campaign_in_diagnostic_mode": _check_campaign_in_diagnostic_mode,
     "capture_filed": _check_capture_filed,
@@ -222,6 +299,7 @@ def run_skill_scenario(scenario: dict, workdir: Path, driver: str,
     transcript = run_driver(
         driver, prompt, store_root=store.engine.dojo_dir, workdir=workdir,
         timeout=int(scenario.get("timeout", timeout)),
+        fresh_machine=bool(scenario.get("fresh_machine")),
     )
     # Fresh handle: the driver's subprocesses wrote through their own engines.
     store = DojoStore(store.engine.dojo_dir)

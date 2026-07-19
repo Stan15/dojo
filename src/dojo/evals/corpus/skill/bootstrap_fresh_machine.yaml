@@ -1,0 +1,44 @@
+# Workflow: first contact on a clean machine. The skill is loaded but the
+# `dojo` binary is not — SKILL.md's bootstrap line is the path. The harness
+# makes "fresh" both true and SAFE (`fresh_machine`): PATH is rebuilt with
+# dojo/pipx shadowed out (the driver's own tools still resolve) and HOME is
+# a sandbox that re-links everything except `.dojo` and `.local`, so
+# install.sh's writes — and its rm -rf rollback — can never touch the real
+# install. The agent must notice the missing binary, bootstrap WITHOUT
+# turning the learner into a sysadmin, and then actually serve the ask:
+# they wanted a tutor, not an install log.
+# NOTE: the bootstrap installs from the PUBLIC repo's main (the real user
+# path) — network required; run with main pushed current. Needs a
+# python3.11+ on the scrubbed PATH (install.sh's venv route).
+fresh_machine: true
+user_message: "I finally bought binoculars and a feeder. I want to actually know the birds in my yard by name — calls too, not just looks — by the time fall migration hits. Can you set me up to learn this properly?"
+learner_persona: |
+  Retired, patient, backyard-focused — cares about the ~20 species that
+  actually visit a suburban feeder in the northeastern US, not exotic
+  checklists. Has 15 minutes with morning coffee. If asked about scope
+  they'll say "feeder birds first, calls matter as much as plumage"; about
+  level, "complete beginner"; about the deadline, "fall migration,
+  September-ish". They have no idea what software is involved and never
+  need to.
+seed: null
+timeout: 1500
+checks:
+  - dojo_binary_installed
+  - campaign_with_confirmed_plan
+  - campaign_in_diagnostic_mode
+  - no_failed_tasks
+  - doctor_clean
+judge_rubric:
+  - {id: c1, weight: 3, question: "Did the agent notice the missing binary
+      and run the skill's bootstrap install on its own, without asking the
+      learner to make technical decisions or narrating installer output at
+      them?"}
+  - {id: c2, weight: 3, question: "After installing, did it continue to the
+      learner's actual request — routing the goal and running the planning
+      conversation — rather than declaring victory at a working install?"}
+  - {id: c3, weight: 2, question: "Does the final summary speak learner
+      language (feeder birds, calls, September) with no install or dojo
+      internals (no paths, no command names)?"}
+  - {id: c4, weight: 1, question: "If the install needed PATH adjustments or
+      retries, did the agent handle them itself (e.g. calling the installed
+      binary by its path) instead of surfacing them to the learner?"}

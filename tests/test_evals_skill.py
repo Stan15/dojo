@@ -115,6 +115,89 @@ class TestHarnessPlumbing:
         assert "no campaign" in result["checks"]["campaign_with_confirmed_plan"]["detail"]
 
 
+class TestFreshMachinePlumbing:
+    """Free: the bootstrap sandbox (fresh_machine scenarios). Two safety
+    properties are load-bearing: the driver's OWN tools must survive the
+    PATH scrub (agent binaries often live beside dojo in ~/.local/bin), and
+    install.sh's writes — including its rm -rf rollback — must be unable to
+    reach the real home."""
+
+    def test_env_scrubs_dojo_and_pipx_but_keeps_neighbors(self, tmp_path):
+        from dojo.evals.skill_runner import _fresh_machine_env
+        bin_a = tmp_path / "bin_a"
+        bin_a.mkdir()
+        for name in ("dojo", "pipx", "codex"):
+            (bin_a / name).write_text("#!/bin/sh\n")
+            (bin_a / name).chmod(0o755)
+        bin_b = tmp_path / "bin_b"
+        bin_b.mkdir()
+        (bin_b / "python3").write_text("#!/bin/sh\n")
+        real_home = tmp_path / "realhome"
+        for d in (".dojo", ".local", ".claude"):
+            (real_home / d).mkdir(parents=True)
+        work = tmp_path / "work"
+        work.mkdir()
+        env = _fresh_machine_env(work, base_env={
+            "PATH": os.pathsep.join([str(bin_a), str(bin_b)]),
+            "HOME": str(real_home),
+        })
+        entries = env["PATH"].split(os.pathsep)
+        assert str(bin_b) in entries, "clean entries pass through verbatim"
+        assert str(bin_a) not in entries, "the dojo-bearing entry is replaced"
+        shadow = Path(entries[0])
+        assert (shadow / "codex").exists(), "neighbors survive (driver binary)"
+        assert not (shadow / "dojo").exists() and not (shadow / "pipx").exists()
+        home = Path(env["HOME"])
+        assert home == work / "home"
+        assert (home / ".claude").exists(), "agent auth/config pass through"
+        assert not (home / ".dojo").exists() and not (home / ".local").exists(), (
+            "install.sh's write/rollback targets must never reach the real home")
+
+    def test_fresh_driver_cannot_resolve_dojo(self, tmp_path):
+        """In the sandbox, `command -v dojo` genuinely fails and $HOME is
+        the sandbox home — the premise the scenario's install line needs."""
+        sc = {
+            "name": "scripted_fresh",
+            "user_message": "set me up",
+            "seed": None,
+            "fresh_machine": True,
+            "checks": ["dojo_binary_installed"],
+        }
+        driver = ("bash -c 'command -v dojo >/dev/null 2>&1 "
+                  "&& echo FOUND_DOJO || echo NO_DOJO; echo \"HOME=$HOME\"'")
+        result = run_skill_scenario(sc, tmp_path, driver, timeout=60)
+        tail = result["transcript_tail"]
+        assert "NO_DOJO" in tail and "FOUND_DOJO" not in tail
+        assert f"HOME={tmp_path / 'home'}" in tail
+        assert result["score"] == 0.0, "nothing installed yet"
+
+    def test_scripted_install_lands_in_sandbox_and_scores(self, tmp_path):
+        """A driver that performs install.sh's venv endgame (symlink into
+        ~/.local/bin) and then drives the installed binary passes the
+        bootstrap check — and every write stayed inside the sandbox."""
+        dojo_bin = Path(sys.executable).parent / "dojo"
+        sc = {
+            "name": "scripted_install",
+            "user_message": "learn backyard birds",
+            "seed": None,
+            "fresh_machine": True,
+            "checks": ["dojo_binary_installed", "campaign_in_diagnostic_mode",
+                       "doctor_clean"],
+        }
+        driver = (
+            "bash -c '"
+            'mkdir -p "$HOME/.local/bin" && '
+            f'ln -sf "{dojo_bin}" "$HOME/.local/bin/dojo" && '
+            '"$HOME/.local/bin/dojo" --json campaign create "backyard birds" '
+            "--name Birds >/dev/null 2>&1'"
+        )
+        result = run_skill_scenario(sc, tmp_path, driver, timeout=120)
+        assert result["score"] == 1.0, result["checks"]
+        assert (tmp_path / "home" / ".local" / "bin" / "dojo").exists()
+        assert (tmp_path / "store" / "dojo" / "campaigns").exists(), (
+            "the installed binary still writes the DOJO_HOME sandbox store")
+
+
 @pytest.mark.eval_skill
 @pytest.mark.parametrize("sc", SCENARIOS, ids=lambda s: s["name"])
 def test_skill_scenario_against_ratchet(sc, tmp_path):
