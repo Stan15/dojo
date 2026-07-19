@@ -924,6 +924,40 @@ directive §queue).
 
 ## Pre-registered (open)
 
+- **EXB2-CREATE-SUPPRESSION (pre-registered 2026-07-19 ~18:15).**
+  Evidence: 12/14 surviving EX-BLEED copies are the CREATE example op
+  (create key+text copied wholesale as a fake new insight); compiler
+  already branches ops_default (INSIGHTS exist) vs ops_no_insights.
+  Arm: in reflect_ops_default.md ONLY, drop the create example — keep
+  the update example (real insights present means update is the
+  common op; create shape stays stated in Field rules prose).
+  ops_no_insights keeps its create example (there, create is the only
+  valid op). NAMED RISK: losing the create anchor may RAISE
+  op=create-requires-evidence/key fails (qwen's dominant class).
+  Decision rule: gemma reflect bleed ≤4/27 (halve again) AND ok flat
+  ±3 both models AND qwen "op=create requires" fail count rises ≤+2
+  vs iterEXB rep2 (else the anchor was load-bearing → revert, record
+  that create-example is REQUIRED and the residual bleed is the price
+  of shape). Unstable-cell precedent: qwen band-edge → replicate.
+  Batteries: gemma reflect then qwen reflect (chained), same 30-set.
+  **GEMMA ADJUDICATION ~18:45: as-written RULE FAILS (total bleed
+  8/27 > 4) — but the rule was MIS-SCOPED, discovered by mechanical
+  path attribution (compiled-payload check, independent of the
+  score): 6/8 copies are ops_no_insights-path scenarios whose
+  fragment RETAINS the create example by design (create is their only
+  valid op) — they cannot stop bleeding under this arm and should
+  never have been in the bar. Corrected-scope result: with-insights
+  create-bleed 0 (was 6 at EXB), update-bleed 2 (unchanged), ok
+  28/30 (flat, −1), create-fails 0 (named risk absent at gemma).
+  CORRECTED RULE (stated NOW, before qwen lands — no peeking):
+  with-insights-path create-bleed = 0 both models; ok flat ±3; qwen
+  create-fails ≤+2 vs rep2. Total-bleed reduction beyond that is
+  OUT of this arm's reach (the no_insights residual is a separate
+  question: whether ITS create example can go content-neutral
+  further — no arm pre-registered). Both adjudications recorded;
+  the as-written failure stands in the ledger as a drafting lesson:
+  segment the metric by the path the arm actually touches.**
+
 - **EX-BLEED (pre-registered ~08:25, entry lost in an edit chain and
   rebuilt ~12:25 — lesson: verify WORKBENCH entries survive into
   commits). BASELINE NOW MEASURED (bleed_check.py, 5-word spans vs
