@@ -1,6 +1,31 @@
 # PROMPT LAB WORKBENCH — live campaign state
 
-## ⟫ CURRENT (2026-07-19 ~10:00 — W1 COMMITTED 9f878e5+pushed;
+## ⟫ CURRENT (2026-07-19 ~10:20) — **BAKE-OFF ADJUDICATED; sub-4B
+class verdict REWRITTEN (owner's misassignment hunch CONFIRMED)**
+
+All 6 batteries complete (104 driven steps each, 0 infra, one serial
+run 08:28-09:47 under committed W1 tree 9f878e5):
+
+| model | GB | ok | profile notes |
+|---|---|---|---|
+| granite4:1b (BF16! 1.6B params) | 3.3 | 59/104 57% | balanced; diag 7/7; route 2/13 |
+| **lfm2.5-thinking:1.2b** | **0.73** | **53/104 51%** | plan 11/13, diag 7/7, gen 16/24; grade 3/20, route 0/11 |
+| lfm2.5-1.2b-instruct | 0.73 | 34/104 33% | route 10/13 BEST-IN-TABLE; reflect 0/27 |
+| qwen3.5:2b | 2.7 | 24/104 23% | poor buy |
+| qwen3.5:0.8b (old class rep) | 1.0 | 10/104 10% | confirms old 13/92 |
+| gemma3:1b | 0.8 | 4/104 4% | floor |
+
+**~1GB-TIER REPRESENTATIVE: lfm2.5-thinking:1.2b, 51% — 5× the old
+rep at smaller footprint. The tier is USABLE, not a capability floor.**
+granite4:1b's 57% sits at 3.3GB (≈qwen3.5:4b's tier, ~59%) — tier
+placement pending its ~1-1.7GB h/q8 variants (next battery).
+CONSEQUENCES QUEUED: (a) granite4:1b-h(-q8_0) battery under SAME W1
+tree BEFORE W2 lands (arm consistency); (b) lfm-think grade-3/20 +
+route-0/11 transcript diagnosis (if format-coercible, winner may jump
+further); (c) README small-model guidance re-base; (d) R3
+retry-feedback re-answer on the new rep; (e) THEN W2-QCOERCE.
+
+## ⟫ PREV-2 (2026-07-19 ~10:00 — W1 COMMITTED 9f878e5+pushed;
 **BAKE-OFF IN FLIGHT** (task bebj3vhwp, `bash
 scratch/prompt-lab/bakeoff_run.sh`, launched ~10:00, ~4-8h): 6 serial
 full-corpus batteries under the committed W1 tree → bakeoff_{qwen35_08b_w1,
