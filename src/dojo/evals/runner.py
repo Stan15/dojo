@@ -241,6 +241,28 @@ def evidence_haystacks(output_text: str) -> tuple[str, ...]:
     return (_norm(output_text), _norm(legacy), _norm(decoded))
 
 
+def evidence_matches(evidence: str, haystacks: tuple[str, ...]) -> bool:
+    """True when the judge's quote is verbatim in some haystack. Set-level
+    criteria ("spans three axes") are honestly proven with SEVERAL short
+    quotes joined like: "a", "b", "c" — the joined string is no substring of
+    the output, so a whole-quote miss falls back to splitting on quote-mark
+    joins (and mid-quote elisions) and requiring EVERY substantial fragment
+    verbatim (eval finding 2026-07-18: a weight-4 pass on a four-axis
+    criterion was discarded although all four quoted fragments were real).
+    A fabricated fragment still discards the pass."""
+    core = _evidence_core(evidence)
+    if any(core in h for h in haystacks):
+        return True
+    fragments = [
+        _evidence_core(f)
+        for f in re.split(r'"\s*[,;·/]\s*"|…|\.\.\.', evidence)
+    ]
+    fragments = [f for f in fragments if len(f) >= 3]
+    if len(fragments) < 2:
+        return False
+    return all(any(f in h for h in haystacks) for f in fragments)
+
+
 def render_judge_prompt(scenario_context: str, output_text: str, criteria: list[dict]) -> str:
     """Fills judge_prompt.md with the scenario context, the output on trial,
     and the criterion questions."""
@@ -280,8 +302,7 @@ def judge_output(
             continue
         if v["verdict"] == "pass":
             evidence = v.get("evidence") or ""
-            core = _evidence_core(evidence)
-            if not evidence or not any(core in h for h in haystacks):
+            if not evidence or not evidence_matches(evidence, haystacks):
                 discarded.append(c["id"])
                 verdicts[c["id"]] = "discarded-unproven-pass"
                 continue
