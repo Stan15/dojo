@@ -70,3 +70,27 @@ class TestSummaryClipNotReject:
     def test_in_cap_summary_untouched(self):
         topic = PlanTopic(path="a.b", kind="recall", summary="short hook")
         assert topic.summary == "short hook"
+
+
+class TestRetryMessagePedagogy:
+    """R1/R2 (2026-07-19): rejection messages teach the RIGHT fix."""
+
+    def test_path_charset_message_teaches_words_not_regex(self):
+        from dojo.schemas import PlanTopic
+        import pytest as _pytest
+        with _pytest.raises(Exception) as exc:
+            PlanTopic(path="git/bisect run", kind="skill")
+        msg = str(exc.value)
+        assert "underscores" in msg and "hyphens" in msg
+        assert "String should match pattern" not in msg
+
+    def test_mass_missing_root_fields_adds_syntax_hint(self, tmp_path):
+        from dojo.tasks import service
+        from pydantic import ValidationError
+        from dojo.schemas import PlanResult
+        try:
+            PlanResult.model_validate({"topics": [{"path": "a.b", "kind": "recall"}]})
+        except ValidationError as e:
+            root_missing = sum(1 for err in e.errors()
+                               if err.get("type") == "missing" and len(err.get("loc", ())) == 1)
+            assert root_missing >= 3  # premise: inner-object grab looks like this

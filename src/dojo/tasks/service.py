@@ -177,7 +177,22 @@ def _validate_and_apply(store, task: Task, raw: str) -> list[str]:
     try:
         result = schema.model_validate(data)
     except ValidationError as e:
-        return [f"{_loc_path(err['loc'])}: {err['msg']}" for err in e.errors()[:8]]
+        msgs = [f"{_loc_path(err['loc'])}: {err['msg']}" for err in e.errors()[:8]]
+        # R2 (2026-07-19): when several ROOT fields are "missing" at once, the
+        # likeliest cause is a JSON syntax slip mid-output — extraction then
+        # grabs an inner balanced object and every top-level field looks
+        # absent. Without this hint the retry "fixes" fields it already wrote.
+        root_missing = sum(
+            1 for err in e.errors()
+            if err.get("type") == "missing" and len(err.get("loc", ())) == 1
+        )
+        if root_missing >= 3:
+            msgs.append(
+                "several top-level fields look missing at once — if you emitted "
+                "them, your JSON likely has a syntax error (stray brace or "
+                "missing comma); re-emit ONE complete valid JSON object"
+            )
+        return msgs
 
     applier = APPLIERS.get(task.kind)
     if applier is None:

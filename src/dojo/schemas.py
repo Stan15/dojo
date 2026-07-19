@@ -332,9 +332,22 @@ class PlanTopic(BaseModel):
     fattest output; the summary is a hook, not a syllabus). Phases may only
     reference declared topics."""
 
-    path: str = Field(min_length=1, pattern=r"^[a-z0-9_]+(\.[a-z0-9_]+)*$")
+    path: str = Field(min_length=1)
     kind: Literal["recall", "skill"]
     summary: str = ""
+
+    @field_validator("path")
+    @classmethod
+    def _path_shape(cls, v: str) -> str:
+        """Same regex the Field pattern enforced — as a validator so the
+        rejection TEACHES the fix instead of echoing regex syntax (retry
+        messages are pedagogy: R1, 2026-07-19)."""
+        if not re.fullmatch(r"[a-z0-9_]+(\.[a-z0-9_]+)*", v):
+            raise ValueError(
+                "path must be lowercase words joined by underscores, dots only "
+                "between levels (e.g. git.bisect_run) — no hyphens, spaces, or slashes"
+            )
+        return v
 
     @field_validator("summary")
     @classmethod
