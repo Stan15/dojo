@@ -247,3 +247,29 @@ reads: the locator's path syntax bleeds into topic_path when the registry
 offers no path-shaped exemplars to imitate; and the near-empty-registry
 case (fresh direct-door campaigns) is the hostile edge for routers. Not
 corpus-covered; candidate visible scenario for a future (fresh) session.
+
+## 2026-07-18 — a refusal scenario must PIN its refusal, or it punishes the sanctioned door
+Owner probe on the skill tier's respect_the_no: `dojo more` IS the
+sanctioned pathway for an explicit "give me more" (the completion envelope
+names it), so the ideal driver runs it — and the scenario's
+no_extension_session check is only fair if the seed GUARANTEES the debt
+guard refuses. The original seed carried ~3 dues against capacity 28; the
+refusal came from the flimsy no-material branch, and a daily-first agent
+(replenishment → stock appears) could have been granted, then scored 0 for
+walking the sanctioned door correctly. General rule for behavioral evals:
+any check that rewards ABSENCE of an action must be paired with a free
+test proving the system deterministically refuses that action under the
+seed — otherwise the scenario grades the fixture, not the agent.
+
+## 2026-07-18 — fresh-machine sandboxes need shadowing, not removal
+Bootstrap-install scenario (skill tier): simulating "no dojo binary" by
+dropping dojo-bearing PATH entries breaks the driver itself — agent CLIs
+routinely live BESIDE dojo in ~/.local/bin (install.sh symlinks there).
+And running install.sh under the real $HOME would let its venv rollback
+`rm -rf $HOME/.dojo/venv` clobber the owner's live install. Both isolations
+want the same shape: REPLACE the container and re-link everything except
+the excluded names (PATH entry → shadow-bin minus dojo/pipx; $HOME →
+sandbox home minus .dojo/.local, so agent auth like ~/.claude passes
+through while every install write lands sandboxed). pipx is excluded with
+dojo deliberately: it pins install.sh to its deterministic venv route and
+keeps `pipx install --force` from ever seeing real state.
