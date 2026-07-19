@@ -243,9 +243,20 @@ _Statuses: `[x]` shipped · `[~]` standing/in-progress · `[?]` blocked-on-owner
    anchor doesn't restrict internal thinkers). This SUBSUMES the
    "reasoning" JSON-field idea (same hypothesis, riskier encoding: long
    free-text is where ≤4B models break JSON — README failure mode 5).
-   **Default: scenarios + profile config + local batteries next session;
-   nothing adopted without the measured win; codex cell awaits your
-   green light.**
+   **ANSWERED BY MEASUREMENT 2026-07-19 (8-cell grid, 2 replicates/cell,
+   12 deliberation-trap scenarios, deterministic trap detectors):**
+   caliber-DIVERGENT. qwen3.5:4b takes the invitation (pre_bytes 0→~450)
+   and trap-avoidance rises 44%→75% of measurable rows with rejects
+   flat; gemma3:4b ignores it entirely (pre_bytes unchanged) and gets
+   slightly worse (avoided 15→12, rejects 2→4) while already at ceiling
+   under the neutral anchor (0 trap hits in all 4 neutral+invited
+   cells... 0 hits total). ADOPTED as the opt-in
+   `fulfiller.anchor_profile: deliberate` config (compiler-appended,
+   default neutral byte-identical) with guidance: qwen-class visible
+   thinkers only. The codex B cell was deliberately skipped (your
+   pre-reg expected flat = low information; spend discipline) — say the
+   word if you want it run. Judged floors for the 12 trap scenarios
+   bootstrap on the arm-A codex run.
 
 6j. **Link-enrichment for tool-capable fulfillers (your question
    2026-07-19).** Capture-time fetching by the harness is shipped

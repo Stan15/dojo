@@ -16,6 +16,7 @@ Usage: python measure.py "<driver command>" out.jsonl [name_filter ...]
 from __future__ import annotations
 
 import json
+import os
 import sys
 import tempfile
 import time
@@ -73,6 +74,9 @@ def run_scenario(path: Path, driver: str) -> list[dict]:
             store = seed_store(Path(td), sc["seed"])
         except Exception as exc:
             return [{"scenario": path.stem, "error": f"seed: {exc}"}]
+        profile = os.environ.get("DOJO_ANCHOR_PROFILE")
+        if profile:  # A/B arm switch (QUESTIONS 6i): compiler-side, per seeded store
+            store.configs.set_value("fulfiller.anchor_profile", profile)
         cid = sc["seed"]["campaign"]["id"]
         for idx, step in enumerate(sc["steps"]):
             try:

@@ -339,3 +339,17 @@ keeps `pipx install --force` from ever seeing real state.
   generations blow the 240s timeout even on a healthy box (first wave gets
   1/3 GPU each). Resource checks before batteries are data hygiene, not
   courtesy; plan-only minis run workers=1.
+- **The deliberation invitation is caliber-divergent — measure, never
+  assume (2026-07-19, 6i grid).** The same compiler-appended invitation
+  ("think it through step by step first — write your thinking, then the
+  JSON") made qwen3.5:4b write ~450B of pre-JSON deliberation and raised
+  deterministic trap-avoidance 44%→75% with shape flat — while gemma3:4b
+  ignored it entirely (pre_bytes unchanged) and got slightly worse
+  (rejects 2→4). Same 4B footprint class, opposite response. This is WHY
+  anchor behavior is a fulfiller PROFILE (opt-in config, compiler-
+  selected) and never a default: the default stays byte-identical
+  neutral, and the profile carries per-caliber guidance. Also proven en
+  route: the trap corpus discriminates (gemma neutral near-ceiling 0
+  hits; qwen neutral hit both plan dependency-root traps), and
+  pre_bytes is a sufficient mechanism check — no thinking-trace access
+  needed.

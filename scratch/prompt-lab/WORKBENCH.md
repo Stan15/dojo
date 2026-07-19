@@ -336,6 +336,74 @@ Decision rules bind per pre-reg P4a/P4b/P5: local minis same-or-better
 ok-rates vs iterW2 per kind; zero letter-paths; recovered codex floors
 without losing mixed_signals/mastery_resolution/extend_not_duplicate.
 
+## 6i SUB-ARC (started ~10:00) — trap-benchmark + anchor profiles
+
+Design source: QUESTIONS 6i (owner-approved; codex cell authorized by
+the directive §queue). PARALLEL SLATE (doctrine-compliant lane rows):
+
+- **Lane T1 (cognitive, subagent): grade+reflect traps.** 2 scenarios
+  each: grade right-result-broken-method; reflect aggregate-vs-
+  latency×topic-decomposition + distractor. MAY read:
+  src/dojo/evals/corpus/quality/route_url_bleed_near_empty_registry.yaml
+  (format), src/dojo/schemas.py, src/dojo/limits.py, the two relevant
+  templates. MUST NOT read/open: corpus/holdout/**, evals/baselines/
+  *__holdout*, evals/reports/holdout-*, other visible corpus files,
+  scratch/prompt-lab/WORKBENCH.md. Deliverable: 4 YAML drafts to
+  scratch/prompt-lab/traps/, filenames+one-line summaries reported.
+  Reconcile: orchestrator reviews content, moves to corpus, ratchets
+  floors. Runtime ~15 min. Restart: re-spawn from this row.
+- **Lane T2 (cognitive, subagent): plan+route traps.** plan:
+  deadline-forces-cutting-dependency-root; route: lexical-match
+  campaign vs semantic owner. Same reads/exclusions (their templates),
+  same deliverable shape.
+- **Lane T3 (cognitive, subagent): generate+diagnostic traps.**
+  generate: insight-collision engineering; diagnostic: jointly-implied
+  open axis. Same reads/exclusions, same deliverable shape.
+- **Orchestrator (this session, parallel): anchor-profile plumbing** —
+  compiler-selected invitation fragment (exact 6i wording), opt-in
+  fulfiller profile config, free tests. Then review lanes → corpus
+  commit with 'deliberation' category floors → A/B battery plan
+  (2 replicates per cell, ONE battery at a time).
+Decision rules: pre-registered in QUESTIONS 6i verbatim (adopt
+invitation as opt-in profile ONLY if trap-avoidance rises materially
+at some caliber, neutral floors regress nowhere, bytes/latency hold).
+
+PROGRESS (~11:10): T1/T2/T3 lanes delivered 12/12; orchestrator
+review fixed 4 step blocks (grade attempt_id shape, gen difficulty
+kwarg); all 12 verified through seed→compile; corpus commit e4a3aa7
+(floors 92, category deliberation:12, footprint diagnostic
+representative 1694→1991 corpus-order). Plumbing commit f88df7e
+(fulfiller.anchor_profile, default byte-identical). measure.py gained
+DOJO_ANCHOR_PROFILE env arm switch (uncommitted — rides with the A/B
+results commit).
+
+**6i VERDICT (~13:05, all 8 cells, 2 reps/cell): ADOPT AS OPT-IN with
+per-caliber guidance.** qwen3.5:4b takes the invitation (pre_bytes
+0→~450) and trap-avoidance rises 44%→75% of measurable rows (avoided
+4→6, hit 3→1, rejects flat 12→13) — consistent both reps. gemma3:4b
+IGNORES it (pre_bytes 8→8, no written deliberation), avoided 15→12,
+rejects 2→4: mildly harmful, mechanism never engages. Pre-reg bar met
+at the qwen caliber; neutral default untouched (byte-identical).
+Guidance: profile for qwen-class visible thinkers only; never
+gemma-class. Codex B cell SKIPPED deliberately (pre-reg expected flat
+= low information; spend discipline — authorization is not
+obligation; owner may request it anytime). Judged floors for the 12
+traps bootstrap via the arm-A codex run (launching). Data:
+trapAB_{qwen,gemma}_{A,B}_{r1,r2}.jsonl + trap_check.py.
+
+A/B GRID (12 traps; filters: diag_implied_axis gen_collision
+grade_canceling grade_memorized plan_deadline_cuts reflect_fast_wrong
+reflect_topic_split route_lexical; workers=2; ONE battery at a time):
+- Cell 1 IN FLIGHT: qwen A r1 → trapAB_qwen_A_r1.jsonl (task
+  b02ad5tli ~11:12). Then: qwen B r1 (DOJO_ANCHOR_PROFILE=deliberate),
+  qwen A r2, qwen B r2, gemma A r1, gemma B r1, gemma A r2, gemma B r2.
+- Trap-avoidance measured DETERMINISTICALLY per scenario (the traps'
+  wrong answers are field-detectable: grade score 1.0-vs-0.3, reflect
+  difficulty lowered-vs-held, route campaign choice, plan root-topic
+  survival) — scratch/prompt-lab/trap_check.py (being written).
+  B−A per caliber = restriction effect; pre_bytes confirms mechanism.
+  Codex spot cell (judged) AFTER local grid, spend-batched once.
+
 ## ARC CLOSED ~09:40: iterZ done, COMMIT 6 = 04368ad, P10 CONFIRMED
 
 Targeted codex 6/6: deadline_compression RECOVERED (c5 kind-mix
