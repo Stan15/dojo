@@ -336,6 +336,48 @@ Decision rules bind per pre-reg P4a/P4b/P5: local minis same-or-better
 ok-rates vs iterW2 per kind; zero letter-paths; recovered codex floors
 without losing mixed_signals/mastery_resolution/extend_not_duplicate.
 
+## ARC CLOSED ~09:40: iterZ done, COMMIT 6 = 04368ad, P10 CONFIRMED
+
+Targeted codex 6/6: deadline_compression RECOVERED (c5 kind-mix
+fixed), all controls hold. EVERY scenario from the original 11-drop
+codex fail list is now recovered-and-verified or variance-confirmed
+with floors intact. No floors moved this run. Next: experiment queue
+item 1 — 6i deliberation trap-benchmark (owner-approved design,
+directive §queue): ~2 trap scenarios per kind (visible corpus
+additions, coverage floors ratcheted), neutral vs strongest-elicitor
+anchor profiles, B−A per caliber = restriction effect; codex cell
+authorized; adopt anchor-profile only as opt-in on measured win.
+Open queue behind it: P9b (compiler-interpolated real insight id),
+retry-error pedagogy, example-bleed hardening, judged spot-sets.
+
+## iterZ BATCH former header (P9+P10; COMMIT 6 landed)
+
+EDITS APPLIED ~08:15: P9 reflect_ops_default placeholder →
+realistic literal ins_4c21a9e7_0; P10 plan rule 4 'compress by cutting
+topic COUNT — never by flattening kinds; memorized material stays
+recall'. Free gates + footprint update ran in task bg8c4ngue (check
+its head for deltas). Batteries (ONE at a time):
+1. DONE: qwen reflect 10/23 (iterY2 13/23; series 11/8/13/10 — within
+   ±3 band, 13 was the high outlier; accepted).
+2. DONE: qwen plan 6/9 (iterY 5/9), zero letter-paths, charset class
+   FULLY GONE at qwen. PASS.
+3. DONE ~09:05: gemma reflect 17/23 (iterY 19/23, within band, no new
+   class). P9 verdict: MARGINAL-NEUTRAL — id-copying persists (2 vs 3;
+   one fail copies the NEW literal ins_4c21a9e7_0 verbatim, one
+   invents ins_glaze_*). Kept (craft-rule-compliant), but **QUEUE
+   P9b**: ops_example should interpolate a REAL active-insight id via
+   compiler ({{ first_insight_id }}) so the example demonstrates a
+   VALID op — craft rule 5, branching in compiler. 
+4. IN FLIGHT: gemma plan (w1, task bsoffq8k4, ~09:07) →
+   iterZ_gemma3_4b_plan.jsonl (vs iterY 7/9)
+Then splice (reflect+plan over iterY files), output-budget, pytest →
+COMMIT 6 → targeted codex: deadline_compression (P10 target, c5
+kind-mix) + controls plan_recall_skill_lanes, plan_single_fact_goal,
+mastery_resolution, reflect_learner_language, reflect_pending_grade_
+integrity. Ratchets on wins same commit. AFTER: experiment queue item
+1 (6i deliberation trap-benchmark — owner-approved design in
+directive §queue).
+
 ## NEXT (exact order)
 
 1. DONE ~01:05 — letter-bleed fix applied to campaign_plan.md (words-only
