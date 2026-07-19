@@ -609,8 +609,28 @@
         "c4": "pass"
       },
       "discarded": []
+    },
+    "gen_collision_music_relative_parallel": {
+      "quality": 0.5,
+      "verdicts": {
+        "c1": "fail: Item 1 is a study card, not a decision or short production.",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "fail: Item 1 prompt contains its own answer verbatim."
+      },
+      "discarded": []
+    },
+    "gen_collision_sql_left_join": {
+      "quality": 0.5,
+      "verdicts": {
+        "c1": "fail: First item has no tiny concrete dataset with visible row values.",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "fail: First item has rubric null and prompt leaks join purpose."
+      },
+      "discarded": []
     }
   },
-  "mean_quality": 0.882,
+  "mean_quality": 0.874,
   "note": "2026-07-18 validation run: 23 floors bootstrapped, 15 raised; 6 single-sample drops NOT lowered (multi-sample rule; sample 2 in flight — fresh session dispositions); present_before_probing floorless (scored 0, zero never persists) | 2026-07-19: +10 deliberation-trap floors bootstrapped (arm-A run 085715); gen_collision pair floorless pending compliance pass; celestial plan trap scored 0.0 (genuine, not refusal) — floorless per the zero-precedent, diagnosis queued."
 }
