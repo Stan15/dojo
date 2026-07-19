@@ -273,3 +273,42 @@ sandbox home minus .dojo/.local, so agent auth like ~/.claude passes
 through while every install write lands sandboxed). pipx is excluded with
 dojo deliberately: it pins install.sh to its deterministic venv route and
 keeps `pipx install --force` from ever seeing real state.
+
+## 2026-07-18/19 — drop-diagnosis session learnings
+
+- **A judge can fail a driver honestly: set-level criteria vs the verbatim-quote
+  gate.** "Spans three axes" is proven by SEVERAL short quotes; the judge joins
+  them `"a", "b", "c"` and the joined string is no substring of the output → the
+  weight-4 pass was discarded as unproven and diagnostic_axis_coverage sat
+  capped at 0.6 while the driver output was fine. Fixed (3c3041f): fragment
+  splitting, every substantial fragment must be verbatim. Same family as the
+  2026-07-11 escape-decoding fix — when a floor won't move, audit the JUDGE
+  MECHANICS before the prompt.
+- **Model-side conditional branches in templates don't fire — at any caliber.**
+  The 10b downward-calibration rule ("when RECENT shows repeated struggle, go
+  gentler") was executed by nobody: codex anchored on the TASK line's nominal
+  difficulty twice (floor stuck at 0.3). The compiler knows the condition
+  deterministically; craft rule 5 was right all along — a conditional the
+  compiler can evaluate must be a compiler-selected fragment, not model prose.
+  (Same fix shape as the empty-INSIGHTS create-first skeleton.)
+- **The skeleton-final anchor pattern-locks token one to `{`.** 55/62 battery
+  runs started with `{` at byte zero; the "anything before it is ignored"
+  license is a dead letter in practice — prompts END with a JSON skeleton, and
+  pattern completion continues it. Whether this RESTRICTS models that think by
+  outputting (~4B open models; internal thinkers are unaffected, sub-1B is
+  measurably hurt by invitations) is an open empirical question — the
+  deliberation trap-benchmark design (QUESTIONS) measures thinking by its
+  FRUIT (trap-avoidance delta between anchor variants), immune to the
+  internal-vs-visible thinker confound.
+- **Example-content bleed reconfirmed live at 4B (README mode 9).**
+  mastery_resolution, qwen3.5:4b: op text "rushes multi-step problems" /
+  "process.skips_checking" copied verbatim from the skeleton's example values
+  into real ops — shape-pass, pedagogy-wrong. Skeleton example values must stay
+  orthogonal to any real decision the scenario could want.
+- **Battery latency is not product latency.** Single-stream, real counters
+  (qwen3.5:4b, real 7KB reflect payload): prompt processing 106 tok/s,
+  generation 7.6 tok/s, 47s total. The same call inside a 3-concurrent battery
+  reads as 150-220s and the worst collisions hit the 240s driver timeout (7
+  infra-errors in iterW). Never quote battery wall-clocks as user-facing
+  latency; prefill (not decode) dominates single-stream cost on weak hardware,
+  which is what keeps input-side compression (parked armACC-in) interesting.
