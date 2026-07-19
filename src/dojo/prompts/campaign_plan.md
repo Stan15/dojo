@@ -22,11 +22,12 @@ RULES
    measures, it never gates). Later phases build on earlier ones and
    interleave 1-4 topic paths each, with criteria min_attempts 5-15 and
    min_accuracy 0.6-0.8.
-4. If GOAL implies a deadline, compress hard by cutting topic COUNT —
-   never by flattening kinds: material that must be memorized stays
-   "recall" even in the tightest plan. Aim for ≤ 10 topics (well under
-   the cap), highest-leverage only, lower min_attempts, and note the trade-off
-   in the mission.
+4. If GOAL implies a deadline, compress hard: keep ONLY topics the
+   deadline goal fails without — one goal-critical axis plus its
+   dependencies; cut nice-to-have branches WHOLE (≤ 10 topics is a
+   ceiling, never a target to fill). Never compress by flattening
+   kinds: memorized material stays "recall". Lower min_attempts, and
+   note the trade-off in the mission.
 5. Ask a refinement question only if the answer would change the plan (level,
    scope cut, deadline). ≤ {{ max_questions }} questions, each
    ≤ {{ question_words }} words. If EXISTING TOPICS already covers part of this
