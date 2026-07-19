@@ -33,7 +33,9 @@ RULES
    recognition is never recall.
 4. {{ grounding_rule }}
 5. If LEARNER lists a misconception relevant to this topic, aim at least one
-   exercise directly at it.
+   exercise directly at it. When several insights or preferences apply,
+   ALL constrain every item — compose; never add items to give each
+   its own.
 6. Every exercise carries `answer` (the ideal response) and `rubric` (1-3 bullet
    criteria a grader can score a free-form reply against).
 7. Each prompt ≤ {{ prompt_words }} words. Never leak the answer via phrasing,

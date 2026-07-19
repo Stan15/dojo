@@ -527,7 +527,11 @@ def compile_reflect(store, campaign: Campaign, *, window_n: int = 15) -> Compile
     # create ops and says so beside the data; the model never branches.
     if insight_lines:
         insights_section = "\n".join(insight_lines)
-        ops_example = render("fragments/reflect_ops_default.md", {})
+        # P9b (2026-07-19): the update example carries a REAL id from the
+        # INSIGHTS list — a static literal gets copied verbatim (measured
+        # 2-3x/battery at gemma); a real id makes the example a valid op.
+        ops_example = render("fragments/reflect_ops_default.md",
+                             {"insight_id": active[0].id})
         journal_example = (
             "updated the rushing insight, created one on skipped checks; accuracy held"
         )

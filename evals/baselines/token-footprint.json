@@ -3,7 +3,7 @@
   "tolerance": 0.05,
   "bytes": {
     "diagnostic": 1991,
-    "generate": 5000,
+    "generate": 5126,
     "goal_route": 1795,
     "grade": 2405,
     "plan": 3637,

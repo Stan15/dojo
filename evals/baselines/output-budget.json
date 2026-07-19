@@ -1,11 +1,11 @@
 {
   "note": "output bytes per successful task (whole trace) + single-shot ok-rates, per driver; ratchet gates in tests/test_output_budget.py",
-  "template_hash": "f35c7e8910228578",
+  "template_hash": "f974261704c236c7",
   "ok_noise_band": 3,
   "bytes_tolerance": 0.1,
   "drivers": {
     "api-chat/qwen3.5:4b/--no-think": {
-      "source_battery": "iterP11b_qwen35_4b.jsonl",
+      "source_battery": "iterQ_qwen35_4b.jsonl",
       "kinds": {
         "attempt.grade": {
           "n": 16,
@@ -19,8 +19,8 @@
         },
         "campaign.reflect": {
           "n": 23,
-          "ok": 10,
-          "bytes_ok_median": 888
+          "ok": 12,
+          "bytes_ok_median": 725
         },
         "capture.route": {
           "n": 6,
@@ -33,9 +33,9 @@
           "bytes_ok_median": 906
         },
         "exercise.generate": {
-          "n": 20,
-          "ok": 16,
-          "bytes_ok_median": 1503
+          "n": 22,
+          "ok": 17,
+          "bytes_ok_median": 1636
         },
         "goal.route": {
           "n": 2,
@@ -45,7 +45,7 @@
       }
     },
     "api-chat/gemma3:4b": {
-      "source_battery": "iterP11b_gemma3_4b.jsonl",
+      "source_battery": "iterQ_gemma3_4b.jsonl",
       "kinds": {
         "attempt.grade": {
           "n": 16,
@@ -59,8 +59,8 @@
         },
         "campaign.reflect": {
           "n": 23,
-          "ok": 17,
-          "bytes_ok_median": 657
+          "ok": 20,
+          "bytes_ok_median": 701
         },
         "capture.route": {
           "n": 6,
@@ -73,9 +73,9 @@
           "bytes_ok_median": 921
         },
         "exercise.generate": {
-          "n": 20,
-          "ok": 18,
-          "bytes_ok_median": 1453
+          "n": 22,
+          "ok": 21,
+          "bytes_ok_median": 1832
         },
         "goal.route": {
           "n": 2,

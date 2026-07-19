@@ -350,3 +350,14 @@ class TestAnchorProfile:
             difficulty="intermediate")
         assert self.INVITE in compiled.prompt
         assert compiled.prompt.rstrip().endswith("Only the last JSON object counts.")
+
+
+class TestOpsExampleRealId:
+    """P9b: with active insights, the update example carries a REAL id from
+    the store — never a static literal a model can copy into an invalid op."""
+
+    def test_update_example_uses_first_active_insight_id(self, store: DojoStore):
+        compiled = compiler.compile_reflect(store, _campaign(store))
+        # the fixture seeds exactly one active insight: ins_1
+        assert '"id": "ins_1"' in compiled.prompt
+        assert "ins_4c21a9e7" not in compiled.prompt  # no static literal survives
