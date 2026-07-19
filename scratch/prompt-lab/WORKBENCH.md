@@ -835,7 +835,26 @@ directive §queue).
   (qwen 1/6→≥1, gemma 6/6 stays); README mode-11 candidate if
   adopted. Check other templates for "one word"-style descriptors in
   the same pass.
-- **R3-LFM (pre-registered 2026-07-19 ~10:45; runs after granite-q8
+- **W5-EVIDENCE-CORE (pre-registered 2026-07-19 ~11:40, owner
+  discussion of verbatim-check cost/value; AFTER R3-LFM adjudicates).**
+  Archive taxonomy of the 162 post-W3 verbatim rejections: 128 (79%)
+  genuinely ungrounded (guard working — stays strict, owner aligned),
+  6 answer-KEY quotes (guard catching wrong-text grading — the proof
+  it must stay), 28 (17%) NEAR-MISSES: ≥70% of the evidence is a true
+  contiguous quote with 1-2 drifted words. Fix: longest-true-substring
+  rescue in apply_grade — find the longest contiguous common substring
+  between normalized evidence and answer; accept iff its length ≥
+  max(0.7×evidence_len, ~3 words); STORE THE CORE (the learner's
+  actual words), never the model's version. Guarantee unchanged:
+  stored evidence remains a verbatim substring. Decision rule: unit
+  tests from archived near-miss examples + the 28 archive converts
+  verified by replay script + no acceptance of any of the 6 key-quote
+  cases (guard regression check = hard fail); ride next battery for
+  live confirmation. NOTE: the owner ASKED about soft vs strict
+  (2026-07-19) — no ruling yet; the session's recommendation (keep
+  strict + mechanical rescues; soft = product-semantics change,
+  owner-gated) was delivered with the archive taxonomy. If the owner
+  rules soft, that supersedes; until then the invariant stays strict.
   battery + W2/W3 land).** The R3 retry-feedback question re-answers
   on the NEW ~1GB rep (lfm2.5-thinking:1.2b): retry_probe.py arms
   A (blind resample) vs B (error feedback), grade+route stems (its
