@@ -581,3 +581,17 @@ evals/reports/holdout-* — all off-limits to any prompt-work context.
   W3 recommended equilibrium. Owner proposals drafted (reflect-decomp
   closing evidence; per-kind mixed-model routing). R3-LFM retry probe in
   flight. 937 tests green.
+- 07-19 (prompt-lab, session close-out wave): R3-LFM retry-feedback probe
+  NEGATIVE by pre-registration (+13 vs +15 bar; interim +36 was a
+  sampling-order artifact — feedback rescues verbatim-evidence 5/7,
+  field-omission 0/12; fourth and final R3 negative). W4 enum-phrasing
+  NEGATIVE and reverted (rumination migrated to the next informal
+  descriptor; root cause = deliberation-budget exhaustion on rule-dense
+  route payloads — thinking-class simplification profile queued).
+  EX-BLEED ADOPTED (871db97): content-orthogonal reflect example values —
+  bleed 16→8/27 gemma (ok 27→29/30, best measured), 9→2/27 qwen
+  (replicated), README-mode-9 refinement ledgered in INSIGHTS. W1
+  verbosity guard closed (codex: 3 SUBSTANTIVE / 1 PADDED on a 4-field
+  tail). W2/W3 judged debts closed by content-preservation argument.
+  BLOG_MATERIAL.md dossier established + wired into the loop (capture-
+  first standing directive). 937 tests green; all raw data committed.

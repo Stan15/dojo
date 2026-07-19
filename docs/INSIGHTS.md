@@ -389,3 +389,16 @@ keeps `pipx install --force` from ever seeing real state.
   — a class representative is per-KIND, and mixed-model deployments are
   a real design option the compiler's per-caliber fragments already
   anticipate.
+- **Plausible example content silently pollutes; orthogonal content
+  pollutes visibly and less (2026-07-19, EX-BLEED).** One realistic
+  skeleton example insight appeared verbatim in 59%/33% of gemma/qwen
+  reflect outputs — and because it was plausible for almost any scenario,
+  the pollution was undetectable downstream. Replacing example values with
+  realistic content from a domain absent from the corpus (calligraphy)
+  halved gemma's bleed, cut qwen's 78% (replicated), RAISED both ok-rates,
+  and made surviving copies conspicuously wrong. Refines README mode 9:
+  "realistic and imitable" is necessary but not sufficient — example
+  VALUES should also be domain-orthogonal to plausible inputs, because
+  copy-pressure under uncertainty is structural and the design choice is
+  only whether copies are visible. (Follow-up: compiler-side example
+  suppression when real insights exist.)
