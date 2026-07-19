@@ -82,9 +82,16 @@ from pydantic import field_validator
 
 
 def _cap_words(field_name: str, cap: int):
+    """Word caps are strong suggestions (owner ruling 2026-07-20): the stated
+    cap anchors length in the template; rejection fires only past the
+    tolerance wall, because a rejection costs a whole re-generation."""
+
     def _check(cls, v):
-        if v is not None and _limits.word_count(v) > cap:
-            raise ValueError(f"{field_name} exceeds {cap} words ({_limits.word_count(v)})")
+        if v is not None and _limits.word_count(v) > _limits.word_cap_hard(cap):
+            raise ValueError(
+                f"{field_name} is {_limits.word_count(v)} words; "
+                f"rewrite it in at most {cap} words"
+            )
         return v
 
     return _check
@@ -140,9 +147,10 @@ class Intervention(BaseModel):
     @classmethod
     def _cap_question_words(cls, v: List[str]) -> List[str]:
         for q in v:
-            if _limits.word_count(q) > _limits.INTERVENTION_QUESTION_WORDS:
+            if _limits.word_count(q) > _limits.word_cap_hard(_limits.INTERVENTION_QUESTION_WORDS):
                 raise ValueError(
-                    f"intervention question exceeds {_limits.INTERVENTION_QUESTION_WORDS} words: {q!r}"
+                    f"intervention question is {_limits.word_count(q)} words; rewrite it "
+                    f"in at most {_limits.INTERVENTION_QUESTION_WORDS} words: {q!r}"
                 )
         return v
 
@@ -310,9 +318,10 @@ class ReflectResult(BaseModel):
     @classmethod
     def _cap_question_words(cls, v: List[str]) -> List[str]:
         for q in v:
-            if _limits.word_count(q) > _limits.REFLECT_QUESTION_WORDS:
+            if _limits.word_count(q) > _limits.word_cap_hard(_limits.REFLECT_QUESTION_WORDS):
                 raise ValueError(
-                    f"question exceeds {_limits.REFLECT_QUESTION_WORDS} words: {q!r}"
+                    f"question is {_limits.word_count(q)} words; rewrite it "
+                    f"in at most {_limits.REFLECT_QUESTION_WORDS} words: {q!r}"
                 )
         return v
 
@@ -397,8 +406,11 @@ class PlanResult(BaseModel):
     @classmethod
     def _cap_questions(cls, v: List[str]) -> List[str]:
         for q in v:
-            if _limits.word_count(q) > _limits.PLAN_QUESTION_WORDS:
-                raise ValueError(f"refinement question exceeds {_limits.PLAN_QUESTION_WORDS} words: {q!r}")
+            if _limits.word_count(q) > _limits.word_cap_hard(_limits.PLAN_QUESTION_WORDS):
+                raise ValueError(
+                    f"refinement question is {_limits.word_count(q)} words; rewrite it "
+                    f"in at most {_limits.PLAN_QUESTION_WORDS} words: {q!r}"
+                )
         return v
 
     @model_validator(mode="after")

@@ -1,6 +1,140 @@
 # PROMPT LAB WORKBENCH — live campaign state
 
-## ⟫ RESUME HERE (handoff written 2026-07-20 ~01:20 for a fresh context)
+## ⟫ CURRENT (2026-07-19 ~09:50 — W1 ADOPTED+COMMITTED; NEXT: launch
+scratch/prompt-lab/bakeoff_run.sh (6 sub-4B full batteries, serial,
+~4-8h; then adjudicate per best-in-class rule + re-base sub-4B claims
++ README small-model guidance if winner changes). AFTER bake-off:
+W2-QCOERCE implementation (pre-registered below). Tree must stay
+QUIET for the whole bake-off — no src/ or corpus edits.)
+
+**W1 FINAL VERDICT (all 4 cells, adopted):** qwen plan 10/13
+(overlap +2, PASS); gemma plan 13/13 (overlap 11/11, +2, PASS —
+question-cap class fully converted); gemma reflect 27/30 (overlap
++1, PASS); qwen reflect 9/23 ×2 runs (−3 both, band edge) —
+NEUTRAL-BY-MECHANISM: W1 is monotone-looser (cannot reject what the
+old validator accepted), churn root-caused to the questions-object
+lottery (W2 class, orthogonal, pre-existing); new wall correctly
+rejected 32-74-word rambles ×3 (quality guard working). No new
+failure class anywhere. Output-budget rebuilt from w1cap_*_full
+splices (qwen reflect source = rep2, the lower run — conservative
+floor; run1 16/30 archived). 926 tests green.
+
+## ⟫ PREV (2026-07-19 ~07:55, session resumed post-handoff)
+
+- **Realworld batteries ADJUDICATED (both complete, 0 infra):** qwen
+  7/12, gemma 8/12 on the 12 realworld scenarios. New-class failures:
+  none beyond known lanes (qwen route weakness, diagnostic
+  undercount-sans-note, gemma path-charset, intervention-vs-items).
+  TWO failures are W1-target word-cap overshoots (qwen reflect reason
+  23w/cap20; gemma refinement question >15w) — both inside the 1.5×
+  wall → predicted converts.
+- **W1 IMPLEMENTED (uncommitted, battery in flight):**
+  WORD_CAP_TOLERANCE=1.5 + word_cap_hard() in limits.py; _cap_words +
+  3 question validators (intervention/reflect/plan) + diagnostic
+  prompt check all reject only past ceil(cap×1.5) with teaching
+  message (actual count + suggested cap). Templates untouched (they
+  keep stating suggested caps; statement gate intact). New test class
+  TestWordCapsAreSuggestions in test_semantic_validation.py. Full
+  pytest 926 GREEN. Evidence pre-launch: ALL 11 historical gemma
+  refinement-question rejections were 16-22 words (≤23 wall) and
+  qwen restructure_minimal_scope 23w (≤30 wall) → all convert.
+- **W1 MINI-BATTERIES (arm = tree at 878360c + W1 diff):** order:
+  (1) iterW1cap_qwen35_4b_plan.jsonl — 13 fn:plan scenarios, workers=1
+      driver "python scratch/token-diet/api_driver.py qwen3.5:4b --no-think"
+  (2) iterW1cap_qwen35_4b_reflect.jsonl — 30 fn:reflect scenarios, workers=2
+  (3) iterW1cap_gemma3_4b_plan.jsonl — same plan set, driver gemma3:4b, workers=1
+  (4) iterW1cap_gemma3_4b_reflect.jsonl — same reflect set, workers=2
+  Baselines to beat (same-or-better rule; ±3 single-run band):
+  qwen plan 7/11 (rep 5/11), qwen reflect 12/23; gemma plan 9/11
+  (rep 5/11), gemma reflect 20/23; realworld cells as above.
+  DECISION RULE (pre-registered): shape ok-rates same-or-better BOTH
+  models plan+reflect (expected: gemma plan RISES via question-cap
+  conversions); no new failure class introduced. Adopt → rebuild
+  output-budget same commit, push. If dead on resume: rerun the
+  recorded command for the first missing/short jsonl.
+  VERDICTS SO FAR:
+  (1) qwen plan DONE ~08:15: 10/13 ok (9/11 on baseline-comparable
+      subset vs 7/11 iterQ, +2 → PASS). ZERO word-cap fails (class
+      converted as predicted). Remaining fails: root-fields-missing
+      ×2 (mandarin realworld, recall_skill_lanes), min_accuracy
+      non-number ×1 (vague_goal — known class). 0 infra.
+  (2) qwen reflect RUN1 ~08:45: overlap 23 vs baseline: 12→9 ok
+      (−3, band edge, losing side) → pre-reg mandates REPLICATION
+      (rep2 in flight, b8y266r0a, iterW1cap_qwen35_4b_reflect_rep2).
+      KEY MECHANICAL FACT: W1 is MONOTONE-LOOSER (any output accepted
+      pre-W1 is accepted post-W1) — down-flips are sampling churn,
+      not W1 damage; run showed unusual churn (4 up + 7 down flips).
+      Two new fails are 47-74-word rambles correctly stopped by the
+      wall (implicit_ease_detection, extension_binge — genuine
+      quality rejections, not W1 losses). Adjudication rule for rep2:
+      combined best-of-both-runs is NOT allowed (cherry-pick);
+      adjudicate rep2 overlap ok vs 12: ≥12 → PASS; 10-11 → count
+      churn direction + read down-flip transcripts for any W1-message
+      confusion (teaching-message regression check: does the new
+      rejection message appear in retry context? measure.py is
+      single-shot so NO — flips are pure sampling); ≤9 twice →
+      investigate reflect-kind instability as its own finding.
+      REP2 ADJUDICATED ~09:05: overlap ALSO 9/23 (−3) but DIFFERENT
+      scenarios flipped (run1 down: confusion/contradicts/mixed/
+      pending/resolution_amid/retire/too_easy; rep2 down:
+      no_retirement_from_phase_pass/overconfident/confusion/
+      learner_language/mixed/retire/too_easy) → pre-reg "≤9 twice"
+      branch: INSTABILITY FINDING. Root cause identified: the
+      questions-object format lottery (W2 class) — rep2 has 5 fails
+      carrying it, 3 with NO other error; run1 had 2. Under W2
+      coercion rep2 = 12/23 = baseline parity. W1's own class:
+      converted in BOTH runs (zero within-wall word-cap rejections;
+      new wall correctly stopped 32-74w rambles ×3). VERDICT for the
+      reflect cell: NEUTRAL-BY-MECHANISM for W1 (monotone-looser +
+      churn traced to orthogonal W2 class). W1 adoption rides on:
+      plan cells (qwen +2 PASS; gemma pending) + no-new-class (holds)
+      + monotonicity. Reflect instability handed to W2-QCOERCE
+      (pre-registered below, sized 119 archive hits).
+      (3) gemma plan DONE ~09:25: **13/13 PERFECT** (baseline 9/11,
+      rep 5/11 → overlap 11/11, +2 vs best baseline, +6 vs rep).
+      Question-cap class fully converted; zero letter-paths; 0 infra.
+      (4) gemma reflect IN FLIGHT (br0rl840x) — expect flat 20±3
+      (baseline had zero word-cap fails).
+      INCIDENT (~09:35, self-reported): ran a 1-shot lfm2.5-thinking
+      API smoke-test DURING battery 4 — model eviction risk
+      (MAX_LOADED_MODELS=1) taints latency on 1-2 rows. ok-rates
+      unaffected unless timeout appeared; checked at adjudication.
+      LESSON (binding): NO model inference of any kind during a
+      battery, smoke-tests included — GPU-lane serialization applies
+      to every generation, not just batteries.
+      Baseline fail taxonomy
+      (pre-analyzed for instant adjudication): qwen reflect 11 fails
+      = 1 word-cap (restructure_minimal_scope 23w → converts) + 10
+      structural (journal-missing ×4, op-requirements ×5, unknown-id
+      ×1) → expect ~13/23 overlap, band ±3. Gemma reflect 20/23,
+      ZERO word-cap fails → expect flat 20±3. Gemma plan expects the
+      RISE (4 question-cap converts in latest rep).
+  PULLS: qwen3.5:2b + granite4:1b + lfm2.5-thinking:1.2b in flight
+  (btkpqzvvi).
+  OUTPUT-BUDGET REBUILD PLAN (step 5): per driver, merged jsonl =
+  iterQ_<model>.jsonl with campaign.plan+campaign.reflect rows
+  REPLACED by iterW1cap rows (chain scenarios contribute their
+  reflect rows; non-reflect chain rows keep iterQ versions), then
+  build_output_budget.py "api-chat/qwen3.5:4b/--no-think=<merged>"
+  "api-chat/gemma3:4b=<merged>". ok-rates and medians move
+  deliberately in the W1 commit.
+- **3b DEEP-RESEARCH DONE (2026-07-19 ~08:05, WebSearch per owner
+  directive).** 2026 sub-4B landscape: LFM2.5 family leads
+  small-model structured output (Liquid IFStruct: RL-trained variants
+  beat qwen3.5-4b's 36.25% at a fraction of the size — vendor bench,
+  treat as directional); granite4 trained for structured JSON/tool
+  use; no sub-4B gemma4 exists; smollm3 not on ollama; qwen3.5's only
+  sub-2B tag is 0.8b. SLATE (top-3 beyond pulled set, all
+  ollama-pullable, ~0.7-1.7GB): **qwen3.5:2b** (family precedent —
+  4B sibling is class winner above), **granite4:1b** (708MB,
+  JSON-trained), **lfm2.5-thinking:1.2b** (RL successor of the exact
+  model that beat 0.8b in armJ5S-era data). Bake-off roster = these 3
+  + qwen3.5:0.8b (done: 13/92) + LiquidAI/lfm2.5-1.2b-instruct +
+  gemma3:1b. Full current corpus, workers 2, ONE at a time, outputs
+  bakeoff_<slug>.jsonl. Disk 45GB free — pulls fit.
+- Then: 3b bake-off batteries (after W1 minis; see handoff step 3b below).
+
+## ⟫ RESUME HERE (handoff written 2026-07-20 ~01:20 for a fresh context — SUPERSEDED by CURRENT above; steps 3b/4 still pending)
 
 A fresh session pointed at docs/PROMPT_LAB.md does STEP ZERO (arm
 cron heartbeat + wakeup — the old session's schedules died with it),
@@ -618,6 +752,43 @@ directive §queue).
    scenarios (~2/kind, visible) + anchor-profile config + A/B batteries.
 
 ## Pre-registered (open)
+
+- **W2-QCOERCE (pre-registered 2026-07-19 ~08:50 from W1 run1
+  transcripts; implement AFTER the W1 commit lands, own commit).**
+  Observed cross-model: reflect `questions` emitted as OBJECTS with
+  the content in an obvious text key — qwen run1
+  reflect_confusion_is_item_signal ({"question": ..., "target_info":
+  false}) and reflect_pending_grade_integrity ({"text": ...}); gemma
+  baseline fails the same scenario with the same error. Content is
+  semantically fine → ArmS class (coerce harmless formatting
+  variance; rubric list→string precedent). Fix: questions validator
+  mode="before" coerces a list of dicts each having exactly one of
+  question/text/q (str) → that string; anything else still rejects.
+  Same for plan refinement_questions + intervention questions (same
+  shape family). Tests: unit fixtures from the two observed raws.
+  Decision rule: mechanical (validators are monotone-looser; free
+  gates only) + next battery cycle rides confirmation; judged rubrics
+  unaffected (question CONTENT unchanged). Word caps apply to the
+  coerced strings (W1 wall). SIZED (archive sweep ~08:55): 119
+  questions-object rejections across 110 jsonls = 5.5% of ALL
+  recorded fails, present at EVERY caliber (0.8b, qwen 4b, gemma
+  4b) — cross-caliber win, high confidence.
+  the sub-4B bake-off).** Observed: mastery_resolution 4B copied
+  skeleton example content verbatim into ops (example bleed, README
+  mode 9/10 adjacent). Hypothesis: example VALUES whose domain is
+  orthogonal to any plausible scenario (still realistic-shaped,
+  cap-compliant — e.g. a pottery-domain insight in a corpus with no
+  pottery scenario) reduce verbatim content bleed without shape loss,
+  because copying them is self-evidently wrong for the scenario
+  domain. NOT nonsense strings (README rule 9 requires realistic,
+  imitable values). Metric: bleed rate = fraction of driven reflect
+  outputs containing ≥5-consecutive-word spans from skeleton example
+  values (script to write: scratch/prompt-lab/bleed_check.py) +
+  shape ok-rate. Decision rule: bleed drops by ≥half AND ok-rate
+  same-or-better both 4B models (reflect battery pair); shape loss
+  or flat bleed → revert, negative result recorded. Template edit =
+  full protocol (README re-read, goldens, footprint, output-budget
+  same commit).
 
 - **OWNER RULING (2026-07-20 ~00:40): word caps are strong
   suggestions, never significant penalties.** Implementation W1:

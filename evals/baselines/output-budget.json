@@ -5,7 +5,7 @@
   "bytes_tolerance": 0.1,
   "drivers": {
     "api-chat/qwen3.5:4b/--no-think": {
-      "source_battery": "iterQ_qwen35_4b.jsonl",
+      "source_battery": "w1cap_qwen35_4b_full.jsonl",
       "kinds": {
         "attempt.grade": {
           "n": 16,
@@ -13,14 +13,14 @@
           "bytes_ok_median": 235
         },
         "campaign.plan": {
-          "n": 11,
-          "ok": 7,
-          "bytes_ok_median": 1020
+          "n": 13,
+          "ok": 10,
+          "bytes_ok_median": 1100
         },
         "campaign.reflect": {
-          "n": 23,
-          "ok": 12,
-          "bytes_ok_median": 725
+          "n": 27,
+          "ok": 10,
+          "bytes_ok_median": 857
         },
         "capture.route": {
           "n": 6,
@@ -45,7 +45,7 @@
       }
     },
     "api-chat/gemma3:4b": {
-      "source_battery": "iterQ_gemma3_4b.jsonl",
+      "source_battery": "w1cap_gemma3_4b_full.jsonl",
       "kinds": {
         "attempt.grade": {
           "n": 16,
@@ -53,14 +53,14 @@
           "bytes_ok_median": 222
         },
         "campaign.plan": {
-          "n": 11,
-          "ok": 9,
-          "bytes_ok_median": 1340
+          "n": 13,
+          "ok": 13,
+          "bytes_ok_median": 1397
         },
         "campaign.reflect": {
-          "n": 23,
-          "ok": 20,
-          "bytes_ok_median": 701
+          "n": 27,
+          "ok": 25,
+          "bytes_ok_median": 650
         },
         "capture.route": {
           "n": 6,

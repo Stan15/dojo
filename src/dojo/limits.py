@@ -6,8 +6,17 @@ enforced by a Pydantic validator, and tests assert the two never drift
 
 Word caps are validated as caps on *whitespace-separated tokens* — crude but
 deterministic and model-fair (no tokenizer dependence).
+
+Word caps are STRONG SUGGESTIONS, not hard gates (owner ruling 2026-07-20):
+templates state the target number, judged rubrics reward concision, but the
+validator only rejects past WORD_CAP_TOLERANCE × the target — a rejection
+costs a whole re-generation, which is never worth a few words of overshoot.
+Structural bounds (item counts, topic depth, charsets, verbatim-ness) stay
+strict: they are contract shape, not verbosity.
 """
 from __future__ import annotations
+
+import math
 
 # --- generation (exercise.generate / exercise_diagnostic) ---
 GENERATE_PROMPT_WORDS = 120
@@ -61,6 +70,17 @@ TASK_TRACE_CLIP_BYTES = 8 * 1024
 def word_count(text: str) -> int:
     """Whitespace-token count — the one definition of "word" for every cap."""
     return len(text.split())
+
+
+# Rejection fires only past cap × tolerance (owner ruling 2026-07-20; see
+# module docstring). Single source: every word-cap validator computes its
+# hard wall through word_cap_hard, never inline.
+WORD_CAP_TOLERANCE = 1.5
+
+
+def word_cap_hard(cap: int) -> int:
+    """The rejection threshold for a suggested word cap."""
+    return math.ceil(cap * WORD_CAP_TOLERANCE)
 
 
 # Every VALIDATOR-ENFORCED cap a fulfiller can trip, per task kind, under the

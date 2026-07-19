@@ -555,3 +555,16 @@ evals/reports/holdout-* — all off-limits to any prompt-work context.
   cycling), more's open-session refusal speaks human at a TTY
   (alternative_interactive: dojo daily, never the agent envelope).
   706 tests green.
+- 07-19 (prompt-lab, W1): OWNER RULING implemented — word caps are strong
+  suggestions: validators reject only past ceil(cap × WORD_CAP_TOLERANCE=1.5)
+  (limits.word_cap_hard, single source; _cap_words family + 3 question
+  validators + diagnostic prompt check), teaching rejection messages name
+  actual count + suggested cap; templates still state the tight cap (anchor
+  and gate now do different jobs). Mini-batteries: gemma plan 13/13 (was
+  9/11 — question-cap class fully converted), qwen plan +2, gemma reflect
+  +1, qwen reflect neutral (churn root-caused to the cross-caliber
+  questions-object format lottery — W2 coercion pre-registered, 119 archive
+  hits sized). Output-budget rebuilt (w1cap splices). Realworld batteries
+  adjudicated: qwen 7/12, gemma 8/12, no new classes. Sub-4B bake-off slate
+  researched+pulled (qwen3.5:2b, granite4:1b, lfm2.5-thinking:1.2b);
+  bakeoff_run.sh staged. 926 tests green.

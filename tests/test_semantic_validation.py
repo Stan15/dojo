@@ -72,6 +72,51 @@ class TestSummaryClipNotReject:
         assert topic.summary == "short hook"
 
 
+class TestWordCapsAreSuggestions:
+    """W1 (owner ruling 2026-07-20): word caps are strong suggestions, never
+    significant penalties. Templates state the target; the validator rejects
+    only past cap × WORD_CAP_TOLERANCE. Structural bounds stay strict."""
+
+    def test_hard_wall_is_ceil_of_cap_times_tolerance(self):
+        assert limits.WORD_CAP_TOLERANCE == 1.5
+        assert limits.word_cap_hard(30) == 45
+        assert limits.word_cap_hard(25) == 38  # ceil(37.5)
+
+    def test_overshoot_within_tolerance_accepted(self):
+        from dojo.schemas import ReflectResult
+        journal = " ".join(["w"] * (limits.REFLECT_JOURNAL_WORDS + 10))  # 40 ≤ 45
+        result = ReflectResult(ops=[], journal=journal)
+        assert result.journal == journal
+
+    def test_past_tolerance_rejected_with_teaching_message(self):
+        from dojo.schemas import ReflectResult
+        n = limits.word_cap_hard(limits.REFLECT_JOURNAL_WORDS) + 1
+        with pytest.raises(Exception) as exc:
+            ReflectResult(ops=[], journal=" ".join(["w"] * n))
+        msg = str(exc.value)
+        assert f"is {n} words" in msg  # actual count
+        assert f"at most {limits.REFLECT_JOURNAL_WORDS} words" in msg  # suggested cap
+
+    def test_question_lists_share_the_tolerance(self):
+        from dojo.schemas import ReflectResult
+        q = " ".join(["w"] * (limits.REFLECT_QUESTION_WORDS + 5))  # 30 ≤ 38
+        result = ReflectResult(ops=[], journal="ok", questions=[q])
+        assert result.questions == [q]
+
+    def test_question_past_tolerance_still_rejected(self):
+        from dojo.schemas import ReflectResult
+        q = " ".join(["w"] * (limits.word_cap_hard(limits.REFLECT_QUESTION_WORDS) + 1))
+        with pytest.raises(Exception):
+            ReflectResult(ops=[], journal="ok", questions=[q])
+
+    def test_structural_bounds_stay_strict(self):
+        """Item counts are contract shape, not verbosity — no tolerance."""
+        from dojo.schemas import ReflectResult
+        qs = ["too many"] * (limits.REFLECT_MAX_QUESTIONS + 1)
+        with pytest.raises(Exception):
+            ReflectResult(ops=[], journal="ok", questions=qs)
+
+
 class TestRetryMessagePedagogy:
     """R1/R2 (2026-07-19): rejection messages teach the RIGHT fix."""
 

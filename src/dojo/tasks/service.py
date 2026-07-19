@@ -278,9 +278,10 @@ def apply_generate(store, task: Task, result: GenerateResult) -> dict[str, Any]:
         if diagnostic:
             if item.skill != "diagnostic":
                 reasons.append(f"items[{i}].skill must be 'diagnostic'")
-            if limits.word_count(item.prompt) > limits.DIAGNOSTIC_PROMPT_WORDS:
+            if limits.word_count(item.prompt) > limits.word_cap_hard(limits.DIAGNOSTIC_PROMPT_WORDS):
                 reasons.append(
-                    f"items[{i}].prompt exceeds {limits.DIAGNOSTIC_PROMPT_WORDS} words"
+                    f"items[{i}].prompt is {limits.word_count(item.prompt)} words; "
+                    f"rewrite it in at most {limits.DIAGNOSTIC_PROMPT_WORDS} words"
                 )
         else:
             if item.skill == "diagnostic":
