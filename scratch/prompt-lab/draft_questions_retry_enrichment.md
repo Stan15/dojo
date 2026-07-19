@@ -1,6 +1,10 @@
-# QUESTIONS proposal draft — retry-prompt enrichment (owner-gated)
-# CONTINGENT on R3-LFM final adjudication; numbers below marked FINAL when
-# arm B completes. Drafted ~14:00 during the probe per draft-ahead doctrine.
+# RETIRED ~14:15 — R3-LFM adjudicated NEGATIVE (A 39% vs B 52% = +13,
+# bar +15; subs −0.12, bar −0.5). This proposal does NOT ship. Kept as
+# the negative-result record; the only live remnant is a grade-stems-only
+# hypothesis (A 11 vs B 15 ok) requiring a FRESH pre-registered
+# replication before anything is proposed (forking-paths guard).
+#
+# Original contingent draft below, for the record:
 
 **Ask:** when a raw-driver submission is rejected, re-send the ORIGINAL
 prompt plus one line: "Your previous output was rejected: <validator

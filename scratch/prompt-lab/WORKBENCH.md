@@ -34,9 +34,20 @@ PADDED (filler words in one question) → W1 verbosity guard PASSES;
 pre-reg debt closed.** Ops lesson: the first judge call wedged 2h
 WAITING ON STDIN — codex exec without stdin closed hangs; always
 `</dev/null` (or pipe input) for non-interactive codex runs.
-**PROBE ARM A IN FLIGHT ~11:10 (orphaned proc — poll pgrep
-retry_probe + retryprobe_lfmthink_A.jsonl row count; then arm B same
-command with B / retryprobe_lfmthink_B.jsonl).**
+**R3-LFM ADJUDICATED ~14:15 — NEGATIVE by pre-registration.** Final:
+A 13/33 (39%, subs 2.48) vs B 17/33 (52%, subs 2.36) → +13 points
+(bar +15), −0.12 subs (bar −0.5). NEITHER branch met. The interim
++36 (at 20 scenarios) decayed as the route tail landed — feedback
+rescues verbatim-evidence 5/7 but missing-fields 0/12 (route
+omission is upstream rule-phrasing confusion, W4's territory). NO
+retry-enrichment proposal ships (draft updated to negative record).
+FOLLOW-UP CANDIDATE (flagged, NOT adjudicable from this data —
+forking-paths guard): grade-stems-only cell showed A 11 vs B 15 ok;
+a grade-only feedback hypothesis needs a FRESH pre-registered
+replication with its own bar before any proposal. Fourth R3 negative
+(4B, 0.8b, lfm-think overall) — the retry-feedback idea is now
+thoroughly dead as a general mechanism; only the class-specific
+grade cell keeps a pulse, unproven.
 OWNER-PROPOSAL SEEDS (draft when queue quiets, deliver via QUESTIONS
 board): (a) reflect-decomp (STATE 7d) now has hard evidence — after
 W1+W2+W3 the reflect residual is journal-omission + op-requirement

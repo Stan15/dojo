@@ -268,3 +268,21 @@ negatives in a day; 0.8b→1.2b class rep flip at 5× quality per GB.
   commit as the adjudication that produced it — and the bar is CAPTURE
   FIRST: anything interesting goes in regardless of topic; curation is
   the writer's job, later.
+
+## APPENDED ~14:15 — "The win that evaporated" (pre-registration's finest hour)
+
+The retry-feedback probe on the new sub-4B champion looked like a triumph
+mid-run: at 20 scenarios, arm B (error feedback) led arm A (blind resample)
+by +36 points — more than double the pre-registered +15 bar. Three prior
+negatives about to be avenged. Final tally at 33 scenarios: +13. Bar
+missed by two points; verdict NEGATIVE; no production proposal. What
+happened: the easy grade scenarios ran first (feedback rescues verbatim-
+evidence failures 5/7 — the model genuinely re-reads and quotes when
+told), and the route tail ran last (feedback rescues field-omission 0/12,
+because that confusion is upstream in the rule phrasing — a different
+fix's territory). Interim leads are sampling-order artifacts. If the
+decision rule hadn't been written down BEFORE the data, this ships.
+Fourth R3 negative; the mechanism table (rescued 5/7 vs 0/12) is the
+consolation prize — it says exactly which retry classes are feedback-
+shaped, and keeps one narrow grade-only hypothesis alive for a fresh,
+separately pre-registered test. Data: retryprobe_lfmthink_{A,B}.jsonl.
