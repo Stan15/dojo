@@ -23,6 +23,13 @@ one scenario. No coercion arm; re-examine only if current batteries
 show recurrence.
 THEN: R3-LFM probe (grade+route stems on lfm2.5-thinking); then W4
 route-phrasing arm; then standing queue.
+**W1 VERBOSITY GUARD SPOT-CHECK ~12:00 (pre-reg debt, codex remote
+lane in flight bxd6k16ou):** parsing ALL accepted W1-battery outputs
+found only 4 fields exceeding their stated caps (2 plan-questions
+16-18w, 1 insight-text 28w, 1 strategy-reason 21w) across ~70
+accepted outputs — **the anchor HOLDS: stated caps still govern the
+length distribution; the wall admits a thin tail, not drift.** Codex
+judging the 4 for SUBSTANTIVE vs PADDED; verdict lands in ledger.
 **PROBE ARM A IN FLIGHT ~11:10 (orphaned proc — poll pgrep
 retry_probe + retryprobe_lfmthink_A.jsonl row count; then arm B same
 command with B / retryprobe_lfmthink_B.jsonl).**
