@@ -41,7 +41,7 @@ class TestCorpusCoverage:
     breadth is a ratcheted invariant, not an aspiration. These floors may only
     ever go UP; raising them is how the corpus grows deliberately."""
 
-    MIN_TOTAL = 79  # +2 2026-07-18: prose-feedback discernment (owner story) — grade meta-feedback-in-answer, reflect confusion-is-item-signal
+    MIN_TOTAL = 80  # +1 2026-07-19: route URL-bleed trap vs near-empty registry (live INSIGHTS 2026-07-18 failure)
     MIN_PER_CATEGORY = {
         # +13 2026-07-18 (release-gate remedy): every category +1 (routing and
         # planning +2), thin task kinds lifted most (diagnostic, goal_route,
@@ -55,7 +55,7 @@ class TestCorpusCoverage:
         "meta-learning": 4,
         "domain-breadth": 5,
         "change-authority": 4,
-        "routing": 7,
+        "routing": 8,  # +1 2026-07-19 URL-bleed vs near-empty registry
         "robustness": 11,
         "encoding": 3,   # ADR 017: present-before-probing, history-sighted probes; +control
         "care-exit": 3,  # ADR 017 §6: retirement on voice / never on phase-pass / never as escape
