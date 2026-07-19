@@ -257,7 +257,38 @@ deliberate answer is genuinely NO — every candidate would break a rail
 (quiet tree during a battery, GPU-lane serialization, imminent usage
 cut making spawns wasteful) or produce nothing any next step consumes —
 is waiting correct, and even then record briefly WHY (which candidates
-were considered and rejected) so the reasoning is auditable. Otherwise
+were considered and rejected) so the reasoning is auditable.
+
+**An exhaustion claim must be CHECKLIST-verified, never from memory
+(owner correction 2026-07-19: two "candidates exhausted" calls were
+each followed by a human prompt surfacing 3+ real items — shallow
+enumeration is the measured failure mode).** Before concluding
+"waiting is correct", sweep EVERY category below and name what each
+yields or why it's empty:
+
+1. **Pre-registration debts of ADOPTED arms** — judged spot-sets,
+   guard checks, confirmation batteries promised in a pre-reg and not
+   yet run (the W1 verbosity guard sat unpaid until prompted).
+2. **Draft-ahead for every QUEUED arm** — exact diffs, metric
+   scripts, adjudicators written in scratch so results/tree-unfreeze
+   are consumed the moment they arrive.
+3. **Docs currency** — STATE changelog, INSIGHTS entries for durable
+   findings, README claims, QUESTIONS/proposal drafts, memory index.
+4. **Analysis over committed data** — every (model × kind × arm)
+   cell of archived jsonls not yet taxonomized; sizing sweeps for
+   observed-but-unsized failure classes.
+5. **Remote lane** — codex-side work that overlaps local batteries
+   (spot-judges, validations) within spend policy.
+6. **Automation** — chain the next serial step to the current one
+   (watcher that launches arm B when arm A exits) so no dead time
+   exists between stages.
+7. **Directive/tooling hygiene** — does WORKBENCH let a dead session
+   resume every lane? Are orphaned processes recorded with poll
+   instructions?
+
+If a human prompt ever surfaces a candidate this sweep missed, that
+is a DIRECTIVE BUG: patch this checklist in the same session, so the
+class of miss dies with the instance. Otherwise
 USE the time: prep the next step's scripts/commands so results are
 consumed the moment they land, draft pre-registrations and subagent
 briefs, analyze already-collected transcripts, size prospective wins
