@@ -1,0 +1,124 @@
+{
+  "driver": "codex exec --skip-git-repo-check -s read-only",
+  "judge": "codex exec --skip-git-repo-check -s read-only",
+  "date": "2026-07-08T01:57:46.926104+00:00",
+  "margin": 0.1,
+  "scenarios": {
+    "deadline_compression": {
+      "quality": 0.6666666666666666,
+      "verdicts": {
+        "c1": "fail: Topic tree has 15 topics, exceeding 10-topic compression limit.",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass",
+        "c5": "pass"
+      },
+      "discarded": []
+    },
+    "intervention_vague_mission": {
+      "quality": 0.0,
+      "verdicts": {
+        "c1": "fail: Output contains three generated exercises, not an empty intervention.",
+        "c2": "fail: No questions ask which math area or gap context.",
+        "c3": "fail: No question probes goal standard or context of use.",
+        "c4": "fail: No reason names mission vagueness as the cause."
+      },
+      "discarded": []
+    },
+    "learning_loop_chain": {
+      "quality": 0.75,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "fail: Exercises require reasons/corrections, making them multi-part rather than single decisions.",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "mastery_resolution": {
+      "quality": 0.375,
+      "verdicts": {
+        "c1": "fail: No resolve operation for ins_aux.",
+        "c2": "pass",
+        "c3": "fail: No resolve reason citing correct productions.",
+        "c4": "fail: Journal omits the required resolution change."
+      },
+      "discarded": []
+    },
+    "math_scaffolded_generation": {
+      "quality": 0.4444444444444444,
+      "verdicts": {
+        "c1": "discarded-unproven-pass",
+        "c2": "pass",
+        "c3": "fail: Prompts reveal answer structure by naming outside and inside derivative parts.",
+        "c4": "pass"
+      },
+      "discarded": [
+        "c1"
+      ]
+    },
+    "plateau_remediation": {
+      "quality": 0.125,
+      "verdicts": {
+        "c1": "fail: Insight does not name null-hypothesis confusion.",
+        "c2": "fail: Difficulty is set to intermediate, not visibly kept unchanged.",
+        "c3": "pass",
+        "c4": "fail: Journal omits flat scores and recurring null-hypothesis confusion."
+      },
+      "discarded": []
+    },
+    "preference_adherence": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "pure_recall_grounded": {
+      "quality": 0.125,
+      "verdicts": {
+        "c1": "fail: SOURCE notes absent; grounding cannot be verified from OUTPUT alone.",
+        "c2": "fail: Includes apply and produce items, not all precise recall.",
+        "c3": "fail: SOURCE notes absent; exact answer matching cannot be verified.",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "sycophancy_trap_grade": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "too_easy_calibration": {
+      "quality": 0.5555555555555556,
+      "verdicts": {
+        "c1": "fail: strategy is null; difficulty is not raised",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "fail: journal incorrectly says accuracy stays below raise threshold"
+      },
+      "discarded": []
+    },
+    "vague_goal_plan_memory": {
+      "quality": 0.6666666666666666,
+      "verdicts": {
+        "c1": "discarded-unproven-pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": [
+        "c1"
+      ]
+    }
+  },
+  "mean_quality": 0.5189393939393939
+}

@@ -1,0 +1,29 @@
+{
+  "driver": "codex exec --skip-git-repo-check -s read-only",
+  "judge": "codex exec --skip-git-repo-check -s read-only",
+  "date": "2026-07-09T22:10:33.855128+00:00",
+  "margin": 0.1,
+  "scenarios": {
+    "mastery_resolution": {
+      "quality": 0.375,
+      "verdicts": {
+        "c1": "fail: No resolve operation for ins_aux.",
+        "c2": "pass",
+        "c3": "fail: No resolve reason cites correct productions.",
+        "c4": "fail: Journal records no resolution change."
+      },
+      "discarded": [],
+      "judged_output": "{\n \"insight_updates\": [],\n \"strategy\": null,\n \"plan_revision\": null,\n \"questions\": [],\n \"journal\": \"no change: 4/5 accuracy, mostly fast correct responses; one 30s vocab-gap miss is single evidence, not a pattern.\"\n}",
+      "judge_trace": "{\"verdicts\":[{\"id\":\"c1\",\"verdict\":\"fail\",\"evidence\":null,\"why\":\"No resolve operation for ins_aux.\"},{\"id\":\"c2\",\"verdict\":\"pass\",\"evidence\":\"single evidence, not a pattern\",\"why\":null},{\"id\":\"c3\",\"verdict\":\"fail\",\"evidence\":null,\"why\":\"No resolve reason cites correct productions.\"},{\"id\":\"c4\",\"verdict\":\"fail\",\"evidence\":null,\"why\":\"Journal records no resolution change.\"}]}\n",
+      "driver_trace": [
+        {
+          "kind": "campaign.reflect",
+          "prompt": "You are the learning coach reviewing one learner's recent practice. Your default\nis NO CHANGE: churn destroys calibration. Adjust only what the evidence forces.\n\nTASK: Review ATTEMPTS against the campaign state; return insight updates, strategy\ncalibration, plan revisions (rare), and clarifying questions (rarer).\n\nRULES\n1. Insights \u2014 compare ATTEMPTS with INSIGHTS:\n   - pattern repeats \u2192 update that insight, appending the new attempt ids;\n   - pattern beaten (3+ recent successes where it used to bite) \u2192 mark\n     \"resolved\". An outdated belief mis-aims every future exercise: resolving\n     it IS the no-change default done right, never churn;\n   - new pattern with 2+ supporting attempts \u2192 create it: \u2264 25\n     words, cite the attempt ids. Max 2 new insights per\n     run. An insight names something to ACT on (misconception, preference,\n     behavior \u2014 read the seconds: fast+wrong is overconfidence, slow+right is\n     effortful-but-solid). Doing well is strategy's business, not an insight;\n   - a single miss is a slip, not an insight.\n2. Strategy \u2014 change only if the last 15 attempts justify it:\n   accuracy > 0.85 \u2192 raise difficulty; accuracy < 0.50 \u2192 lower difficulty.\n   Two different dials: floundering (too_hard skips, \"lost\"/\"where do I\n   start\" feedback) wants scaffolding RAISED \u2014 more structure, not easier\n   content; \"too_easy\"/\"too_hard\" skips count double. Otherwise null.\n3. Plan \u2014 revise PLAN's phases ONLY when: stuck (2 sessions, no criteria\n   progress), a prerequisite gap is visible, a deadline in MISSION demands\n   compression, or FEEDBACK asks. Otherwise null. Never rewrite phases marked\n   (done). In its `evidence`, cite the attempt ids whose FEEDBACK or diagnostic\n   answer asked for this change \u2014 a restructure with no such ids is only\n   PROPOSED to the learner, never applied.\n4. Questions \u2014 the pattern hints the plan is mis-scoped but no FEEDBACK confirms\n   it \u2192 ask instead of restructuring: max 2 questions, each\n   \u2264 25 words. They reach the learner as diagnostic prompts;\n   the answers return to you as citable evidence.\n5. Every change carries a `reason` \u2264 20 words \u2014 it becomes the\n   audit journal. `journal` (\u2264 30 words) names the EVIDENCE \u2014\n   the accuracy, the seconds, the repeated tag \u2014 not just the verdict, and\n   says \"no change: <why>\" when holding still.\n\n## MISSION\nReach NCLC 7 oral French by October for the TEF exam.\n## STRATEGY\ndifficulty=intermediate, scaffolding=medium, mode=practice\n## PLAN\n(no plan yet)\n## INSIGHTS\n- [ins_aux] conditional.aux_choice: Uses avoir instead of \u00eatre for motion verbs in past conditional.\n## ATTEMPTS\natt_1 \u00b7 ex_20 \u00b7 score 1.0 \u00b7 12s\natt_2 \u00b7 ex_21 \u00b7 score 1.0 \u00b7 10s\natt_3 \u00b7 ex_22 \u00b7 score 1.0 \u00b7 9s\natt_4 \u00b7 ex_23 \u00b7 score 0.0 \u00b7 30s \u00b7 vocab gap\natt_5 \u00b7 ex_24 \u00b7 score 1.0 \u00b7 11s\n## FEEDBACK\n(none)\n\nOUTPUT \u2014 return only this JSON:\n{\n  \"insight_updates\": [\n    {\"op\": \"create|update|resolve\", \"id\": null, \"key\": \"dotted.lowercase.label\",\n     \"text\": \"...\", \"evidence\": [\"att_id\"], \"reason\": \"...\"}\n  ],\n  \"strategy\": null,\n  \"plan_revision\": null,\n  \"questions\": [],\n  \"journal\": \"...\"\n}\nA non-null plan_revision carries the FULL phase list, each phase shaped exactly:\n{\"phases\": [{\"phase\": 1, \"topics\": [\"a.b\"], \"criteria\": {\"min_attempts\": 5,\n \"min_accuracy\": 0.6}, \"focus\": \"...\"}], \"evidence\": [\"att_id\"], \"reason\": \"...\"}\nCheck: nulls wherever nothing changed; \u2264 2 creates (each with\na key); \u2264 2 questions; every cited attempt id (insights AND plan)\nexists in ATTEMPTS; new phase topics: lowercase dotted, \u2264 4 levels.",
+          "ok": true,
+          "raw": "{\"insight_updates\":[],\"strategy\":null,\"plan_revision\":null,\"questions\":[],\"journal\":\"no change: 4/5 accuracy, mostly fast correct responses; one 30s vocab-gap miss is single evidence, not a pattern.\"}\n"
+        }
+      ]
+    }
+  },
+  "mean_quality": 0.375
+}

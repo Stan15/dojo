@@ -1,0 +1,11 @@
+{"scenario": "deadline_compression", "arm": "B", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "plan_deadline_cuts_dependency_root_celestial", "arm": "B", "ok": true, "submissions": 2, "errors_log": [["topics[2].kind: Field required"], []]}
+{"scenario": "plan_deadline_cuts_dependency_root_sourdough", "arm": "B", "ok": true, "submissions": 3, "errors_log": [["result: Value error, phase 2 references undeclared topic: scoring_patterns_visual_match"], ["result: Value error, phase 2 references undeclared topic: starter_feed_dilution_ratio_1to4"], []]}
+{"scenario": "plan_extend_not_duplicate", "arm": "B", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "plan_goal_in_learner_language", "arm": "B", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "plan_multicampaign_registry", "arm": "B", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "plan_prior_expertise_scoping", "arm": "B", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "plan_recall_skill_lanes", "arm": "B", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "plan_single_fact_goal", "arm": "B", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "plan_unrealistic_timeline", "arm": "B", "ok": true, "submissions": 2, "errors_log": [["topics[7].path: Value error, path must be lowercase words joined by underscores, dots only between levels (e.g. git.bisect_run) — no hyphens, spaces, or slashes", "phases: List should have at most 6 items after validation, not 7"], []]}
+{"scenario": "vague_goal_plan_memory", "arm": "B", "ok": true, "submissions": 2, "errors_log": [["topics: List should have at least 1 item after validation, not 0"], []]}

@@ -1,0 +1,29 @@
+{
+  "driver": "codex exec --skip-git-repo-check -s read-only",
+  "judge": "codex exec --skip-git-repo-check -s read-only",
+  "date": "2026-07-09T15:24:55.173006+00:00",
+  "margin": 0.1,
+  "scenarios": {
+    "legitimate_restructure": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "plan_extend_not_duplicate": {
+      "quality": 0.6666666666666666,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "fail: Existing open and barre chord topics reappear.",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    }
+  },
+  "mean_quality": 0.8333333333333333
+}

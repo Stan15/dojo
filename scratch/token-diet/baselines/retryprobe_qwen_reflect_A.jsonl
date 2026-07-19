@@ -1,0 +1,23 @@
+{"scenario": "atrophy_reentry", "arm": "A", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "implicit_ease_detection", "arm": "A", "ok": true, "submissions": 2, "errors_log": [["insight_updates[0].text: Value error, text exceeds 25 words (39)"], []]}
+{"scenario": "inferred_restructure_probe", "arm": "A", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "legitimate_restructure", "arm": "A", "ok": false, "submissions": 3, "errors_log": [["insight_updates[1]: Value error, op=update requires the existing insight id"], ["insight_updates[0]: Value error, op=create requires evidence attempt ids", "questions[0]: Input should be a valid string"], ["plan_revision.phases[1].criteria.min_attempts: Field required", "plan_revision.phases[1].criteria.min_accuracy: Field required"]]}
+{"scenario": "mastery_resolution", "arm": "A", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "no_retirement_as_difficulty_escape", "arm": "A", "ok": true, "submissions": 2, "errors_log": [["insight_updates[0]: Value error, op=create requires evidence attempt ids", "insight_updates[1]: Value error, op=create requires evidence attempt ids", "questions[0]: Input should be a valid string"], []]}
+{"scenario": "no_retirement_from_phase_pass", "arm": "A", "ok": true, "submissions": 2, "errors_log": [["insight_updates[1]: Value error, op=create requires text"], []]}
+{"scenario": "overconfident_fast_wrong", "arm": "A", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "plateau_remediation", "arm": "A", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "premature_resolution_control", "arm": "A", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "reflect_confusion_is_item_signal", "arm": "A", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "reflect_diagnostic_voice_revision", "arm": "A", "ok": true, "submissions": 2, "errors_log": [["journal: Field required"], []]}
+{"scenario": "reflect_extension_binge_discount", "arm": "A", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "reflect_learner_contradicts_evidence", "arm": "A", "ok": true, "submissions": 2, "errors_log": [["insight_updates[0]: Value error, op=create requires evidence attempt ids", "insight_updates[1]: Value error, op=create requires text"], []]}
+{"scenario": "reflect_learner_language", "arm": "A", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "reflect_mixed_signals", "arm": "A", "ok": false, "submissions": 3, "errors_log": [["insight_updates[2]: Value error, op=create requires evidence attempt ids"], ["strategy.reason: Value error, reason exceeds 20 words (22)", "journal: Field required"], ["insight_updates[0]: Value error, op=create requires evidence attempt ids", "insight_updates[1]: Value error, op=create requires evidence attempt ids", "strategy.reason: Value error, reason exceeds 20 words (25)"]]}
+{"scenario": "reflect_pending_grade_integrity", "arm": "A", "ok": true, "submissions": 2, "errors_log": [["insight_updates[1].text: Value error, text exceeds 25 words (31)", "insight_updates[2].key: Value error, key must be a dotted lowercase label, e.g. conditional.aux_choice", "insight_updates[2].reason: String should have at least 1 character"], []]}
+{"scenario": "resolution_amid_active_struggle", "arm": "A", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "resolution_despite_low_window_accuracy", "arm": "A", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "restructure_minimal_scope", "arm": "A", "ok": false, "submissions": 3, "errors_log": [["insight_updates[0]: Value error, op=update requires the existing insight id"], ["questions[0]: Input should be a valid string"], ["journal: Field required"]]}
+{"scenario": "retire_on_learner_voice", "arm": "A", "ok": true, "submissions": 2, "errors_log": [["insight_updates[1].reason: Field required", "strategy.reason: Value error, reason exceeds 20 words (21)", "questions[0]: Input should be a valid string"], []]}
+{"scenario": "too_easy_calibration", "arm": "A", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "too_hard_scaffolding_response", "arm": "A", "ok": true, "submissions": 2, "errors_log": [["insight_updates[1]: Value error, op=create requires evidence attempt ids"], []]}

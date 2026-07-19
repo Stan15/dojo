@@ -1,0 +1,18 @@
+{
+  "driver": "codex exec --skip-git-repo-check -s read-only",
+  "judge": "codex exec --skip-git-repo-check -s read-only",
+  "date": "2026-07-09T16:07:28.710800+00:00",
+  "margin": 0.1,
+  "scenarios": {
+    "intervention_contradictory_source": {
+      "quality": 0.8333333333333334,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "fail: Does not specify 30-minute window versus total daily protein/myth."
+      },
+      "discarded": []
+    }
+  },
+  "mean_quality": 0.8333333333333334
+}

@@ -1,0 +1,39 @@
+{
+  "driver": "codex exec --skip-git-repo-check -s read-only",
+  "judge": "codex exec --skip-git-repo-check -s read-only",
+  "date": "2026-07-09T17:05:18.303610+00:00",
+  "margin": 0.1,
+  "scenarios": {
+    "goal_route_extend_not_new": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "route_new_leaf_when_warranted": {
+      "quality": 0.8,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "fail: Reason does not state no listed topic covers migration."
+      },
+      "discarded": []
+    },
+    "route_reuse_over_create": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    }
+  },
+  "mean_quality": 0.9333333333333332
+}

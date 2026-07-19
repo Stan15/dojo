@@ -1,0 +1,11 @@
+{"scenario": "deadline_compression", "arm": "A", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "plan_deadline_cuts_dependency_root_celestial", "arm": "A", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "plan_deadline_cuts_dependency_root_sourdough", "arm": "A", "ok": true, "submissions": 3, "errors_log": [["mission: Field required", "name: Field required", "topics: Field required"], ["mission: Field required", "name: Field required", "topics: Field required"], []]}
+{"scenario": "plan_extend_not_duplicate", "arm": "A", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "plan_goal_in_learner_language", "arm": "A", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "plan_multicampaign_registry", "arm": "A", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "plan_prior_expertise_scoping", "arm": "A", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "plan_recall_skill_lanes", "arm": "A", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "plan_single_fact_goal", "arm": "A", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "plan_unrealistic_timeline", "arm": "A", "ok": true, "submissions": 3, "errors_log": [["result: Value error, phase 1 references undeclared topic: heyo"], ["phases[1].topics[0]: Input should be a valid string"], []]}
+{"scenario": "vague_goal_plan_memory", "arm": "A", "ok": true, "submissions": 1, "errors_log": [[]]}

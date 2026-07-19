@@ -1,0 +1,6 @@
+{"scenario": "atrophy_reentry", "arm": "B", "ok": true, "submissions": 2, "errors_log": [["journal: Field required"], []]}
+{"scenario": "chain_reflect_then_targeted_generation", "arm": "B", "ok": false, "submissions": 3, "errors_log": [["topic_retirements[0].path: String should have at least 1 character"], ["questions[0]: Input should be a valid string"], ["journal: Field required"]]}
+{"scenario": "chain_strategy_change_then_calibrated_generation", "arm": "B", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "gap_grade_honest_ignorance", "arm": "B", "ok": true, "submissions": 1, "errors_log": [[]]}
+{"scenario": "gen_collision_music_relative_parallel", "arm": "B", "ok": false, "submissions": 3, "errors_log": [["result: Value error, no items and no intervention — return one or the other"], ["no JSON object found in the submission"], ["no JSON object found in the submission"]]}
+{"scenario": "gen_collision_sql_left_join", "arm": "B", "ok": false, "submissions": 3, "errors_log": [["no JSON object found in the submission"], ["result: Value error, no items and no intervention — return one or the other"], ["items[0].answer: Value error, answer exceeds 80 words (116)", "items[0].skill: Field required", "items[1].skill: Field required"]]}
