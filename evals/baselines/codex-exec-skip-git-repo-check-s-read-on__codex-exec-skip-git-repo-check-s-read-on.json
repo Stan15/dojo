@@ -517,8 +517,100 @@
         "c4": "pass"
       },
       "discarded": []
+    },
+    "diag_implied_axis_italian_oral": {
+      "quality": 0.6,
+      "verdicts": {
+        "c1": "discarded-unproven-pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": [
+        "c1"
+      ]
+    },
+    "diag_implied_axis_whiteboard_interview": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "grade_canceling_errors_stoichiometry": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "grade_memorized_interval_bogus_rule": {
+      "quality": 0.9,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "fail: Does not teach one short of a major sixth."
+      },
+      "discarded": []
+    },
+    "plan_deadline_cuts_dependency_root_sourdough": {
+      "quality": 0.4,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "fail: Bagels, focaccia, scoring, and flour topic remain present.",
+        "c3": "fail: Topic list has 9 topics, exceeding roughly 6.",
+        "c4": "fail: Mission lists extra coverage instead of naming breadth cut."
+      },
+      "discarded": []
+    },
+    "reflect_fast_wrong_inflates_difficulty_chess": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "reflect_topic_split_masked_by_aggregate_nav": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "route_lexical_bass_guitar_vs_angling": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
+    },
+    "route_lexical_crane_rigging_vs_ornithology": {
+      "quality": 1.0,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "pass"
+      },
+      "discarded": []
     }
   },
-  "mean_quality": 0.8547040922040922,
-  "note": "2026-07-18 validation run: 23 floors bootstrapped, 15 raised; 6 single-sample drops NOT lowered (multi-sample rule; sample 2 in flight \u2014 fresh session dispositions); present_before_probing floorless (scored 0, zero never persists)"
+  "mean_quality": 0.882,
+  "note": "2026-07-18 validation run: 23 floors bootstrapped, 15 raised; 6 single-sample drops NOT lowered (multi-sample rule; sample 2 in flight — fresh session dispositions); present_before_probing floorless (scored 0, zero never persists) | 2026-07-19: +10 deliberation-trap floors bootstrapped (arm-A run 085715); gen_collision pair floorless pending compliance pass; celestial plan trap scored 0.0 (genuine, not refusal) — floorless per the zero-precedent, diagnosis queued."
 }
