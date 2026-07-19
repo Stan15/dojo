@@ -1,0 +1,165 @@
+# Shame-quit hides inside good numbers: window accuracy stays high while the
+# learner does fewer and fewer items per session after one missed easy item.
+# A level-only read calls the shrinkage mastery (raise) or struggle (lower) or
+# lost interest (retire). The composition is session-count trend x the two
+# learner-voice feedback rows: only reading BOTH yields hold-the-dials plus an
+# avoidance insight that cites the learner's own words.
+category: realworld
+domain: ear-training
+scenario_context: |
+  An intermediate ear-training campaign. The attempt window covers four
+  consecutive days: 4 items, then 3, then 2, then a single skipped item —
+  accuracy on answered items stays high (one miss total, on an easy item).
+  Two attempts carry the learner's own feedback: "i felt stupid getting the
+  easy one wrong" (att_104, the miss) and "skipped today, didn't want to
+  break the streak by failing" (att_110, the skip). Strong output: one new
+  insight naming avoidance-after-error / shame-driven shrinkage, citing
+  att_104 and att_110; strategy null (both dials held — accuracy is fine);
+  no topic retirement; no plan revision; a journal in a compassionate,
+  plain register (no therapy-speak) that says why nothing moved. Weak
+  output: reads the shrinking sessions as mastery and raises difficulty,
+  or as too-hard and lowers difficulty, or retires the intervals topic,
+  or ignores the feedback rows entirely.
+seed:
+  campaign:
+    id: interval-training
+    name: Interval Ear Training
+    mission: "Recognize melodic and harmonic intervals by ear, quickly and reliably."
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+    topics:
+      - {path: intervals, kind: skill, summary: "interval recognition by ear"}
+    attack_plan:
+      - topics: [intervals]
+        criteria: {min_attempts: 20, min_accuracy: 0.6}
+        focus: "seconds through fifths, melodic then harmonic"
+  exercises:
+    - {id: ex_i1, topic_path: intervals, difficulty: intermediate, kind: skill, prompt: "Ascending melodic interval, C4 to E4. Name it."}
+    - {id: ex_i2, topic_path: intervals, difficulty: intermediate, kind: skill, prompt: "Harmonic interval, G3 and D4 together. Name it."}
+    - {id: ex_i3, topic_path: intervals, difficulty: intermediate, kind: skill, prompt: "Descending melodic interval, A4 to C4. Name it."}
+    - {id: ex_i4, topic_path: intervals, difficulty: beginner, kind: skill, prompt: "Ascending melodic interval, E4 to F4. Name it."}
+    - {id: ex_i5, topic_path: intervals, difficulty: intermediate, kind: skill, prompt: "Harmonic interval, C4 and A4 together. Name it."}
+  attempts:
+    - id: att_101
+      session_id: s1
+      exercise_id: ex_i1
+      score: 1.0
+      latency_seconds: 9.0
+      grader: ai
+      user_answer: "major third"
+      created_at: "2026-07-13T18:02:00+00:00"
+    - id: att_102
+      session_id: s1
+      exercise_id: ex_i2
+      score: 1.0
+      latency_seconds: 11.0
+      grader: ai
+      user_answer: "perfect fifth"
+      created_at: "2026-07-13T18:04:00+00:00"
+    - id: att_103
+      session_id: s1
+      exercise_id: ex_i3
+      score: 1.0
+      latency_seconds: 8.0
+      grader: ai
+      user_answer: "major sixth down"
+      created_at: "2026-07-13T18:06:00+00:00"
+    - id: att_104
+      session_id: s1
+      exercise_id: ex_i4
+      score: 0.0
+      latency_seconds: 6.0
+      grader: ai
+      user_answer: "major second"
+      error_tag: "easy_item_slip"
+      feedback: "i felt stupid getting the easy one wrong"
+      created_at: "2026-07-13T18:08:00+00:00"
+    - id: att_105
+      session_id: s2
+      exercise_id: ex_i5
+      score: 1.0
+      latency_seconds: 14.0
+      grader: ai
+      user_answer: "major sixth"
+      created_at: "2026-07-14T18:10:00+00:00"
+    - id: att_106
+      session_id: s2
+      exercise_id: ex_i1
+      score: 1.0
+      latency_seconds: 13.0
+      grader: ai
+      user_answer: "major third"
+      created_at: "2026-07-14T18:12:00+00:00"
+    - id: att_107
+      session_id: s2
+      exercise_id: ex_i2
+      score: 1.0
+      latency_seconds: 12.0
+      grader: ai
+      user_answer: "perfect fifth"
+      created_at: "2026-07-14T18:14:00+00:00"
+    - id: att_108
+      session_id: s3
+      exercise_id: ex_i3
+      score: 1.0
+      latency_seconds: 15.0
+      grader: ai
+      user_answer: "major sixth descending"
+      created_at: "2026-07-15T19:01:00+00:00"
+    - id: att_109
+      session_id: s3
+      exercise_id: ex_i5
+      score: 1.0
+      latency_seconds: 16.0
+      grader: ai
+      user_answer: "major sixth"
+      created_at: "2026-07-15T19:03:00+00:00"
+    - id: att_110
+      session_id: s4
+      exercise_id: ex_i4
+      score: 0.0
+      latency_seconds: 4.0
+      grader: exact
+      user_answer: ""
+      skip_reason: "not_today"
+      feedback: "skipped today, didn't want to break the streak by failing"
+      created_at: "2026-07-16T18:30:00+00:00"
+steps:
+  - compile:
+      fn: reflect
+judge_rubric:
+  - id: c1
+    weight: 4
+    question: "Is there a new insight naming avoidance / shame / streak-protection after the error (not mastery, not difficulty), with evidence citing the feedback attempts att_104 and att_110?"
+  - id: c2
+    weight: 3
+    question: "Are both dials held (strategy null, or at most a scaffolding-support move with difficulty unchanged), with NO topic retirement and NO plan revision?"
+  - id: c3
+    weight: 2
+    question: "Is the journal in a compassionate plain register — acknowledging the sting of the easy miss and the shrinking sessions without therapy jargon, blame, or celebrating 'mastery'?"
+  - id: c4
+    weight: 1
+    question: "Does every cited attempt id actually exist in the window (att_101..att_110), and does the journal state why nothing moved?"
+references:
+  good:
+    insight_updates:
+      - op: create
+        id: null
+        key: affect.avoidance_after_error
+        text: "Sessions shrank from four items to one after a missed easy item; feedback shows shame and streak-protection, not fading ability."
+        evidence: [att_104, att_110]
+        reason: "Two feedback rows in the learner's own words tie shrinking sessions to fear of failing."
+    strategy: null
+    plan_revision: null
+    questions: []
+    topic_retirements: []
+    journal: "No dial moved: accuracy stays strong. One missed easy item hurt; sessions shortened to protect the streak. A short session still counts, and misses are part of practice."
+  bad:
+    insight_updates: []
+    strategy:
+      difficulty: advanced
+      scaffolding: null
+      reason: "High accuracy and shrinking sessions show the material is mastered."
+    plan_revision: null
+    questions: []
+    topic_retirements: []
+    journal: "Accuracy high and fewer items needed each day; clear mastery, difficulty raised to advanced."

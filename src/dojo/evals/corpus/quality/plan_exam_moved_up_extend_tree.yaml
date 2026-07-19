@@ -1,0 +1,99 @@
+# Composition trap: the goal carries a PIVOT (deadline pulled in + skill gap
+# named) while EXISTING TOPICS carries a mature theory tree. A shallow planner
+# pattern-matches "certification exam" and rebuilds the theory syllabus it can
+# see; a strong planner composes goal + tree: theory is DONE, only the timed
+# practical is missing, so it extends the existing namespaces with
+# timing-under-pressure topics and says so in the mission.
+category: realworld
+domain: sommelier
+scenario_context: |
+  The learner's certification exam moved from June to three weeks out. Their
+  registry already holds a mature theory tree (regions, grapes, law, service
+  theory, tasting theory) and they say they know the theory cold — what fails
+  is the timed practical. Strong output: a compressed plan whose topics are
+  timed-practical skills (timed blind deduction, pacing, timed service) that
+  EXTEND the existing wine.* namespaces without re-declaring any existing
+  theory path; the mission names the pivot (three weeks, practical timing,
+  theory already mastered); phases are few, phase 1 calibrates under the
+  clock. Weak output: rebuilds the theory syllabus from scratch (duplicating
+  wine.regions.*, wine.grapes.*, wine.law.* paths), ignores the timing skill
+  entirely, or pads a leisurely multi-phase theory survey with no trace of
+  the three-week deadline.
+seed:
+  campaign:
+    id: somm-theory
+    name: Sommelier Prep
+    mission: "Master sommelier theory: regions, grapes, and wine law."
+    topics:
+      - {path: wine.regions.france, kind: recall, summary: "French appellations and styles"}
+      - {path: wine.regions.italy, kind: recall, summary: "Italian regions and styles"}
+      - {path: wine.regions.new_world, kind: recall, summary: "New World producing regions"}
+      - {path: wine.grapes.reds, kind: recall, summary: "major red varieties"}
+      - {path: wine.grapes.whites, kind: recall, summary: "major white varieties"}
+      - {path: wine.law.appellations, kind: recall, summary: "appellation and labeling law"}
+      - {path: wine.service.theory, kind: recall, summary: "service standards and glassware"}
+      - {path: wine.tasting.theory, kind: recall, summary: "the deduction grid on paper"}
+steps:
+  - compile:
+      fn: plan
+      goal: "My sommelier certification exam got moved from June to three weeks from now. I already know the theory cold — regions, grapes, law, all of it. What I fail is the practical: timed blind tasting and timed service. I run out of clock every mock."
+      context_notes: "Theory tree already built and mastered in an existing campaign; the gap is performing under exam timing."
+      existing_topics: "wine.regions.france, wine.regions.italy, wine.regions.new_world, wine.grapes.reds, wine.grapes.whites, wine.law.appellations, wine.service.theory, wine.tasting.theory"
+judge_rubric:
+  - {id: c1, weight: 4, question: "Do the declared topics pivot to the timed
+      practical (timed blind deduction, pacing under the clock, timed service)
+      rather than re-teaching theory the learner says is mastered?"}
+  - {id: c2, weight: 3, question: "Do new topic paths EXTEND the existing
+      wine.* namespaces without duplicating any path already in EXISTING
+      TOPICS (no re-declared wine.regions.*, wine.grapes.*, wine.law.*,
+      *.theory leaves)?"}
+  - {id: c3, weight: 2, question: "Does the mission explicitly name the pivot
+      — three weeks, practical timing, theory already known — rather than
+      restating generic certification coverage?"}
+  - {id: c4, weight: 1, question: "Is the plan compressed for three weeks
+      (roughly 2-4 phases, moderate min_attempts, phase 1 a timed
+      calibration), not a leisurely survey?"}
+references:
+  good:
+    mission: "Pass the practical exam in three weeks: run the full blind deduction grid and timed service sequence inside exam time limits, leaning on already-mastered theory instead of re-studying it."
+    name: "Practical Timing Sprint"
+    topics:
+      - {path: wine.tasting.timed_blind, kind: skill, summary: "call grape, region, vintage band inside the exam clock"}
+      - {path: wine.tasting.deduction_grid, kind: skill, summary: "run the full grid under time without skipping steps"}
+      - {path: wine.tasting.pacing, kind: skill, summary: "budget seconds per grid section and recover when behind"}
+      - {path: wine.service.timed_sequence, kind: skill, summary: "open, decant, and pour a full table inside service time"}
+    phases:
+      - topics: [wine.tasting.timed_blind]
+        criteria: {min_attempts: 5, min_accuracy: 0.0}
+        focus: "timed baseline: find where the clock actually kills the attempt"
+      - topics: [wine.tasting.deduction_grid, wine.tasting.pacing]
+        criteria: {min_attempts: 10, min_accuracy: 0.7}
+        focus: "grid fluency against a shrinking clock"
+      - topics: [wine.tasting.timed_blind, wine.service.timed_sequence]
+        criteria: {min_attempts: 10, min_accuracy: 0.7}
+        focus: "full exam simulation: blind flight plus service at exam timing"
+    refinement_questions:
+      - "What is the time limit per wine on the practical?"
+  bad:
+    mission: "Master wine theory across regions, grape varieties, and wine law to become a certified sommelier."
+    name: "Sommelier Certification Prep"
+    topics:
+      - {path: wine.regions.france, kind: recall, summary: "French appellations and styles"}
+      - {path: wine.regions.italy, kind: recall, summary: "Italian regions and styles"}
+      - {path: wine.grapes.reds, kind: recall, summary: "major red varieties"}
+      - {path: wine.grapes.whites, kind: recall, summary: "major white varieties"}
+      - {path: wine.law.appellations, kind: recall, summary: "appellation and labeling law"}
+    phases:
+      - topics: [wine.regions.france]
+        criteria: {min_attempts: 5, min_accuracy: 0.0}
+        focus: "calibrate theory knowledge"
+      - topics: [wine.regions.france, wine.regions.italy]
+        criteria: {min_attempts: 15, min_accuracy: 0.7}
+        focus: "region mastery"
+      - topics: [wine.grapes.reds, wine.grapes.whites]
+        criteria: {min_attempts: 15, min_accuracy: 0.7}
+        focus: "grape variety mastery"
+      - topics: [wine.law.appellations]
+        criteria: {min_attempts: 15, min_accuracy: 0.8}
+        focus: "wine law mastery"
+    refinement_questions: []

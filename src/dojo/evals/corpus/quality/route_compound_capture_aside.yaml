@@ -1,0 +1,72 @@
+# Composition trap: one capture, two payloads. The text carries a runnable
+# pottery technique that the existing campaign clearly owns, PLUS a social
+# aside ("my friend recommended a book on negotiation") that belongs to no
+# campaign. A router only files the capture into ONE place — the strong move
+# is to route the technique home and let the aside go unfiled, saying so in
+# the reason. A shallow router latches onto the aside (proposes a negotiation
+# campaign, losing the technique) or freezes on the mixture (stay_inbox for
+# the whole capture).
+category: realworld
+domain: pottery
+scenario_context: |
+  Registry: one active campaign "Wheel Throwing" (wheel-throwing) with topics
+  pottery.centering, pottery.wall_pulling, pottery.rim_control,
+  pottery.trimming. The capture states a concrete class technique — compress
+  the rim with a chamois after every pull to prevent S-cracks — then trails
+  off into an unrelated aside about a friend recommending a negotiation
+  book. Strong output: attach to wheel-throwing at pottery.rim_control (the
+  technique's obvious home), seed true (testable technique), with a reason
+  of 12 words or fewer that does NOT try to file the aside (it may note the
+  aside stays unfiled). Weak output: propose_campaign for the negotiation
+  aside (dropping the runnable technique), stay_inbox for the whole capture
+  because the two halves confuse it, or a reason that pretends the
+  negotiation aside belongs to the pottery campaign.
+seed:
+  campaign:
+    id: wheel-throwing
+    name: Wheel Throwing
+    mission: "Throw consistent 20cm cylinders and mugs on the potter's wheel."
+    topics:
+      - {path: pottery.centering, kind: skill, summary: "center clay reliably before opening"}
+      - {path: pottery.wall_pulling, kind: skill, summary: "pull even walls to height"}
+      - {path: pottery.rim_control, kind: skill, summary: "keep rims level, even, and crack-free"}
+      - {path: pottery.trimming, kind: skill, summary: "trim feet on leather-hard pots"}
+  captures:
+    - id: cap_rim_aside
+      text: "From class: compress the rim with a chamois after every pull — evens out moisture and stops S-cracks in drying. Also my friend recommended a book on negotiation, said it changed how she handles clients."
+steps:
+  - compile:
+      fn: route
+      capture_id: cap_rim_aside
+      capture_text: "From class: compress the rim with a chamois after every pull — evens out moisture and stops S-cracks in drying. Also my friend recommended a book on negotiation, said it changed how she handles clients."
+judge_rubric:
+  - {id: c1, weight: 4, question: "Does the route file the rim-compression
+      technique into wheel-throwing (attach at pottery.rim_control, or a
+      sensible new leaf under pottery) — not propose_campaign for the
+      negotiation aside and not stay_inbox for the whole capture?"}
+  - {id: c2, weight: 3, question: "Is seed true, since the technique is a
+      runnable, testable practice item?"}
+  - {id: c3, weight: 2, question: "Does the reason avoid trying to file the
+      negotiation aside — no proposed second home, no claim that the aside
+      fits the pottery campaign?"}
+  - {id: c4, weight: 1, question: "Is the reason honest and within 12 words,
+      naming the technique as the routed content?"}
+references:
+  good:
+    action: attach
+    campaign: wheel-throwing
+    topic_path: pottery.rim_control
+    new_name: null
+    new_mission: null
+    confidence: high
+    reason: "rim compression technique fits rim_control; negotiation aside stays unfiled"
+    seed: true
+  bad:
+    action: propose_campaign
+    campaign: null
+    topic_path: null
+    new_name: "Negotiation Skills"
+    new_mission: "Learn client negotiation tactics from the recommended book."
+    confidence: low
+    reason: "friend recommended a negotiation book worth studying"
+    seed: false

@@ -1,0 +1,99 @@
+# Caregiver time-reality: LEARNER states the life constraint (new parent,
+# ten unpredictable minutes at random times) and the goal (conversational
+# Portuguese with the in-laws at Christmas). The composition is
+# constraint x goal x question design: the stated facts JOINTLY imply the
+# axes worth probing — audio-only / hands-free feasibility, interruption
+# tolerance, which in-law topics matter, ability grounded in the actual
+# in-law context. Shallow output runs a generic placement test that
+# ignores the life the practice must fit into.
+category: realworld
+domain: portuguese
+scenario_context: |
+  A campaign for conversational Portuguese with the in-laws by Christmas.
+  LEARNER states: new parent, gets roughly ten unpredictable minutes at
+  random times of day. Strong output: four warm but efficient questions
+  probing the axes the constraint and goal jointly imply — are hands and
+  eyes free when the minutes appear (audio-only feasibility)? how should
+  practice behave when interrupted mid-item? what do in-law conversations
+  actually revolve around, and which topics matter most by Christmas? what
+  can they already catch or say in that real in-law context? Never re-asks
+  the stated facts (that they are a new parent, how much time they have,
+  or the Christmas goal itself as a bare question). Weak output: generic
+  level-testing that ignores the life constraint — conjugation drills,
+  translation items, CEFR self-rating, or asking how many hours per week
+  they can commit to structured study.
+seed:
+  campaign:
+    id: family-portuguese
+    name: Family Portuguese
+    mission: "Hold warm everyday conversations in Portuguese with the in-laws by Christmas."
+    topics:
+      - {path: portuguese, kind: skill, summary: "conversational Portuguese for family life"}
+  insights:
+    - id: ins_life1
+      key: life.new_parent_time
+      description: "New parent: practice time comes as roughly ten unpredictable minutes at random points in the day."
+      sources: []
+      status: active
+    - id: ins_goal1
+      key: goal.inlaws_christmas
+      description: "Goal is conversational Portuguese with the in-laws at Christmas."
+      sources: []
+      status: active
+steps:
+  - compile:
+      fn: diagnostic
+      topic_path: portuguese
+      n_items: 4
+judge_rubric:
+  - id: c1
+    weight: 4
+    question: "Do the questions probe the constraint-implied axes — at least two of: hands/eyes-free audio feasibility when the minutes appear, how practice should handle interruption mid-item, which in-law conversation topics matter most?"
+  - id: c2
+    weight: 3
+    question: "Is current ability probed IN the real in-law context (what they catch when in-laws speak, what they can already say back) rather than via abstract level labels or drills?"
+  - id: c3
+    weight: 2
+    question: "Are generic placement-test moves absent — no conjugation or translation drills, no CEFR/1-10 self-rating, no 'hours per week of structured study' question that ignores the stated ten-unpredictable-minutes reality, no re-asking that they are a new parent or the Christmas goal?"
+  - id: c4
+    weight: 1
+    question: "Warm but efficient tone; exactly 4 items, each prompt ≤ 40 words, every skill exactly 'diagnostic', every answer and rubric null?"
+references:
+  good:
+    items:
+      - prompt: "When your ten minutes appear, are your hands and eyes usually free, or would listening-and-speaking practice fit your day better than reading?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "If a session gets cut off mid-question, would you rather pick up exactly where you stopped or start something fresh next time?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "What do conversations with your in-laws usually revolve around: the baby, food, family news? Which topics matter most to you by Christmas?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "When your in-laws speak Portuguese now, how much do you catch, and what can you already say back without rehearsing?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+    note: null
+  bad:
+    items:
+      - prompt: "Conjugate the verb 'falar' in the present tense."
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "Translate into Portuguese: 'The book is on the table.'"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "How many hours per week can you commit to structured study sessions?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "What is your current CEFR level in Portuguese?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+    note: null

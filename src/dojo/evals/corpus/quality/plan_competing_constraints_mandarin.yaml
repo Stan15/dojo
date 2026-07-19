@@ -1,0 +1,94 @@
+# Composition trap: three constraints that cannot all hold — "conversational
+# Mandarin", "10 days at 20 minutes a day" (~200 total minutes), and "can't
+# read characters". A shallow planner writes the standard beginner-Mandarin
+# syllabus (characters, grammar, HSK vocab) and silently pretends the time
+# fits; a strong planner composes the constraints into an explicit trade-off:
+# pinyin-only spoken survival phrases, characters deferred, plan sized to the
+# minutes that actually exist, and one scope question back to the learner.
+category: realworld
+domain: mandarin
+scenario_context: |
+  The learner wants conversational Mandarin for a business trip in 10 days,
+  has 20 minutes a day, and cannot read characters. Roughly 200 total minutes
+  exist — conversational fluency is impossible; only a spoken pinyin survival
+  kit fits. Strong output: the trade-off made EXPLICIT (pinyin-only spoken
+  phrases, characters deferred until after the trip, stated in the mission),
+  a small topic set of situational phrase groups, 2-3 phases with low
+  min_attempts sized to ~200 minutes, and a refinement question of 15 words
+  or fewer about which situations to prioritize. Weak output: any
+  character/writing/reading topics, an HSK-style syllabus, fluency promised
+  in the mission, or a phase structure (many phases, high min_attempts) that
+  silently pretends the 200-minute budget fits.
+seed:
+  campaign:
+    id: chess-endgames
+    name: Endgame Lab
+    mission: "Convert winning rook endgames reliably in classical games."
+    topics:
+      - {path: chess.rook_endings, kind: skill, summary: "Lucena and Philidor positions"}
+steps:
+  - compile:
+      fn: plan
+      goal: "I need conversational Mandarin for a business trip in 10 days. I can give it 20 minutes a day, and I can't read characters yet."
+      context_notes: "Complete beginner speaker; no character knowledge; hard budget of 20 minutes per day for 10 days."
+judge_rubric:
+  - {id: c1, weight: 4, question: "Is the impossible trade-off made explicit —
+      pinyin-only spoken phrases with characters deferred, stated in the
+      mission or plan — with zero character/writing/reading topics declared?"}
+  - {id: c2, weight: 3, question: "Is the plan sized to roughly 200 total
+      minutes: a small topic set (about 4-6 situational phrase groups), 2-3
+      phases, low min_attempts — not a fluency-scale syllabus?"}
+  - {id: c3, weight: 2, question: "Is there a refinement question of 15 words
+      or fewer asking which situations/scope to prioritize for the trip?"}
+  - {id: c4, weight: 1, question: "Are topics concrete spoken business-trip
+      situations (greetings, introductions, dining, logistics) as clean
+      lowercase dotted paths, rather than abstract grammar coverage?"}
+references:
+  good:
+    mission: "Get through greetings, introductions, scheduling, and dinner talk in spoken Mandarin using pinyin only, within roughly 200 total minutes over ten days; characters deferred until after the trip."
+    name: "Trip Mandarin Sprint"
+    topics:
+      - {path: mandarin.pinyin.tones, kind: skill, summary: "the four tones plus neutral, drilled only on trip phrases"}
+      - {path: mandarin.phrases.greetings, kind: recall, summary: "hello, thanks, polite forms for first meetings"}
+      - {path: mandarin.phrases.business_intros, kind: recall, summary: "introduce yourself and your company, exchange courtesies"}
+      - {path: mandarin.phrases.dining, kind: recall, summary: "order, toast, and host courtesies at a business dinner"}
+      - {path: mandarin.phrases.logistics, kind: recall, summary: "taxi, hotel, times and places"}
+    phases:
+      - topics: [mandarin.pinyin.tones, mandarin.phrases.greetings]
+        criteria: {min_attempts: 5, min_accuracy: 0.0}
+        focus: "calibrate ear and tone production on greeting phrases"
+      - topics: [mandarin.phrases.business_intros, mandarin.phrases.dining]
+        criteria: {min_attempts: 8, min_accuracy: 0.6}
+        focus: "core meeting and dinner scripts, spoken drills only"
+      - topics: [mandarin.phrases.logistics, mandarin.phrases.greetings]
+        criteria: {min_attempts: 8, min_accuracy: 0.7}
+        focus: "mixed survival rehearsal at trip pace"
+    refinement_questions:
+      - "Which matters most: meetings, dinners, or travel logistics?"
+  bad:
+    mission: "Achieve conversational fluency in Mandarin, including reading and writing, in time for the business trip."
+    name: "Business Mandarin"
+    topics:
+      - {path: mandarin.pinyin.tones, kind: skill, summary: "tone production and recognition"}
+      - {path: mandarin.characters.radicals, kind: recall, summary: "the most common radicals"}
+      - {path: mandarin.characters.hsk1_writing, kind: recall, summary: "write the HSK1 character set"}
+      - {path: mandarin.grammar.sentence_patterns, kind: recall, summary: "core sentence patterns"}
+      - {path: mandarin.vocab.business_500, kind: recall, summary: "500 essential business words"}
+      - {path: mandarin.phrases.greetings, kind: recall, summary: "greeting phrases"}
+    phases:
+      - topics: [mandarin.pinyin.tones]
+        criteria: {min_attempts: 5, min_accuracy: 0.0}
+        focus: "pronunciation foundations"
+      - topics: [mandarin.characters.radicals]
+        criteria: {min_attempts: 15, min_accuracy: 0.7}
+        focus: "character foundations"
+      - topics: [mandarin.characters.hsk1_writing]
+        criteria: {min_attempts: 15, min_accuracy: 0.7}
+        focus: "reading and writing"
+      - topics: [mandarin.grammar.sentence_patterns, mandarin.vocab.business_500]
+        criteria: {min_attempts: 15, min_accuracy: 0.8}
+        focus: "grammar and vocabulary buildout"
+      - topics: [mandarin.phrases.greetings]
+        criteria: {min_attempts: 15, min_accuracy: 0.8}
+        focus: "conversation practice"
+    refinement_questions: []

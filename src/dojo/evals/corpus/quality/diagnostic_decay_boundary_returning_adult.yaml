@@ -1,0 +1,107 @@
+# Returning-after-years adult: LEARNER already states four years of
+# university statistics a decade ago, "the shape of it" remembered, and a
+# six-week job deadline. The composition is stated-history x question
+# design: good calibration LOCATES the decay boundary (what survived vs
+# what atrophied) with concrete graded-recall probes across core axes —
+# it never re-asks the settled history and never quizzes trivia. Shallow
+# output defaults to absolute-beginner definitions or fact quizzes that
+# map nothing.
+category: realworld
+domain: statistics
+scenario_context: |
+  A campaign to rebuild working statistics for a data analyst job starting
+  in six weeks. LEARNER states: studied statistics for four years at
+  university about a decade ago, remembers "the shape of it", needs it
+  working for the new job. Strong output: five questions that locate the
+  decay boundary — concrete graded-recall probes across the domain's core
+  axes (e.g. explain a p-value or confidence interval and say where the
+  explanation gets fuzzy; set up a regression and name the first step
+  that's gone; sort topics into still-automatic vs name-recognition-only;
+  what the job actually needs day-to-day and in which tools). Never
+  absolute-beginner definitions, never trivia (inventors, acronyms), never
+  re-asking the stated history or deadline. Weak output: "what is a
+  mean?"-level questions, trivia quizzes, self-ratings on a 1-10 scale,
+  or re-asking whether/how long they studied statistics.
+seed:
+  campaign:
+    id: stats-reboot
+    name: Statistics Reboot
+    mission: "Rebuild working statistics for a data analyst role starting in six weeks."
+    topics:
+      - {path: statistics, kind: skill, summary: "applied statistics for analyst work"}
+  insights:
+    - id: ins_bg1
+      key: background.prior_study
+      description: "Studied statistics for four years at university about a decade ago; remembers 'the shape of it' but not the details."
+      sources: []
+      status: active
+    - id: ins_bg2
+      key: goal.job_deadline
+      description: "Needs statistics working for a new data analyst job that starts in six weeks."
+      sources: []
+      status: active
+steps:
+  - compile:
+      fn: diagnostic
+      topic_path: statistics
+      n_items: 5
+judge_rubric:
+  - id: c1
+    weight: 4
+    question: "Do the questions probe graded recall to locate the decay boundary — asking the learner to perform or explain something concrete AND identify where it gets fuzzy, or to sort what is still automatic vs only recognized by name — across at least three distinct core statistics axes (e.g. inference, regression, data handling, tools)?"
+  - id: c2
+    weight: 3
+    question: "Is the stated history left settled — no question asks whether/how long they studied statistics, how long ago, or restates the six-week deadline as a question?"
+  - id: c3
+    weight: 2
+    question: "Are absolute-beginner definition questions and trivia absent — no 'what is a mean/median', no inventor or acronym quizzes, no bare 1-10 self-ratings?"
+  - id: c4
+    weight: 1
+    question: "Exactly 5 items, each prompt ≤ 40 words, every skill exactly 'diagnostic', every answer and rubric null, valid JSON?"
+references:
+  good:
+    items:
+      - prompt: "Explain to a colleague what a p-value does and does not tell you; where does your explanation start to feel shaky?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "A dataset has a few extreme outliers. Which summary statistics and test choices change, and why? Answer as far as you can from memory."
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "Sketch in words how you would set up a simple linear regression, and name the first step you no longer remember how to do."
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "Which topics still feel automatic from university, and which do you now only recognize by name? List a few of each."
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "What will the new role need statistics for day-to-day, and in which tools (spreadsheets, SQL, Python, R) will that work happen?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+    note: null
+  bad:
+    items:
+      - prompt: "What is the difference between a mean and a median?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "Have you studied statistics before, and for how long?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "What does the acronym ANOVA stand for?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "Who is credited with inventing the t-test?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "On a scale of 1 to 10, how good are you at statistics?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+    note: null

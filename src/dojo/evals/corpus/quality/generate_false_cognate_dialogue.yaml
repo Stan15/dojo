@@ -1,0 +1,89 @@
+# Jargon collision (REAL-WORLD HARD): medical Spanish for nurses, where the
+# learner model carries BOTH a misconception ("confuses clinical false
+# cognates — embarazada/embarrassed, constipado/constipated, intoxicado/
+# intoxicated") and a preference ("wants realistic patient dialogue, not word
+# lists"). Composition under test: the constraints must land IN THE SAME
+# ITEMS — dialogue-framed exercises that specifically force discrimination of
+# the false-cognate class. Weak paths: generic vocab/translation drills, or
+# realistic dialogue that never touches a false cognate.
+category: realworld
+domain: medical_spanish
+scenario_context: |
+  An ER nurse is learning Spanish for patient intake and bedside care. The
+  learner model holds a misconception insight — confuses clinical false
+  cognates (reads "embarazada" as embarrassed, "constipado" as constipated,
+  "intoxicado" as intoxicated) — and a preference: realistic patient
+  dialogue, not isolated word lists.
+  Strong output: exercises framed as realistic patient or clinical dialogue
+  in believable register, where getting the item right REQUIRES correctly
+  discriminating a false cognate (interpreting a patient's "estoy
+  constipado", producing "embarazada" for pregnant, charting "intoxicado" as
+  poisoning). Both constraints compose inside the same items.
+  Weak output: generic vocabulary drills ("translate: hospital, doctor,
+  nurse"), word-list items with no dialogue frame, OR pleasant realistic
+  dialogue that never touches the false-cognate class — satisfying one
+  constraint while dropping the other, leaving the documented misconception
+  untested.
+seed:
+  campaign:
+    id: ward-spanish
+    name: Ward Spanish
+    mission: "Communicate accurately with Spanish-speaking patients during ER intake and bedside care as a nurse."
+    topics:
+      - {path: medical_spanish, kind: skill, summary: "clinical Spanish for nursing"}
+      - {path: medical_spanish.patient_dialogue, kind: skill, summary: "realistic intake and bedside patient dialogue"}
+  insights:
+    - id: ins_false_cognates
+      key: cognates.false_clinical
+      description: "Confuses clinical false cognates: reads embarazada as embarrassed, constipado as constipated, intoxicado as intoxicated."
+      sources: [att_ws1]
+      topic_path: medical_spanish.patient_dialogue
+    - id: ins_dialogue_pref
+      key: feedback.user.realistic_dialogue
+      description: "Wants realistic patient dialogue practice, not isolated word lists or translation drills."
+      sources: [att_ws2]
+      topic_path: medical_spanish.patient_dialogue
+steps:
+  - compile:
+      fn: generate
+      topic_path: medical_spanish.patient_dialogue
+      n_items: 3
+      difficulty: intermediate
+judge_rubric:
+  - {id: c1, weight: 4, question: "Do the items specifically target the clinical false-cognate class (embarazada, constipado, intoxicado, or comparable clinical false friends) such that a learner holding the documented confusion would answer wrong?"}
+  - {id: c2, weight: 3, question: "Are the items framed as realistic patient or clinical dialogue / bedside situations (quoted patient speech, charting, intake questions) rather than isolated word-list or bare translation drills?"}
+  - {id: c3, weight: 2, question: "Do the two constraints compose within items — at least two items embed a false cognate INSIDE a realistic dialogue frame, rather than segregating dialogue items from cognate items?"}
+  - {id: c4, weight: 1, question: "Does every item carry a scorable answer and rubric, stay self-contained, and demand active production or interpretation (no yes/no, no 'did you know')?"}
+references:
+  good:
+    items:
+      - prompt: "A patient at triage says: \"Estoy muy constipado y no puedo respirar bien por la nariz.\" In one short English sentence, what is the patient actually reporting?"
+        answer: "He is congested — a head cold with a blocked nose — not constipated."
+        rubric: "- interprets constipado as congested / head cold\n- does NOT translate it as constipated"
+        skill: "apply"
+      - prompt: "Before an X-ray you must ask a female patient whether she could be pregnant. Give the question in natural Spanish, using the correct word for pregnant."
+        answer: "¿Está usted embarazada? / ¿Hay alguna posibilidad de que esté embarazada?"
+        rubric: "- uses embarazada correctly to mean pregnant\n- well-formed, respectful question in Spanish"
+        skill: "produce"
+      - prompt: "A relative tells you: \"Creo que está intoxicado — comió mariscos anoche.\" What condition should you suspect and chart, and why would writing 'intoxicated' be a dangerous error?"
+        answer: "Suspect food poisoning from shellfish; intoxicado means poisoned, not drunk — charting 'intoxicated' would send the workup down the wrong path."
+        rubric: "- identifies poisoning / food poisoning\n- explains intoxicado is a false cognate of intoxicated (drunk)"
+        skill: "explain"
+    note: null
+    intervention: null
+  bad:
+    items:
+      - prompt: "Translate into Spanish: the hospital, the doctor, the nurse, the medicine."
+        answer: "el hospital, el médico, la enfermera, la medicina"
+        rubric: "- all four nouns translated correctly with articles"
+        skill: "recall"
+      - prompt: "List five parts of the body in Spanish."
+        answer: "la cabeza, el brazo, la pierna, el estómago, el corazón"
+        rubric: "- five correct body-part nouns in Spanish"
+        skill: "recall"
+      - prompt: "A patient says: \"Buenos días, me duele la cabeza.\" Respond politely in Spanish offering to get the doctor."
+        answer: "Buenos días. Lo siento — ahora mismo llamo al médico."
+        rubric: "- polite register\n- offers to fetch the doctor in correct Spanish"
+        skill: "produce"
+    note: null
+    intervention: null

@@ -1,0 +1,82 @@
+# Composition trap: lexical gravity vs semantic ownership. The registry holds
+# a dormant music campaign literally NAMED "Interval Training" (mission says
+# the ear-training goal was completed in 2024) and an active marathon campaign
+# whose topics never say "interval". The capture opens with the words
+# "Interval training" but is unmistakably a running workout (5k effort,
+# VO2max, mile repeats). A shallow router string-matches the campaign name; a
+# strong router reads the capture's domain and routes to the active semantic
+# owner, growing a new leaf under running.*. The stale campaign is listed
+# FIRST (as the primary seed) to maximize the pull.
+category: realworld
+domain: running
+scenario_context: |
+  Registry: campaign "Interval Training" (interval-training) — a music
+  ear-training campaign whose mission says the goal was completed December
+  2024, topics all under intervals.* (musical intervals) — and campaign
+  "Marathon Build" (marathon-build), an active sub-4 marathon campaign with
+  topics under running.*. The capture is a coach's running workout that
+  happens to begin with the words "Interval training". Strong output: routes
+  to marathon-build — new_topic with a clean lowercase dotted leaf grown
+  under running.* (running.intervals or similar), seed true (a runnable
+  workout), reason grounded in domain not surface words. Weak output:
+  attaches to the dormant interval-training campaign because its name and
+  intervals.* topic paths lexically match the capture, or stay_inbox /
+  propose_campaign for material the active campaign clearly owns.
+seed:
+  campaign:
+    id: interval-training
+    name: Interval Training
+    mission: "Recognize all melodic intervals by ear — course completed December 2024."
+    topics:
+      - {path: intervals.seconds_thirds, kind: skill, summary: "hear major and minor seconds and thirds"}
+      - {path: intervals.fourths_fifths, kind: skill, summary: "hear perfect fourths and fifths"}
+      - {path: intervals.recognition_speed, kind: skill, summary: "name any interval within two seconds"}
+  campaigns:
+    - id: marathon-build
+      name: Marathon Build
+      mission: "Run a sub-4:00 marathon at the Berlin race this October."
+      topics:
+        - {path: running.base_mileage, kind: skill, summary: "weekly aerobic volume progression"}
+        - {path: running.tempo_runs, kind: skill, summary: "sustained threshold-pace running"}
+        - {path: running.long_run_fueling, kind: recall, summary: "carb and fluid intake per long-run hour"}
+  captures:
+    - id: cap_3030
+      text: "Interval training idea from coach: 30/30s — 30 seconds at 5k effort, 30 seconds jog, 20 reps. Builds VO2max with less pounding than mile repeats."
+steps:
+  - compile:
+      fn: route
+      capture_id: cap_3030
+      capture_text: "Interval training idea from coach: 30/30s — 30 seconds at 5k effort, 30 seconds jog, 20 reps. Builds VO2max with less pounding than mile repeats."
+judge_rubric:
+  - {id: c1, weight: 4, question: "Does the route land in marathon-build (the
+      active semantic owner of a running workout) rather than the dormant
+      interval-training music campaign whose name and topics merely match the
+      capture's words?"}
+  - {id: c2, weight: 3, question: "Is it a new_topic with a clean lowercase
+      dotted leaf grown under the running namespace (running.intervals or
+      similar) — not an attach to a musical intervals.* path, not
+      stay_inbox, not a proposed campaign?"}
+  - {id: c3, weight: 2, question: "Is seed true, since the capture states a
+      runnable, testable workout protocol?"}
+  - {id: c4, weight: 1, question: "Is the reason (12 words or fewer) grounded
+      in the capture's domain — a running workout for the active goal — not
+      in the surface phrase 'interval training'?"}
+references:
+  good:
+    action: new_topic
+    campaign: marathon-build
+    topic_path: running.intervals
+    new_name: null
+    new_mission: null
+    confidence: high
+    reason: "running workout for the active marathon goal, not ear training"
+    seed: true
+  bad:
+    action: attach
+    campaign: interval-training
+    topic_path: intervals.recognition_speed
+    new_name: null
+    new_mission: null
+    confidence: high
+    reason: "capture is explicitly about interval training"
+    seed: true

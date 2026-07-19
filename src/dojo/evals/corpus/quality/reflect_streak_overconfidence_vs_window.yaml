@@ -1,0 +1,159 @@
+# Streak overconfidence: the learner's voice asks for harder items ("12-day
+# streak") while the window shows 0.55 accuracy with SLOW successes at the
+# current difficulty. Deference fails here — the composition is learner
+# feedback x accuracy level x latency evidence: feedback contradicting the
+# window means hold both dials and NAME the mismatch (rule-4 question or an
+# insight citing attempt ids), heard respectfully but not obeyed.
+category: realworld
+domain: chess
+scenario_context: |
+  An intermediate chess-tactics campaign. The nine-attempt window shows 5/9
+  correct (0.55) with every success taking 73-110 seconds — effortful wins
+  at the CURRENT difficulty — and misses tagged with concrete pattern
+  errors. The final attempt carries learner feedback: "this is too easy
+  now, bump me up, I've got a 12-day streak". Strong output: difficulty is
+  NOT raised — strategy null (or a scaffolding-support move with difficulty
+  unchanged) — and the mismatch between the request and the evidence is
+  named respectfully via a question to the learner or an insight citing
+  specific attempt ids (e.g. att_209 with the slow successes att_203 /
+  att_207); the streak is acknowledged, the evidence wins; journal records
+  the hold with numbers. Weak output: raises difficulty to advanced because
+  the learner asked, or dismisses the learner without naming the evidence,
+  or lowers difficulty (nothing supports that either).
+seed:
+  campaign:
+    id: tactics-ladder
+    name: Chess Tactics
+    mission: "Solve club-level chess tactics accurately under a slow clock."
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+    topics:
+      - {path: tactics, kind: skill, summary: "club-level tactical motifs"}
+    attack_plan:
+      - topics: [tactics]
+        criteria: {min_attempts: 25, min_accuracy: 0.7}
+        focus: "forks, pins, and back-rank motifs from real games"
+  exercises:
+    - {id: ex_t1, topic_path: tactics, difficulty: intermediate, kind: skill, prompt: "White to move: exploit the back rank."}
+    - {id: ex_t2, topic_path: tactics, difficulty: intermediate, kind: skill, prompt: "Black to move: win material with a fork."}
+    - {id: ex_t3, topic_path: tactics, difficulty: intermediate, kind: skill, prompt: "White to move: use the pin on the f-file."}
+    - {id: ex_t4, topic_path: tactics, difficulty: intermediate, kind: skill, prompt: "Black to move: find the deflection."}
+    - {id: ex_t5, topic_path: tactics, difficulty: intermediate, kind: skill, prompt: "White to move: convert the discovered attack."}
+  attempts:
+    - id: att_201
+      session_id: s1
+      exercise_id: ex_t1
+      score: 1.0
+      latency_seconds: 88.0
+      grader: ai
+      user_answer: "Re8 hits the back rank, rook trade forced then Re1 mates"
+      created_at: "2026-07-16T07:31:00+00:00"
+    - id: att_202
+      session_id: s1
+      exercise_id: ex_t2
+      score: 0.0
+      latency_seconds: 45.0
+      grader: ai
+      user_answer: "Nxe4 forking king and rook"
+      error_tag: "missed_defender"
+      created_at: "2026-07-16T07:34:00+00:00"
+    - id: att_203
+      session_id: s1
+      exercise_id: ex_t3
+      score: 1.0
+      latency_seconds: 104.0
+      grader: ai
+      user_answer: "Rf1 piles on the pinned knight, then g4 wins it"
+      created_at: "2026-07-16T07:37:00+00:00"
+    - id: att_204
+      session_id: s1
+      exercise_id: ex_t4
+      score: 0.0
+      latency_seconds: 52.0
+      grader: ai
+      user_answer: "Qb6 attacking the bishop"
+      error_tag: "wrong_target"
+      created_at: "2026-07-16T07:40:00+00:00"
+    - id: att_205
+      session_id: s1
+      exercise_id: ex_t5
+      score: 1.0
+      latency_seconds: 96.0
+      grader: ai
+      user_answer: "Bishop moves with check, discovered rook takes the queen"
+      created_at: "2026-07-16T07:44:00+00:00"
+    - id: att_206
+      session_id: s2
+      exercise_id: ex_t2
+      score: 0.0
+      latency_seconds: 41.0
+      grader: ai
+      user_answer: "Nc2 forks the rooks"
+      error_tag: "missed_defender"
+      created_at: "2026-07-17T07:30:00+00:00"
+    - id: att_207
+      session_id: s2
+      exercise_id: ex_t4
+      score: 1.0
+      latency_seconds: 110.0
+      grader: ai
+      user_answer: "Rd8 deflects the queen from f7, then Qxf7 mate"
+      created_at: "2026-07-17T07:34:00+00:00"
+    - id: att_208
+      session_id: s2
+      exercise_id: ex_t3
+      score: 0.0
+      latency_seconds: 58.0
+      grader: ai
+      user_answer: "take the knight right away with the bishop"
+      error_tag: "released_pin_early"
+      created_at: "2026-07-17T07:37:00+00:00"
+    - id: att_209
+      session_id: s2
+      exercise_id: ex_t1
+      score: 1.0
+      latency_seconds: 73.0
+      grader: ai
+      user_answer: "Qe8 forcing the rook trade, back rank falls"
+      feedback: "this is too easy now, bump me up, I've got a 12-day streak"
+      created_at: "2026-07-17T07:41:00+00:00"
+steps:
+  - compile:
+      fn: reflect
+judge_rubric:
+  - id: c1
+    weight: 4
+    question: "Is difficulty NOT raised — strategy null, or a scaffolding-only support move with difficulty unchanged — despite the learner's explicit request to bump up?"
+  - id: c2
+    weight: 3
+    question: "Is the feedback-vs-evidence mismatch explicitly named, via a question to the learner or an insight, citing specific attempt ids from the window (the feedback row att_209 and/or slow successes like att_203, att_207)?"
+  - id: c3
+    weight: 2
+    question: "Is the learner's voice treated respectfully — the streak or request acknowledged rather than ignored or belittled — while the 0.55 accuracy / slow-success evidence still wins?"
+  - id: c4
+    weight: 1
+    question: "Does the journal record the hold WITH the evidence (accuracy around 0.55, successes taking over a minute), and is difficulty not lowered either?"
+references:
+  good:
+    insight_updates:
+      - op: create
+        id: null
+        key: calibration.streak_overconfidence
+        text: "Learner asks for harder tactics citing a 12-day streak, but the window shows 0.55 accuracy and successes taking 73-110 seconds."
+        evidence: [att_209, att_203, att_207]
+        reason: "Feedback contradicts the window; name the mismatch and hold both dials."
+    strategy: null
+    plan_revision: null
+    questions:
+      - "Your streak is real; recent puzzles still take over a minute each with about half correct; which ones felt too easy?"
+    topic_retirements: []
+    journal: "Held both dials. The learner asked to move up; window accuracy is 0.55 with slow successes. Asked which puzzles felt easy before changing anything."
+  bad:
+    insight_updates: []
+    strategy:
+      difficulty: advanced
+      scaffolding: null
+      reason: "Learner reports the tactics are too easy and holds a 12-day streak."
+    plan_revision: null
+    questions: []
+    topic_retirements: []
+    journal: "Raised difficulty to advanced as requested; the 12-day streak shows strong momentum."

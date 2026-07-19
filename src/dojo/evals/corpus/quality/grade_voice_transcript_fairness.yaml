@@ -1,0 +1,71 @@
+# Voice-transcription fairness (REAL-WORLD HARD): the learner answered by
+# voice; the transcript is unpunctuated, filler-ridden, and carries homophone
+# errors ("their" for "there", "threw" for "through"). The CONTENT hits two of
+# three rubric points and genuinely misses the third (two-stage cooling time
+# limits). Composition under test: fairness to surface noise WITHOUT sliding
+# into leniency — 0.7 is right, both 0.3 (punishing noise) and 1.0 (blanket
+# charity) are wrong. Evidence must stay a verbatim copy, sloppiness included.
+category: realworld
+domain: food_safety
+scenario_context: |
+  A culinary student dictated their answer by voice on a commute; the raw
+  transcript has no punctuation, filler words, and homophone errors ("their"
+  for "there", "threw" for "through"). Substantively the answer names the
+  danger zone range and a valid rapid-cooling method, but says nothing about
+  the two-stage cooling time limits the rubric requires.
+  Strong output: scores 0.7 — credits the correct content despite the messy
+  surface, docks the genuinely missing rubric point; evidence is copied
+  character-for-character from the transcript (errors intact); feedback
+  corrects the missing content and never lectures about spelling, grammar,
+  punctuation, or filler words.
+  Weak output: 0.3/0.0 punishing transcription noise ("full of errors",
+  "incomplete sentences"), OR 1.0 out of blanket charity that ignores the
+  missing time limits, OR evidence that is cleaned-up/paraphrased instead of
+  verbatim, OR an error_tag about writing mechanics.
+seed:
+  campaign:
+    id: kitchen-safety
+    name: Kitchen Safety
+    mission: "Pass the food protection manager exam and run a safe commercial line."
+    topics:
+      - {path: food_safety, kind: skill, summary: "commercial kitchen food safety"}
+      - {path: food_safety.cooling, kind: skill, summary: "danger zone and cooling procedures"}
+  exercise:
+    id: ex_cooling
+    topic_path: food_safety.cooling
+    difficulty: intermediate
+    kind: skill
+    prompt: "Explain the temperature danger zone and the required two-stage cooling procedure for a large batch of soup in a commercial kitchen."
+    answer: "The danger zone is roughly 41-135°F, where bacteria multiply fastest. Cooked food must cool from 135°F to 70°F within 2 hours, then from 70°F to 41°F within the next 4 hours, using rapid methods like shallow pans, an ice bath, or an ice paddle."
+    rubric: "- names the danger zone temperature range (about 41-135°F; 40-140 acceptable)\n- states the two-stage cooling time limits (135 to 70°F within 2 hours, then to 41°F within 4 more)\n- gives at least one valid rapid-cooling method (shallow pans, ice bath, ice paddle)"
+  attempts:
+    - id: att_voice
+      session_id: sess_71
+      exercise_id: ex_cooling
+      score: 0.0
+      latency_seconds: 48.0
+      grader: null
+      prompt: "Explain the temperature danger zone and the required two-stage cooling procedure for a large batch of soup in a commercial kitchen."
+      user_answer: "ok so um the danger zone thats like forty to one forty degrees bacteria are growing like crazy in their so you gotta get the soup threw that zone fast um you can put it in shallow pans or use an ice paddle to cool it down quick"
+steps:
+  - compile:
+      fn: grade
+      attempt_id: att_voice
+judge_rubric:
+  - {id: c1, weight: 4, question: "Is the score exactly 0.7 — crediting the substantively correct content (danger zone range, valid cooling method) while docking the genuinely missing two-stage time limits — not 0.3/0.0 for transcription noise and not 1.0 out of leniency?"}
+  - {id: c2, weight: 3, question: "Does feedback correct the actual content gap (the two-stage cooling time limits) and contain NO penalty, complaint, or lecture about spelling, grammar, punctuation, homophones, or filler words?"}
+  - {id: c3, weight: 2, question: "Is evidence a character-for-character copy of a phrase from the transcript, with its sloppiness intact — not cleaned up, corrected, or paraphrased?"}
+  - {id: c4, weight: 1, question: "Is error_tag null or a content-pattern label — not a label about writing mechanics, sloppiness, or transcription quality?"}
+references:
+  good:
+    score: 0.7
+    evidence: "forty to one forty degrees"
+    feedback: "You nailed the danger zone range and valid cooling methods. Missing: the two-stage time limits — cool from 135 to 70°F within 2 hours, then to 41°F within 4 more."
+    error_tag: null
+    knowledge_gap: false
+  bad:
+    score: 0.3
+    evidence: "growing like crazy in their"
+    feedback: "Your answer is full of grammar and spelling errors like 'their' and 'threw' and has no punctuation; write in complete sentences before the content can be properly assessed."
+    error_tag: "poor writing mechanics"
+    knowledge_gap: false

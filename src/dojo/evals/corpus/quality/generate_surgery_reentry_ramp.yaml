@@ -1,0 +1,149 @@
+# Interrupted-life replenishment (REAL-WORLD HARD): RECENT shows solid
+# pre-gap mastery, then a 3-week silence, then one weak return attempt whose
+# learner feedback says "back from surgery, hands still weak". A preference
+# insight asks for short typed answers. Composition under test: re-calibrate
+# gently (recognition -> short production ramp over PREVIOUSLY MASTERED
+# material) while honoring the physical limitation — without either failure
+# pole: resuming at full pre-gap difficulty with long-typing multi-part
+# problems, or condescending to absolute-beginner definitions.
+category: realworld
+domain: electronics
+scenario_context: |
+  A hobbyist electronics learner had solid intermediate mastery of RC
+  circuits (scores 0.7-1.0 through late June), then a 3-week gap. Their one
+  return attempt scored 0.3 and carries their own feedback: "back from
+  surgery, hands still weak". A stored preference says long typing is painful
+  — they want exercises answerable in a few typed words.
+  Strong output: a gentle re-entry set over material the learner previously
+  mastered (time constants, charging behavior) — starting at recognition or
+  identification, ramping to at most one short production item; EVERY item
+  answerable in a few typed words or one short sentence; difficulty
+  re-calibrated a notch below the pre-gap ceiling but clearly not restarted
+  from zero.
+  Weak output: resumes at full pre-gap difficulty (multi-part design or
+  derivation problems demanding paragraphs of typing), OR condescends to
+  absolute-beginner content ("what is a resistor?") the record shows was
+  mastered long ago, OR ignores the short-typed-answer preference on any
+  item.
+seed:
+  campaign:
+    id: circuit-fluency
+    name: Circuit Fluency
+    mission: "Read and analyze DC and RC circuits confidently to repair and modify hobby audio gear."
+    topics:
+      - {path: electronics, kind: skill, summary: "hobby electronics fundamentals"}
+      - {path: electronics.rc_circuits, kind: skill, summary: "RC time constants, charging and discharging behavior"}
+  insights:
+    - id: ins_short_typing
+      key: feedback.user.short_answers
+      description: "Recovering from hand surgery; long typing is painful — wants exercises answerable in a few typed words."
+      sources: [att_rc5]
+      topic_path: electronics.rc_circuits
+  exercises:
+    - id: ex_rc1
+      topic_path: electronics.rc_circuits
+      difficulty: intermediate
+      kind: skill
+      prompt: "Compute the time constant of a 10 kOhm resistor in series with a 100 uF capacitor, and state what it means physically."
+      answer: "Tau = RC = 1 s; the time to reach about 63% of the supply voltage."
+      rubric: "- tau = RC = 1 s\n- interprets tau as the ~63% charge time"
+    - id: ex_rc2
+      topic_path: electronics.rc_circuits
+      difficulty: intermediate
+      kind: skill
+      prompt: "Sketch-describe the capacitor voltage curve while charging through a resistor and explain why it flattens."
+      answer: "Exponential rise flattening toward the supply voltage; current falls as the voltage difference shrinks."
+      rubric: "- exponential rise toward supply\n- flattening explained by shrinking voltage difference / current"
+    - id: ex_rc3
+      topic_path: electronics.rc_circuits
+      difficulty: intermediate
+      kind: skill
+      prompt: "After how many time constants is a capacitor conventionally considered fully charged, and to what percentage?"
+      answer: "About 5 time constants, roughly 99%."
+      rubric: "- 5 time constants\n- ~99%"
+  attempts:
+    - id: att_rc1
+      session_id: sess_20
+      exercise_id: ex_rc1
+      score: 1.0
+      latency_seconds: 55.0
+      prompt: "Compute the time constant of a 10 kOhm resistor in series with a 100 uF capacitor, and state what it means physically."
+      user_answer: "Tau = RC = 1 second, the time to hit about 63% of supply voltage."
+      created_at: "2026-06-18T19:10:00+00:00"
+    - id: att_rc2
+      session_id: sess_20
+      exercise_id: ex_rc2
+      score: 0.7
+      latency_seconds: 80.0
+      prompt: "Sketch-describe the capacitor voltage curve while charging through a resistor and explain why it flattens."
+      user_answer: "Exponential curve up to the supply voltage; it flattens because current drops as the cap fills."
+      created_at: "2026-06-18T19:14:00+00:00"
+    - id: att_rc3
+      session_id: sess_21
+      exercise_id: ex_rc3
+      score: 1.0
+      latency_seconds: 40.0
+      prompt: "After how many time constants is a capacitor conventionally considered fully charged, and to what percentage?"
+      user_answer: "5 time constants, about 99%."
+      created_at: "2026-06-24T18:30:00+00:00"
+    - id: att_rc4
+      session_id: sess_21
+      exercise_id: ex_rc1
+      score: 1.0
+      latency_seconds: 38.0
+      prompt: "Compute the time constant of a 10 kOhm resistor in series with a 100 uF capacitor, and state what it means physically."
+      user_answer: "RC = 1 s, time to reach roughly 63% of the supply."
+      created_at: "2026-06-24T18:34:00+00:00"
+    - id: att_rc5
+      session_id: sess_22
+      exercise_id: ex_rc2
+      score: 0.3
+      latency_seconds: 240.0
+      feedback: "back from surgery, hands still weak"
+      prompt: "Sketch-describe the capacitor voltage curve while charging through a resistor and explain why it flattens."
+      user_answer: "it curves up... cant type much sorry"
+      created_at: "2026-07-17T19:05:00+00:00"
+steps:
+  - compile:
+      fn: generate
+      topic_path: electronics.rc_circuits
+      n_items: 3
+      difficulty: intermediate
+judge_rubric:
+  - {id: c1, weight: 4, question: "Do the items re-calibrate for re-entry — anchored in the RC material the record shows was previously mastered (time constants, charging behavior), pitched a notch below the pre-gap ceiling — rather than full pre-gap multi-part difficulty OR absolute-beginner definitions like 'what is a resistor'?"}
+  - {id: c2, weight: 3, question: "Is EVERY item answerable in a few typed words or one short sentence (no derivations, essays, sketches, or multi-part productions), honoring the hands-still-weak / short-typed-answers constraint?"}
+  - {id: c3, weight: 2, question: "Is there a visible ramp across the set — earlier items recognition or identification (e.g. pick/state the value), later at most one brief production or explanation?"}
+  - {id: c4, weight: 1, question: "Does the output nowhere condescend about the injury or restart from zero — no re-teaching of basics the learner demonstrably knew, no pitying tone in prompts or note?"}
+references:
+  good:
+    items:
+      - prompt: "After charging for exactly one time constant, roughly what percentage of the supply voltage has the capacitor reached — 37%, 63%, or 95%? Type just the number."
+        answer: "63%"
+        rubric: "- says 63% (accept 63 or about two thirds)"
+        skill: "recall"
+      - prompt: "R = 10 kOhm and C = 100 uF. Type the time constant tau with its unit — a couple of words is enough."
+        answer: "1 second"
+        rubric: "- tau = RC = 1 s (accept 1 sec / 1 second)"
+        skill: "apply"
+      - prompt: "In one short sentence: why does a charging capacitor's voltage rise fastest at the very start?"
+        answer: "The voltage difference across the resistor is largest at the start, so the charging current is highest."
+        rubric: "- largest voltage difference at start\n- hence highest current / fastest charging"
+        skill: "explain"
+    note: "Short re-entry ramp after the break; all answers kept to a few typed words."
+    intervention: null
+  bad:
+    items:
+      - prompt: "Design an RC low-pass filter with a 1 kHz cutoff for a guitar pedal: choose R and C, justify the component values, derive the transfer function, and describe how the Bode plot changes if C doubles."
+        answer: "R = 1.6 kOhm with C = 100 nF gives fc = 1/(2*pi*RC) ~ 1 kHz; H(s) = 1/(1+sRC); doubling C halves the cutoff, shifting the rolloff an octave lower."
+        rubric: "- valid R and C for ~1 kHz\n- correct transfer function\n- correct effect of doubling C"
+        skill: "produce"
+      - prompt: "Write a full paragraph deriving the capacitor charging equation v(t) = V(1 - e^(-t/RC)) from Kirchhoff's voltage law, showing every algebra step and the separation of variables."
+        answer: "KVL gives V = iR + v; with i = C dv/dt, separate variables and integrate to get v(t) = V(1 - e^(-t/RC))."
+        rubric: "- starts from KVL\n- shows separation of variables\n- reaches v(t) = V(1 - e^(-t/RC))"
+        skill: "produce"
+      - prompt: "Explain in detail, with at least three worked examples of your own invention, how time constants govern coupling and decoupling capacitor choices across an entire audio signal chain."
+        answer: "Coupling caps form high-pass filters with the load; decoupling caps form low-pass filters on supply rails; each example sets RC against the lowest frequency of interest."
+        rubric: "- coupling as high-pass\n- decoupling as low-pass\n- examples set RC against target frequency"
+        skill: "explain"
+    note: null
+    intervention: null

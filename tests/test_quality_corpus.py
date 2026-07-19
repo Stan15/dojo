@@ -41,7 +41,7 @@ class TestCorpusCoverage:
     breadth is a ratcheted invariant, not an aspiration. These floors may only
     ever go UP; raising them is how the corpus grows deliberately."""
 
-    MIN_TOTAL = 92  # +12 2026-07-19: deliberation trap-benchmark (QUESTIONS 6i — 2 traps/kind, shallow pattern-completion detectably wrong)
+    MIN_TOTAL = 104  # +12 2026-07-19: realworld hardness axes (owner directive — voice-transcript fairness, integrity edges, life interruptions, motivational texture, stale-registry gravity; saturation audit showed 62% floors at 1.0)
     MIN_PER_CATEGORY = {
         # +13 2026-07-18 (release-gate remedy): every category +1 (routing and
         # planning +2), thin task kinds lifted most (diagnostic, goal_route,
@@ -57,6 +57,7 @@ class TestCorpusCoverage:
         "change-authority": 4,
         "routing": 8,  # +1 2026-07-19 URL-bleed vs near-empty registry
         "deliberation": 12,  # 2026-07-19 QUESTIONS 6i trap-benchmark (2 per task kind)
+        "realworld": 12,  # 2026-07-19 owner-directed hardness axes (2 per task kind)
         "robustness": 11,
         "encoding": 3,   # ADR 017: present-before-probing, history-sighted probes; +control
         "care-exit": 3,  # ADR 017 §6: retirement on voice / never on phase-pass / never as escape
