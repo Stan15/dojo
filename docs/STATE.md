@@ -417,6 +417,24 @@ committed work, not proposals awaiting an answer. Item numbering is stable
       committed. 805 tests green. First real `-m eval_skill` run still
       owed — blocked on the owner's driver-agent pick (10d2).
 
+11. **IN PROGRESS — PROMPT LAB: autonomous quality-density campaign
+   (owner grant 2026-07-19, standing).** The owner authorized continuous,
+   uninterrupted prompt improvement: judged quality AND output-token
+   efficiency (quality-density), all calibers, codex spend included;
+   adopt only measured wins; NEVER reward hack; holdout blindness stays
+   TOTAL and the release gate stays owner-triggered. **Directive (point
+   any session at it): `docs/PROMPT_LAB.md`** — it self-arms a resilient
+   heartbeat (STEP ZERO) and resumes from
+   `scratch/prompt-lab/WORKBENCH.md` (live state: in-flight inventory,
+   pre-registered hypotheses, results/negative-results, spend ledger).
+   Completed within this campaign so far: drop-diagnosis of all 10d
+   targets (judge multi-quote fix 3c3041f; template+compiler fixes
+   pending their same-commit battery gate), P1 letter-bleed
+   catch-and-fix, INSIGHTS 2026-07-18/19, QUESTIONS 6i/6j. This session
+   entered via CLAUDE_START as STATE 10f's fresh session; its full
+   handoff detail lives in the WORKBENCH, not here — STATE stays the
+   map, WORKBENCH the territory.
+
 ## RELEASE GATE STATUS (2026-07-18) + CONTAMINATION HANDOFF
 
 The v1.0.0 holdout release gate was RUN (owner-approved) and FAILED — v1.0.0
