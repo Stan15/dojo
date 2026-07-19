@@ -201,6 +201,54 @@ _Statuses: `[x]` shipped · `[~]` standing/in-progress · `[?]` blocked-on-owner
    plans refuse). Interactive-flow surfacing of the plan chain rides with
    display unification (6d).
 
+6i. **Deliberation trap-benchmark + anchor profiles (your directive
+   2026-07-19, designed in-session).** Finding: 55/62 battery runs start
+   with `{` at byte zero — the skeleton-final prompt pattern-locks token
+   one, and the reasoning-neutral license ("anything before it is
+   ignored") is a dead letter in practice. Whether that RESTRICTS models
+   that think by outputting (~4B; internal thinkers unaffected, sub-1B
+   measurably hurt by invitations) is unknown. Design (immune to the
+   internal-vs-visible-thinker confound — we can't observe thinking, so
+   we measure it by its FRUIT): ~2 TRAP scenarios per task kind (visible
+   corpus) where shallow pattern-completion yields a specific detectable
+   wrong answer and the right answer requires composing 2-3 non-adjacent
+   constraints (grade: right-result-broken-method; reflect: aggregate vs
+   latency×topic decomposition + distractor; plan: deadline forces
+   cutting the dependency root; route: lexical-match campaign vs
+   semantic owner; generate: insight-collision engineering; diagnostic:
+   jointly-implied open axis). Then batteries per (model × anchor):
+   (A) current neutral anchor vs (B) bounded-invitation fragment
+   ("unsure between two defensible outputs? brief prose first; only the
+   last JSON object counts") — compiler-selected by a fulfiller PROFILE,
+   never model judgment (craft rule 5). B−A per model = the restriction
+   effect; pre_bytes confirms mechanism. Pre-registered rule: adopt the
+   invitation as an OPT-IN profile only if trap-avoidance rises
+   materially at some caliber, neutral floors regress nowhere, and
+   bytes/latency hold (mutual non-regression, both directions). 2
+   replicates per cell (±3 kind variance); codex cell = one spot set,
+   spend-gated on you (expected flat — that flatness itself proves the
+   anchor doesn't restrict internal thinkers). This SUBSUMES the
+   "reasoning" JSON-field idea (same hypothesis, riskier encoding: long
+   free-text is where ≤4B models break JSON — README failure mode 5).
+   **Default: scenarios + profile config + local batteries next session;
+   nothing adopted without the measured win; codex cell awaits your
+   green light.**
+
+6j. **Link-enrichment for tool-capable fulfillers (your question
+   2026-07-19).** Capture-time fetching by the harness is shipped
+   doctrine (6g). The strong form — payloads carrying only a link,
+   fulfiller fetches at generation time — violates three invariants
+   (offline floor / model-strength neutrality: local models can't fetch
+   and would silently produce ungrounded items; provenance: grounding
+   dojo never saw weakens review-before-trust; ADR 009/010 injection
+   surface: third-party page content flowing into the store's writer).
+   Soft form recommended: SOURCE slice stays the sufficient floor,
+   locator rides as information; a tool-capable fulfiller MAY consult
+   the full source (§1b surplus-intelligence side-channel; local models
+   ignore it at zero cost). Needs benchmark scenarios (noise is the
+   test) + fetch-failure-never-blocks rule. **Default: design only;
+   nothing built until you gate it.**
+
 6h. **Session abandonment as evidence (found 2026-07-18, README-truthfulness
    check).** `/quit`//`/exit` pause the session and leave NO attempt row —
    reflection cannot see abandonment patterns (your real avoidance insight
