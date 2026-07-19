@@ -499,6 +499,37 @@ directive §queue).
 
 ## Pre-registered (open)
 
+- **P11 deadline-compression fills-to-the-cap (2026-07-19 ~14:00;
+  traces: celestial 0.0 + sourdough 0.4, run 085715).** CORRECTION of
+  the earlier headline: codex did NOT cut dependency roots (both c1
+  root-survival criteria effectively met; celestial mission literally
+  says the corrections stay "because every sight depends on them").
+  The real two-scenario class: breadth THINNED not CUT under deadline
+  (star sights at 11 topics; decorative_patterns/bagels/focaccia for a
+  2-week pop-up at 9). Mechanism: "aim for ≤ 10 topics" reads as a
+  TARGET under deadline framing (numeric focal point, mode-6 cousin) —
+  the model fills toward the cap and rule 1's "mission fails without
+  it" test loses. Fix: restate rule-4 compression as goal-axis
+  selection in WORDS (keep only topics the deadline goal fails
+  without — one goal-critical axis plus its dependencies; a deadline
+  plan still carrying nice-to-have breadth has not compressed),
+  keeping the ≤10 cap statement and P10's kind-mix line intact.
+  Decision rule: celestial + sourdough breadth criteria (c2/c3)
+  recover on a targeted codex run; controls deadline_compression
+  (0.89 level), plan_single_fact_goal, plan_recall_skill_lanes,
+  plan_extend_not_duplicate all stay passing; local plan minis both
+  models same-or-better with zero letter-paths; plan footprint delta
+  ≤ +120B. Rubrics NOT touched (strict-but-consistent; no independent
+  evidence they are wrong).
+  P11 ROUND-1 RESULT (~14:35): qwen 9-subset 5/9 (band vs iterZ 6/9);
+  single_fact emitted literal a.b.c.d.e (depth-rejected; bleed-prone
+  scenario, n=1 — replicate); footprint +213B EXCEEDS the pre-reg
+  ≤+120B → TIGHTEN rule-4 wording after the in-flight gemma mini
+  lands (quiet tree), then rerun BOTH plan minis on the tightened
+  text (qwen rerun doubles as the letter-path replicate). The two
+  trap scenarios now ride the plan_ filter (11-row minis; they fail
+  shape at 4B — not part of P11's local bar, codex-tier rubric traps).
+
 - **P4a ops-example COUNT/TYPE anchoring (2026-07-19 ~02:10; evidence:
   codex plateau_remediation 0.12 'two insights not one' + README-demo
   qwen 2 creates in 2/2 budgets).** d69ff5c changed the reflect ops
@@ -641,6 +672,19 @@ directive §queue).
   template (hard-failed both codex runs pre-fix). n=1, encouraging only.
 
 ## Negative results (never blind-retest)
+
+- **P11 wording does NOT move the dependency-root trap pair at codex
+  (2026-07-19 ~15:20, targeted run post-5cb13ec):** celestial 0.0 /
+  sourdough 0.5 — still ~10 topics, adjacent breadth kept ("ceiling,
+  never a target" words insufficient against the numeric anchor).
+  KEPT anyway: locally same-or-better, +65B, and deadline_compression
+  reached 1.0 with all four controls passing. OPEN follow-up
+  **P11c** (ride-along with the next plan-touching batch, never
+  alone): remove the "≤ 10" literal from rule 4 (goal-axis words
+  derive the count; hard cap stays elsewhere) — decision rule:
+  deadline_compression HOLDS 1.0 (its rubric references the 10-topic
+  limit — the risk), trap pair breadth criteria improve, plan minis
+  same-or-better, zero letter-paths.
 
 - (carry-over, dev/token-diet) armACC-in input compression: parked —
   shape-risk × battery-cost, ride-along only.
