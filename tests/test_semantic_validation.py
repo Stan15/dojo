@@ -117,6 +117,63 @@ class TestWordCapsAreSuggestions:
             ReflectResult(ops=[], journal="ok", questions=qs)
 
 
+class TestQuestionObjectCoercion:
+    """W2 (2026-07-19): question lists emitted as objects with one obvious
+    text key coerce to strings — observed at every measured caliber (119
+    archived rejections; reflect-kind run churn root cause)."""
+
+    def test_question_key_coerces_and_ignores_decoration(self):
+        from dojo.schemas import ReflectResult
+        r = ReflectResult(ops=[], journal="ok",
+                          questions=[{"question": "Was this too hard?", "target_info": False}])
+        assert r.questions == ["Was this too hard?"]
+
+    def test_text_key_coerces(self):
+        from dojo.schemas import ReflectResult
+        r = ReflectResult(ops=[], journal="ok", questions=[{"text": "Skip which step?"}])
+        assert r.questions == ["Skip which step?"]
+
+    def test_plain_strings_untouched(self):
+        from dojo.schemas import ReflectResult
+        r = ReflectResult(ops=[], journal="ok", questions=["Plain?"])
+        assert r.questions == ["Plain?"]
+
+    def test_ambiguous_two_content_keys_rejects(self):
+        from dojo.schemas import ReflectResult
+        with pytest.raises(Exception):
+            ReflectResult(ops=[], journal="ok",
+                          questions=[{"question": "a?", "text": "b?"}])
+
+    def test_non_string_content_rejects(self):
+        from dojo.schemas import ReflectResult
+        with pytest.raises(Exception):
+            ReflectResult(ops=[], journal="ok", questions=[{"question": 3}])
+
+    def test_word_cap_wall_applies_to_coerced_string(self):
+        from dojo.schemas import ReflectResult
+        long_q = {"text": " ".join(["w"] * (limits.word_cap_hard(limits.REFLECT_QUESTION_WORDS) + 1))}
+        with pytest.raises(Exception):
+            ReflectResult(ops=[], journal="ok", questions=[long_q])
+
+    def test_plan_refinement_questions_coerce(self):
+        from dojo.schemas import PlanResult
+        payload = {
+            "name": "Test Campaign", "mission": "learn the thing",
+            "topics": [{"path": "a.b", "kind": "recall"}],
+            "phases": [{"name": "p1", "topics": ["a.b"],
+                        "criteria": {"min_attempts": 3, "min_accuracy": 0.7}}],
+            "refinement_questions": [{"q": "Deadline fixed?"}],
+        }
+        r = PlanResult.model_validate(payload)
+        assert r.refinement_questions == ["Deadline fixed?"]
+
+    def test_intervention_questions_coerce(self):
+        from dojo.schemas import Intervention
+        i = Intervention(kind="clarify_goal", questions=[{"text": "Which exam?"}],
+                        reason="goal names no scope")
+        assert i.questions == ["Which exam?"]
+
+
 class TestRetryMessagePedagogy:
     """R1/R2 (2026-07-19): rejection messages teach the RIGHT fix."""
 

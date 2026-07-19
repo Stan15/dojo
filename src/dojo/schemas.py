@@ -81,6 +81,26 @@ from typing import Literal
 from pydantic import field_validator
 
 
+def _coerce_question_objects(v):
+    """Models at every measured caliber sometimes emit question lists as
+    objects ({"question": ...} / {"text": ...} / {"q": ...}) with the content
+    in a single obvious text key — semantically the contracted string (ArmS:
+    coerce harmless formatting variance; 119 archived rejections, 5.5% of all
+    recorded fails). Ambiguous dicts (two content keys) and non-string
+    content still reject downstream."""
+    if isinstance(v, list):
+        out = []
+        for q in v:
+            if isinstance(q, dict):
+                keys = [k for k in ("question", "text", "q") if isinstance(q.get(k), str)]
+                if len(keys) == 1:
+                    out.append(q[keys[0]])
+                    continue
+            out.append(q)
+        return out
+    return v
+
+
 def _cap_words(field_name: str, cap: int):
     """Word caps are strong suggestions (owner ruling 2026-07-20): the stated
     cap anchors length in the template; rejection fires only past the
@@ -142,6 +162,8 @@ class Intervention(BaseModel):
     _cap_reason = field_validator("reason")(
         _cap_words("reason", _limits.INTERVENTION_REASON_WORDS)
     )
+
+    _coerce_questions = field_validator("questions", mode="before")(_coerce_question_objects)
 
     @field_validator("questions")
     @classmethod
@@ -314,6 +336,8 @@ class ReflectResult(BaseModel):
         _cap_words("journal", _limits.REFLECT_JOURNAL_WORDS)
     )
 
+    _coerce_questions = field_validator("questions", mode="before")(_coerce_question_objects)
+
     @field_validator("questions")
     @classmethod
     def _cap_question_words(cls, v: List[str]) -> List[str]:
@@ -401,6 +425,8 @@ class PlanResult(BaseModel):
     _cap_name = field_validator("name")(
         _cap_words("name", _limits.ROUTE_NEW_NAME_WORDS)
     )
+
+    _coerce_questions = field_validator("refinement_questions", mode="before")(_coerce_question_objects)
 
     @field_validator("refinement_questions")
     @classmethod
