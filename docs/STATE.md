@@ -568,3 +568,16 @@ evals/reports/holdout-* — all off-limits to any prompt-work context.
   adjudicated: qwen 7/12, gemma 8/12, no new classes. Sub-4B bake-off slate
   researched+pulled (qwen3.5:2b, granite4:1b, lfm2.5-thinking:1.2b);
   bakeoff_run.sh staged. 926 tests green.
+- 07-19 (prompt-lab, bake-off + W2/W3): sub-4B class verdict REWRITTEN by
+  7-model bake-off under W1 tree — lfm2.5-thinking:1.2b takes the ~1GB tier
+  at 51/104 single-shot (old rep qwen3.5:0.8b: 10/104); README re-based;
+  family non-uniformity + per-kind divergence ledgered in INSIGHTS. W2
+  landed (questions object→string coercion, cross-caliber, class-kill
+  confirmed 0 hits in confirmation battery); W3 landed (evidence decoration
+  strip; latent empty-evidence bypass closed). W5 core-rescue + W2b type
+  coercion sized and closed NEGATIVE (W3 captured the recoverable mass;
+  type pool is old-era degenerate output). Verbatim-check taxonomy for the
+  owner: 79% ungrounded / 17% near-miss / 4% answer-key catches — strict +
+  W3 recommended equilibrium. Owner proposals drafted (reflect-decomp
+  closing evidence; per-kind mixed-model routing). R3-LFM retry probe in
+  flight. 937 tests green.
