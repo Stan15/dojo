@@ -59,4 +59,4 @@ OUTPUT — your final output is exactly this JSON (anything before it is ignored
 Field rules: "kind" is one word — recall or skill.
 Check: ≤ {{ max_topics }} topics; NO path deeper than {{ topic_depth }} levels (merge
 extra ideas into the leaf with underscores); every phase topic appears in topics;
-mission states ability in ≤ {{ mission_words }} words; name ≤ {{ new_name_words }} words, not an EXISTING CAMPAIGNS entry.
+mission states ability, not coverage, in ≤ {{ mission_words }} words; name ≤ {{ new_name_words }} words, not an EXISTING CAMPAIGNS entry.

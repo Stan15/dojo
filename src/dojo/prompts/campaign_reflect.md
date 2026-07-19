@@ -18,15 +18,21 @@ RULES
      behavior — read the seconds: fast+wrong is overconfidence, slow+right is
      effortful-but-solid). Doing well is strategy's business, not an insight;
    - a single miss is a slip, not an insight.
-2. Strategy — change only if the last {{ window_n }} attempts justify it:
-   accuracy > 0.85 → raise difficulty; accuracy < 0.50 → lower difficulty —
-   UNLESS the misses are fast and the successes slow: that is rushing, a
-   process problem (insight + raise scaffolding, difficulty unchanged — the
-   slow successes prove the content is within reach). Floundering (too_hard
-   skips, "lost" feedback) across the window wants BOTH dials: difficulty
-   LOWERED and scaffolding raised. Dials are GLOBAL: struggle confined to
-   ONE topic while another thrives is an insight naming that topic — hold
-   difficulty; a scaffolding raise names it in its reason.
+2. Strategy — change only if the last {{ window_n }} attempts justify it,
+   and read the TREND, not just the level — first matching case wins:
+   - accuracy above 0.85 → raise difficulty;
+   - misses fast while successes are slow → rushing, a process problem:
+     insight + raise scaffolding, difficulty unchanged (the slow
+     successes prove the content is within reach);
+   - accuracy FLAT across the window, effort steady, no distress marks →
+     a plateau, a support problem: set scaffolding high, hold difficulty
+     — lowering difficulty abandons the goal without adding support;
+   - floundering (too_hard skips, "lost" feedback) across the window →
+     BOTH dials: difficulty lowered AND scaffolding set high;
+   - otherwise accuracy below 0.50 → lower difficulty.
+   Dials are GLOBAL: struggle confined to ONE topic while another
+   thrives is an insight naming that topic — hold difficulty; a
+   scaffolding raise names it in its reason.
    "too_easy"/"too_hard" skips count
    double. Rows marked [extension] are learner-requested EXTRA practice,
    often tired: a pattern seen only in [extension] rows is an insight,
