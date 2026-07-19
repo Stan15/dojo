@@ -1,0 +1,66 @@
+# Near-empty registries are the hostile edge for routers (INSIGHTS
+# 2026-07-18): with no path-shaped exemplars to imitate, the capture's URL/
+# locator path syntax bleeds into topic_path (observed live: three straight
+# rejections proposing slash-bearing leaves like 'git/bisect run' against a
+# root-only registry; the same model routed first-try once realistic topic
+# paths existed). The registry here offers ONE root topic; the leaf must
+# still be a lowercase dotted identifier.
+category: routing
+domain: git
+scenario_context: |
+  A fresh direct-door campaign "git-mastery" registers only its root topic
+  "git" — no subtopics yet. The learner captures a technique from a web
+  tutorial; the capture text carries the source URL with slashes in it.
+  Strong output: action "new_topic" in campaign "git-mastery" with a
+  lowercase dotted path grown from the existing root (git.bisect,
+  git.bisect_run, or similar) — never slash syntax, never URL fragments in
+  the path — and seed true (a runnable technique). Weak output: a
+  topic_path containing slashes, spaces, or URL pieces (git/bisect,
+  "git/bisect run"), a new_topic that just repeats the bare root "git", or
+  propose_campaign for material the existing campaign clearly owns.
+seed:
+  campaign:
+    id: git-mastery
+    name: Git Mastery
+    mission: "Master git internals and daily workflows."
+    topics:
+      - {path: git, kind: skill, summary: "git internals and workflows"}
+  captures:
+    - id: cap_bisect
+      text: "git bisect run <cmd> automates the whole hunt: it checks out each midpoint commit, uses the command's exit code as good/bad, and lands on the first bad commit with no manual stepping. (from https://blog.example.dev/git/bisect-run-automation)"
+steps:
+  - compile:
+      fn: route
+      capture_id: cap_bisect
+      capture_text: "git bisect run <cmd> automates the whole hunt: it checks out each midpoint commit, uses the command's exit code as good/bad, and lands on the first bad commit with no manual stepping. (from https://blog.example.dev/git/bisect-run-automation)"
+judge_rubric:
+  - {id: c1, weight: 4, question: "Is topic_path a clean lowercase dotted
+      identifier grown from the existing root (git.bisect, git.bisect_run,
+      or similar) — no slashes, no spaces, no angle brackets, no URL
+      fragments?"}
+  - {id: c2, weight: 3, question: "Does the route stay inside campaign
+      git-mastery (new_topic under it), rather than proposing a new campaign
+      or staying in the inbox for material this campaign clearly owns?"}
+  - {id: c3, weight: 2, question: "Is seed true, since the capture states a
+      runnable, testable technique?"}
+  - {id: c4, weight: 1, question: "Is the reason short and honest, without
+      reproducing the URL?"}
+references:
+  good:
+    action: new_topic
+    campaign: git-mastery
+    topic_path: git.bisect_run
+    new_name: null
+    new_mission: null
+    confidence: high
+    reason: "runnable bisect technique; root has no subtopics yet"
+    seed: true
+  bad:
+    action: new_topic
+    campaign: git-mastery
+    topic_path: git/bisect run
+    new_name: null
+    new_mission: null
+    confidence: high
+    reason: "filed under https://blog.example.dev/git/bisect-run-automation"
+    seed: false
