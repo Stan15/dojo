@@ -217,9 +217,13 @@ _Statuses: `[x]` shipped · `[~]` standing/in-progress · `[?]` blocked-on-owner
    cutting the dependency root; route: lexical-match campaign vs
    semantic owner; generate: insight-collision engineering; diagnostic:
    jointly-implied open axis). Then batteries per (model × anchor):
-   (A) current neutral anchor vs (B) bounded-invitation fragment
-   ("unsure between two defensible outputs? brief prose first; only the
-   last JSON object counts") — compiler-selected by a fulfiller PROFILE,
+   (A) current neutral anchor vs (B) bounded-invitation fragment worded
+   as the STRONGEST known elicitor, activity words not format words
+   (owner probe 2026-07-19: "prose" names a format, not the activity —
+   a weak invitation false-negatives the whole experiment): "If two
+   outputs seem defensible, think it through step by step first — write
+   your thinking, then the JSON. Only the last JSON object counts."
+   Compiler-selected by a fulfiller PROFILE,
    never model judgment (craft rule 5). B−A per model = the restriction
    effect; pre_bytes confirms mechanism. Pre-registered rule: adopt the
    invitation as an OPT-IN profile only if trap-avoidance rises
