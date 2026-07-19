@@ -371,6 +371,34 @@ def _normalize(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip().lower()
 
 
+_EVIDENCE_ELLIPSIS = ("...", "…")
+_EVIDENCE_QUOTE_PAIRS = (('"', '"'), ("'", "'"), ("“", "”"), ("‘", "’"))
+
+
+def _strip_evidence_decoration(text: str) -> str:
+    """Leading/trailing ellipsis and symmetric wrapping quote marks are
+    quoting DECORATION, not content — models add them when quoting honestly
+    (25 archived rejections were correct quotes wearing decoration, every
+    caliber; W3 2026-07-19). The remainder must still pass the verbatim
+    check unchanged, so this never weakens the hallucination guard."""
+    s = text.strip()
+    changed = True
+    while changed:
+        changed = False
+        for e in _EVIDENCE_ELLIPSIS:
+            if s.endswith(e):
+                s = s[: -len(e)].rstrip()
+                changed = True
+            if s.startswith(e):
+                s = s[len(e):].lstrip()
+                changed = True
+        for a, b in _EVIDENCE_QUOTE_PAIRS:
+            if len(s) >= 2 and s.startswith(a) and s.endswith(b):
+                s = s[1:-1].strip()
+                changed = True
+    return s
+
+
 def apply_grade(store, task: Task, result: GradeResult) -> dict[str, Any]:
     """Lands a grade: rejects unless `evidence` is a verbatim quote from the
     learner's answer (the anti-hallucination anchor), then finalizes the
@@ -383,8 +411,11 @@ def apply_grade(store, task: Task, result: GradeResult) -> dict[str, Any]:
         raise ApplyRejection(f"attempt {attempt_id} not found in campaign {campaign_id}")
 
     # The anti-hallucination anchor (design/prompts.md §4): the quoted evidence
-    # must actually occur in the learner's answer.
-    if _normalize(result.evidence) not in _normalize(attempt.user_answer or ""):
+    # must actually occur in the learner's answer. Decoration (wrapping
+    # quotes, ellipsis) is stripped first; the remainder is checked verbatim,
+    # and evidence that was ONLY decoration rejects.
+    evidence = _strip_evidence_decoration(result.evidence)
+    if not evidence or _normalize(evidence) not in _normalize(attempt.user_answer or ""):
         raise ApplyRejection(
             "evidence is not a verbatim quote from the answer — re-read ANSWER and quote it"
         )
@@ -409,7 +440,7 @@ def apply_grade(store, task: Task, result: GradeResult) -> dict[str, Any]:
     # Storage stays bounded without ever rejecting an honest quote: a
     # verbatim quote's prefix is still verbatim (ArmS 2026-07-17).
     attempt.grade_evidence = " ".join(
-        result.evidence.split()[: limits.GRADE_EVIDENCE_WORDS * 3]
+        evidence.split()[: limits.GRADE_EVIDENCE_WORDS * 3]
     )
     attempt.grade_feedback = result.feedback
     attempt.error_tag = result.error_tag

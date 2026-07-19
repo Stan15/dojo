@@ -358,6 +358,39 @@ class TestGradeApplier:
         assert not outcome.ok and "verbatim" in outcome.errors[0]
         assert store.attempts.get(CAMP_ID, "att_1").score == 0.0, "state untouched"
 
+    def test_decorated_verbatim_evidence_accepted(self, store: DojoStore):
+        """W3 (2026-07-19): wrapping quotes and ellipsis are quoting
+        decoration, not content — a correct quote wearing them lands (25
+        archived rejections at every caliber were exactly this)."""
+        task_id, _ = self._seed_attempt(store)
+        outcome = service.submit(store, task_id, json.dumps({
+            "score": 0.3,
+            "evidence": '"aurait allé..."',
+            "feedback": "Right tense; aller takes être.",
+            "error_tag": "aux choice",
+        }))
+        assert outcome.ok, outcome.errors
+        att = store.attempts.get(CAMP_ID, "att_1")
+        assert att.grade_evidence == "aurait allé", "stored quote is the stripped verbatim text"
+
+    def test_decoration_only_evidence_rejected(self, store: DojoStore):
+        """Evidence that is ONLY decoration strips to nothing and rejects —
+        also closes the latent edge where empty evidence vacuously passed
+        the substring check."""
+        task_id, _ = self._seed_attempt(store)
+        outcome = service.submit(store, task_id, json.dumps({
+            "score": 0.3, "evidence": '"..."', "feedback": "ok", "error_tag": None,
+        }))
+        assert not outcome.ok and "verbatim" in outcome.errors[0]
+
+    def test_decorated_hallucination_still_rejected(self, store: DojoStore):
+        task_id, _ = self._seed_attempt(store)
+        outcome = service.submit(store, task_id, json.dumps({
+            "score": 1.0, "evidence": '"Il serait allé..."', "feedback": "ok",
+            "error_tag": None,
+        }))
+        assert not outcome.ok and "verbatim" in outcome.errors[0]
+
     def test_off_band_score_rejected_by_schema(self, store: DojoStore):
         task_id, _ = self._seed_attempt(store)
         outcome = service.submit(store, task_id, json.dumps({
