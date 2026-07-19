@@ -109,6 +109,18 @@ running in parallel per doctrine:
   launches until load normalizes. Treat this machine's latency numbers
   as suspect while starved.
 
+## OWNER ASK (~20:10 2026-07-19): sub-4B improvement number
+
+Owner asked whether any <4B model improved. Honest answer given: not
+yet measured this campaign (all wins 4B+/codex; 0.8b historical
+baseline ~4/64). QUEUED NEXT after the R3 reflect probes: full
+qwen3.5:0.8b battery on current templates →
+iterQ_qwen35_08b.jsonl (driver "python scratch/token-diet/api_driver.py
+qwen3.5:0.8b --no-think", workers 2, no filters = all 92) — diff vs
+base2_qwen35_08b.jsonl class-by-class; then the deferred Lane C1
+taxonomy runs on whichever file is richer. Report the number to the
+owner either way.
+
 ## Parallel slate (planned — DEFERRED until usage renews + load normal)
 
 Per doctrine: no spawns during imminent usage outage. First slate after
@@ -499,6 +511,30 @@ directive §queue).
 
 ## Pre-registered (open)
 
+- **R3 retry-feedback probe (2026-07-19 ~19:00; finding: drain_tasks
+  re-sends task.prompt UNCHANGED — raw-driver retries are ERROR-BLIND
+  re-samples; R1/R2 messages reach only agent drivers).** Probe
+  (scratch-only, no product change): retry_probe.py drives plan
+  scenarios through emit→submit with the production budget, arm A =
+  re-sample (current behavior), arm B = retry prompt is the original
+  + one line: "Your previous output was rejected: <errors>. Emit the
+  corrected complete JSON object." Metric: budget-success rate +
+  submissions-to-success per model (qwen, gemma). Decision rule: if B
+  materially beats A (≥ +15 points budget-success or −0.5 mean
+  submissions), write the QUESTIONS proposal for retry-prompt
+  enrichment (owner-gated design change — token cost per retry rides
+  the proposal); if flat, the negative result kills the idea and R1/R2
+  wording stands as agent-driver-only value. ONE battery at a time;
+  probe runs are heavier per scenario (up to 3 generations).
+  AMENDMENT (~19:40, recorded BEFORE arm B results): qwen plan arm A
+  hit CEILING — 11/11 budget-success, mean 1.36 subs; the +15-points
+  bar is unreachable and −0.5 subs arithmetically impossible from
+  1.36. The plan cell is under-powered by design. PRIMARY adjudicating
+  cell moves to REFLECT scenarios at qwen (single-shot ~52% — budget
+  won't ceiling); same decision rule, applied there. Plan-cell B still
+  informative for mean-subs (density: each avoided retry ≈ a full
+  regeneration) but cannot adjudicate ADOPT alone.
+
 - **BATCH CLOSED (~18:20; commits 94c5519 + 152de95): P12 CONFIRMED
   at codex (collision pair passes compliance, floors bootstrap 0.5/0.5
   — per-item constraint composition is the remaining ceiling), P9b
@@ -707,6 +743,17 @@ directive §queue).
   template (hard-failed both codex runs pre-fix). n=1, encouraging only.
 
 ## Negative results (never blind-retest)
+
+- **R3 retry-error-feedback NOT ADOPTED (2026-07-19 ~21:10, qwen
+  4B, both kinds):** arm B (retry prompt + rejection errors) lost to
+  blind re-sampling on BOTH cells — reflect 19/23 @1.74 subs vs A
+  20/23 @1.40; plan 11/11 @1.45 vs 11/11 @1.36. Budgeted re-sampling
+  is near-sufficient at 4B and the feedback line adds cost + retry
+  count. No QUESTIONS proposal. R1/R2 message wording stays (agent
+  drivers read errors in-context; SKILL contract). OPEN: the sub-4B
+  cell (0.8b) is the only place feedback could still matter (5%
+  single-shot base) — test ONLY if the 0.8b baseline (running) shows
+  a non-floor acceptance rate worth building on.
 
 - **RAIL SLIP logged (~17:05): ONE-battery rule briefly violated** —
   the moot iterQ2 qwen plan rerun (bundled into an earlier command)
