@@ -239,9 +239,13 @@ laptop. Reflection (distilling insights like the ones above) is the hardest
 task; the smallest model measured landing it through the production
 pipeline is **qwen3.5:4b** (~3.4 GB) — in our test, 2 of 2 production
 budgets produced evidence-cited insights, with the built-in retries
-absorbing the early misses. Smaller than ~4B, current models miss the
-output contracts too often — but the benchmark measures any model in one
-command, so check yours.
+absorbing the early misses. Below ~4B the picture is changing fast: the
+strongest sub-4B we've measured, **lfm2.5-thinking:1.2b** (~730 MB!),
+lands planning and diagnostics at near-4B rates (11/13 and 7/7 first-try
+on our corpus) and about half of tasks overall — but still misses the
+grading and routing contracts too often to run the full loop alone. A 4B
+model remains the full-loop reliability floor; the benchmark measures any
+model in one command, so check yours.
 
 ## Under the hood, in one paragraph
 
