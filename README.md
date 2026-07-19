@@ -235,8 +235,11 @@ exercise: Translate "I am tired today."     learner: "Yo soy cansado hoy"
 ```
 
 Grading, routing, and exercise generation all run at that reliability on a
-laptop; reflection (distilling insights like the ones above) is the hardest
-task and wants a stronger model. Smaller than ~4B, current models miss the
+laptop. Reflection (distilling insights like the ones above) is the hardest
+task; the smallest model measured landing it through the production
+pipeline is **qwen3.5:4b** (~3.4 GB) — in our test, 2 of 2 production
+budgets produced evidence-cited insights, with the built-in retries
+absorbing the early misses. Smaller than ~4B, current models miss the
 output contracts too often — but the benchmark measures any model in one
 command, so check yours.
 
