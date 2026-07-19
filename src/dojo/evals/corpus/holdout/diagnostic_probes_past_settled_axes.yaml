@@ -1,0 +1,85 @@
+# Skill under test: calibration questions must skip every axis the learner
+# already settled (goal + deadline, current ability, solo-only format) and
+# probe past them — the panic breakdown point, realistic pool access, prior
+# instruction — instead of re-asking the standard diagnostic set.
+category: calibration
+domain: adult_swimming
+scenario_context: |
+  Adult learner preparing for a lake relay. The LEARNER digest already settles
+  three axes in their own words: the goal is fixed (1 km continuous front
+  crawl by mid-September), the level is stated precisely (two 25 m lengths,
+  then stopping from breathing panic, not muscle fatigue), and the format
+  preference is closed (solo drills only; group lessons are off the table for
+  schedule and nerves). A shallow diagnostic re-asks exactly these three —
+  "what's your goal", "how far can you swim", "group or solo?" — including
+  narrowed rephrases, which the rules count as re-asks. Strong output probes
+  past the settled facts: where exactly the panic sequence starts, realistic
+  weekly pool access, and prior instruction history — axes the digest leaves
+  open, each answerable in a sentence or two within the word cap.
+seed:
+  campaign:
+    id: open-water-ready
+    name: Open Water Ready
+    mission: Swim 1 km front crawl continuously by mid-September for the lake relay.
+    strategy_profile: {difficulty: beginner, scaffolding: high}
+  insights:
+    - id: ins_goal_fixed
+      key: goals.distance_deadline
+      description: Goal fixed in their words — 1 km continuous front crawl by mid-September for the lake relay.
+    - id: ins_level_stated
+      key: ability.current_lengths
+      description: Swims two 25 m lengths then stops — breathing panic, not muscle fatigue, per their own report.
+    - id: ins_solo_only
+      key: preferences.solo_drills
+      description: Practises alone at the gym pool; group lessons are off the table — schedule and nerves.
+steps:
+  - compile:
+      fn: diagnostic
+      topic_path: swimming.freestyle.breathing
+      n_items: 3
+judge_rubric:
+  - id: c1
+    weight: 4
+    question: "Does the set avoid re-asking all three settled axes — goal/deadline, current distance or ability, and group-versus-solo preference — including narrowed or rephrased versions?"
+  - id: c2
+    weight: 3
+    question: "Does at least one question probe past a settled fact (e.g. what happens first when the panic starts, or under what condition the two-length limit breaks down)?"
+  - id: c3
+    weight: 2
+    question: "Are there exactly 3 items, every skill exactly 'diagnostic', with answer and rubric null?"
+  - id: c4
+    weight: 1
+    question: "Is each question 40 words or fewer, self-contained, and answerable in one or two sentences without grading pressure?"
+references:
+  good:
+    items:
+      - prompt: "When the panic starts mid-length, what do you notice first — your breathing rhythm, your exhale underwater, or your thoughts?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "How many pool visits can you realistically fit into a normal week, and roughly how long is each one?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "Have you ever had formal stroke instruction, and is there any drill that already feels comfortable to you?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+    note: null
+    intervention: null
+  bad:
+    items:
+      - prompt: "What distance would you like to be able to swim, and is there a date you want to reach it by?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "How many lengths of the pool can you currently swim without stopping?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "Would you prefer practising on your own or joining a group lesson?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+    note: null
+    intervention: null

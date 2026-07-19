@@ -1,0 +1,117 @@
+# Skill under test: generation composes ALL active constraints into every
+# item — target the sour-direction misconception, honour the learner's
+# no-arithmetic taste-led preference, and keep beginner items to one decision
+# each — instead of writing the stock ratio-math espresso drills.
+category: personalization
+domain: espresso
+scenario_context: |
+  Home-espresso learner on a beginner/high-scaffolding profile. Two active
+  insights constrain generation together: a misconception (when a shot tastes
+  sour they grind COARSER — the opposite of the fix, since sour signals
+  under-extraction) and a stated preference (taste-led drills; no brew-ratio
+  arithmetic or extraction-percentage math). Recent attempts show the
+  coarsening mistake twice. The task asks for exactly 2 beginner items on
+  taste diagnosis. Strong output composes: every item is a single
+  taste-anchored decision, at least one lands directly on the sour-goes-finer
+  direction, scaffolding shows the taste-compass method without leaking the
+  asked answer, and the count stays at 2 (compose constraints, never add
+  items to give each its own). Weak output pattern-matches "espresso practice"
+  into ratio calculations, multi-part variable lists, or yes/no prompts —
+  violating the preference, the calibration, and the item count at once.
+seed:
+  campaign:
+    id: espresso-daily
+    name: Espresso at Home
+    mission: Pull consistently balanced shots on a single-boiler machine before work.
+    strategy_profile: {difficulty: beginner, scaffolding: high}
+  insights:
+    - id: ins_sour_direction
+      key: espresso.extraction.sour_direction
+      description: When a shot tastes sour they grind coarser — the opposite of the fix; sour signals under-extraction.
+      topic_path: espresso.extraction.taste_diagnosis
+    - id: ins_taste_first
+      key: preferences.taste_first
+      description: Asked for taste-led drills; no brew-ratio arithmetic or extraction-percentage math.
+      topic_path: espresso.extraction.taste_diagnosis
+  exercises:
+    - id: ex_sour_1
+      topic_path: espresso.extraction.taste_diagnosis
+      difficulty: beginner
+      prompt: "Your shot tastes sour. Do you grind finer or coarser?"
+      answer: "Finer — sour means under-extraction."
+      rubric: "- Chooses finer"
+    - id: ex_bitter_1
+      topic_path: espresso.extraction.taste_diagnosis
+      difficulty: beginner
+      prompt: "Your shot tastes bitter and harsh. Which grind direction fixes it?"
+      answer: "Coarser — bitter means over-extraction."
+      rubric: "- Chooses coarser"
+  attempts:
+    - id: att_sour_1
+      session_id: s5
+      exercise_id: ex_sour_1
+      score: 0.0
+      latency_seconds: 19.0
+      error_tag: sour direction
+      user_answer: "Coarser — it tasted sour so it must have over-extracted, back it off."
+    - id: att_sour_2
+      session_id: s6
+      exercise_id: ex_sour_1
+      score: 0.0
+      latency_seconds: 24.0
+      error_tag: sour direction
+      user_answer: "I went two steps coarser again and honestly it got worse, even more sour."
+    - id: att_bitter_1
+      session_id: s6
+      exercise_id: ex_bitter_1
+      score: 1.0
+      latency_seconds: 17.0
+      user_answer: "Coarser."
+steps:
+  - compile:
+      fn: generate
+      topic_path: espresso.extraction.taste_diagnosis
+      n_items: 2
+      difficulty: beginner
+judge_rubric:
+  - id: c1
+    weight: 3
+    question: "Does at least one item directly target the misconception — a sour shot where the correct move is FINER — framed so choosing coarser is detectably wrong?"
+  - id: c2
+    weight: 3
+    question: "Is every item taste-led with zero brew-ratio arithmetic or extraction-percentage math, honouring the stated preference in ALL items rather than just one?"
+  - id: c3
+    weight: 2
+    question: "Are there exactly 2 items, each a single beginner-sized decision (no multi-part prompts, no open-ended lists)?"
+  - id: c4
+    weight: 1
+    question: "Do prompts stay active production (no yes/no or did-you-know phrasing) and does any built-in hint show the taste-compass method without stating the asked answer?"
+references:
+  good:
+    items:
+      - prompt: "This morning's shot tastes sharply sour and vanishes fast. Use the taste compass: sour sits at the under-extracted end, bitter at the over-extracted end. One decision — do you grind finer or coarser?"
+        answer: "Finer. Sour means the water left too soon (under-extraction), so a finer grind slows the shot and pulls more flavour."
+        rubric: "- Chooses finer, not coarser\n- Links sour to under-extraction"
+        skill: apply
+      - prompt: "A friend tastes your sour shot and says: 'Too sour — go coarser.' Correct or wrong? Give the direction you would actually turn the grinder and the taste rule that decides it."
+        answer: "Wrong — sour is under-extraction, so grind finer; coarser would make it even more sour."
+        rubric: "- Rejects coarser\n- Names sour as under-extraction\n- States finer as the fix"
+        skill: critique
+    note: null
+    intervention: null
+  bad:
+    items:
+      - prompt: "You dose 18 g of coffee and stop the shot at 40 g out. Calculate the brew ratio, state the extraction percentage assuming 20 percent solubles, and explain whether the shot is balanced."
+        answer: "Ratio about 1:2.2, extraction near 20 percent, so the shot is balanced."
+        rubric: "- Correct ratio\n- Correct percentage\n- Balance judgement"
+        skill: apply
+      - prompt: "Did you know a sour shot can be fixed by adjusting the grind?"
+        answer: "Yes."
+        rubric: "- Answers yes"
+        skill: recall
+      - prompt: "List every variable that affects espresso extraction — dose, yield, temperature, grind, tamp pressure, basket, and water chemistry — and explain how each interacts with the others."
+        answer: "Dose, yield, temperature, grind, tamp, basket, and water all interact to set extraction."
+        rubric: "- Names all variables\n- Explains interactions"
+        skill: explain
+    note: null
+    intervention: null

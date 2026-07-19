@@ -1,0 +1,104 @@
+# Skill under test: reflection holds both dials when the learner's stated
+# boredom contradicts the window, traces the "easy" feeling to extension-only
+# octave wins, and still adjudicates the standing thirds insight.
+category: strategy_calibration
+domain: music_ear_training
+scenario_context: |
+  Ear-training learner asks outright to be bumped to intermediate: "this is
+  getting too easy, I nail these at night." The ritual window disagrees —
+  accuracy near 0.4, descending thirds missed repeatedly, wins slow. The fast
+  perfect rows all sit in [extension] late-night top-ups and all test octaves
+  versus unisons, the easiest cue. Strong reflection composes three rules:
+  FEEDBACK contradicting the window means hold both dials and name the
+  mismatch (insight or question); a pattern seen only in extension rows is an
+  insight, never a dial move; and the standing thirds-confusion insight gets
+  updated with the new miss ids. Weak reflection obeys the learner's voice,
+  raises difficulty, and leaves the thirds insight unexamined.
+seed:
+  campaign:
+    id: ear-foundations
+    name: Ear Foundations
+    mission: Identify intervals and chord qualities by ear for jam-session confidence.
+    strategy_profile: {difficulty: beginner, scaffolding: medium}
+    active_phase_index: 1
+    attack_plan:
+      - phase: 1
+        topics: [music.ear.intervals]
+        criteria: {min_attempts: 5, min_accuracy: 0.0}
+        focus: calibrate interval hearing
+      - phase: 2
+        topics: [music.ear.intervals, music.ear.chords]
+        criteria: {min_attempts: 12, min_accuracy: 0.7}
+        focus: intervals both directions, then triad qualities
+    topics:
+      - path: music.ear.intervals
+        kind: skill
+        summary: Name intervals played melodically, ascending and descending
+      - path: music.ear.chords
+        kind: skill
+        summary: Major, minor, diminished triad qualities by ear
+  exercises:
+    - {id: ex_thirds_desc, topic_path: music.ear.intervals, difficulty: beginner, kind: skill, prompt: "Two notes descend. Is the interval a major or minor third?", answer: "Names the correct third quality.", rubric: "- Correct quality named"}
+    - {id: ex_fifths, topic_path: music.ear.intervals, difficulty: beginner, kind: skill, prompt: "Identify the interval: is it a perfect fifth or a perfect fourth?", answer: "Correct interval named.", rubric: "- Correct interval"}
+    - {id: ex_sixths, topic_path: music.ear.intervals, difficulty: beginner, kind: skill, prompt: "Ascending pair: major sixth or minor sixth?", answer: "Correct sixth quality.", rubric: "- Correct quality"}
+    - {id: ex_octaves, topic_path: music.ear.intervals, difficulty: beginner, kind: skill, prompt: "Is this pair an octave or a unison?", answer: "Correct answer.", rubric: "- Correct answer"}
+  insights:
+    - id: ins_thirds
+      key: intervals.thirds_confusion
+      description: Confuses major and minor thirds when the pair is played descending.
+      topic_path: music.ear.intervals
+  attempts:
+    - {id: att_r1, session_id: s21, exercise_id: ex_thirds_desc, score: 0.0, latency_seconds: 31.0, user_answer: "Major... no wait, minor. Going with major.", error_tag: thirds descending, created_at: "2026-07-10T19:00:00+00:00"}
+    - {id: att_r2, session_id: s21, exercise_id: ex_fifths, score: 1.0, latency_seconds: 47.0, user_answer: "Perfect fifth.", created_at: "2026-07-10T19:04:00+00:00"}
+    - {id: att_r3, session_id: s21, exercise_id: ex_thirds_desc, score: 0.0, latency_seconds: 36.0, user_answer: "Minor third? They blur when it goes down.", error_tag: thirds descending, created_at: "2026-07-10T19:08:00+00:00"}
+    - {id: att_r4, session_id: s22, exercise_id: ex_sixths, score: 0.3, latency_seconds: 42.0, user_answer: "Minor sixth — guessed between the two.", created_at: "2026-07-13T19:02:00+00:00"}
+    - {id: att_r5, session_id: s22, exercise_id: ex_fifths, score: 1.0, latency_seconds: 51.0, user_answer: "Fifth, took me a while to hum it.", created_at: "2026-07-13T19:06:00+00:00"}
+    - {id: att_r6, session_id: s22, exercise_id: ex_sixths, score: 0.0, latency_seconds: 39.0, user_answer: "Major sixth. Not sure.", created_at: "2026-07-13T19:10:00+00:00"}
+    - {id: att_r7, session_id: s23, exercise_id: ex_thirds_desc, score: 0.3, latency_seconds: 33.0, user_answer: "Descending... minor? I flip these constantly.", error_tag: thirds descending, created_at: "2026-07-16T19:03:00+00:00"}
+    - {id: att_r8, session_id: s23, exercise_id: ex_fifths, score: 1.0, latency_seconds: 44.0, user_answer: "Perfect fifth.", feedback: "Honestly this is getting too easy — I nail these when I practise at night. Bump me up to intermediate, I'm bored at this level.", created_at: "2026-07-16T19:07:00+00:00"}
+    - {id: att_x1, session_id: s24, exercise_id: ex_octaves, score: 1.0, latency_seconds: 7.0, origin: extension, user_answer: "Octave.", created_at: "2026-07-16T23:10:00+00:00"}
+    - {id: att_x2, session_id: s24, exercise_id: ex_octaves, score: 1.0, latency_seconds: 6.0, origin: extension, user_answer: "Unison.", created_at: "2026-07-16T23:12:00+00:00"}
+    - {id: att_x3, session_id: s24, exercise_id: ex_octaves, score: 1.0, latency_seconds: 8.0, origin: extension, user_answer: "Octave again.", created_at: "2026-07-16T23:14:00+00:00"}
+steps:
+  - compile: {fn: reflect}
+judge_rubric:
+  - id: c1
+    weight: 4
+    question: "Are both dials held (strategy null or explicitly unchanged) despite the learner's request, with the feedback-versus-window mismatch named in an insight or question?"
+  - id: c2
+    weight: 3
+    question: "Is the easy feeling traced to the [extension] octave rows (or the request tied to night-time top-ups) rather than converted into a difficulty raise?"
+  - id: c3
+    weight: 2
+    question: "Is the standing thirds-confusion insight adjudicated — updated with new descending-thirds miss ids, not ignored or resolved?"
+  - id: c4
+    weight: 1
+    question: "Does the journal record the hold WITH the evidence (window accuracy versus the stated boredom)?"
+references:
+  good:
+    insight_updates:
+      - op: update
+        id: ins_thirds
+        text: "Still flips major and minor thirds on descending pairs; three more misses this window."
+        evidence: [att_r1, att_r3, att_r7]
+        reason: "descending thirds misses repeat in this window"
+      - op: create
+        key: calibration.perceived_ease
+        text: "Says drills feel too easy, yet ritual accuracy sits near 0.4; the fast wins are octave-only extension rows."
+        evidence: [att_r8, att_x1]
+        reason: "stated ease contradicts the ritual window"
+    strategy: null
+    plan_revision: null
+    questions: []
+    topic_retirements: []
+    journal: "Held both dials: learner asked for intermediate, but ritual accuracy is near 0.4 with slow wins; the easy feel comes from octave-only extension rows. Updated thirds insight."
+  bad:
+    insight_updates: []
+    strategy:
+      difficulty: intermediate
+      scaffolding: null
+      reason: "learner reports the drills are too easy and asked for harder"
+    plan_revision: null
+    questions: []
+    topic_retirements: []
+    journal: "Raised difficulty to intermediate at the learner's request; they report the beginner drills are too easy and boring."

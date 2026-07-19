@@ -1,0 +1,120 @@
+# Skill under test: planning from a rambling voice-memo goal after a life
+# interruption — compress around the hard deadline, respect the learner's
+# "don't re-teach me" claim, yet let calibration VERIFY that claim instead of
+# trusting it or grinding the material again.
+category: planning
+domain: amateur_radio
+scenario_context: |
+  A new parent returns to studying for the amateur radio technician exam after
+  a four-month interruption. The goal arrives as a messy transcribed voice
+  memo: the exam window closes August 15 (about four weeks away), they claim
+  the electronics formulas "stuck", the regulations and call-sign material is
+  gone, antenna safety was never studied, and they explicitly ask not to
+  re-grind circuit math. Strong planning composes three things: deadline
+  compression around the forgotten and never-studied material; the electronics
+  claim honoured by keeping it OUT of drill phases; and phase-1 calibration
+  still measuring that claimed retention, because a four-month-old self-report
+  is a claim, not evidence. Weak planning either re-teaches the full syllabus
+  from scratch (ignoring the request and the deadline) or drops electronics
+  entirely, trusting the claim with no calibration check.
+seed:
+  campaign:
+    id: sourdough-basics
+    name: Sourdough Basics
+    mission: Bake a dependable weekly sourdough loaf at home.
+    strategy_profile: {difficulty: beginner, scaffolding: medium}
+steps:
+  - compile:
+      fn: plan
+      goal: "Voice memo, transcribed: ok so I started studying for the ham radio technician exam back in March, then the baby came and everything just stopped. My club's exam window closes August 15 so that's like four weeks. I genuinely remember the electronics — Ohm's law, the formulas, that stuff stuck. what's gone is the rules part, band privileges, call sign stuff, and I never even touched antenna safety. please don't make me grind circuit math again, I don't have the hours now"
+judge_rubric:
+  - id: c1
+    weight: 3
+    question: "Is the plan compressed around the deadline — regulations, call signs, and antenna safety carrying the drill phases, with no phase dedicated to re-teaching electronics?"
+  - id: c2
+    weight: 3
+    question: "Does phase 1 remain a calibration phase that includes the claimed electronics retention (verifying the self-report) rather than trusting it blindly or dropping electronics from the plan entirely?"
+  - id: c3
+    weight: 2
+    question: "Does the mission state the testable exam outcome with the August 15 deadline (or the compression trade-off) in 40 words or fewer?"
+  - id: c4
+    weight: 1
+    question: "Is the name a short recognizable label (4 words or fewer) rather than the goal restated?"
+references:
+  good:
+    mission: "Pass the amateur radio technician exam by August 15: drill regulations, band privileges, call signs, and antenna safety; calibration verifies the electronics the learner says still stuck."
+    name: "License Sprint"
+    topics:
+      - path: radio.regulations.band_privileges
+        kind: recall
+        summary: "Which bands and modes a technician licence allows."
+      - path: radio.regulations.call_signs
+        kind: recall
+        summary: "Call sign formats and station identification rules."
+      - path: radio.operating.procedures
+        kind: recall
+        summary: "Basic operating and emergency procedures for the exam."
+      - path: radio.safety.antennas
+        kind: recall
+        summary: "RF exposure limits and antenna installation safety."
+      - path: radio.electronics.fundamentals
+        kind: recall
+        summary: "Ohm's law and formulas — verified in calibration only."
+    phases:
+      - phase: 1
+        topics: [radio.electronics.fundamentals, radio.regulations.band_privileges]
+        criteria: {min_attempts: 5, min_accuracy: 0.0}
+        focus: "Calibrate: verify the claimed electronics retention and sample the regulations gap."
+      - phase: 2
+        topics: [radio.regulations.band_privileges, radio.regulations.call_signs]
+        criteria: {min_attempts: 8, min_accuracy: 0.7}
+        focus: "Drill the forgotten rules: privileges and identification."
+      - phase: 3
+        topics: [radio.safety.antennas, radio.operating.procedures]
+        criteria: {min_attempts: 8, min_accuracy: 0.7}
+        focus: "Cover the never-studied safety and operating material before the window closes."
+    refinement_questions: []
+  bad:
+    mission: "Become a confident licensed amateur radio operator by studying the complete technician syllabus: electronics from scratch, regulations, operating procedures, antenna safety, and full practice exams."
+    name: "Ham Radio Exam Study"
+    topics:
+      - path: radio.electronics.ohms_law
+        kind: recall
+        summary: "Relearn Ohm's law and power formulas from the beginning."
+      - path: radio.electronics.circuit_math
+        kind: recall
+        summary: "Series and parallel circuit calculations, step by step."
+      - path: radio.electronics.components
+        kind: recall
+        summary: "Resistors, capacitors, semiconductors and their roles."
+      - path: radio.regulations.band_privileges
+        kind: recall
+        summary: "Which bands and modes a technician licence allows."
+      - path: radio.regulations.call_signs
+        kind: recall
+        summary: "Call sign formats and station identification rules."
+      - path: radio.safety.antennas
+        kind: recall
+        summary: "RF exposure limits and antenna installation safety."
+    phases:
+      - phase: 1
+        topics: [radio.electronics.ohms_law]
+        criteria: {min_attempts: 5, min_accuracy: 0.0}
+        focus: "Calibrate electronics from first principles."
+      - phase: 2
+        topics: [radio.electronics.ohms_law, radio.electronics.circuit_math]
+        criteria: {min_attempts: 12, min_accuracy: 0.75}
+        focus: "Rebuild the full circuit-math foundation."
+      - phase: 3
+        topics: [radio.electronics.components]
+        criteria: {min_attempts: 10, min_accuracy: 0.75}
+        focus: "Master every component class."
+      - phase: 4
+        topics: [radio.regulations.band_privileges, radio.regulations.call_signs]
+        criteria: {min_attempts: 12, min_accuracy: 0.8}
+        focus: "Then move on to the rules."
+      - phase: 5
+        topics: [radio.safety.antennas]
+        criteria: {min_attempts: 10, min_accuracy: 0.8}
+        focus: "Finish with safety whenever time allows."
+    refinement_questions: []

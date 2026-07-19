@@ -1,0 +1,83 @@
+# Skill under test: routing a degraded voice capture whose surface words
+# (stomach, gut) point at the wrong campaign — the practice outcome is race
+# fueling, the right campaign lists no fueling topic (new_topic), the two-home
+# pull keeps confidence low, and the stated g/kg technique warrants seeding.
+category: routing
+domain: endurance_running
+scenario_context: |
+  Learner runs two campaigns: marathon training and an IBS-calming diet
+  overhaul. A capture transcribed from a voice note mid-run says to carb-load
+  8-10 g per kg for two days pre-race and to rehearse the race breakfast on
+  long-run days so their stomach "doesnt blow up again like tulsa". Surface
+  features mislead: stomach and gut wording matches the digestion campaign's
+  topics. The practice outcome is race-fueling rehearsal, which belongs to the
+  marathon campaign — but that campaign lists no fueling topic, so the right
+  action is new_topic with a new leaf under the existing running namespace.
+  Because the capture plausibly fits both homes, confidence stays low; and the
+  capture states a testable technique (8-10 g/kg, rehearsed breakfast), so
+  seed is true. Weak routing attaches to the digestion campaign's
+  trigger-foods topic with high confidence and no seed.
+seed:
+  campaign:
+    id: marathon-buildup
+    name: Marathon Buildup
+    mission: Finish the Chicago Marathon strong with a negative split.
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+    topics:
+      - path: running.long_runs.pacing
+        kind: skill
+        summary: Hold goal pace late in long runs without fading
+      - path: running.recovery.sleep
+        kind: recall
+        summary: Sleep and recovery habits that protect training load
+  campaigns:
+    - id: gut-reset
+      name: Gut Reset
+      mission: Calm my IBS with steady diet and stress habits.
+      topics:
+        - path: nutrition.digestion.trigger_foods
+          kind: recall
+          summary: Personal trigger foods and safer swaps
+        - path: nutrition.digestion.fodmap_basics
+          kind: recall
+          summary: FODMAP categories and elimination basics
+  captures:
+    - id: cap_fuel_07
+      text: "from the coach pod — carb load 8 to 10 g per kg for 2 days before the race, and practise the race breakfast on long run days so my stomach doesnt blow up again like tulsa"
+steps:
+  - compile:
+      fn: route
+      capture_id: cap_fuel_07
+      capture_text: "from the coach pod — carb load 8 to 10 g per kg for 2 days before the race, and practise the race breakfast on long run days so my stomach doesnt blow up again like tulsa"
+judge_rubric:
+  - id: c1
+    weight: 3
+    question: "Does the route land in marathon-buildup (the practice outcome is race-fueling rehearsal) rather than gut-reset despite the stomach/gut surface wording?"
+  - id: c2
+    weight: 3
+    question: "Is the action new_topic with a short new fueling leaf under the existing running namespace, rather than forcing the capture onto a listed digestion or pacing topic?"
+  - id: c3
+    weight: 2
+    question: "Is confidence low because the capture plausibly fits two campaigns?"
+  - id: c4
+    weight: 1
+    question: "Is seed true, since the capture states a testable technique (8-10 g/kg load, rehearsed race breakfast)?"
+references:
+  good:
+    action: new_topic
+    campaign: marathon-buildup
+    topic_path: running.fueling
+    new_name: null
+    new_mission: null
+    confidence: low
+    reason: "race fueling rehearsal belongs with marathon training"
+    seed: true
+  bad:
+    action: attach
+    campaign: gut-reset
+    topic_path: nutrition.digestion.trigger_foods
+    new_name: null
+    new_mission: null
+    confidence: high
+    reason: "stomach trouble is a digestion issue"
+    seed: false

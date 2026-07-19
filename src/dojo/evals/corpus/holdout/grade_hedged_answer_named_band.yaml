@@ -1,0 +1,66 @@
+# Skill under test: grading composes three constraints at once — ignore the
+# learner's self-deprecating hedging, apply the rubric's named partial-credit
+# band for swapped placement, and quote the flawed component (never the affect).
+category: grading_integrity
+domain: knitting
+scenario_context: |
+  Adult knitter shaping their first V-neck. The exercise asks for both decrease
+  leans and their mirrored edge placement. The learner's answer is soaked in
+  self-doubt ("pretty sure I got it wrong", "sorry") yet names both leans
+  correctly; placement is half-guessed and swapped. The rubric NAMES the case:
+  both leans right but placement swapped, vague, or guessed scores 0.7. Strong
+  grading composes all three: 0.7 despite the hedging, evidence copied from the
+  placement guess (not the apology), feedback that credits the leans and fixes
+  placement, knowledge_gap false. Weak grading anchors on the learner's
+  confidence language and drops to 0.3 with affect quoted as evidence — or
+  hears "I always blank on this" as a knowledge gap.
+seed:
+  campaign:
+    id: sweater-school
+    name: Sweater School
+    mission: Knit a top-down raglan sweater with tidy mirrored shaping.
+    strategy_profile: {difficulty: beginner, scaffolding: medium}
+  exercises:
+    - id: ex_dec_09
+      topic_path: knitting.shaping.decreases
+      difficulty: beginner
+      prompt: "You are shaping a V-neck. Name the decrease that leans right and the one that leans left, then state which neck edge each belongs on for mirrored shaping."
+      answer: "K2tog leans right and sits on the left neck edge; ssk leans left and sits on the right neck edge, so both lean into the neckline."
+      rubric: "Award 0.4 for k2tog leaning right and 0.4 for ssk leaning left. Award 0.2 for placing k2tog on the left neck edge and ssk on the right. If both leans are correct but placement is swapped, vague, or guessed, score 0.7."
+  attempts:
+    - id: att_vneck_3
+      session_id: s12
+      exercise_id: ex_dec_09
+      score: 0.0
+      latency_seconds: 58.0
+      user_answer: "Ugh, I always blank on this. Pretty sure I got it wrong, but: k2tog slants right, ssk slants left. Placement I just guess honestly — maybe k2tog on the right edge? Sorry, decreases never stick for me."
+steps:
+  - compile:
+      fn: grade
+      attempt_id: att_vneck_3
+judge_rubric:
+  - id: c1
+    weight: 4
+    question: "Does the grade land on the rubric's named 0.7 band — both leans correct, placement guessed/swapped — rather than 0.3 or 0.0 driven by the learner's hedging?"
+  - id: c2
+    weight: 3
+    question: "Is the evidence copied from the flawed placement words (e.g. the k2tog-on-the-right-edge guess), not from the apology or self-doubt language?"
+  - id: c3
+    weight: 2
+    question: "Does the feedback credit the correct leans first, then give placement as the single correction?"
+  - id: c4
+    weight: 1
+    question: "Is knowledge_gap false — self-doubt and 'it never sticks' treated as a failed retrieval, not never-taught material?"
+references:
+  good:
+    score: 0.7
+    evidence: "maybe k2tog on the right edge"
+    feedback: "Both leans are right — k2tog right, ssk left. Placement is the gap: k2tog goes on the left neck edge, ssk on the right, so they mirror into the neckline."
+    error_tag: decrease placement
+    knowledge_gap: false
+  bad:
+    score: 0.3
+    evidence: "Pretty sure I got it wrong"
+    feedback: "You sound very unsure of this material. Review both decreases from the beginning until you feel confident naming them without guessing."
+    error_tag: low confidence
+    knowledge_gap: true
