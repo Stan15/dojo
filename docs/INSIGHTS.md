@@ -353,3 +353,24 @@ keeps `pipx install --force` from ever seeing real state.
   hits; qwen neutral hit both plan dependency-root traps), and
   pre_bytes is a sufficient mechanism check — no thinking-trace access
   needed.
+- **A stated cap and its enforcement wall do different jobs — split them
+  (2026-07-19, W1).** Word caps stated in templates anchor the LENGTH
+  DISTRIBUTION (models cluster just around the number); the validator's job
+  is only to stop genuine rambles. Enforcing at the stated cap rejected
+  16-22-word questions against a 15-word cap — 100% of gemma's historical
+  refinement-question rejections were within +50% — each costing a full
+  regeneration for a few words of overshoot. Rejecting only past
+  ceil(cap×1.5) converted gemma plan 9/11→13/13 while the wall still
+  caught 32-74-word rambles. Raising the cap itself would have moved the
+  whole distribution up; softening only the gate kept the anchor tight.
+- **Adjudicate monotone-looser changes by mechanism, not by run deltas
+  (2026-07-19, W1).** A validator change that only loosens acceptance
+  cannot regress any identical output, so a measured ok-rate DROP under it
+  is sampling churn by construction — read the failing transcripts for the
+  real churn source instead of blaming the arm. Doing so here exposed the
+  cross-caliber questions-object lottery (models stochastically emitting
+  {"question"/"text": ...} objects for contracted string lists; 119
+  archived rejections, 5.5% of all recorded fails), which both explained
+  the churn and became the next arm (W2 coercion). Corollary: kind-level
+  variance bands measured on stable kinds understate unstable ones — the
+  reflect kind's churn was format-lottery variance, not model instability.

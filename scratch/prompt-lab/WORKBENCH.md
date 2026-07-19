@@ -1,11 +1,18 @@
 # PROMPT LAB WORKBENCH — live campaign state
 
-## ⟫ CURRENT (2026-07-19 ~09:50 — W1 ADOPTED+COMMITTED; NEXT: launch
-scratch/prompt-lab/bakeoff_run.sh (6 sub-4B full batteries, serial,
-~4-8h; then adjudicate per best-in-class rule + re-base sub-4B claims
-+ README small-model guidance if winner changes). AFTER bake-off:
-W2-QCOERCE implementation (pre-registered below). Tree must stay
-QUIET for the whole bake-off — no src/ or corpus edits.)
+## ⟫ CURRENT (2026-07-19 ~10:00 — W1 COMMITTED 9f878e5+pushed;
+**BAKE-OFF IN FLIGHT** (task bebj3vhwp, `bash
+scratch/prompt-lab/bakeoff_run.sh`, launched ~10:00, ~4-8h): 6 serial
+full-corpus batteries under the committed W1 tree → bakeoff_{qwen35_08b_w1,
+gemma3_1b_w1,lfm25_12b_w1,lfm25think_12b_w1,granite4_1b_w1,qwen35_2b_w1}.jsonl.
+If dead on resume: check which bakeoff_*.jsonl are complete, rerun the
+script (it will redo the interrupted model's file — or edit the script
+to skip completed slugs). Adjudicate per best-in-class rule; re-base
+sub-4B claims + README small-model guidance if the winner changes;
+re-answer R3 retry question on the winner if it isn't qwen 0.8b.
+AFTER bake-off: W2-QCOERCE (pre-registered below). Tree stays QUIET
+throughout — no src/ or corpus edits, NO model inference outside the
+battery (incident lesson ~09:35).)
 
 **W1 FINAL VERDICT (all 4 cells, adopted):** qwen plan 10/13
 (overlap +2, PASS); gemma plan 13/13 (overlap 11/11, +2, PASS —
