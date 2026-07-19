@@ -1,0 +1,1 @@
+Calibrate DOWN: RECENT shows repeated struggle at "{{ difficulty }}" — build every item one notch GENTLER than the dial: scaffolded entry items that rebuild the decision rule one decision at a time, before any full scenario, and say the step-down in "note". Repeating nominal-difficulty items would repeat the failure.

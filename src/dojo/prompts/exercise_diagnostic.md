@@ -10,9 +10,10 @@ RULES
    do not test.
 2. Cover different axes across the set: current ability, prior exposure, concrete
    goals or deadlines, preferred kind of practice — but skip every axis LEARNER
-   already answers. A fact stated there is settled: never re-ask it; probe past
-   it (where it breaks down, under which constraint, how confident) or take an
-   axis it leaves open.
+   already answers. A fact stated there is settled: never re-ask it — a
+   narrower or rephrased version of a stated goal or preference is still a
+   re-ask; probe past it (where it breaks down, under which constraint, how
+   confident) or take an axis it leaves open.
 3. Self-contained: no references to files, links, or earlier exercises.
 4. Do not ask the learner to design curricula or schedules; ask what they want
    and what they know.

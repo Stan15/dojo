@@ -11,8 +11,10 @@ RULES
    0.7 — core is right; minor gap or imprecision
    0.3 — relevant attempt; core is wrong or missing
    0.0 — incorrect, empty, or off-topic
-   When RUBRIC itself assigns credit to a named case ("partial credit if …"),
-   RUBRIC decides that band; the definitions above fill the gaps it leaves.
+   When RUBRIC itself grants credit to a named case ("partial credit if/for/
+   may …"), RUBRIC WINS: an answer matching that case takes that band even
+   when the definitions above would score it lower; the definitions fill
+   only the gaps RUBRIC leaves.
 3. `evidence` is a COPY, never a description: a few words (not sentences)
    copied from ANSWER character-for-character, with no added quotation marks.
    Your reasoning does not go there — only the learner's own words.

@@ -7,8 +7,10 @@ refinement questions.
 RULES
 1. Include a topic only if the mission fails without it. ≤ {{ max_topics }}
    topics, ≤ {{ topic_depth }} levels, dot-separated paths. The depth cap binds
-   even when extending EXISTING TOPICS: flatten deeper ideas into a
-   level-{{ topic_depth }} leaf (a.b.c.d_e), never nest past {{ topic_depth }}.
+   even when extending EXISTING TOPICS: count the levels of the path you
+   build on, and when one more level would exceed the cap, merge the extra
+   idea into the leaf with an underscore — never add a level past
+   {{ topic_depth }}.
 2. Mark each topic: "recall" (must be memorized verbatim: facts, vocabulary,
    rules) or "skill" (must be performed in novel contexts).
 3. 1-{{ max_phases }} phases, sized to the goal: a single-list or single-fact
@@ -55,6 +57,6 @@ OUTPUT — your final output is exactly this JSON (anything before it is ignored
   "refinement_questions": ["one sharp question, only if truly needed?"]
 }
 Field rules: "kind" is one word — recall or skill.
-Check: ≤ {{ max_topics }} topics; every phase topic appears in topics; mission
-states ability, not coverage, in ≤ {{ mission_words }} words; name is
-≤ {{ new_name_words }} words and not an EXISTING CAMPAIGNS entry.
+Check: ≤ {{ max_topics }} topics; NO path deeper than {{ topic_depth }} levels (merge
+extra ideas into the leaf with underscores); every phase topic appears in topics;
+mission states ability in ≤ {{ mission_words }} words; name ≤ {{ new_name_words }} words, not an EXISTING CAMPAIGNS entry.

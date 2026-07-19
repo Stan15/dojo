@@ -135,6 +135,121 @@ class TestCompileEachKind:
         assert compiled.context["mode"] == "diagnostic"
 
 
+class TestCompilerBranches:
+    """The compiler, never the model, decides encoding-stage and calibration
+    branches (craft rule 5; eval findings 2026-07-18: the model-side struggle
+    conditional never fired at any caliber, and the update-first reflect
+    example baits update ops from an empty insight store)."""
+
+    def _fresh(self, tmp_path, *, topics=None, strategy=None) -> tuple[DojoStore, Campaign]:
+        s = DojoStore(tmp_path / "dojo")
+        camp = Campaign(
+            id="c1", name="C", mission="Pass the radio exam.",
+            topics=topics or [], strategy_profile=strategy or {},
+        )
+        s.campaigns.save(camp)
+        return s, s.campaigns.get("c1")
+
+    def test_first_contact_registered_topic_gets_introduce_rule(self, tmp_path):
+        s, camp = self._fresh(
+            tmp_path, topics=[{"path": "aviation.phonetic_alphabet", "kind": "skill"}]
+        )
+        compiled = compiler.compile_generate(
+            s, camp, topic_path="aviation.phonetic_alphabet", n_items=2,
+            difficulty="beginner",
+        )
+        assert "FIRST CONTACT" in compiled.prompt
+        assert "not new" not in compiled.prompt
+
+    def test_practiced_topic_gets_no_present_guard(self, store: DojoStore):
+        store.exercises.save(CAMP_ID, Exercise(
+            id="ex_1", topic_path="french.grammar", difficulty="intermediate",
+            prompt="Traduisez.",
+        ))
+        compiled = compiler.compile_generate(
+            store, _campaign(store), topic_path="french.grammar",
+            n_items=2, difficulty="intermediate",
+        )
+        assert "not new" in compiled.prompt
+        assert "FIRST CONTACT" not in compiled.prompt
+
+    def test_grounded_first_contact_gets_guard_not_introduce(self, tmp_path):
+        s, camp = self._fresh(
+            tmp_path, topics=[{"path": "anatomy.nerves", "kind": "recall"}]
+        )
+        compiled = compiler.compile_generate(
+            s, camp, topic_path="anatomy.nerves", n_items=2,
+            difficulty="beginner", source_slice="The twelve cranial nerves are…",
+        )
+        assert "FIRST CONTACT" not in compiled.prompt
+        assert "not new" in compiled.prompt
+
+    def test_unregistered_topic_with_other_practice_stays_neutral(self, store: DojoStore):
+        # att_1 exists but its exercise is unknown → no on-topic practice,
+        # topic unregistered: neither branch may claim anything.
+        compiled = compiler.compile_generate(
+            store, _campaign(store), topic_path="french.oral",
+            n_items=2, difficulty="intermediate",
+        )
+        assert "FIRST CONTACT" not in compiled.prompt
+        assert "not new" not in compiled.prompt
+
+    def _seed_struggle(self, s: DojoStore, camp_id: str, scores) -> None:
+        s.exercises.save(camp_id, Exercise(
+            id="ex_s", topic_path="pruning.fruit_trees", difficulty="intermediate",
+            prompt="Which cut first?",
+        ))
+        for i, sc in enumerate(scores):
+            s.attempts.save(camp_id, Attempt(
+                id=f"att_s{i}", session_id="s1", exercise_id="ex_s",
+                campaign_id=camp_id, score=sc, latency_seconds=90.0,
+                grader="ai", user_answer="a guess",
+            ))
+
+    def test_repeated_struggle_fires_downward_calibration(self, tmp_path):
+        s, camp = self._fresh(tmp_path, strategy={"difficulty": "intermediate",
+                                                  "scaffolding": "medium"})
+        self._seed_struggle(s, camp.id, [0.3, 0.3, 0.3, 0.3])
+        compiled = compiler.compile_generate(
+            s, camp, topic_path="pruning.fruit_trees", n_items=3,
+            difficulty="intermediate",
+        )
+        assert "Calibrate DOWN" in compiled.prompt
+        assert "one notch above RECENT" not in compiled.prompt
+
+    def test_struggle_suppressed_when_scaffolding_already_high(self, tmp_path):
+        s, camp = self._fresh(tmp_path, strategy={"difficulty": "intermediate",
+                                                  "scaffolding": "high"})
+        self._seed_struggle(s, camp.id, [0.3, 0.3, 0.3])
+        compiled = compiler.compile_generate(
+            s, camp, topic_path="pruning.fruit_trees", n_items=3,
+            difficulty="intermediate",
+        )
+        assert "Calibrate DOWN" not in compiled.prompt
+        assert "one notch above RECENT" in compiled.prompt
+
+    def test_mixed_scores_keep_normal_calibration(self, tmp_path):
+        s, camp = self._fresh(tmp_path)
+        self._seed_struggle(s, camp.id, [0.3, 0.3, 1.0])
+        compiled = compiler.compile_generate(
+            s, camp, topic_path="pruning.fruit_trees", n_items=3,
+            difficulty="intermediate",
+        )
+        assert "Calibrate DOWN" not in compiled.prompt
+
+    def test_reflect_empty_insights_leads_with_create_ops(self, tmp_path):
+        s, camp = self._fresh(tmp_path)
+        compiled = compiler.compile_reflect(s, camp)
+        assert "create is the only valid op" in compiled.prompt
+        assert '"op": "create"' in compiled.prompt
+        assert '"op": "update"' not in compiled.prompt
+
+    def test_reflect_with_insights_keeps_update_first_example(self, store: DojoStore):
+        compiled = compiler.compile_reflect(store, _campaign(store))
+        assert "create is the only valid op" not in compiled.prompt
+        assert compiled.prompt.index('"op": "update"') < compiled.prompt.index('"op": "create"')
+
+
 class TestGoldenPayload:
     """Byte-level pin of the full compiled generate payload (ADR 016 Tier 1).
     A change to the template, the section builders, or the budgets shows up as
@@ -174,7 +289,9 @@ class TestDerivedCeiling:
         mult = compiler.TIER_MULTIPLIER[tier]
         values = {k: "x" * int(b * mult * 2) for k, b in compiler.SECTION_BUDGETS[kind].items()}
         values.update({"n_items": 2, "topic_path": "a.b", "difficulty": "intermediate",
-                       "grounding_rule": "", "window_n": 15})
+                       "grounding_rule": "", "encounter_rule": "",
+                       "calibration_rule": "", "window_n": 15,
+                       "ops_example": "", "journal_example": ""})
         compiled = compiler._compile(store, kind, values, {})
         assert compiled.prompt  # no BudgetExceeded: sections clip, ceiling holds
 

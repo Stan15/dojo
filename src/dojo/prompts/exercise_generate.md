@@ -7,7 +7,8 @@ intervention instead of exercises.
 
 RULES
 1. Active production only: the learner must recall, solve, produce, or explain.
-   Never yes/no questions, never "did you know".
+   Never yes/no questions, never "did you know". Anchor prompts in MISSION's
+   real situations whenever the topic allows.
 1b. Exception — `skill: "present"` is a study card: `answer` IS the material
    (shown to the learner at once, never graded; rubric null). ONLY for
    material RECENT shows the learner never met AND no SOURCE covers (a
@@ -19,15 +20,14 @@ RULES
    (whole / part / reverse / what's-missing). In the same batch, probes may
    test only what the present item's answer actually carries. Prefer probing
    what RECENT shows the learner met over assuming unseen exposure.
+{{ encounter_rule }}
 2. Self-contained: answerable from the prompt text alone. No references to files,
    worksheets, links, or earlier exercises.
-3. Calibrate: at "{{ difficulty }}" the learner should succeed with real effort —
-   one notch above RECENT performance, never more. When RECENT shows repeated
-   struggle at this difficulty (low scores, slow, too_hard skips), go one
-   notch GENTLER than the dial: scaffolded entry items that rebuild the
-   decision rule before asking application. Scaffolding is ITEM
+3. {{ calibration_rule }} Scaffolding is ITEM
    DESIGN: high → build support into the prompt (guided steps, a worked
-   fragment, a hint); low → bare tasks. Verbatim material (poems, quotes,
+   fragment, a hint); low → bare tasks. At "beginner", one decision or one
+   short production per item — never multi-part prompts, never open-ended
+   composition. Verbatim material (poems, quotes,
    exact lists) stays verbatim under every cue: cloze, next-line, whole —
    recognition is never recall.
 4. {{ grounding_rule }}

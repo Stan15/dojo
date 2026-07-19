@@ -207,6 +207,16 @@ def insights_digest(store, campaign_id: str, k: int = 5,
     return "\n".join(lines) if lines else "(no insights yet — first sessions)"
 
 
+def _topic_matches(t: Optional[str], topic_path: str) -> bool:
+    """One topic-relatedness rule for every consumer: exact, descendant, or
+    ancestor of the requested path."""
+    return bool(t) and (
+        t == topic_path
+        or t.startswith(topic_path + ".")
+        or topic_path.startswith(t + ".")
+    )
+
+
 def recent_rows(store, campaign_id: str, topic_path: str = "", n: int = 8) -> str:
     """The topic's recent practice ARC (ADR 017 practice-history window):
     presentations near-verbatim — they are the content anchors later probes
@@ -222,12 +232,7 @@ def recent_rows(store, campaign_id: str, topic_path: str = "", n: int = 8) -> st
 
     def on_topic(a) -> bool:
         ex = exercises.get(a.exercise_id)
-        t = ex.topic_path if ex else None
-        return bool(t) and (
-            t == topic_path
-            or t.startswith(topic_path + ".")
-            or topic_path.startswith(t + ".")
-        )
+        return _topic_matches(ex.topic_path if ex else None, topic_path)
 
     topical = [a for a in attempts if on_topic(a)] if topic_path else list(attempts)
     window = topical[-n:]
@@ -364,11 +369,56 @@ def compile_generate(
     grounding_rule = render(
         f"fragments/grounding_{mode}.md", {"n_items": n_items}
     )
+    # Encoding-stage branch (ADR 017; craft rule 5 — the compiler, never the
+    # model, decides): a registered topic in a campaign with zero practice
+    # anywhere and no source is FIRST CONTACT → lead with a present card.
+    # Any practice near the topic (or a source the learner already met) →
+    # the no-present guard. Residual cases (unregistered topic, practice
+    # elsewhere only) say nothing — rule 1b's conditions still bind.
+    attempts = store.attempts.list(campaign.id)
+    exercises = {ex.id: ex for ex in store.exercises.list(campaign.id)}
+    on_topic = [
+        a for a in attempts
+        if _topic_matches(
+            getattr(exercises.get(a.exercise_id), "topic_path", None), topic_path
+        )
+    ]
+    registered = any(
+        t.get("path") == topic_path for t in (campaign.topics or [])
+    )
+    if not attempts and not source_slice and registered:
+        encounter_rule = render("fragments/encounter_introduce.md", {})
+    elif on_topic or source_slice:
+        encounter_rule = render("fragments/encounter_no_present.md", {})
+    else:
+        encounter_rule = ""
+    # Downward-calibration branch (eval finding 2026-07-18: the model-side
+    # "when RECENT shows struggle" conditional never fired at any caliber —
+    # the TASK line's nominal difficulty anchors; floor stuck at 0.3 across
+    # two runs). The compiler reads the same graded rows RECENT renders and
+    # emits the matching instruction. Skipped when scaffolding is already
+    # high: the dials responded — generation must not double-lower.
+    sp = campaign.strategy_profile or {}
+    recent_graded = [
+        a for a in on_topic
+        if not a.skip_reason and a.grader not in (None, "exposure")
+    ][-4:]
+    struggling = (
+        len(recent_graded) >= 3
+        and all(a.score < 0.7 for a in recent_graded)
+        and sp.get("scaffolding", "medium") != "high"
+    )
+    calibration = "struggle" if struggling else "normal"
+    calibration_rule = render(
+        f"fragments/calibration_{calibration}.md", {"difficulty": difficulty}
+    )
     values = {
         "n_items": n_items,
         "topic_path": topic_path,
         "difficulty": difficulty,
         "grounding_rule": grounding_rule,
+        "encounter_rule": encounter_rule,
+        "calibration_rule": calibration_rule,
         "mission": campaign.mission,
         "strategy_line": strategy_line(campaign),
         "insights_digest": insights_digest(store, campaign.id, topic_path=topic_path),
@@ -464,6 +514,26 @@ def compile_reflect(store, campaign: Campaign, *, window_n: int = 15) -> Compile
         f"- [{ins.id}] {ins.key}: {(ins.description or '').splitlines()[0]}"
         for ins in active
     ]
+    # Empty-INSIGHTS branch (INSIGHTS finding 2026-07-18: the skeleton's
+    # update-first example baits update ops from 4B models when nothing
+    # exists to update — nine straight rejections). Craft rule 5: the
+    # compiler knows the store is empty, so it leads the example with
+    # create ops and says so beside the data; the model never branches.
+    if insight_lines:
+        insights_section = "\n".join(insight_lines)
+        ops_example = render("fragments/reflect_ops_default.md", {})
+        journal_example = (
+            "updated the rushing insight, created one on skipped checks; accuracy held"
+        )
+    else:
+        insights_section = (
+            "(none — nothing exists yet to update or resolve; "
+            "create is the only valid op)"
+        )
+        ops_example = render("fragments/reflect_ops_no_insights.md", {})
+        journal_example = (
+            "created insights on skipped checks and mixed terms; dials held"
+        )
     # Encoding events (grader="exposure", ADR 017) are information, not
     # learner evidence: they are pre-marked reflected and stay out of the
     # rows entirely — aggregate encoding activity reaches reflection via the
@@ -545,7 +615,9 @@ def compile_reflect(store, campaign: Campaign, *, window_n: int = 15) -> Compile
         "mission": campaign.mission,
         "strategy_line": strategy_line(campaign),
         "plan_lines": "\n".join(plan_rows) or "(no plan yet)",
-        "active_insights_with_ids": "\n".join(insight_lines) or "(none)",
+        "active_insights_with_ids": insights_section,
+        "ops_example": ops_example,
+        "journal_example": journal_example,
         "trend_rows": trend_rows(store, campaign),
         "attempt_rows": "\n".join(rows) or "(none)",
         "learner_feedback_or_none": "\n".join(feedback_lines) or "(none)",

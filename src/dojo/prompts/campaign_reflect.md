@@ -23,8 +23,11 @@ RULES
    UNLESS the misses are fast and the successes slow: that is rushing, a
    process problem (insight + raise scaffolding, difficulty unchanged — the
    slow successes prove the content is within reach). Floundering (too_hard
-   skips, "lost" feedback) wants BOTH dials: difficulty LOWERED and
-   scaffolding raised, plan untouched; "too_easy"/"too_hard" skips count
+   skips, "lost" feedback) across the window wants BOTH dials: difficulty
+   LOWERED and scaffolding raised. Dials are GLOBAL: struggle confined to
+   ONE topic while another thrives is an insight naming that topic — hold
+   difficulty; a scaffolding raise names it in its reason.
+   "too_easy"/"too_hard" skips count
    double. Rows marked [extension] are learner-requested EXTRA practice,
    often tired: a pattern seen only in [extension] rows is an insight,
    never a dial move — unmarked rows are the calibration signal. Otherwise
@@ -37,8 +40,10 @@ RULES
    PROPOSED to the learner, never applied. A learner-asked revision
    implements their stated scope exactly: everything they asked for,
    nothing they excluded, the rest kept as is.
-4. Questions — the pattern hints the plan is mis-scoped but no FEEDBACK confirms
-   it → ask instead of restructuring: max {{ max_questions }} questions, each
+4. Questions — the pattern hints at a plan problem (a mis-scoped phase, a
+   missing prerequisite, a practical blocker) but no FEEDBACK confirms it →
+   ask instead of restructuring; a phase collapsing while FEEDBACK stays
+   silent is exactly this case: max {{ max_questions }} questions, each
    ≤ {{ question_words }} words. They reach the learner as diagnostic prompts;
    the answers return to you as citable evidence. Ask ONLY for information,
    or consent to an action listed here (plan change, topic retirement) —
@@ -53,10 +58,11 @@ RULES
    `dojo topic revive`. Passing a phase is NEVER a reason — old strengths
    are maintained by design.
 6. Every change carries a `reason` ≤ {{ reason_words }} words — it becomes the
-   audit journal. `journal` (≤ {{ journal_words }} words) names the EVIDENCE —
-   the accuracy, the seconds, the repeated tag, and when FEEDBACK drove a
-   change, the learner's stated reason in their terms — not just the verdict;
-   when holding still, say why.
+   audit journal. `journal` (≤ {{ journal_words }} words) records what CHANGED
+   (each insight created, updated, or resolved; each dial moved) WITH the
+   evidence — the accuracy, the seconds, the repeated tag, and when FEEDBACK
+   drove a change, the learner's stated reason in their terms; when holding
+   still, say why.
 7. EVERY learner-facing word — insights, questions, journal, even a no-change
    note ("sin cambios", never "no change") — is in the learner's language
    (their answers/FEEDBACK); keys stay lowercase English.
@@ -79,18 +85,13 @@ RULES
 OUTPUT — your final output is exactly this JSON (anything before it is ignored):
 {
   "insight_updates": [
-    {"op": "update", "id": "the insight's id", "key": null,
-     "reason": "the same slip appears twice",
-     "text": "rushes multi-step problems", "evidence": ["att_id"]},
-    {"op": "create", "id": null, "key": "process.skips_checking",
-     "reason": "pattern across two attempts",
-     "text": "submits without re-reading the prompt", "evidence": ["att_id"]}
+    {{ ops_example }}
   ],
   "strategy": null,
   "plan_revision": null,
   "questions": [],
   "topic_retirements": [],
-  "journal": "accuracy held; rushing pattern repeats; watching pace"
+  "journal": "{{ journal_example }}"
 }
 Field rules: "op" is one word — create, update, or resolve. create needs key
 + text + evidence; update needs id + text; resolve needs id; EVERY op needs a

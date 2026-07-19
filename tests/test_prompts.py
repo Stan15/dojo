@@ -29,6 +29,19 @@ TASK_TEMPLATES = [
 FRAGMENTS = [
     "fragments/grounding_grounded.md",
     "fragments/grounding_synthetic.md",
+    "fragments/calibration_normal.md",
+    "fragments/calibration_struggle.md",
+    "fragments/encounter_introduce.md",
+    "fragments/encounter_no_present.md",
+    "fragments/reflect_ops_default.md",
+    "fragments/reflect_ops_no_insights.md",
+]
+
+# Fragments that render INTO an OUTPUT skeleton get the same shape-lints as
+# the skeletons themselves (they ARE skeleton text once rendered).
+SKELETON_FRAGMENTS = [
+    "fragments/reflect_ops_default.md",
+    "fragments/reflect_ops_no_insights.md",
 ]
 
 
@@ -37,7 +50,7 @@ class TestInventory:
     def test_template_exists(self, name: str):
         assert (_templates_dir() / name).exists(), f"missing template: {name}"
 
-    @pytest.mark.parametrize("name", TASK_TEMPLATES)
+    @pytest.mark.parametrize("name", TASK_TEMPLATES + SKELETON_FRAGMENTS)
     def test_output_skeletons_avoid_weak_model_hostile_patterns(self, name: str):
         """Shape-lints (token-diet campaign, dev/token-diet): these patterns
         were MEASURED to cause rejection-retries — the dominant weak-model
