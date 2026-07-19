@@ -58,6 +58,24 @@ class TestSkillCorpusIntegrity:
             compiled = compile_step(store, sc["seed"]["campaign"]["id"], dict(spec))
             assert compiled.prompt
 
+    def test_respect_the_no_premise_debt_guard_refuses(self, tmp_path):
+        """`dojo more` is the SANCTIONED door for an explicit ask, so the
+        ideal agent walks it — the refusal scenario only judges fairly if
+        the seed guarantees the debt guard says no. If the guard ever let
+        the grant through, no_extension_session would punish correct
+        behavior (owner probe 2026-07-18: the original seed carried ~3 dues
+        against capacity 28 and refused only via the no-material branch)."""
+        from dojo.api import DojoAPI
+        from dojo.evals.skill_runner import _sandbox_store
+        sc = next(s for s in SCENARIOS if s["name"] == "respect_the_no")
+        store = _sandbox_store(tmp_path, sc["seed"])
+        api = DojoAPI(store.engine.dojo_dir)
+        res = api.more()
+        assert res["extension_available"] is False
+        assert "debt" in res.get("reason", ""), (
+            f"the refusal must come from the DEBT GUARD, got: {res}")
+        assert res["projected_due_7d"] > res["capacity_7d"]
+
     def test_prompt_carries_skill_message_and_persona(self):
         p = driver_prompt("teach me knots", persona="patient, hates jargon")
         assert "SKILL.md" in p and "teach me knots" in p

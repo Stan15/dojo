@@ -48,12 +48,16 @@ def _sandbox_store(workdir: Path, seed: Optional[dict]) -> DojoStore:
     if not seed:
         return DojoStore(root / "dojo")
     store = seed_store(root, seed)  # seed_store roots the store at root/"dojo"
-    # Skill seeds may carry sources (grounding material a learner "has");
-    # seeded here, NOT in the shared seed_store — its seed dialect is frozen
-    # by tiers this harness must never perturb.
+    # Skill seeds may carry sources (grounding material a learner "has") and
+    # configs (their real settings — e.g. a small packet_size that makes the
+    # capacity guard's numbers honest); seeded here, NOT in the shared
+    # seed_store — its seed dialect is frozen by tiers this harness must
+    # never perturb.
     from ..schemas import Source
     for src in seed.get("sources", []):
         store.sources.save(Source(**src))
+    for key, value in (seed.get("configs") or {}).items():
+        store.configs.set_value(key, value)
     return store
 
 
