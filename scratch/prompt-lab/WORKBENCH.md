@@ -17,6 +17,17 @@ topic_retirements (iterW2w3 atrophy_reentry/legitimate_restructure)
 — W2b candidate if it recurs; NOT sized yet, do not implement blind.
 THEN: R3-LFM probe (grade+route stems on lfm2.5-thinking); then W4
 route-phrasing arm; then standing queue.
+**PROBE ARM A IN FLIGHT ~11:10 (orphaned proc — poll pgrep
+retry_probe + retryprobe_lfmthink_A.jsonl row count; then arm B same
+command with B / retryprobe_lfmthink_B.jsonl).**
+OWNER-PROPOSAL SEEDS (draft when queue quiets, deliver via QUESTIONS
+board): (a) reflect-decomp (STATE 7d) now has hard evidence — after
+W1+W2+W3 the reflect residual is journal-omission + op-requirement
+composition, i.e. the 5-job single call itself; (b) mixed-model
+deployment: per-kind class winners diverge hard (lfm-think plan/diag
+≈4B at 730MB; lfm-instruct route 10/13 best-in-table; grade needs
+4B) — a routing table per kind is a real product option the
+compiler's fulfiller profiles already anticipate.
 
 ## ⟫ PREV-1 (2026-07-19 ~10:20) — **BAKE-OFF ADJUDICATED; sub-4B
 class verdict REWRITTEN (owner's misassignment hunch CONFIRMED)**
