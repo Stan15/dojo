@@ -109,7 +109,48 @@ running in parallel per doctrine:
   launches until load normalizes. Treat this machine's latency numbers
   as suspect while starved.
 
-## OWNER ASK (~20:10 2026-07-19): sub-4B improvement number
+## OWNER ASK 2 (~21:40): real-world corpus + holdout enrichment
+
+Saturation audit: 62% of 89 floors at 1.0; routing/meta-learning/
+encoding categories mean 1.00 (saturated at codex); frontier =
+composition-hard real-world scenarios (21 floors <0.8; traps proved
+manufacturable headroom). PLAN (owner-directed, flywheel-style):
+- Lanes V1-V3 (cognitive, parallel, DRAFTS TO scratch/prompt-lab/
+  realworld/ — corpus moves ONLY after the 0.8b battery lands):
+  wide real-world hardness axes × kinds, fresh domains, every
+  scenario must require composing 2-3 constraints and include an
+  opposite-branch control where a one-way behavior could overfit.
+  V1: grade+generate axes (degraded/voice-transcribed input fairness,
+  integrity edges: learner requests answer-leak / metric-gaming;
+  jargon collisions). V2: plan+route (long-horizon interruptions:
+  exam moved up, injury pause, semester restart; huge/stale
+  registries; cross-campaign ownership). V3: reflect+diagnostic
+  (motivational texture: shame-quit, streak overconfidence,
+  frustration spirals; conflicting authority: learner-vs-evidence-vs-
+  source). ~4 scenarios per lane (12 total). Same read rules as the
+  trap lanes (exemplar + schemas/limits + own templates; NEVER
+  holdout, never other visible corpus, never WORKBENCH).
+- Lane H1 (HOLDOUT, cold-context, AFTER corpus commit per the
+  prompts-first ordering): blind protocol per CLAUDE_START — brief
+  carries ONLY category/skill names + public contracts + holdout dir
+  pointer for FORMAT; bars reading src/dojo/evals/corpus/quality/;
+  writes ~5-6 scenarios into corpus/holdout/; runs shape suite;
+  reports FILENAMES+COUNTS ONLY. Holdout stays smaller than visible.
+  Floors bootstrap at the owner's gate, as always.
+- Ratchets: MIN_TOTAL 92→104ish + per-category bumps with the corpus
+  commit; footprint re-measure (corpus-order representatives).
+
+## OWNER ASK ANSWERED (~22:20): qwen3.5:0.8b 2/64 → 9/64 (3%→14%,
+4.5×) on the identical shared set; 13/92 on the full harder corpus;
+0 infra. Newly passing skew: grade/generate (the shape-hardening
+surfaces). Remaining classes: no-json 12, journal-missing 11,
+semantic 10 → 0.8b ceiling is JSON emission itself; template quality
+moves even this caliber (none of the fixes targeted it). Rescue-arms
+decision: the no-json class is the only >10% lever left; park unless
+owner prioritizes (capability-floor framing otherwise). Data:
+iterQ_qwen35_08b.jsonl vs base2_qwen35_08b.jsonl.
+
+## former OWNER ASK (~20:10 2026-07-19): sub-4B improvement number
 
 Owner asked whether any <4B model improved. Honest answer given: not
 yet measured this campaign (all wins 4B+/codex; 0.8b historical
