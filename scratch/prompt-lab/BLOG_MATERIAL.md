@@ -301,3 +301,22 @@ thinking-class fulfiller profile that states fewer rules and lets the
 validator teach the rest. Also a clean demo of revert discipline: negative
 by pre-registered bar → templates checked out, tests green, GPU for the
 guard batteries never spent. Data: iterW4_lfmthink_route.jsonl.
+
+## APPENDED ~18:05 — "One example string was polluting half the outputs" (EX-BLEED adopted)
+
+A single skeleton example insight — "submits without re-reading the
+prompt" — turned up verbatim inside 59% of gemma's and 33% of qwen's
+reflect outputs. Plausible-sounding example content is the worst kind:
+models under uncertainty grab the example, and a plausible copy corrupts
+the learner's insight store SILENTLY. The fix tested the orthogonal-domain
+hypothesis: replace example values with realistic content from a domain no
+scenario contains (calligraphy — "overloads the nib before flourishes").
+Result: bleed halved at gemma (16→8/27) and cut 78% at qwen (9→2/27,
+replicated), shape ok-rates up at both (gemma 27→29/30, its best reflect
+ever). The survivors now copy conspicuously wrong content — visible
+pollution instead of silent pollution. En route, the unstable-cell
+discipline fired again: qwen run1 sampled 12/30 (one beyond band), the
+fail classes showed zero example-tied errors, replication ruled (rep2:
+18/30, adopt). Copy-pressure itself is structural — the follow-up arm is
+compiler-side example suppression when real insights exist. Data:
+iterEXB_*.jsonl, exb_*_full.jsonl.

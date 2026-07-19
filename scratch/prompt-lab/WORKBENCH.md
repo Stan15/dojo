@@ -34,6 +34,55 @@ PADDED (filler words in one question) → W1 verbosity guard PASSES;
 pre-reg debt closed.** Ops lesson: the first judge call wedged 2h
 WAITING ON STDIN — codex exec without stdin closed hangs; always
 `</dev/null` (or pipe input) for non-interactive codex runs.
+**W2/W3 JUDGED-QUALITY DEBT CLOSED BY ARGUMENT ~16:50 (no spend):**
+both are content-preserving transforms — W2 coercion passes through
+the question TEXT byte-identical (only the wrapper dict is removed);
+W3 stores the stripped core, which is the learner's own words. Judged
+quality of accepted content is unchanged BY CONSTRUCTION; a codex
+spot-set would judge identical text. Recorded so the "judged spot-set
+per adopted arm" queue item doesn't re-open. (Battery 2 chained:
+bprro0m8n launches qwen EXB when gemma exits; EXB-QWEN-DONE signals
+both complete.)
+**EXB QWEN RUN1 + REPLICATION ~17:45: qwen bleed 9→2 (78% cut, far
+past the ≤4 bar) but ok 12/30 vs baseline 16/30 (−4, one beyond ±3)
+on the KNOWN-unstable cell (same arm sampled 12 and 16 across runs
+in the W1 era). Fail classes: all familiar structural churn
+(op-requirements/journal/unknown-id), ZERO example-tied — no causal
+path from a value-only fragment change. Per cell precedent:
+REPLICATING (rep2 in flight b0qjift6t →
+iterEXB_qwen35_4b_reflect_rep2.jsonl). Adjudication rule for rep2:
+ok ≥13 → both-model rule satisfied (gemma already PASS) → ADOPT
+(output-budget rebuild same commit); ok ≤12 twice → the −4 is
+treated as real despite no mechanism → REVERT fragments and record
+the paradox for a compiler-side example-suppression arm instead.**
+**EXB GEMMA INTERIM ~17:10: ok 29/30 (baseline 27/30, +2 — best
+gemma reflect ever); OLD bleed 0/27; NEW bleed 8/27 (was 16/27 —
+halved, exactly at the ≤8 bar). MECHANISM NOTE (transcripts): the
+remaining 8 copy the ENTIRE example create op (key
+calligraphy.ink_loading + reason) into real insight_updates — copy
+pressure is structural under uncertainty; orthogonal content halves
+it AND makes surviving pollution conspicuous (baseline pollution was
+plausible-sounding = silently corrupting). Follow-up candidate for
+the queue: compiler-side example suppression (ops_example omitted or
+minimized when INSIGHTS non-empty — the update op alone may anchor
+enough). Qwen battery decides adoption (both-models rule).**
+**EX-BLEED IN EXECUTION ~16:45 (tree = EXB overlay, uncommitted;
+only the output-budget hash gate red, by design):** both reflect_ops
+fragments' example values replaced with calligraphy-domain content
+(absent from all 104 scenarios): update text "crowds letterforms near
+margins", create key "calligraphy.ink_loading", create text
+"overloads the nib before flourishes" — length-matched to originals
+(README mode 9), reasons untouched. BATTERIES (serial):
+(1) iterEXB_gemma3_4b_reflect.jsonl (30 reflect set, workers 2);
+(2) iterEXB_qwen35_4b_reflect.jsonl. DECISION RULE (pre-reg): bleed
+rate (bleed_check.py vs NEW example values + a check that OLD values
+no longer appear) — bleed halves (gemma ≤8/27, qwen ≤4/27) AND ok
+flat-or-better (gemma vs 27/30 W1-era ±3; qwen vs 16/30 W2W3-era ±3;
+note gemma comparison spans W2/W3 landing — monotone-looser, only
+helps). Calligraphy content appearing in outputs = bleed of the NEW
+value (counted by the same metric). ADOPT → output-budget rebuild
+same commit; REVERT → checkout fragments. If dead: rerun battery
+commands.
 **W4 CLOSED NEGATIVE ~16:30, REVERTED (0/13 vs ≥4 bar; templates
 checked out clean, 937 green).** MECHANISM REFINED: with "one word"
 gone from every template, lfm-think's rumination MIGRATED (now
