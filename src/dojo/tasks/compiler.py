@@ -158,6 +158,12 @@ def _compile(store, kind: str, values: dict[str, Any], context: dict[str, Any]) 
         )
     if truncated:
         context = {**context, "truncated_sections": truncated}
+    # Opt-in fulfiller profile (QUESTIONS 6i): the deliberation invitation is
+    # appended by the COMPILER on config, never chosen by the model. Default
+    # profile is neutral — payloads stay byte-identical unless a store opts in.
+    profile = str(store.configs.get_value("fulfiller.anchor_profile", "neutral"))
+    if profile == "deliberate":
+        prompt = prompt + "\n" + render("fragments/anchor_deliberate.md", {}).strip()
     return CompiledTask(kind=kind, prompt=prompt, context=context, truncated_sections=truncated)
 
 

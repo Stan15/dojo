@@ -329,3 +329,24 @@ class TestHeartbeatSurvivesCompileErrors:
             res = api.daily()
         assert res.get("session") is not None, "practice must survive the failure"
         assert res["skipped"]["reflection_compile_errors"] == 1
+
+
+class TestAnchorProfile:
+    """QUESTIONS 6i: the deliberation invitation is compiler-appended on
+    config opt-in ONLY; the default profile leaves payloads untouched."""
+
+    INVITE = "If two outputs seem defensible, think it through step by step"
+
+    def test_default_neutral_has_no_invitation(self, store: DojoStore):
+        compiled = compiler.compile_generate(
+            store, _campaign(store), topic_path="t", n_items=3,
+            difficulty="intermediate")
+        assert self.INVITE not in compiled.prompt
+
+    def test_deliberate_profile_appends_invitation_last(self, store: DojoStore):
+        store.configs.set_value("fulfiller.anchor_profile", "deliberate")
+        compiled = compiler.compile_generate(
+            store, _campaign(store), topic_path="t", n_items=3,
+            difficulty="intermediate")
+        assert self.INVITE in compiled.prompt
+        assert compiled.prompt.rstrip().endswith("Only the last JSON object counts.")
