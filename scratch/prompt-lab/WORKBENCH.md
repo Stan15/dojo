@@ -89,6 +89,15 @@ before the open-ended loop starts. P1 fix APPLIED to campaign_plan.md
 
 ## Results ledger
 
+- **P1 gemma verdict (2026-07-19 ~01:30): PASS** — plan mini 7/9 (was 2/9
+  bled, 5/9 iterV baseline; now ABOVE baseline), zero letter-path
+  outputs. Remaining fails are pre-existing classes: refinement-question
+  15-word cap (deadline_compression), topic-padding 19>18 on
+  plan_single_fact_goal (QUEUE candidate: single-fact goals padding the
+  tree — smallest-path rule may need the same treatment downward
+  calibration got). qwen mini IN FLIGHT → iterW2_qwen35_4b_plan.jsonl
+  (if dead on resume: rerun per NEXT step 3).
+
 - iterW qwen3.5:4b battery: 42/72 ok (58%) vs iterV 43/77 (56%) — reflect
   6/22→10/21 (empty-INSIGHTS create-first fix visible), generate 14/15,
   7×240s timeouts (3-way contention, not template regressions).
