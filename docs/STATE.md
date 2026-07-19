@@ -434,6 +434,18 @@ committed work, not proposals awaiting an answer. Item numbering is stable
    entered via CLAUDE_START as STATE 10f's fresh session; its full
    handoff detail lives in the WORKBENCH, not here — STATE stays the
    map, WORKBENCH the territory.
+   **Drop-diagnosis arc CLOSED 2026-07-19** (commits d69ff5c fb9fe04
+   03d466d 9fb94e8 1ff6425): all five 10d drops + three unmoved floors
+   recovered and codex-verified; the iteration's own regressions were
+   caught by the campaign's pre-registered batteries and fixed in two
+   further verified rounds (op-count anchoring, dial precedence+levels,
+   scope anchor, path charset, skeleton self-consistency, mismatch
+   branch, scaffold answer-leak). README reflect demo now measured on
+   qwen3.5:4b (2/2 budgets). Whole-battery: qwen 42→47/79, gemma
+   68/79 flat, zero letter-paths. Residual queue: P9 (descriptive
+   placeholder id), P10 (kind-mix under deadline compression), then
+   the standing experiment queue (6i traps first). Holdout gate:
+   ready for the owner whenever they choose — drops dispositioned.
 
 ## RELEASE GATE STATUS (2026-07-18) + CONTAMINATION HANDOFF
 

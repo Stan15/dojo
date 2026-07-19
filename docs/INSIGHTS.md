@@ -312,3 +312,30 @@ keeps `pipx install --force` from ever seeing real state.
   infra-errors in iterW). Never quote battery wall-clocks as user-facing
   latency; prefill (not decode) dominates single-stream cost on weak hardware,
   which is what keeps input-side compression (parked armACC-in) interesting.
+- **Skeleton examples anchor COUNT and TYPE, not just content (2026-07-19;
+  README mode 10).** An empty-store ops example showing two `create` ops made
+  models at BOTH tiers emit exactly two creates (codex plateau_remediation
+  'two insights, not one' 0.12; qwen README-demo 2 creates in 2/2 budgets);
+  the mixed update+create example never did this. One example op per
+  distinct valid TYPE, never a repeated type, unless multiplicity itself is
+  the lesson. Same family: gemma copied the DESCRIPTIVE placeholder value
+  "the insight's id" verbatim 3× in one battery — every skeleton value must
+  be a realistic literal (P9 queued).
+- **A skeleton must satisfy the template's own Check line (2026-07-19).**
+  campaign_plan's topics literal declared `a.b.c` while the phases literal
+  referenced `a.b` — the skeleton DEMONSTRATED the violation ("every phase
+  topic appears in topics") and gemma reproduced it as a stable two-sample
+  failure. Fixing the one literal removed the class at both models. Lint
+  candidate: compile every skeleton through its own validators.
+- **Rule bytes are not free even when semantically right (2026-07-19).**
+  +349B of correct new reflect rules doubled 4B journal-omissions and cost
+  −3 ok (11→8/23); the same semantics at −213B scored 13/23 — ABOVE the
+  pre-change bar. Weak models pay attention-tax per byte of rule mass near
+  tail fields; state each decision once, delete generalizer sentences that
+  repeat what cases already state inline.
+- **A starved machine voids measurements; contention voids plan minis
+  (2026-07-19).** Load 135/8-cores + 90% swap produced 7/9 driver timeouts
+  that vanished on the recovered machine; 3 concurrent plan-length
+  generations blow the 240s timeout even on a healthy box (first wave gets
+  1/3 GPU each). Resource checks before batteries are data hygiene, not
+  courtesy; plan-only minis run workers=1.

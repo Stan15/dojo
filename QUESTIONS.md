@@ -29,12 +29,21 @@ _Statuses: `[x]` shipped · `[~]` standing/in-progress · `[?]` blocked-on-owner
       bound (≤2 budgets/model), and if a 4B lands it, swap/augment the
       README demo with its exact model tag.**
       NOTES:
-- [ ] Fresh session (prompt authority; this one holdout-disqualified,
-      STATE 10f): diagnose 5 stable ratchet drops + 3 unmoved weak floors
-      from the two runs' traces; includes the empty-INSIGHTS compiler
-      candidate and the near-empty-registry route bleed (INSIGHTS).
-- [?] Holdout release gate re-trigger (you; after the drops are
-      dispositioned) · uncommitted __holdout baseline disposition (you).
+- [x] Fresh session (prompt authority) — DONE 2026-07-19 under the
+      PROMPT_LAB grant (STATE item 11): all 5 stable drops + 3 unmoved
+      floors + present_before_probing diagnosed from traces and FIXED at
+      template/compiler/judge level (never scenario-specific); judge
+      multi-quote fix 3c3041f; template commits d69ff5c, 9fb94e8,
+      1ff6425; route-bleed scenario fb9fe04. Codex validation run + two
+      targeted adjudications: 7 of the 11 post-iteration drops
+      fixed+verified, 4 variance-confirmed, residuals P9/P10 queued in
+      the WORKBENCH. Local batteries re-measured each commit; output
+      budgets rebuilt same commit. README weak-model demo RESOLVED:
+      qwen3.5:4b landed content-good reflects 2/2 budgets; README demo
+      updated with the tag (03d466d).
+- [?] Holdout release gate re-trigger (you; drops now dispositioned —
+      gate is yours whenever you choose) · uncommitted __holdout
+      baseline disposition (you).
 - [x] Skill battery hardening (2026-07-18 late): your respect_the_no probe
       confirmed — seed now GUARANTEES the debt-guard refusal (`dojo more`
       is the sanctioned door; premise pinned by a free test, 7d8e283) +

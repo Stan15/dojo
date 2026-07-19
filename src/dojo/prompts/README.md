@@ -59,6 +59,15 @@ Mandatory companions to any edit here:
    cap-compliant text a model can safely imitate (and where a format is
    validated — dotted keys — one example op must demonstrate it).
 
+10. **Example lists anchor COUNT and TYPE.** An ops example showing two
+   `create` entries made models at every tier emit exactly two creates
+   (codex plateau_remediation "two insights, not one"; qwen3.5:4b README
+   demo, 2/2 budgets); the older mixed update+create pair never did.
+   Show one example per distinct valid TYPE, never a repeated type. A
+   skeleton must also satisfy the template's own Check line as a whole:
+   a phases literal referencing a topic absent from the topics literal
+   was reproduced verbatim as a stable failure (gemma, two samples).
+
 ## Before you commit
 
 - `python -m pytest -q` (statement/caps/golden/footprint gates bind; template

@@ -5,9 +5,34 @@ or woken session reads the directive, then this, then executes NEXT._
 
 ## Phase
 
-BOOTSTRAP (2026-07-19, ~01:15): finishing the drop-diagnosis pipeline
-before the open-ended loop starts. P1 fix APPLIED to campaign_plan.md
-(words-only depth rule); its verification mini-battery is IN FLIGHT.
+STEPS 5+6 IN FLIGHT (2026-07-19 ~01:22): COMMIT 2 (d69ff5c) and
+COMMIT 3 (fb9fe04) landed; P1 adjudicated PASS both models. Two lanes
+running in parallel per doctrine:
+- LOCAL lane: README demo retry, qwen3.5:4b --no-think, ≤2 budgets
+  (task b21bw9vtx). Then gemma3:4b same command if qwen doesn't land a
+  GOOD reflect. If dead on resume: rerun
+  python scratch/prompt-lab/readme_demo_retry.py "python scratch/token-diet/api_driver.py qwen3.5:4b --no-think" 2
+- REMOTE lane DONE (~01:50, 45min run): codex validation 73/84.
+  **ALL FIVE target drops RECOVERED** (none in the fail list) and the
+  three unmoved weak floors moved off the list too. **11 OTHER floors
+  fell** (margin 0.1): chain_strategy_change_then_calibrated_generation,
+  deadline_compression, diagnostic_mission_anchoring,
+  math_scaffolded_generation, plan_recall_skill_lanes,
+  plan_single_fact_goal, plateau_remediation, pure_recall_grounded,
+  reflect_learner_contradicts_evidence, route_new_leaf_when_warranted,
+  too_hard_scaffolding_response (0.57, c1 'scaffolding medium not
+  high'). 5/11 are generate+scaffolding — prime suspect: the new
+  calibration_* fragment selection. NO ratchet updates from this run
+  (floors only move on wins). ADJUDICATION PROTOCOL (in order, free
+  first): (1) per failing scenario, diff compiled payload NOW vs
+  d69ff5c^ — unchanged payload ⇒ variance candidate, changed ⇒
+  regression candidate; (2) read report traces for changed ones
+  (evals/reports/, newest quality-*.json — VISIBLE report, allowed);
+  (3) targeted codex re-run of only the failing subset for the
+  variance candidates (multi-sample rule: a floor drop needs BOTH
+  samples failing). Report file: check ls -t evals/reports/.
+- Wait-time work (this session, during lanes): qwen FAIL-transcript
+  diagnosis; STATE item 11 draft revision.
 
 ## IN-FLIGHT + WORKING-TREE INVENTORY (a resuming session reads this first)
 
@@ -106,6 +131,211 @@ renewal, if load is sane:
   (~2/kind, visible-corpus additions) per directive §queue — brief to be
   written at spawn time per doctrine (needs the pre-registration first).
 
+## ADJUDICATION RESULT (~04:15): 7/11 recovered, 3 real mechanisms remain
+
+Run 20260719-064412 (targeted, 11 scenarios): P5 CONFIRMED (topic
+counts recovered; deadline_compression now fails only c5 recall/skill
+mix at 0.89 vs 0.90 — margin noise, different criterion, no action).
+P4a CONFIRMED (plateau single-insight). P4b PARTIAL (too_hard
+recovered; plateau 0.12→0.5 — right lever, wrong level: scaffolding
+medium not high; the confined-raise line states no level). All five
+replicate-only scenarios PASSED — variance confirmed, floors intact,
+zero ratchet changes. Two-sample REAL: plateau level (P4b2),
+learner-contradicts mismatch branch (P8), math scaffold answer-leak
+(P7).
+
+## NEXT BATCH pre-registrations (applied → battery cycle → COMMIT 5)
+
+- **P2** (charset, pre-reg above) — plan.
+- **P6** skeleton phases literal ["a.b"] → ["a.b.c"] to match the
+  topics literal (two-sample gemma bait; the skeleton currently
+  demonstrates the violation its Check line forbids) — plan.
+- **P4b2** state the level wherever scaffolding is the lever for
+  persistent struggle: the topic-confined raise line and plateau line
+  both say set it HIGH (partial support against a standing wall is
+  another lap of the wall). Decision rule: plateau_remediation ≥0.9 on
+  next targeted run; too_hard stays passing; local reflect minis
+  same-or-better — reflect.
+- **P8** mismatch branch in the rule-2 case list, before the otherwise-
+  lower case: learner's stated experience contradicts the window's
+  evidence → hold BOTH dials, name the mismatch (insight or rule-4
+  question) — acting on contested evidence miscalibrates. Decision
+  rule: learner_contradicts ≥0.9; mixed_signals + voiced-scope
+  scenarios stay passing (opposite-branch controls) — reflect.
+- **P7** generate: scaffolding shows the METHOD (pattern, first step,
+  structure), never the completed answer value for what the item asks
+  (pedagogy-foundation: no leaked clues). Decision rule:
+  math_scaffolded c3 recovers; scaffolded/calibration scenarios
+  (too_hard chain, downward_calibration) stay passing; generate minis
+  both models same-or-better — generate.
+EDITS APPLIED ~04:30 (uncommitted, COMMIT 5 held by output-budget
+gate): P2+P6 in campaign_plan.md, P4b2+P8 in campaign_reflect.md, P7
+in exercise_generate.md. Free gates green; generate golden regenerated
+(2-line diff); footprint updated (generate +91B, plan +108B, reflect
++349B — deliberate, priced against 0.5/0.67 two-sample defects).
+iterY BATTERY CYCLE (ONE at a time; same 23 reflect stems as iterX;
+plan filters "plan_ deadline_compression vague_goal" workers=1;
+generate stems = kind exercise.generate rows of iterX ~20 stems):
+1. DONE ~04:55 — REGRESSION SIGNAL: qwen reflect 8/23 vs iterX 11/23
+   (−3, edge of band, wrong direction). journal-missing DOUBLED 3→6,
+   questions errors 2→5: the +349B rule mass crowds tail fields at 4B.
+   Plateau + pending_grade + restructure_minimal newly PASS (P4b2
+   works at 4B too) — the cost is the verbosity, not the semantics.
+   DECISION (recorded ~05:00): after the plan battery lands, TIGHTEN
+   the additions ~−200B — (a) delete the redundant lever sentence
+   ("When scaffolding is the lever... wall." — each case already
+   states high inline); (b) compress the mismatch case to "FEEDBACK
+   contradicts the window's evidence → hold both dials, name the
+   mismatch (insight or question);". Then RERUN qwen reflect
+   (iterY2_qwen35_4b_reflect.jsonl). Adjudicate: ≥11/23 → proceed to
+   remaining batteries under tightened wording (gemma reflect measures
+   tightened too); ≤9/23 → the case-list structure itself is the 4B
+   cost → revert reflect to the iterX wording + plateau-only, keep
+   P8 mismatch as a codex-profile question for the owner (fulfiller
+   profiles are the doctrine's answer to per-class divergence).
+   NO reflect edit until the in-flight PLAN battery notification
+   (quiet-tree letter rail; plan compiles don't read reflect, but the
+   rail holds by letter).
+2. DONE ~05:15: qwen plan 5/9 (iterX 4/9, same-or-better), ZERO
+   letter-paths, charset fails 4→1, a.b bait GONE — P2+P6 PASS at
+   qwen. Remaining fails are content-level (typo'd undeclared refs,
+   one charset, unrealistic_timeline structural).
+2b. TIGHTENING APPLIED ~05:17 (reflect 7446→7233B, −213; free gates
+   green; footprint updated): lever sentence deleted, mismatch case
+   compressed to "FEEDBACK contradicts the window's evidence → hold
+   both dials, name the mismatch (insight or question)". IN FLIGHT:
+   iterY2 qwen reflect rerun (task bk0yvhydi, ~05:18) →
+   iterY2_qwen35_4b_reflect.jsonl. Adjudicate per item-1 decision:
+   ≥11/23 proceed (gemma reflect measures THIS wording; reflect
+   splices use iterY2 files); ≤9/23 revert to iterX reflect wording +
+   plateau-only, P8 becomes an owner question (codex-profile).
+   BOOKKEEPING: plan batteries (iterY) remain valid — plan template
+   untouched by the tightening; generate batteries still owed (P7
+   tree unchanged since edit).
+2c. ADJUDICATED ~05:45: iterY2 qwen reflect 13/23 (> iterX 11/23),
+   journal-missing 6→2, plateau AND contradicts PASS at 4B. Tightened
+   wording ADOPTED; reflect splice uses iterY2 file.
+3. DONE ~06:10: qwen generate 16/20, 0 infra (iterX 14/15 + 5 infra —
+   denominators differ; 2 of 4 'newly failing' were iterX infra rows).
+   Real flips: 2 down (chain_strategy escape-hatch empty-items,
+   verbatim_poetry skill-field omission — pre-existing classes, no P7
+   mechanism), 1 up (downward_calibration). math_scaffolded (P7
+   target) stays ok. VERDICT: within-band churn, PROCEED.
+4. DONE ~06:40: gemma reflect 19/23 (iterX 20/23, within band);
+   plateau AND contradicts PASS at gemma too. All 3 distinctive fails
+   are one class: verbatim copy of the default fragment's DESCRIPTIVE
+   placeholder value "the insight's id" → QUEUE P9: replace with a
+   realistic literal id (craft rule 7: realistic values only; this
+   value predates the campaign — worth its own mini when batched with
+   the next reflect edit).
+5. DONE ~07:05: gemma plan 7/9 (rep2 8/9, within band), ZERO
+   letter-paths, a.b bait GONE (single_fact fails only the
+   refinement-question 15-word cap now — pre-existing class). P6
+   verified both models; P2 residual 1 charset fail at gemma.
+6. DONE ~07:30: gemma generate 18/20 (iterX 16/20, UP 2; churn 1↓3↑).
+   CYCLE COMPLETE — all six batteries same-or-better or within band.
+   Spliced (qwen 47/79 ok — up from iterX 42; gemma 68/79 flat),
+   output-budget rebuilt (templates 6c09eab1dfdc0404), 825 green,
+   **COMMIT 5 = 1ff6425**.
+7. ADJUDICATED ~07:50 (run beg51o8y1): 8/9 pass — plateau_remediation,
+   reflect_learner_contradicts_evidence, math_scaffolded_generation
+   ALL RECOVERED at codex (P4b2/P8/P7 confirmed); controls held.
+   deadline_compression 0.89 vs 0.90: c5 'all topics marked skill' —
+   2nd consecutive sample → two-sample real → **P10 queued** (next
+   batch with P9): principle 'compress by cutting topic count, never
+   by flattening kinds — material that must be memorized stays
+   recall' (~70B, plan fires once/campaign). No floors moved, no
+   ratchet commit needed. DROP-DIAGNOSIS ARC CLOSED: of the 11
+   codex drops — 7 fixed+verified, 4 variance-confirmed with
+   controls holding; residuals are P9 + P10 (queued, evidence-backed).
+7b. CODEX ADJUDICATION former entry (task beg51o8y1): targets
+   plateau_remediation, reflect_learner_contradicts_evidence,
+   math_scaffolded_generation; controls too_hard, mixed_signals,
+   deadline_compression, single_fact_goal, downward_calibration,
+   chain_strategy. Decision rules per P4b2/P8/P7 pre-regs: targets
+   ≥ floor−0.1; every control stays passing. Ratchets only on wins,
+   same commit. On a control regression: trace-diagnose before any
+   further edit; floors never lowered.
+   Splice bookkeeping: qwen = iterY2 reflect + iterY plan + iterY
+   generate over iterX; gemma = all iterY-named files (measured on
+   final tree). Extend splice to 3 kinds.
+Adjudicate each vs iterX same-kind (same-or-better ok, zero
+letter-paths for plan — P6 should REMOVE the a.b bait: single_fact
+undeclared-ref must disappear; charset fails should drop under P2).
+Then: splice (extend splice script to generate kind or inline),
+build_output_budget (iterY), full pytest → COMMIT 5 → targeted codex
+(plateau_remediation, reflect_learner_contradicts_evidence,
+math_scaffolded_generation + controls: too_hard_scaffolding_response,
+reflect_mixed_signals, deadline_compression, plan_single_fact_goal,
+generate_downward_calibration, chain_strategy).
+
+## CODEX ADJUDICATION former section (task b3c8culp3 — DONE, see above)
+
+COMMIT 4 = 9fb94e8 (P4a/P4b/P5 landed; local gates in the message).
+Targeted codex re-run of the 11 dropped floors running. On completion:
+- P4a/P4b recovered if plateau_remediation, too_hard_scaffolding_
+  response, reflect_learner_contradicts_evidence pass (and the run's
+  mixed_signals/mastery controls were already green in the full run).
+- P5 recovered if deadline_compression, plan_recall_skill_lanes,
+  plan_single_fact_goal pass topic-count criteria (single_fact may
+  still fail on the P6 skeleton bait — adjudicate the CRITERION, read
+  the verdict detail, not just pass/fail).
+- Replicate-only five (route_new_leaf, chain_strategy, math_scaffolded,
+  pure_recall, diagnostic_mission_anchoring): second sample — pass ⇒
+  variance confirmed, no action; fail ⇒ two-sample real, pre-register
+  per notes (diagnostic boundary-words fix drafted in triage entry).
+- Ratchet updates ONLY for recovered floors, SAME commit as any
+  baseline change. If rerun fails floors again, floors STAY; iterate.
+NEXT BATCH after adjudication: P2 (path-charset statement) + P6
+(skeleton phases literal a.b → a.b.c, matching the topics literal —
+fixes the demonstrated-violation bait; stable two-sample evidence).
+Both are plan-template edits: one battery cycle (plan minis both
+models, workers=1) + free gates + footprint/output-budget same commit.
+
+## BATTERY QUEUE (P4a/P4b/P5 verification — COMMIT 4 held by
+## output-budget hash gate; templates edited, free gates green) — DONE, see above
+
+Fixes APPLIED to tree (uncommitted): reflect_ops_no_insights → ONE
+create (P4a); campaign_reflect rule 2 → ordered case list, trend
+before level, plateau branch (P4b); campaign_plan Check line →
+'ability, not coverage' restored (P5). Batteries ONE at a time:
+1. DONE ~02:45: qwen reflect 11/23 ok vs 10/21 old (rate holds, 0
+   infra); churn is pre-existing classes (reason-missing, dotted-key,
+   placeholder-id); journal-missing 3 vs 2-3 old (no new class).
+   LOCAL GATE PASS for P4a/P4b on qwen.
+2. DONE ~03:05: qwen plan 4/9 ok (= rep2 level, same-or-better), zero
+   letter-paths, 0 infra. plan_unrealistic_timeline PASSES for the
+   first time in 3 runs (P3 syntax-degradation case, n=1). Remaining
+   fails: 4× P2 charset class + 1 structural — P2 stays queued for the
+   NEXT template batch (tree frozen until COMMIT 4).
+3. DONE ~03:35: gemma reflect 20/23 vs 20/23 old — identical rate,
+   churn 1↔1 (legitimate_restructure ↔ resolution_amid_active_
+   struggle). LOCAL GATE PASS for P4a/P4b on gemma.
+4. RUN 1 ~03:50: gemma plan 6/9 (old 7/9) with ONE letter-path
+   (plan_single_fact_goal phase ref 'a.b' — skeleton-literal bleed,
+   P1 class; other fails: P2 charset ×1, topics 19>18 padding ×1 same
+   as old). BELOW the pre-reg bar → REPLICATE launched (~03:52,
+   iterX_gemma3_4b_plan_rep2.jsonl, workers=1). Adjudication on rep2:
+   ≥7/9 with zero letter-paths → P5 gemma PASS (use rep2 for splice;
+   run-1 noted as single-sample churn — P5's two-word edit has no
+   mechanism for a.b bleed); ≤6/9 or any letter-path again → treat as
+   REAL: revert P5? No — P5 is implausible as cause; investigate the
+   skeleton phases example ("a.b" literal) as the standing bleed
+   source and pre-register a fix (e.g. realistic phase-topic literal
+   matching the topics example), separate from P5's fate.
+   THEN: splice both models (splice_iterx.py), build_output_budget
+   with iterX files, full pytest, COMMIT 4, targeted codex re-run.
+5. Splice per kind over iterW2_<model>.jsonl → iterX_<model>.jsonl
+   (extend splice_iterw2.py or inline: drop kind rows, append mini),
+   build_output_budget with both iterX files, footprint already
+   updated, full pytest → COMMIT 4.
+6. Targeted codex re-run: the 11 failing scenarios + route_new_leaf
+   (variance replicate) — decision rules in each pre-reg. Ratchets
+   only on wins, same commit.
+Decision rules bind per pre-reg P4a/P4b/P5: local minis same-or-better
+ok-rates vs iterW2 per kind; zero letter-paths; recovered codex floors
+without losing mixed_signals/mastery_resolution/extend_not_duplicate.
+
 ## NEXT (exact order)
 
 1. DONE ~01:05 — letter-bleed fix applied to campaign_plan.md (words-only
@@ -136,6 +366,87 @@ renewal, if load is sane:
    scenarios (~2/kind, visible) + anchor-profile config + A/B batteries.
 
 ## Pre-registered (open)
+
+- **P4a ops-example COUNT/TYPE anchoring (2026-07-19 ~02:10; evidence:
+  codex plateau_remediation 0.12 'two insights not one' + README-demo
+  qwen 2 creates in 2/2 budgets).** d69ff5c changed the reflect ops
+  example from update+create (mixed types) to create+create in BOTH
+  fragments → models imitate op count and type (mode 9 extended to
+  COUNT). Fix: reflect_ops_default shows update+create (old shape,
+  one of each); reflect_ops_no_insights shows ONE create (create is
+  the only valid op there — the section line already says so).
+  Decision rule: plateau c1 class recovers (exactly-one-insight
+  scenarios stop double-creating) at codex on the targeted re-run;
+  README-demo rerun produces 1-2 evidence-driven creates (not
+  always-2); mixed_signals + mastery_resolution (multi-insight
+  scenarios) STAY passing; local reflect minis same-or-better ok.
+- **P4b dial-precedence hedge (2026-07-19 ~02:10; evidence: plateau
+  'lowered difficulty because accuracy was 0.43' echoing the rule-2
+  threshold verbatim; too_hard scaffolding medium-not-high;
+  learner_contradicts difficulty-lowered-unresolved).** The d69ff5c
+  global-dials/window hedges made the accuracy<0.50 threshold the
+  first-matching rule for ALL sub-0.5 windows; no plateau branch
+  exists (old codex inferred it; hedged codex doesn't). Candidate fix
+  (VERIFY against docs/pedagogy-foundation.md BEFORE wording — anti
+  reward-hack: principle must be category-wide, not rubric-phrased):
+  state trend-before-level precedence — flat accuracy across the
+  window with no distress markers = support gap → scaffolding raise
+  (to high), difficulty held; floundering (distress markers) keeps
+  both-dials; rushing carve-out untouched. Decision rule: plateau +
+  too_hard + learner_contradicts recover ≥ floor−0.1 at codex;
+  mixed_signals (hold-dials control) AND reflect_mixed_signals class
+  stay passing; local reflect minis same-or-better.
+- **P5 restore 'not coverage' scope anchor (2026-07-19 ~02:10;
+  evidence: deadline_compression 15 topics >10, recall_skill_lanes 9
+  topics, single_fact_goal 4 topics >1-3 at codex; gemma mini
+  topic-padding 19>18).** d69ff5c's Check-line compression deleted
+  'not coverage' from 'mission states ability, not coverage' — the
+  scope-restraint anchor. Fix: restore the two words (+13B). Decision
+  rule: the three plan scenarios' topic-count criteria recover at
+  codex; plan_extend_not_duplicate (depth) stays passing; local plan
+  minis (workers=1) same-or-better with zero letter-paths.
+- **Variance-only (NO fix, replicate-only): route_new_leaf_when_
+  warranted** — payload byte-identical to pre-iteration; single-run
+  fail c4 (reason wording). Multi-sample rule: include in the targeted
+  codex re-run; floor action only if it fails twice.
+- **Triage complete (2026-07-19 ~02:35) — REPLICATE-ONLY set (no fix;
+  floor action only on a second failure): route_new_leaf (payload
+  unchanged), chain_strategy (judge PARAPHRASED 'nitrogen'→'nutrient';
+  evidence gate CORRECTLY discarded — verified by rerunning
+  evidence_matches; gate stays untouched, anti-reward-hack),
+  math_scaffolded_generation (c3 answer-leak in one item),
+  pure_recall_grounded (c3 content detail), diagnostic_mission_
+  anchoring (mechanism plausible: d69ff5c 'narrower/rephrased is
+  still a re-ask' hardening — whose target respects_known_insights
+  RECOVERED — may inhibit mentioning the stated deadline; if it fails
+  the replicate, apply boundary words: anchoring readiness against a
+  stated deadline is probing, not re-asking).**
+
+- **P2 path-charset invisible floor (2026-07-19 ~01:35, transcripts:
+  deadline_compression both runs + single-fact class).** Finding: the
+  plan validator enforces ^[a-z0-9_]+(\.[a-z0-9_]+)*$ but
+  campaign_plan.md states only "dot-separated" + "lowercase English" —
+  hyphens are never excluded. Jargon-heavy domains (CKAD: api-server)
+  anchor hyphenated paths → charset rejection. Classic invisible-floor
+  class (STATE item 4 rule: every validator a payload can trip must be
+  stated). Hypothesis: stating "segments join words with underscores —
+  no hyphens, spaces, or slashes" in WORDS (P1 lesson: zero new
+  letter-path literals) removes the charset failures without moving
+  anything else. Decision rule: deadline_compression's charset error
+  disappears across a plan mini (both 4B models, workers=1); no new
+  failure class appears; footprint delta ≤ +80B. EDIT ONLY after the
+  codex lane completes (quiet tree) and after re-reading prompts
+  README + design/prompts.md (hard rule).
+- **P3 syntax-degradation-on-deep-paths (observation, needs mechanism
+  work before pre-reg).** plan_unrealistic_timeline (fails both runs,
+  iterW too): mission/name PRESENT in raw but JSON syntax corrupts
+  around over-deep crammed paths (7 levels, e.g.
+  katakana...days.moon.sun_mon; '"." for ","' + stray braces) → span
+  recovery grabs an inner object → validator reports "mission: Field
+  required" — a RETRY-PEDAGOGY bug (message teaches the wrong fix) on
+  top of an over-scoping bug (unrealistic timeline → cram). Related
+  queue item: retry-error pedagogy. Do NOT treat as missing-fields.
+
 
 - **P1 letter-path bleed fix (2026-07-19 ~00:55).** Finding: my rule-1
   rewrite added two abstract letter-path literals (a.b.c.d_e / a.b.c.d.e);

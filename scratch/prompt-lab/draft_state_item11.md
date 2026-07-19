@@ -1,7 +1,18 @@
-# Draft — STATE item 11 (fill numbers after battery + demo)
+# Draft — STATE item 11 (codex validation numbers still pending)
 
 11. **DONE 2026-07-19 — drop-diagnosis iteration (fresh session, holdout
-   blindness intact; STATE 10d queue executed on visible traces only).**
+   blindness intact; STATE 10d queue executed on visible traces only;
+   landed as d69ff5c templates+gates, fb9fe04 corpus, 03d466d README).**
+   a0. **P1 letter-bleed regression caught by pre-registered mini-
+      batteries mid-iteration**: the first depth-rule rewrite embedded
+      abstract letter-path literals (a.b.c.d_e / a.b.c.d.e); 4B models
+      copied them as content (gemma plan 5/9→2/9, literal fused paths
+      like a.pod_b.service_c). Words-only restatement recovered gemma to
+      7/9 (ABOVE its 5/9 baseline) and qwen to 4/9 (rep2, pre-reg bar),
+      with zero letter-path outputs across all 27 verification rows.
+      Forensics note: two earlier qwen verification runs were VOIDED
+      honestly (machine resource starvation; then 3-worker GPU
+      contention timeouts) — plan-only minis now run workers=1.
    a. All 8 targets diagnosed from the two 2026-07-18 run traces; root
       causes template/harness-side, none scenario-specific:
       - reflect_mixed_signals (1.0→0.56/0.67): floundering rule fired
@@ -44,7 +55,12 @@
       footprint updated deliberately (reflect 6509→6995B, +7.5% — priced
       by three weight-3 criteria across two dropped scenarios).
    e. Route URL-bleed visible scenario authored (routing 7→8, total 79→80).
-   f. README weak-model demo retry: [RESULT PENDING]
-   g. NOT DONE / owner-gated: codex validation of the fixes + floor
-      bootstraps for the new scenario (spend policy — asked in QUESTIONS);
-      holdout release gate re-trigger (owner-only).
+   f. README weak-model demo retry: qwen3.5:4b --no-think landed a
+      content-good reflect in 2/2 production budgets (evidence-cited
+      insights, coherent journal; in-budget retries absorbed early
+      misses). README reflection claim updated with the measured tag
+      (03d466d).
+   g. Codex validation RUN UNDER THE PROMPT_LAB GRANT (owner-authorized
+      2026-07-19): [RESULTS PENDING — fill floors recovered/bootstrapped
+      + ratchet commit hash]. Holdout release gate re-trigger remains
+      owner-only, untouched.
