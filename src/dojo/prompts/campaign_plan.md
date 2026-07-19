@@ -6,7 +6,9 @@ refinement questions.
 
 RULES
 1. Include a topic only if the mission fails without it. ≤ {{ max_topics }}
-   topics, ≤ {{ topic_depth }} levels, dot-separated paths. The depth cap binds
+   topics, ≤ {{ topic_depth }} levels, dot-separated paths of lowercase
+   words — multi-word segments join with underscores, never hyphens,
+   spaces, or slashes. The depth cap binds
    even when extending EXISTING TOPICS: count the levels of the path you
    build on, and when one more level would exceed the cap, merge the extra
    idea into the leaf with an underscore — never add a level past
@@ -53,7 +55,7 @@ OUTPUT — your final output is exactly this JSON (anything before it is ignored
   "mission": "the goal restated as one testable sentence",
   "name": "≤ {{ new_name_words }} words — a label, not the goal",
   "topics": [{"path": "a.b.c", "kind": "recall", "summary": "≤ {{ topic_summary_words }} words — a hook, not a syllabus"}],
-  "phases": [{"topics": ["a.b"], "criteria": {"min_attempts": 5, "min_accuracy": 0.6}, "focus": "what this phase builds"}],
+  "phases": [{"topics": ["a.b.c"], "criteria": {"min_attempts": 5, "min_accuracy": 0.6}, "focus": "what this phase builds"}],
   "refinement_questions": ["one sharp question, only if truly needed?"]
 }
 Field rules: "kind" is one word — recall or skill.

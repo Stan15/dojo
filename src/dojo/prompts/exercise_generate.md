@@ -25,7 +25,8 @@ RULES
    worksheets, links, or earlier exercises.
 3. {{ calibration_rule }} Scaffolding is ITEM
    DESIGN: high → build support into the prompt (guided steps, a worked
-   fragment, a hint); low → bare tasks. At "beginner", one decision or one
+   fragment of a DIFFERENT example, a hint) — support shows the method,
+   never the answer the item asks for; low → bare tasks. At "beginner", one decision or one
    short production per item — never multi-part prompts, never open-ended
    composition. Verbatim material (poems, quotes,
    exact lists) stays verbatim under every cue: cloze, next-line, whole —

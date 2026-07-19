@@ -22,17 +22,19 @@ RULES
    and read the TREND, not just the level — first matching case wins:
    - accuracy above 0.85 → raise difficulty;
    - misses fast while successes are slow → rushing, a process problem:
-     insight + raise scaffolding, difficulty unchanged (the slow
+     insight + set scaffolding high, difficulty unchanged (the slow
      successes prove the content is within reach);
    - accuracy FLAT across the window, effort steady, no distress marks →
      a plateau, a support problem: set scaffolding high, hold difficulty
      — lowering difficulty abandons the goal without adding support;
    - floundering (too_hard skips, "lost" feedback) across the window →
      BOTH dials: difficulty lowered AND scaffolding set high;
+   - FEEDBACK contradicts the window's evidence → hold both dials, name
+     the mismatch (insight or question);
    - otherwise accuracy below 0.50 → lower difficulty.
    Dials are GLOBAL: struggle confined to ONE topic while another
    thrives is an insight naming that topic — hold difficulty; a
-   scaffolding raise names it in its reason.
+   scaffolding raise (set high) names the topic in its reason.
    "too_easy"/"too_hard" skips count
    double. Rows marked [extension] are learner-requested EXTRA practice,
    often tired: a pattern seen only in [extension] rows is an insight,

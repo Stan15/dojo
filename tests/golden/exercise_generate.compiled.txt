@@ -26,7 +26,8 @@ RULES
    worksheets, links, or earlier exercises.
 3. Calibrate: at "intermediate" the learner should succeed with real effort — one notch above RECENT performance, never more. Scaffolding is ITEM
    DESIGN: high → build support into the prompt (guided steps, a worked
-   fragment, a hint); low → bare tasks. At "beginner", one decision or one
+   fragment of a DIFFERENT example, a hint) — support shows the method,
+   never the answer the item asks for; low → bare tasks. At "beginner", one decision or one
    short production per item — never multi-part prompts, never open-ended
    composition. Verbatim material (poems, quotes,
    exact lists) stays verbatim under every cue: cloze, next-line, whole —
