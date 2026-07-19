@@ -1,6 +1,24 @@
 # PROMPT LAB WORKBENCH — live campaign state
 
-## ⟫ CURRENT (2026-07-19 ~10:20) — **BAKE-OFF ADJUDICATED; sub-4B
+## ⟫ CURRENT (2026-07-19 ~10:45) — W2 LANDED (ea8ff26, questions
+coercion), W3 LANDED (298ba10, evidence decoration strip), 937 green.
+**IN FLIGHT: W2+W3 confirmation battery** (bfdpcd6pm →
+iterW2w3_qwen35_4b_reflect.jsonl, same 30-scenario reflect set).
+PRE-REGISTERED prediction: overlap-23 ok ≥12. RESULT ~11:05: overlap
+11/23 (miss-by-1, within ±3 of baseline 12) BUT the mechanism check
+is decisive: **questions-object fails 0 this run** (2-5 every W1-era
+run) — W2 CLASS-KILL CONFIRMED; W2+W3 stay adopted (monotone + class
+evidence). Residual reflect churn is now cleanly journal-omission
+(6×) + op=create-requires-evidence/id (6×) — that is the reflect
+CEILING for qwen 4B and belongs to the owner-gated reflect-decomp
+proposal (STATE 7d), not validator work. NEW SIBLING observed once:
+object-in-string on insight reason + dict-for-list on
+topic_retirements (iterW2w3 atrophy_reentry/legitimate_restructure)
+— W2b candidate if it recurs; NOT sized yet, do not implement blind.
+THEN: R3-LFM probe (grade+route stems on lfm2.5-thinking); then W4
+route-phrasing arm; then standing queue.
+
+## ⟫ PREV-1 (2026-07-19 ~10:20) — **BAKE-OFF ADJUDICATED; sub-4B
 class verdict REWRITTEN (owner's misassignment hunch CONFIRMED)**
 
 All 6 batteries complete (104 driven steps each, 0 infra, one serial
