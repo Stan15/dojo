@@ -28,8 +28,12 @@ lane in flight bxd6k16ou):** parsing ALL accepted W1-battery outputs
 found only 4 fields exceeding their stated caps (2 plan-questions
 16-18w, 1 insight-text 28w, 1 strategy-reason 21w) across ~70
 accepted outputs — **the anchor HOLDS: stated caps still govern the
-length distribution; the wall admits a thin tail, not drift.** Codex
-judging the 4 for SUBSTANTIVE vs PADDED; verdict lands in ledger.
+length distribution; the wall admits a thin tail, not drift.**
+**VERDICT ~13:40 (codex, w1_judge_verdict.txt): 3× SUBSTANTIVE, 1×
+PADDED (filler words in one question) → W1 verbosity guard PASSES;
+pre-reg debt closed.** Ops lesson: the first judge call wedged 2h
+WAITING ON STDIN — codex exec without stdin closed hangs; always
+`</dev/null` (or pipe input) for non-interactive codex runs.
 **PROBE ARM A IN FLIGHT ~11:10 (orphaned proc — poll pgrep
 retry_probe + retryprobe_lfmthink_A.jsonl row count; then arm B same
 command with B / retryprobe_lfmthink_B.jsonl).**
