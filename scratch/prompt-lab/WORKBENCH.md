@@ -15,6 +15,12 @@ proposal (STATE 7d), not validator work. NEW SIBLING observed once:
 object-in-string on insight reason + dict-for-list on
 topic_retirements (iterW2w3 atrophy_reentry/legitimate_restructure)
 — W2b candidate if it recurs; NOT sized yet, do not implement blind.
+W2b SIZED AND DECLINED ~11:55: the 304 archive-wide non-question
+type-shape rejections are dominated by armJ2-era degenerate outputs
+(gemma1b/lfm on superseded templates — empty lists, skeleton-copied
+paths), not clean single-key wraps; current-era evidence is 2 hits in
+one scenario. No coercion arm; re-examine only if current batteries
+show recurrence.
 THEN: R3-LFM probe (grade+route stems on lfm2.5-thinking); then W4
 route-phrasing arm; then standing queue.
 **PROBE ARM A IN FLIGHT ~11:10 (orphaned proc — poll pgrep
