@@ -25,6 +25,24 @@ then executes THIS list in order:
    update cap-pinning tests, full pytest, plan+reflect minis both 4B
    models (expect question-cap/reason-cap classes to convert to
    accepts), output-budget rebuild SAME commit, push.
+3b. **SUB-4B BAKE-OFF (owner directive 2026-07-20 ~01:45 — the class
+   verdict currently rests on ONE model and may be misassigned).**
+   Historical armJ5S-era data had LFM2.5-1.2B at 21/64 (33%) — AHEAD
+   of qwen3.5:0.8b's current 14%. Run full current-corpus batteries
+   (workers 2, ONE at a time, pgrep first) for every pulled <4B
+   model: "ollama run"-able tags are qwen3.5:0.8b (done —
+   iterQ_qwen35_08b.jsonl 13/92), LiquidAI/lfm2.5-1.2b-instruct
+   (730MB!), gemma3:1b (robustness point). Outputs:
+   bakeoff_<slug>.jsonl. Class representative = best performer per
+   the best-in-class rule (owner 2026-07-17: strongest model per
+   resource footprint; all three fit the ~1GB tier). Re-base every
+   sub-4B claim on the winner (incl. README small-model guidance if
+   the winner changes, and the R3-sub4B verdict — the retry-feedback
+   question may need re-answering on the winner). Also ASK THE OWNER
+   whether any newer top-tier <4B models should be pulled for the
+   bake-off (the pulled set is 2026-07 vintage; the owner tracks
+   releases). Commit raw jsonls + ledger verdicts per standing
+   practice.
 4. **Standing queue** (directive §queue + entries below): example-
    bleed hardening; judged spot-sets for adopted arms; judged floors
    for the 12 realworld scenarios at the next authorized codex spend;
