@@ -5,6 +5,47 @@ Point any fresh session here; it knows exactly what to do. This file is the
 WHAT and the RULES; `scratch/prompt-lab/WORKBENCH.md` is the LIVE STATE a
 resuming session picks up from._
 
+## STEP ZERO — arm the resiliency mechanism before any work
+
+The moment a session is pointed at this file, BEFORE reading anything
+else or doing any work, make the campaign failure-tolerant:
+
+1. **Recurring cron heartbeat** (CronCreate, every ~23 min, recurring,
+   off the :00/:30 marks) with EXACTLY this prompt:
+
+   > [PROMPT-LAB HEARTBEAT — not a user message, not a new task.] STOP
+   > CONDITION FIRST: if this session is already executing prompt-lab
+   > work, mid-conversation, or waiting on an in-flight process, reply
+   > with one short line ("heartbeat — campaign active, continuing
+   > <current step>") and RETURN to exactly what you were doing — do not
+   > re-read files, do not restart steps, do not launch anything. ONLY
+   > IF this session is genuinely idle on the campaign (no in-flight
+   > battery per `pgrep -f measure.py` and no unfinished turn): read
+   > docs/PROMPT_LAB.md, then scratch/prompt-lab/WORKBENCH.md, and
+   > resume from its NEXT section. Hard rails always: never reward hack;
+   > holdout blindness total (never open corpus/holdout/,
+   > evals/baselines/*__holdout*, evals/reports/holdout-*; never run the
+   > holdout gate; uncommitted __holdout baseline is owner-only); mutual
+   > non-regression both directions; ONE battery at a time; stage files
+   > by name.
+
+   The stop-condition preamble is load-bearing: a firing that lands on a
+   WORKING session must defuse itself into a one-line heartbeat — never
+   restart steps, never double-start a battery, never derail the thread.
+2. **One-shot wakeup** (ScheduleWakeup, ~20-25 min while work runs,
+   30-60 min when idle-ish) pointing back here; re-arm it before every
+   long operation and at every turn end. The wakeup is the pacer, the
+   cron is the net beneath it: if usage runs out, missed cron firings
+   are lost harmlessly and the first firing after renewal resumes the
+   campaign from WORKBENCH.
+3. Then read `CLAUDE_START.md` (method chain), the rest of this file,
+   and `scratch/prompt-lab/WORKBENCH.md` — and execute its NEXT section.
+
+Known limits (say them to the owner if asked, don't re-derive): cron and
+wakeup are session-scoped — if the Claude process itself dies, recovery
+is the owner pointing ANY new session at this file; recurring crons
+auto-expire after 7 days (each session re-arms its own).
+
 ## Mission — maximize QUALITY-DENSITY
 
 The single objective (owner refinement 2026-07-19): **judged quality
