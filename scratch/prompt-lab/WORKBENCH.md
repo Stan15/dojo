@@ -336,6 +336,28 @@ Decision rules bind per pre-reg P4a/P4b/P5: local minis same-or-better
 ok-rates vs iterW2 per kind; zero letter-paths; recovered codex floors
 without losing mixed_signals/mastery_resolution/extend_not_duplicate.
 
+## 6i SUB-ARC CLOSED (~13:40) — commits e4a3aa7 f88df7e 6cfdb7c 36ac04b
+
+Corpus 92 (deliberation:12), opt-in anchor profile shipped+measured
+(caliber-divergent verdict in QUESTIONS 6i), 9 trap floors
+bootstrapped. NEW WEAK CELLS from the traps (next loop iterations, in
+leverage order):
+1. **plan celestial trap: codex 0.0** — dependency root cut under
+   deadline even at strong tier (sourdough 0.4 same class). Diagnose
+   the trace (report 20260719-085715); candidate P11: plan template
+   states WHICH topics survive compression (never cut what other
+   topics depend on — cut breadth, keep roots) — verify scenario
+   fairness in the trace FIRST (rubric could be miswitten; T2-authored).
+2. **gen_collision compliance: codex 4-items-for-3** — collision
+   pressure over-generates even at codex. Read driver_trace; candidate:
+   generate template states the item budget binds even under
+   competing insights (compose, don't append). Scenario fairness check
+   first (n_items=3 with 3 colliding constraints may be UNDER-specified).
+3. diag_implied_axis_italian_oral 0.6 — read verdicts.
+Then standing queue: P9b (compiler-interpolated real insight id),
+retry-error pedagogy, example-bleed hardening, judged spot-sets per
+adopted arm.
+
 ## 6i SUB-ARC (started ~10:00) — trap-benchmark + anchor profiles
 
 Design source: QUESTIONS 6i (owner-approved; codex cell authorized by
