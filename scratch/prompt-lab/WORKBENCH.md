@@ -17,8 +17,12 @@ run 08:28-09:47 under committed W1 tree 9f878e5):
 
 **~1GB-TIER REPRESENTATIVE: lfm2.5-thinking:1.2b, 51% — 5× the old
 rep at smaller footprint. The tier is USABLE, not a capability floor.**
-granite4:1b's 57% sits at 3.3GB (≈qwen3.5:4b's tier, ~59%) — tier
-placement pending its ~1-1.7GB h/q8 variants (next battery).
+granite4:1b's 57% sits at 3.3GB (≈qwen3.5:4b's tier, ~59%) — and its
+~1.6GB variant granite4:1b-h-q8_0 (1.5B hybrid) scored 31/104 (30%)
+(bakeoff_granite4_1bh_q8_w1.jsonl, ~10:15, 0 infra): NOT competitive
+below 3GB. **Bake-off CLOSED: lfm2.5-thinking:1.2b holds the sub-4B
+crown decisively; granite bf16 is a ~3GB-tier data point under
+qwen3.5:4b.**
 CONSEQUENCES QUEUED: (a) granite4:1b-h(-q8_0) battery under SAME W1
 tree BEFORE W2 lands (arm consistency); (b) lfm-think grade-3/20 +
 route-0/11 transcript diagnosis (if format-coercible, winner may jump
@@ -785,7 +789,55 @@ directive §queue).
 
 ## Pre-registered (open)
 
-- **W2-QCOERCE (pre-registered 2026-07-19 ~08:50 from W1 run1
+- **W4-ROUTE-PHRASING (pre-registered 2026-07-19 ~10:50 from lfm-think
+  route transcripts; template edit → full protocol, own battery
+  cycle).** Observed: lfm-think route 0/11 fails are RUMINATION LOOPS
+  on literal readings of informal rule phrasing — "'action' is one
+  word — attach, new_topic, or propose_campaign" sends the thinking
+  trace into "but propose_campaign is two words?!" spirals ("Wait
+  wait no!"), ending in JSON with required fields omitted (3/3
+  sampled transcripts; also the plausible mechanism behind its
+  new_topic-requires-campaign omissions). Mechanism: thinking-class
+  models take meta-DESCRIPTIONS of enums literally; kin of README
+  mode 6 (rumination) + mode 7 (understatement). Fix hypothesis:
+  state enums as enums ("exactly one of: attach | new_topic |
+  propose_campaign"), never prose descriptors like "one word".
+  Decision rule: lfm-think route mini ≥4/11 with 4B route cells flat
+  (qwen 1/6→≥1, gemma 6/6 stays); README mode-11 candidate if
+  adopted. Check other templates for "one word"-style descriptors in
+  the same pass.
+- **R3-LFM (pre-registered 2026-07-19 ~10:45; runs after granite-q8
+  battery + W2/W3 land).** The R3 retry-feedback question re-answers
+  on the NEW ~1GB rep (lfm2.5-thinking:1.2b): retry_probe.py arms
+  A (blind resample) vs B (error feedback), grade+route stems (its
+  weak cells — where retries actually happen). Same decision rule as
+  R3-sub4B: B ≥ A+15 points budget-success or B mean-subs ≤ A−0.5 →
+  QUESTIONS proposal; else negative result stands for this rep too.
+  Run AFTER W2+W3 so retries are measured against the production
+  validator state.
+- **W3-EVIDENCE-NORM — SIZING DONE ~10:40: 24 converts / 153
+  verbatim rejections, ≥4 calibers (qwen 4b/0.8b/2b, gemma, lfm both
+  variants); decision rule MET → GO after W2.** Mechanisms confirmed:
+  symmetric quote-wrapping (unicode scenarios = README mode 3),
+  trailing ellipsis, stray edge whitespace. (pre-registered 2026-07-19 ~10:35 from bake-off
+  lfm-think diagnosis; AFTER W2).** Observed: lfm2.5-thinking grade
+  16/17 fails are verbatim-evidence violations, and sampled evidence
+  values are correct quotes with a trailing "..." appended (habit:
+  marking truncation), e.g. "you never taught me what the failure
+  patterns are..." — the ellipsis breaks the literal substring check
+  on an otherwise-verbatim quote. Hypothesis: normalizing evidence
+  BEFORE the substring check — strip trailing/leading ellipsis
+  ("...", "…") and symmetric wrapping quote pairs (README mode 3
+  corruption) — converts these without weakening the hallucination
+  guard (the remaining string must STILL be a verbatim substring of
+  the answer; stripping decoration ≠ loosening semantics). Sizing
+  script needed first (scratch/prompt-lab/evidence_norm_check.py):
+  re-check archived grade verbatim-fails' evidence against scenario
+  answers under normalization; report convert counts per caliber.
+  Decision rule: sizing shows ≥5 archive converts across ≥2 calibers
+  → implement in the applier check (service side, mechanics-honesty),
+  unit tests from observed raws, ride next battery. Judge/rubric
+  untouched. NOT a route/grade rubric edit (reward-hack rail).
   transcripts; implement AFTER the W1 commit lands, own commit).**
   Observed cross-model: reflect `questions` emitted as OBJECTS with
   the content in an obvious text key — qwen run1
