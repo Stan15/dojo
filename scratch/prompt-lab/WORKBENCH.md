@@ -109,7 +109,16 @@ running in parallel per doctrine:
   launches until load normalizes. Treat this machine's latency numbers
   as suspect while starved.
 
-## OWNER ASK 2 (~21:40): real-world corpus + holdout enrichment
+## OWNER ASK 2 COMPLETE (~23:30): corpus 104 (realworld:12, commit
+a30c951) + blind holdout enrichment landed (commit a0452ec, PUSHED —
+6 scenarios one per kind, cold-context authored, filenames-only
+report relayed, 920 tests green; this session read NO content).
+Holdout floors bootstrap at the owner-triggered gate, as always.
+Remaining from this ask: local 4B shape batteries over the 12 new
+realworld visible scenarios (next), judged floors at the next
+authorized codex spend.
+
+## former OWNER ASK 2 (~21:40): real-world corpus + holdout enrichment
 
 Saturation audit: 62% of 89 floors at 1.0; routing/meta-learning/
 encoding categories mean 1.00 (saturated at codex); frontier =
