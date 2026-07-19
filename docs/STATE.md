@@ -310,7 +310,9 @@ committed work, not proposals awaiting an answer. Item numbering is stable
 
 9. **CAMPAIGN COMPLETE — AWAITING OWNER MERGE GATE (dev/token-diet,
    2026-07-18): token-diet.** Winner `armJ5S` shipped on-branch, 722 tests
-   green: shape-hardened templates + semantic-only validation + permanent
+   green [MERGED to main 03402c4 on 2026-07-18 — verified in git by the
+   2026-07-18 late session; this entry's "awaiting merge gate" is history]:
+   shape-hardened templates + semantic-only validation + permanent
    bidirectional gates (shape-lints, semantic-validation tests, prompts.md
    rule 7 + §1c, guard README chain). Results: class-verdict qwen3.5:4b
    26.3±3.2 → 33-35/64 with 5× variance collapse; gemma3:4b 28 → 50-53;
@@ -394,6 +396,26 @@ committed work, not proposals awaiting an answer. Item numbering is stable
       tier, README, STATE, and mechanical ratchet bootstraps remain in
       scope; any further template/corpus iteration belongs to a fresh
       session.
+
+   g. **2026-07-18 (late, separate session — non-prompt scope only; the
+      drops-diagnosis session had NOT landed, so templates/visible corpus/
+      baselines untouched): skill-tier hardening.**
+      (i) Owner probe on respect_the_no ("there is a `more` pathway, no?")
+      confirmed sharp: the seed carried ~3 dues vs capacity 28 — the debt
+      guard would have GRANTED and only the no-material branch refused;
+      a daily-first driver could be granted then punished by
+      no_extension_session for walking the sanctioned door. Seed now
+      guarantees the guard refusal (packet_size 2 via new skill-seed
+      `configs` block — skill harness only, shared dialect frozen; 12 dues
+      in-horizon vs capacity 11), premise pinned by a free test (7d8e283).
+      (ii) Bootstrap-install scenario shipped (launch-prompt invitation;
+      PATH isolation proved tractable): `fresh_machine` sandbox shadows
+      PATH (minus dojo/pipx) and HOME (minus .dojo/.local — install.sh's
+      rm -rf rollback can never reach the real install; agent auth passes
+      through), new `dojo_binary_installed` check, battery now 7, free
+      plumbing tests (1037b1c). Design-doc addendum + INSIGHTS entries
+      committed. 805 tests green. First real `-m eval_skill` run still
+      owed — blocked on the owner's driver-agent pick (10d2).
 
 ## RELEASE GATE STATUS (2026-07-18) + CONTAMINATION HANDOFF
 

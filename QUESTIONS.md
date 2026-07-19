@@ -35,10 +35,18 @@ _Statuses: `[x]` shipped · `[~]` standing/in-progress · `[?]` blocked-on-owner
       candidate and the near-empty-registry route bleed (INSIGHTS).
 - [?] Holdout release gate re-trigger (you; after the drops are
       dispositioned) · uncommitted __holdout baseline disposition (you).
+- [x] Skill battery hardening (2026-07-18 late): your respect_the_no probe
+      confirmed — seed now GUARANTEES the debt-guard refusal (`dojo more`
+      is the sanctioned door; premise pinned by a free test, 7d8e283) +
+      bootstrap-install fresh-machine scenario shipped (battery 7,
+      shadow-PATH/HOME sandbox, 1037b1c). 805 tests green.
 - [?] First real `-m eval_skill` run — needs your driver-agent command
-      pick (STATE 10d2). · Docs hosting workflow on your word / go-public
-      (Q 3b). · Gated designs: 6b reflect decomposition, 6d display
-      unification, 6f vault export, 6h quit-as-evidence.
+      pick (STATE 10d2); battery is now 7 incl. bootstrap-install (that one
+      needs network + main pushed current). · Docs hosting workflow on your
+      word / go-public (Q 3b). · Gated designs: 6b reflect decomposition,
+      6d display unification, 6f vault export, 6h quit-as-evidence.
+      · NEW: 8 standalone binary / non-dev barrier (assessment delivered,
+      defaults stated).
 
 ## Open — decisions actually waiting on you
 
@@ -234,6 +242,38 @@ _Statuses: `[x]` shipped · `[~]` standing/in-progress · `[?]` blocked-on-owner
    concrete: holdout gate + v1.0.0 (decision #1), repo public (decision #3),
    docs site, demo GIF, packs. **Default: no public move until you approve
    the doc and its prerequisites.**
+
+8. **Standalone binary + non-dev barrier (your question 2026-07-18).**
+   Assessment: YES it's buildable — deps are four small libraries
+   (PyYAML/rich/pydantic/fsrs), git already optional, and install.sh's
+   Step 3 + PyInstaller hint anticipated exactly this. But the cheapest
+   barrier-killer is NOT the binary:
+   - **(a) uv fallback in install.sh (recommended first move, ~15 lines,
+     zero release infra):** today the script dead-ends only when the
+     machine has no Python 3.11+ and no published binary exists. Insert a
+     step: no compatible python → `curl -LsSf https://astral.sh/uv/install.sh
+     | sh` → `uv tool install git+https://github.com/Stan15/dojo` — uv
+     ships its own standalone Pythons and handles ~/.local/bin shims. This
+     closes the Python prerequisite on mac/linux entirely.
+   - **(b) PyInstaller release matrix (the actual binary):** GitHub Actions
+     on tag → `dojo-{os}-{arch}` artifacts that install.sh Step 3 already
+     downloads. Real costs: ~40-60MB artifacts, onefile cold-start lag,
+     and — the hidden one — **macOS Gatekeeper**: an unsigned binary gets
+     quarantined on download, and "right-click → Open" is a WORSE non-dev
+     experience than the script path. Shipping (b) honestly means an Apple
+     Developer ID + notarization ($99/yr + CI signing) or mac users stay
+     on (a). Linux has no such tax; Windows (no sh at all today) is its
+     own separate decision.
+   - **(c) The real non-dev front door is the AGENT, not the terminal:**
+     our persona's non-dev never runs curl — their agent does (the skill
+     self-bootstraps since fd1f9f7, and the new bootstrap_fresh_machine
+     scenario now measures exactly that flow). Every install-path
+     improvement should be judged by "can the agent walk it unattended".
+   **Worth it?** (a) now — it's the only current dead-end and costs almost
+   nothing; (b) when field evidence shows (a) failing or Windows demand
+   appears, and only WITH signing on macOS. **Default: build (a) on your
+   word; (b) stays gated (needs the signing spend decision); Windows
+   support ledgered but unscheduled.**
 
 _Parked by your explicit rule (not decisions, just recorded): interleave
 share tuning and OP #13 exact-undo — both wait for real usage data._

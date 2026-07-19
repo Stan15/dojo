@@ -80,6 +80,25 @@ skill tier earns its own blind slice is an owner call at a release gate
 - **Isolation**: sandbox store only; the driver command is configured, never
   hardcoded (same rule as every tier).
 
+## Addendum 2026-07-18 — battery is 7: bootstrap-install joined
+
+Shipped post-approval (launch-prompt invitation; PATH isolation proved
+tractable): **bootstrap_fresh_machine** — the skill's install line
+(`curl … install.sh | sh`) had zero behavioral coverage. `fresh_machine`
+scenarios rebuild the driver env by SHADOWING, never removal: PATH entries
+carrying `dojo`/`pipx` are replaced by one shadow dir symlinking everything
+else (agent CLIs live beside dojo in ~/.local/bin; pipx exclusion pins
+install.sh to its deterministic venv route), and HOME becomes a sandbox
+re-linking all top-level entries except `.dojo`/`.local` — agent auth
+passes through, install writes (and install.sh's `rm -rf` rollback) stay
+sandboxed. Deterministic check: `dojo_binary_installed`. Caveats, stated
+in the scenario: installs the PUBLIC repo's main (the real user path —
+network required, keep main pushed current) and needs a python3.11+ on the
+scrubbed PATH. Also same day (owner probe): respect_the_no's seed now
+GUARANTEES the debt-guard refusal (packet_size 2, 12 dues vs capacity 11),
+premise pinned by a free test — a refusal scenario that doesn't pin its
+refusal punishes the sanctioned `dojo more` door.
+
 ## Recommendation
 
 Gate this design; on approval, land the harness + the 6-scenario battery with
