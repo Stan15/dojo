@@ -499,6 +499,41 @@ directive §queue).
 
 ## Pre-registered (open)
 
+- **BATCH CLOSED (~18:20; commits 94c5519 + 152de95): P12 CONFIRMED
+  at codex (collision pair passes compliance, floors bootstrap 0.5/0.5
+  — per-item constraint composition is the remaining ceiling), P9b
+  CONFIRMED (unknown-id class zero both models, gemma reflect
+  17→20/23), P11c REVERTED (negative result). Six controls 1.0.
+  Visible floors: 89, mean 0.874. NEXT QUEUE: retry-error pedagogy
+  (measure whether validator messages teach the right fix — start
+  from existing battery jsonls' rejected→retry patterns via
+  readme_demo-style submission budgets), then example-bleed
+  hardening, then judged spot-sets.**
+- **former NEXT BATCH (one battery cycle, three surfaces):**
+  - **P11c** (plan; ride-along per its negative-result entry): remove
+    the "≤ 10" literal from rule 4 — goal-axis words derive the count.
+    Decision rule recorded in Negative results.
+  - **P12 generate collision-compose (2026-07-19 ~15:40; evidence:
+    codex 4-items-for-3 on BOTH gen_collision scenarios while 4B
+    models emit exactly 3 — the strong tier gives each colliding
+    insight its own item).** Fix: generate template states composition
+    in words: every active insight constrains EVERY item; the item
+    count never grows to give each insight its own item. Decision
+    rule: gen_collision pair passes compliance at codex (floors
+    bootstrap); insight_targeting + preference_adherence +
+    chain_reflect controls stay passing; generate minis both models
+    same-or-better; footprint delta ≤ +100B.
+  - **P9b reflect real-id example (queued earlier):** compile_reflect
+    interpolates the first ACTIVE insight's real id into the default
+    ops fragment ({{ insight_id }}) so the update example demonstrates
+    a VALID op. Decision rule: unknown-id/example-id-copy class
+    (2-3 per gemma battery) drops to ≤1 across both reflect minis; no
+    new class; free tests pin the interpolation.
+  Battery plan: plan+generate+reflect minis × 2 models (6, ONE at a
+  time, workers 1/2/2), splice over iterP11b, budget, pytest, COMMIT,
+  targeted codex (trap pair + gen_collision pair + deadline_compression
+  + plan controls + generate controls).
+
 - **P11 deadline-compression fills-to-the-cap (2026-07-19 ~14:00;
   traces: celestial 0.0 + sourdough 0.4, run 085715).** CORRECTION of
   the earlier headline: codex did NOT cut dependency roots (both c1
@@ -673,6 +708,25 @@ directive §queue).
 
 ## Negative results (never blind-retest)
 
+- **RAIL SLIP logged (~17:05): ONE-battery rule briefly violated** —
+  the moot iterQ2 qwen plan rerun (bundled into an earlier command)
+  was still running when the iterQ qwen generate battery launched;
+  they overlapped until the plan battery finished. Plan results moot
+  (measured reverted wording, discarded). Generate rows completed
+  during the overlap keep valid SHAPE verdicts but any timeout rows
+  get rerun. LESSON (binding): pgrep -f measure.py before EVERY
+  battery launch — bundled launch commands hide live lanes.
+- **P11c de-anchoring REVERTED (2026-07-19 ~16:40, two runs):**
+  removing the "≤ 10 ceiling" literal (+ a trade-off-channel clause)
+  correlated with gemma plan 4-5/9 and a persistent refinement-
+  question cap-violation class (5, 3 occurrences vs ~1 baseline);
+  the channel clause did not fix it; codex upside unproven (P11
+  itself hadn't moved the trap pair). Working tree reverted to the
+  committed P11 wording (gemma 8/9 / qwen 7/9 verified). Do NOT
+  re-test P11c blind; the trap pair stays documented hard evidence
+  (celestial floorless, sourdough 0.4-0.5). Gemma question-verbosity
+  under rule-4 mass is a standing observation for the retry-pedagogy
+  queue item.
 - **P11 wording does NOT move the dependency-root trap pair at codex
   (2026-07-19 ~15:20, targeted run post-5cb13ec):** celestial 0.0 /
   sourdough 0.5 — still ~10 topics, adjacent breadth kept ("ceiling,
