@@ -286,3 +286,18 @@ Fourth R3 negative; the mechanism table (rescued 5/7 vs 0/12) is the
 consolation prize — it says exactly which retry classes are feedback-
 shaped, and keeps one narrow grade-only hypothesis alive for a fresh,
 separately pre-registered test. Data: retryprobe_lfmthink_{A,B}.jsonl.
+
+## APPENDED ~16:35 — "The rumination that migrated" (W4 negative)
+
+We removed the phrase that sent a thinking model into "propose_campaign is
+two words?!" spirals — and watched the spiral re-attach to the next
+informal descriptor in sight ("is 'backyard-birding' one word?"; 0/13
+before, 0/13 after). Root cause refined: for small thinking models the
+trigger isn't any particular phrase, it's deliberation-budget exhaustion
+against a rule-dense payload — the model spends its coherence deliberating
+every rule and drops required fields from the final JSON. Phrase surgery
+can't fix a budget problem. The live fix direction is structural: a
+thinking-class fulfiller profile that states fewer rules and lets the
+validator teach the rest. Also a clean demo of revert discipline: negative
+by pre-registered bar → templates checked out, tests green, GPU for the
+guard batteries never spent. Data: iterW4_lfmthink_route.jsonl.

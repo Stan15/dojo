@@ -34,6 +34,35 @@ PADDED (filler words in one question) → W1 verbosity guard PASSES;
 pre-reg debt closed.** Ops lesson: the first judge call wedged 2h
 WAITING ON STDIN — codex exec without stdin closed hangs; always
 `</dev/null` (or pipe input) for non-interactive codex runs.
+**W4 CLOSED NEGATIVE ~16:30, REVERTED (0/13 vs ≥4 bar; templates
+checked out clean, 937 green).** MECHANISM REFINED: with "one word"
+gone from every template, lfm-think's rumination MIGRATED (now
+spirals on whether a topic-path leaf "is one word" — 3 mentions in
+one transcript). The trigger is not a phrase; the model spirals on
+ANY informal format descriptor, and the underlying route failure is
+DELIBERATION-BUDGET EXHAUSTION across route's dense rule set (fields
+drop from the final JSON after long deliberation). Do not blind-
+retest phrase-level fixes on this cell. QUEUE (new arm, pre-register
+properly before testing): route payload simplification as a
+thinking-class fulfiller PROFILE (compiler-side, in-scope) — fewer
+rules stated, mechanical checks moved to validator messages; measure
+against the same 13-scenario set. Guard batteries 2-4 were never run
+(primary dead — GPU saved).
+**former W4 plan (executed, negative):**
+4 template edits applied per draft_w4_route_phrasing.md ("is one
+word" → "is exactly one of" in reflect/plan/goal_route/capture_route).
+936/937 pytest (the 1 red = expected hash gate). BATTERY PLAN (serial):
+(1) iterW4_lfmthink_route.jsonl — route_+goal_route_ scenarios,
+    lfm2.5-thinking, workers 2 (IN FLIGHT bpdl4hmed). Bar: ≥4/11
+    driven route rows ok (was 0/11+0/2).
+(2) iterW4_qwen35_4b_route.jsonl + (3) iterW4_gemma3_4b_route.jsonl —
+    guard: flat-or-better (qwen 1/6+0/2; gemma 6/6+1/2 baselines).
+(4) plan+reflect minis both 4B models — flatness guard for the
+    kind/op line changes (baselines: qwen plan 10/13, gemma plan
+    13/13, qwen reflect ~11-13/27, gemma reflect 27/30 — W1-era).
+ADOPT → build_output_budget from spliced fulls + footprint + goldens
+regen SAME commit; REVERT → git checkout the 4 templates, record
+negative. If dead on resume: rerun the recorded battery commands.
 **R3-LFM ADJUDICATED ~14:15 — NEGATIVE by pre-registration.** Final:
 A 13/33 (39%, subs 2.48) vs B 17/33 (52%, subs 2.36) → +13 points
 (bar +15), −0.12 subs (bar −0.5). NEITHER branch met. The interim
