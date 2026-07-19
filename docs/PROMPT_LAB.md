@@ -165,6 +165,106 @@ task-contract shape changes (new kinds, multi-turn, tool calls),
 schema/applier semantics beyond validation-message wording, anything in
 QUESTIONS marked owner-gated, the holdout gate, version tags.
 
+## Parallel experimentation doctrine (owner directive 2026-07-19)
+
+The owner directs FULL use of subagent parallelism — multiple experiments
+in flight at once — under diligent, written planning. Parallelism is a
+multiplier on the loop, never a loosening of it: every hard rail binds
+every lane, and adoption stays serial even when experimentation is
+parallel.
+
+**Lane taxonomy — know which resource a job burns before you spawn it:**
+
+- **Local-GPU lane (SERIAL, unchanged):** ollama batteries share one
+  Metal GPU and one memory pool — concurrent batteries contend and
+  corrupt the measurements (measured: 7×240s timeouts from 3-way
+  contention, iterW). ONE local battery at a time stays a hard rail.
+  Parallelize around this lane, never through it.
+- **Cognitive lane (PARALLEL):** subagents doing trace analysis,
+  rejection taxonomies, scenario drafting, trap design, independent
+  replication of a diagnosis, second opinions, doc drafts. They read
+  existing artifacts and write ONLY to scratch/ or their own worktree —
+  never src/ while a battery runs (quiet-tree rail). Cheap locally;
+  this is the main parallelism win.
+- **Remote lane (PARALLEL with local):** codex runs burn API spend, not
+  local compute — they may overlap a local battery. Spend policy
+  unchanged; parallelism compresses wall-clock, never inflates budget.
+
+**Plan before spawn (mandatory).** A parallel slate is WRITTEN IN
+WORKBENCH BEFORE any launch: per lane — objective, pre-registered
+decision rule, exact inputs the agent may read, explicit exclusions
+(holdout paths named every time; plus whatever else that brief must
+firewall), deliverable form, expected runtime, and how the result gets
+reconciled. No agent launches without its WORKBENCH row — a dead
+session must be able to reap or restart every lane from that row alone.
+
+**Reconciliation (serial, orchestrator-owned):**
+
+- The session pointed at this file is the ORCHESTRATOR: the single
+  writer for WORKBENCH, STATE, baselines, goldens, and every commit.
+  Subagents deliver reports/diffs; they never commit, never push,
+  never touch shared state.
+- Winners merge ONE AT A TIME, mutual non-regression gates rerun after
+  each. Two winners touching the same template are a NEW combined arm —
+  re-verify the merged state (mini-battery) before commit. Never assume
+  additivity: the P1 letter-bleed was exactly an interaction effect.
+- Worktrees isolate tree STATE, not compute: template-variant drafting
+  in a worktree during a battery is fine; the battery itself records
+  which tree/commit it measured (arm-snapshot discipline).
+- Subagent negative results land in WORKBENCH like any other — a lane
+  that dies with its findings unrecorded was launched wrong.
+
+**Contamination topology.** Every new agent is a new context-flow
+route, and contamination flows UP: a subagent that read forbidden
+content contaminates the parent through its report. Briefs are
+firewalls — treat brief-writing as prompt-craft. State exactly what may
+be read and what must NOT (holdout always, by path); reports back are
+minimized to what the parent may safely hold (filenames/counts/verdicts
+when content would contaminate).
+
+**System-resource guardianship (owner directive — never fry the
+laptop).** BEFORE any heavy launch (battery, subagent slate, codex
+fan-out) and at every heartbeat during long runs, check:
+
+- load: `uptime` — 1-min load sustained near/under core count
+  (`sysctl -n hw.ncpu`);
+- memory: `memory_pressure -Q` free %, `sysctl vm.swapusage` (swap not
+  near-full and not growing);
+- thermals: `pmset -g therm` (CPU_Speed_Limit at 100 / no warnings);
+- GPU/model state: `ollama ps`.
+
+Throttling and swap-thrash are DATA CORRUPTION, not just machine risk:
+latency numbers measured on a starved machine are invalid, so resource
+care and measurement validity are the same discipline. If pressure
+appears: launch nothing new, let in-flight lanes drain, re-check before
+resuming; never raise OLLAMA_NUM_PARALLEL mid-campaign to parallelize
+harder. Live precedent (2026-07-19): a pre-spawn check caught 1-min
+load 135 on 8 cores with swap 90% full — a leaked-process fire
+(~1700 ssh-agents) unrelated to the campaign; the slate was deferred,
+the fire reported to the owner. That is the protocol working.
+
+**Never idle-wait (owner directive 2026-07-19).** Whenever anything is
+running in the background (a battery, a codex run, a subagent lane),
+ask explicitly: "is there anything else I can be doing instead of just
+waiting?" Only if the honest answer is NO — every candidate would break
+a rail (quiet tree during a battery, GPU-lane serialization, imminent
+usage cut making spawns wasteful) or produce nothing the next step
+consumes — is waiting correct. Otherwise USE the time: prep the next
+step's scripts/commands so results are consumed the moment they land,
+draft pre-registrations and subagent briefs, analyze already-collected
+transcripts, update WORKBENCH/STATE/QUESTIONS drafts, design trap
+scenarios. Wait-time work obeys the same lane rules as everything else
+— it must never touch what the in-flight measurement depends on.
+
+**When NOT to parallelize.** Coordination and context budget are real
+costs. A lane with no pre-registered decision rule, or whose output the
+next step doesn't consume, is waste — serial-with-focus beats
+parallel-with-drift. Parallelize when lanes are truly independent, each
+has a decision rule, and reconciliation was planned before launch. An
+imminent usage outage also argues for deferring spawns: agents that die
+mid-flight burn budget for nothing (their WORKBENCH rows make restart
+cheap, but not free).
+
 ## Experiment queue (seeded 2026-07-19; WORKBENCH holds the live version)
 
 - **6i deliberation trap-benchmark + anchor profiles** (owner approved
@@ -204,6 +304,22 @@ QUESTIONS marked owner-gated, the holdout gate, version tags.
   first, then this file, then WORKBENCH — then continue the loop. If
   WORKBENCH shows an in-flight battery, check its process/output before
   starting anything (ONE battery at a time).
+- **Full-restoration sweep after ANY interruption (owner directive
+  2026-07-19).** A usage-limit outage, session kill, or crash may take
+  down subagent lanes, scheduled crons/wakeups, and monitoring — while
+  local processes (batteries, ollama) keep running or die independently.
+  On the first turn back, BEFORE resuming NEXT: (1) re-arm the STEP ZERO
+  mechanism if the session restarted (cron + wakeup are session-scoped
+  and die silently); (2) inventory EVERY lane recorded in WORKBENCH —
+  battery: `pgrep -f measure.py` + output-file row count/mtime vs
+  expected; subagent lanes: completed reports present or lane dead;
+  codex runs: report files present; (3) restart every dead lane from its
+  WORKBENCH row — batteries via their recorded command, subagents by
+  re-spawning their recorded briefs (a killed agent's partial context is
+  gone; the brief is the restart point — this is WHY briefs live in
+  WORKBENCH before launch); (4) only when every lane is confirmed
+  running-or-complete, return to NEXT. The bar: campaign state as if
+  the interruption never happened.
 - Contamination self-check at session start: if holdout content has
   entered your context by ANY route, stop prompt work, record it in
   STATE, leave the queue for a fresh session.
