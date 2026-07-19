@@ -855,6 +855,15 @@ directive §queue).
   strict + mechanical rescues; soft = product-semantics change,
   owner-gated) was delivered with the archive taxonomy. If the owner
   rules soft, that supersedes; until then the invariant stays strict.
+  **CLOSED AS NEGATIVE ~11:50 (replay verification,
+  evidence_core_check.py): the naive 28-near-miss sizing double-
+  counted W3's mass — with W3 LIVE in production the W5 marginal is
+  3 converts archive-wide (<5 rule line), and the rescued cores are
+  mangled fragments (mid-word starts, truncated JSON) that would
+  store ugly evidence. W3 already captured the recoverable mass.
+  DO NOT IMPLEMENT; do not blind-retest. Owner answer stands with
+  this correction: strict + W3 is the equilibrium; remaining
+  rejections are genuinely ungrounded.**
   battery + W2/W3 land).** The R3 retry-feedback question re-answers
   on the NEW ~1GB rep (lfm2.5-thinking:1.2b): retry_probe.py arms
   A (blind resample) vs B (error feedback), grade+route stems (its
