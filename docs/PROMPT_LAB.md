@@ -148,7 +148,11 @@ the strongest model of each resource class.
    Losers: revert the working tree, record the negative result in
    WORKBENCH (a disproven theory is progress; never re-test it blind).
 6. **Record + reschedule** — update WORKBENCH (state, queue, spend
-   ledger), STATE.md at milestones, INSIGHTS.md for durable learnings.
+   ledger), STATE.md at milestones, INSIGHTS.md for durable learnings,
+   and scratch/prompt-lab/BLOG_MATERIAL.md for ANYTHING interesting
+   (standing owner directive 2026-07-19: capture first — wins,
+   failures, war stories, any topic — in the same commit as the
+   adjudication that produced it; curation is the owner's job, later).
    Schedule the next wakeup (below) so the loop survives usage gaps.
    Go to 1.
 
