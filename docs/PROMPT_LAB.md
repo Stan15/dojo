@@ -243,18 +243,31 @@ load 135 on 8 cores with swap 90% full — a leaked-process fire
 (~1700 ssh-agents) unrelated to the campaign; the slate was deferred,
 the fire reported to the owner. That is the protocol working.
 
-**Never idle-wait (owner directive 2026-07-19).** Whenever anything is
-running in the background (a battery, a codex run, a subagent lane),
-ask explicitly: "is there anything else I can be doing instead of just
-waiting?" Only if the honest answer is NO — every candidate would break
-a rail (quiet tree during a battery, GPU-lane serialization, imminent
-usage cut making spawns wasteful) or produce nothing the next step
-consumes — is waiting correct. Otherwise USE the time: prep the next
-step's scripts/commands so results are consumed the moment they land,
-draft pre-registrations and subagent briefs, analyze already-collected
-transcripts, update WORKBENCH/STATE/QUESTIONS drafts, design trap
-scenarios. Wait-time work obeys the same lane rules as everything else
-— it must never touch what the in-flight measurement depends on.
+**Never idle-wait — THINK DEEPLY before concluding "wait" (owner
+directive 2026-07-19, strengthened 2026-07-19).** Whenever anything is
+running in the background (a battery, a codex run, a subagent lane) or
+progress feels blocked, the required act is not the question alone but
+DEEP THOUGHT on it: actively generate a candidate list of what you
+could be doing instead — enumerate lanes (cognitive analysis, prep,
+drafting, design, sizing sweeps over already-collected data), enumerate
+blockers, and for each blocker ask whether it can be problem-solved
+around rather than waited out. "Waiting" is a CONCLUSION you must earn
+by exhausting the candidate list, never a default state. Only when the
+deliberate answer is genuinely NO — every candidate would break a rail
+(quiet tree during a battery, GPU-lane serialization, imminent usage
+cut making spawns wasteful) or produce nothing any next step consumes —
+is waiting correct, and even then record briefly WHY (which candidates
+were considered and rejected) so the reasoning is auditable. Otherwise
+USE the time: prep the next step's scripts/commands so results are
+consumed the moment they land, draft pre-registrations and subagent
+briefs, analyze already-collected transcripts, size prospective wins
+from archived run data, update WORKBENCH/STATE/QUESTIONS drafts,
+design trap scenarios. Wait-time work obeys the same lane rules as
+everything else — it must never touch what the in-flight measurement
+depends on. Live precedent (2026-07-19): during a reflect battery,
+wait-time transcript analysis of the PREVIOUS run discovered the
+questions-object rejection class, and an archive sizing sweep proved
+it cross-caliber (119 hits) — the wait produced the next adopted arm.
 
 **When NOT to parallelize.** Coordination and context budget are real
 costs. A lane with no pre-registered decision rule, or whose output the
