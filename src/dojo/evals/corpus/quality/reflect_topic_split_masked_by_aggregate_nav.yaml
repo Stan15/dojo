@@ -1,0 +1,113 @@
+# AGGREGATE-VS-DECOMPOSITION + DISTRACTOR (deliberation): window accuracy is
+# 0.43 — the shallow read fires "below 0.50 -> lower difficulty". Decomposed
+# by topic the aggregate is a lie: nav.time_conversion is 4/4 fast and clean
+# (plus a too_easy skip), while nav.sight_reduction fails repeatedly on ONE
+# tagged error (sign_of_declination). The template's own composition rule
+# ("struggle confined to one topic while another thrives is an insight naming
+# that topic — hold difficulty") must beat the aggregate clause. DISTRACTOR:
+# the salient too_easy skip (skips count double) invites the opposite global
+# knee-jerk — raise difficulty — equally wrong.
+category: deliberation
+domain: navigation
+scenario_context: |
+  Ten recent attempts in a celestial-navigation campaign. Aggregate window
+  accuracy is 0.43, below the 0.50 lower-difficulty threshold — but the
+  decomposition shows time conversions at 4/4 with ~10 s latencies (plus
+  one too_easy skip) while sight reduction fails 5 times, slowly, with the
+  same error tag (sign_of_declination) recurring. Strong output: NO global
+  difficulty move (strategy null, or a scaffolding-only raise whose reason
+  names sight reduction); a create insight scoped to sight reduction's
+  declination-sign error citing 2+ of the failing attempt ids; journal
+  stating the per-topic split. Weak output: difficulty lowered to beginner
+  off the 0.43 aggregate, or difficulty raised off the salient too_easy
+  skip, a global "learner is struggling" insight or none at all, journal
+  citing only the average.
+seed:
+  campaign:
+    id: celestial-nav
+    name: Celestial Nav
+    mission: "Pass the offshore navigation exam: sight reduction and time conversions by hand, no electronics."
+    strategy_profile:
+      difficulty: intermediate
+      scaffolding: medium
+    topics:
+      - {path: nav.sight_reduction, kind: skill, summary: "reduce a sextant sight to an intercept and azimuth"}
+      - {path: nav.time_conversion, kind: skill, summary: "zone time, UTC, and chronometer conversions"}
+    attack_plan:
+      - topics: [nav.sight_reduction, nav.time_conversion]
+        criteria: {min_attempts: 12, min_accuracy: 0.7}
+        focus: "full sight workflow with clean timekeeping"
+  attempts:
+    - {id: att_01, session_id: s1, exercise_id: ex_time_a, score: 1.0, latency_seconds: 10,
+       prompt: "Convert 14:30 zone time at ZD +3 to UTC.", user_answer: "17:30 UTC",
+       created_at: "2026-07-17T09:00:00+00:00"}
+    - {id: att_02, session_id: s1, exercise_id: ex_sight_a, score: 0.0, latency_seconds: 78,
+       prompt: "Reduce this sight: Hc vs Ho with declination 12 S.", user_answer: "I added the declination instead of subtracting; intercept came out 40 miles off.",
+       error_tag: sign_of_declination, created_at: "2026-07-17T09:04:00+00:00"}
+    - {id: att_03, session_id: s1, exercise_id: ex_sight_b, score: 0.0, latency_seconds: 85,
+       prompt: "Compute Hc for declination 8 S, latitude 35 N.", user_answer: "Used +8 for the southern declination again, altitude wrong.",
+       error_tag: sign_of_declination, created_at: "2026-07-17T09:09:00+00:00"}
+    - {id: att_04, session_id: s1, exercise_id: ex_time_b, score: 1.0, latency_seconds: 12,
+       prompt: "Chronometer reads 03:12:40 UTC, error 20s fast. True UTC?", user_answer: "03:12:20 UTC",
+       created_at: "2026-07-17T09:13:00+00:00"}
+    - {id: att_05, session_id: s2, exercise_id: ex_sight_c, score: 0.3, latency_seconds: 90,
+       prompt: "Name the sign rule for declination same vs contrary to latitude.", user_answer: "Same name add, contrary subtract... I think it is the other way for south?",
+       error_tag: sign_of_declination, created_at: "2026-07-18T09:00:00+00:00"}
+    - {id: att_06, session_id: s2, exercise_id: ex_time_c, score: 1.0, latency_seconds: 9,
+       prompt: "ZD for longitude 052 W?", user_answer: "+3, so UTC is zone time plus 3.",
+       created_at: "2026-07-18T09:03:00+00:00"}
+    - {id: att_07, session_id: s2, exercise_id: ex_sight_d, score: 0.0, latency_seconds: 82,
+       prompt: "Full reduction, declination 15 S, DR latitude 40 N.", user_answer: "Treated 15 S as same-name and added it; azimuth ended up mirrored.",
+       error_tag: sign_of_declination, created_at: "2026-07-18T09:08:00+00:00"}
+    - {id: att_08, session_id: s2, exercise_id: ex_time_d, score: 0.0, latency_seconds: 4,
+       skip_reason: too_easy, prompt: "Convert 09:00 zone time at ZD -2 to UTC.", user_answer: "",
+       feedback: "another clock conversion, come on — I can do these in my sleep",
+       created_at: "2026-07-18T09:10:00+00:00"}
+    - {id: att_09, session_id: s2, exercise_id: ex_sight_e, score: 0.0, latency_seconds: 95,
+       prompt: "Reduce the sight: declination 20 S, latitude 38 N.", user_answer: "Sign flip on declination again, intercept unusable.",
+       created_at: "2026-07-18T09:16:00+00:00"}
+    - {id: att_10, session_id: s2, exercise_id: ex_time_e, score: 1.0, latency_seconds: 11,
+       prompt: "Watch time 22:05, watch error 1m slow, ZD +5. UTC?", user_answer: "03:06 UTC next day",
+       created_at: "2026-07-18T09:19:00+00:00"}
+steps:
+  - compile:
+      fn: reflect
+judge_rubric:
+  - {id: c1, weight: 4, question: "Does the output AVOID any global difficulty
+      move (strategy is null, or changes scaffolding only, with a reason that
+      names sight reduction), despite window accuracy sitting below 0.50?"}
+  - {id: c2, weight: 3, question: "Is there an insight scoped to sight
+      reduction's declination-sign error (create with a key naming sight
+      reduction or the sign error), citing at least two of att_02, att_03,
+      att_05, att_07, att_09?"}
+  - {id: c3, weight: 2, question: "Does the output resist the too_easy-skip
+      distractor (att_08): no difficulty RAISE, and no dial move justified by
+      the time-conversion rows?"}
+  - {id: c4, weight: 1, question: "Does the journal state the decomposed
+      evidence — time conversions clean and fast versus sight reduction
+      failing on the repeated sign error — rather than the aggregate accuracy
+      alone?"}
+references:
+  good:
+    insight_updates:
+      - op: create
+        id: null
+        key: nav.sight_reduction.declination_sign
+        text: "Declination sign flips (south treated as same-name) wreck every sight reduction; time conversions are fast and clean."
+        evidence: [att_02, att_03, att_07, att_09]
+        reason: "same sign_of_declination tag across the window"
+    strategy: null
+    plan_revision: null
+    questions: []
+    topic_retirements: []
+    journal: "Held both dials: the 0.43 window is topic-shaped — time conversions 4/4 and fast, sight reduction failing on a repeated declination sign error."
+  bad:
+    insight_updates: []
+    strategy:
+      difficulty: beginner
+      scaffolding: null
+      reason: "window accuracy 0.43 is below the 0.50 threshold"
+    plan_revision: null
+    questions: []
+    topic_retirements: []
+    journal: "Accuracy fell below half, so difficulty drops to beginner across the campaign."

@@ -1,0 +1,102 @@
+# JOINTLY-IMPLIED OPEN AXIS (deliberation): the learner profile answers
+# several axes explicitly — oral exam in three weeks (goal + deadline),
+# written-flashcards-only practice history (method), short-session
+# preference. TWO of the stated facts jointly imply the critical unknown:
+# an ORAL exam plus a purely WRITTEN practice history means real-time
+# spoken production and listening at speed are completely unmeasured — and
+# no insight states that gap. A shallow diagnostic re-asks the settled
+# facts ("what's your goal?", "when is the exam?", "do you like
+# flashcards?") or asks generic topic-interest filler; the right set
+# probes the implied axis directly.
+category: deliberation
+domain: italian
+scenario_context: |
+  Campaign "CILS B2 Prep" compiles 3 diagnostic questions for topic
+  italian. The LEARNER section states three facts: sitting the CILS B2
+  ORAL exam in three weeks (fixed date); has only ever practiced by
+  writing flashcards and reading graded readers (large written vocabulary,
+  easy grammar drills); prefers short twenty-minute morning sessions.
+  The oral exam and the writing-only history JOINTLY imply the open axis:
+  real-time spoken production and listening comprehension at native speed
+  — never stated as a gap anywhere.
+  Strong output: most questions probe that implied axis — last real
+  conversation and how it went, how much native-speed audio they catch,
+  how far they get speaking aloud unprepared — plus at most one other
+  genuinely open axis (speaking partners available, self-assessed spoken
+  level vs written).
+  Weak output: re-asks settled facts (goal, exam date, study method,
+  session preference) including narrowed rephrasings ("which flashcard app
+  do you use?"), or generic axis-coverage filler ("what topics interest
+  you?") that ignores what the stated facts jointly imply.
+seed:
+  campaign:
+    id: italian-cils
+    name: CILS B2 Prep
+    mission: "Pass the CILS Due B2 Italian certification with a comfortable margin, oral component included."
+    topics:
+      - {path: italian, kind: skill, summary: "Italian language toward CILS B2 certification"}
+      - {path: italian.oral, kind: skill, summary: "oral exam performance: monologue and examiner dialogue"}
+  insights:
+    - id: ins_goal
+      key: goal.cils_oral_exam
+      status: active
+      description: "Sitting the CILS B2 oral exam in three weeks; the date is fixed and cannot move."
+    - id: ins_method
+      key: practice.written_flashcards_only
+      status: active
+      description: "Has only ever practiced by writing flashcards and reading graded readers; written vocabulary is large and grammar drills feel easy."
+    - id: ins_pref
+      key: preference.short_sessions
+      status: active
+      description: "Prefers short daily sessions, about twenty minutes before work."
+steps:
+  - compile:
+      fn: diagnostic
+      topic_path: italian
+      n_items: 3
+judge_rubric:
+  - {id: c1, weight: 4, question: "Do at least two of the three questions
+      probe real-time spoken production or listening at native speed — the
+      axis jointly implied by an oral exam plus writing-only practice —
+      e.g. last spontaneous conversation, speaking aloud unprepared, how
+      much native-speed audio they catch?"}
+  - {id: c2, weight: 3, question: "Are there ZERO re-asks of settled facts
+      — nothing about the goal, the exam or its date, the flashcard/reading
+      habit, or session length — including narrowed or rephrased versions
+      of them?"}
+  - {id: c3, weight: 2, question: "Is each question ≤ 40 words, answerable
+      in one or two sentences, and calibrating in tone (no trick questions,
+      no grading pressure)?"}
+  - {id: c4, weight: 1, question: "Shape: exactly 3 items, every skill is
+      exactly 'diagnostic', every answer and rubric is null?"}
+references:
+  good:
+    items:
+      - prompt: "When did you last speak Italian out loud with another person, and how did it go — could you keep the conversation moving in real time?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "If you listen to a minute of Italian at native speed — radio or a video, no subtitles — roughly how much do you catch: the gist, most details, or almost nothing?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "Try describing your kitchen aloud in Italian right now, without writing anything first: how far do you get before you stall, and what stops you?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+    note: null
+  bad:
+    items:
+      - prompt: "What is your main goal with Italian, and is there a deadline you are working toward?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "Do you prefer studying with flashcards, apps, or textbooks, and how long are your usual study sessions?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "Which topics in Italian culture interest you most — food, travel, cinema, or something else?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+    note: null

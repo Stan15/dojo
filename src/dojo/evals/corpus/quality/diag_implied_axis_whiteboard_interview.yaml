@@ -1,0 +1,101 @@
+# JOINTLY-IMPLIED OPEN AXIS (deliberation), second domain: stated facts —
+# whiteboard-only onsite in two weeks (goal + format + deadline), practice
+# exclusively inside an IDE with autocomplete and instant test runs
+# (method), strong data-structure theory (ability, partially settled). The
+# whiteboard format and the IDE-only history JOINTLY imply the critical
+# unknown: producing and verifying code BY HAND with no execution
+# feedback, while narrating reasoning aloud — never stated as a gap. A
+# shallow diagnostic re-asks the interview/date/volume facts or quizzes
+# already-settled theory ("what's quicksort's complexity?"); the right set
+# probes hand-written coding, hand-tracing verification, and
+# thinking-aloud experience.
+category: deliberation
+domain: coding-interviews
+scenario_context: |
+  Campaign "Onsite Prep" compiles 3 diagnostic questions for topic
+  interviews.algorithms. The LEARNER section states: onsite interview in
+  two weeks with recruiter-confirmed whiteboard-only coding rounds (no
+  laptop); has only ever practiced in an IDE with autocomplete and
+  instant test runs, about two problems a day; data-structure theory is
+  strong — states complexities and standard algorithms from memory.
+  The whiteboard format plus the IDE-only history JOINTLY imply the open
+  axis: writing correct code by hand with no compiler or test feedback,
+  verifying by hand-tracing, and narrating reasoning aloud while writing
+  — never stated as a gap.
+  Strong output: questions probe exactly that — experience writing full
+  solutions on paper/whiteboard, how they check code without running it,
+  whether they can think aloud while coding or go silent.
+  Weak output: re-asks settled facts (interview date, format, daily
+  problem volume, preferred practice tool) or quizzes settled theory
+  strength (complexity trivia), or generic filler ("which languages do
+  you know?") that ignores what the stated facts jointly imply.
+seed:
+  campaign:
+    id: onsite-prep
+    name: Onsite Prep
+    mission: "Clear a whiteboard-heavy software interview onsite loop and convert it into an offer."
+    topics:
+      - {path: interviews, kind: skill, summary: "software interview performance"}
+      - {path: interviews.algorithms, kind: skill, summary: "algorithm problems under interview conditions"}
+  insights:
+    - id: ins_goal
+      key: goal.onsite_whiteboard
+      status: active
+      description: "Onsite in two weeks; the recruiter confirmed whiteboard-only coding rounds — no laptop, no editor."
+    - id: ins_method
+      key: practice.ide_test_loop_only
+      status: active
+      description: "Has only ever practiced in an IDE with autocomplete and instant test runs; solves about two problems a day this way."
+    - id: ins_strength
+      key: knowledge.ds_theory_strong
+      status: active
+      description: "Data-structure theory is strong: states complexities and standard algorithms from memory without hesitation."
+steps:
+  - compile:
+      fn: diagnostic
+      topic_path: interviews.algorithms
+      n_items: 3
+judge_rubric:
+  - {id: c1, weight: 4, question: "Do at least two of the three questions
+      probe no-execution-feedback coding — writing solutions by hand on
+      paper or a board, verifying by hand-tracing instead of running, or
+      narrating reasoning aloud while writing?"}
+  - {id: c2, weight: 3, question: "Are there ZERO re-asks of settled facts
+      — nothing about the interview date or format, daily problem volume,
+      or IDE habits as such — and no quizzing of already-settled theory
+      strength (e.g. complexity trivia)?"}
+  - {id: c3, weight: 2, question: "Is each question ≤ 40 words, answerable
+      in one or two sentences, calibrating in tone rather than testing?"}
+  - {id: c4, weight: 1, question: "Shape: exactly 3 items, every skill is
+      exactly 'diagnostic', every answer and rubric is null?"}
+references:
+  good:
+    items:
+      - prompt: "Have you ever written a complete solution on paper or a whiteboard, then checked it purely by hand-tracing instead of running it? How did that go?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "While working through a problem, can you narrate your reasoning out loud as you write, or do you tend to go silent until the code works?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "Without running anything: how confident are you that a first handwritten draft of yours handles edge cases — and what do you actually do to check?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+    note: null
+  bad:
+    items:
+      - prompt: "When is your interview, and what format will the coding rounds take?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "What is the time complexity of quicksort in the average and worst case?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+      - prompt: "How many practice problems do you solve per day, and which platform do you prefer to use?"
+        answer: null
+        rubric: null
+        skill: diagnostic
+    note: null

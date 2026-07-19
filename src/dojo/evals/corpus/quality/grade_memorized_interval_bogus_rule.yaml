@@ -1,0 +1,84 @@
+# RIGHT-RESULT-BROKEN-METHOD (deliberation): the learner names the correct
+# interval ("minor sixth" — plausibly memorized) but justifies the quality
+# with an invented rule ("sixths above E are always minor") and never counts
+# semitones, which the rubric makes the required derivation. A pattern-
+# completing grader keys on the correct name and awards 1.0; the right grade
+# composes: result correct + derivation invalid/missing + rubric wording that
+# scores an underived quality as core-wrong (0.3).
+category: deliberation
+domain: music
+scenario_context: |
+  An interval-naming attempt where the final name is correct (minor sixth)
+  and the letter count is genuinely right (E F G A B C = 6 letters), but
+  the quality is justified by a fabricated rule — "sixths above E are
+  always minor" — instead of the semitone count the rubric demands (8
+  semitones -> minor; 9 would be major). The rubric states the quality must
+  be DERIVED from the semitone count and that a correct name with an
+  invalid or missing derivation scores core-wrong. Strong output: score
+  0.3, evidence quoting the invented rule verbatim (not the correct
+  interval name), an error_tag naming the flaw (invented rule / no semitone
+  count), feedback that teaches counting semitones rather than confirming
+  the name. Weak output: score 1.0 or 0.7 because the name matches,
+  evidence quoting "minor sixth", null error_tag, feedback praising the
+  result.
+seed:
+  campaign:
+    id: music-theory-core
+    name: Music Theory Core
+    mission: "Read and name intervals, chords, and keys fluently from first principles."
+    topics:
+      - {path: music.intervals, kind: skill, summary: "interval naming by letter count plus semitone count"}
+  exercise:
+    id: ex_e_to_c
+    topic_path: music.intervals
+    difficulty: beginner
+    kind: skill
+    prompt: "Name the ascending interval from E up to the C above it. Show BOTH checks: the letter-name count that gives the interval number, and the semitone count that gives the quality."
+    answer: "minor sixth"
+    rubric: |
+      - final answer: minor sixth
+      - letter count shown: E F G A B C = 6 letter names -> a sixth
+      - semitone count shown: E up to C = 8 semitones -> minor (a major sixth is 9)
+      - the quality MUST be derived from the semitone count; a correct name with
+        an invalid or missing derivation scores as core-wrong (0.3)
+  attempts:
+    - id: att_trap
+      session_id: s1
+      exercise_id: ex_e_to_c
+      score: 0.0
+      latency_seconds: 95.0
+      grader: null
+      prompt: "Name the ascending interval from E up to the C above it. Show BOTH checks: the letter-name count that gives the interval number, and the semitone count that gives the quality."
+      user_answer: "E F G A B C is six letter names, so it is a sixth. Sixths above E are always minor because E is a sharp-side note, so the answer is a minor sixth."
+steps:
+  - compile:
+      fn: grade
+      attempt_id: att_trap
+judge_rubric:
+  - {id: c1, weight: 4, question: "Is the score exactly 0.3 — not 1.0 or 0.7 —
+      because the rubric requires the quality to be derived from a semitone
+      count and the answer instead uses an invented rule ('sixths above E are
+      always minor'), even though 'minor sixth' is the right name?"}
+  - {id: c2, weight: 3, question: "Does evidence quote the bogus justification
+      verbatim (some part of 'Sixths above E are always minor' / 'sharp-side
+      note') rather than the correct name 'minor sixth' or the correct letter
+      count?"}
+  - {id: c3, weight: 2, question: "Is error_tag a non-null 2-4 word label naming
+      the method flaw (invented rule, missing semitone count, unjustified
+      quality) rather than null?"}
+  - {id: c4, weight: 1, question: "Does feedback credit the correct letter count,
+      then teach the real derivation (E to C is 8 semitones, one short of a
+      major sixth) instead of confirming the answer?"}
+references:
+  good:
+    score: 0.3
+    evidence: "Sixths above E are always minor"
+    feedback: "Your letter count to a sixth is right. Quality comes from counting semitones — E to C is 8, one below a major sixth — not from a rule about E."
+    error_tag: "invented quality rule"
+    knowledge_gap: false
+  bad:
+    score: 1.0
+    evidence: "minor sixth"
+    feedback: "Correct — E up to C is a minor sixth, and you showed your counting clearly."
+    error_tag: null
+    knowledge_gap: false

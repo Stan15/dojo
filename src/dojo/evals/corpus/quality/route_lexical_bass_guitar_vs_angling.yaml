@@ -1,0 +1,79 @@
+# LEXICAL-MATCH CAMPAIGN vs SEMANTIC OWNER (trap): the capture's headline
+# token "bass" is literally the ROOT NAMESPACE of one campaign's topic tree
+# (Bass Guitar Foundations: bass, bass.technique, bass.scales), but the
+# capture is about largemouth bass — the fish — and belongs to Freshwater
+# Angling (fishing.species_behavior). Shallow token matching attaches to the
+# bass.* music namespace; a semantic router files it under fishing.
+category: deliberation
+domain: angling
+scenario_context: |
+  The registry holds two campaigns. Bass Guitar Foundations owns the literal
+  bass.* namespace (bass.technique, bass.scales); Freshwater Angling owns
+  fishing.rigs and fishing.species_behavior. The capture describes where
+  largemouth bass hold in summer and a presentation that draws strikes: its
+  WORDS match the guitar campaign's name and root topic token, but its
+  MEANING is fish behavior and rig presentation. Strong output: attach (or
+  new_topic) inside freshwater-angling on a fishing path —
+  fishing.species_behavior or fishing.rigs copied verbatim, or a clean
+  lowercase leaf under one of them — with seed true (a testable holding
+  pattern and technique) and a reason grounded in the content. Weak output:
+  attaches into the bass.* guitar namespace because the token matches,
+  proposes a redundant new campaign, or stays in the inbox for material the
+  angling campaign clearly owns.
+seed:
+  campaign:
+    id: bass-guitar-foundations
+    name: Bass Guitar Foundations
+    mission: "Hold down a groove: fingerstyle technique, scales, and timing on bass guitar."
+    topics:
+      - {path: bass, kind: skill, summary: "bass guitar playing"}
+      - {path: bass.technique, kind: skill, summary: "fingerstyle plucking and muting"}
+      - {path: bass.scales, kind: recall, summary: "major and minor patterns across the neck"}
+  campaigns:
+    - id: freshwater-angling
+      name: Freshwater Angling
+      mission: "Read water and pick presentations that catch fish year-round."
+      topics:
+        - {path: fishing, kind: skill, summary: "freshwater angling"}
+        - {path: fishing.rigs, kind: skill, summary: "tying and fishing common rigs"}
+        - {path: fishing.species_behavior, kind: recall, summary: "where each species holds and when it feeds"}
+  captures:
+    - id: cap_bass
+      text: "In high summer sun, largemouth bass tuck tight under dock shade lines. A wacky-rigged senko pitched past the edge and left to fall on slack line draws the strike when nothing else moves."
+steps:
+  - compile:
+      fn: route
+      capture_id: cap_bass
+      capture_text: "In high summer sun, largemouth bass tuck tight under dock shade lines. A wacky-rigged senko pitched past the edge and left to fall on slack line draws the strike when nothing else moves."
+judge_rubric:
+  - {id: c1, weight: 4, question: "Does the route land inside campaign
+      freshwater-angling (attach or new_topic), NOT bass-guitar-foundations,
+      despite the shared token 'bass'?"}
+  - {id: c2, weight: 3, question: "Is topic_path an existing fishing path
+      copied verbatim (fishing.species_behavior or fishing.rigs) or a clean
+      lowercase dotted leaf grown under one of them — never a bass.* music
+      path?"}
+  - {id: c3, weight: 2, question: "Is seed true, since the shade-line
+      holding pattern and slack-line senko presentation are testable?"}
+  - {id: c4, weight: 1, question: "Does the short reason invoke the
+      capture's meaning (fish behavior, presentation) rather than mere word
+      overlap with the guitar campaign?"}
+references:
+  good:
+    action: attach
+    campaign: freshwater-angling
+    topic_path: fishing.species_behavior
+    new_name: null
+    new_mission: null
+    confidence: high
+    reason: "largemouth holding pattern and presentation; angling, not music"
+    seed: true
+  bad:
+    action: attach
+    campaign: bass-guitar-foundations
+    topic_path: bass.technique
+    new_name: null
+    new_mission: null
+    confidence: high
+    reason: "capture mentions bass"
+    seed: false

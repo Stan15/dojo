@@ -1,0 +1,105 @@
+# INSIGHT-COLLISION ENGINEERING (deliberation), second domain: the three
+# active constraints pull item design in opposite directions. Insight A
+# (LEFT JOIN silently collapsed to INNER by WHERE filters on the right
+# table) begs for a schema + query + prediction task; insight B demands a
+# tiny CONCRETE dataset with visible rows (abstract table_a/table_b loses
+# the learner); insight C caps effective prompt length (~60 words) and
+# forbids multi-part. Concrete rows cost words — a shallow generator either
+# goes abstract (violates B), dumps a long multi-query drill (violates C),
+# or writes short generic definition items (ignores A). The right set packs
+# a 2-3 row dataset, one single-task question, and the WHERE-collapse trap
+# into every compact item.
+category: deliberation
+domain: sql
+scenario_context: |
+  Campaign "SQL Fluency" requests 3 exercises for topic sql.joins.outer at
+  intermediate difficulty. Three ACTIVE learner constraints collide: (A)
+  treats LEFT JOIN as INNER JOIN — puts filters on right-table columns in
+  WHERE and never notices unmatched rows vanishing; (B) gets lost in
+  abstract schemas — reasons reliably only over a tiny dataset with
+  visible rows; (C) abandons prompts longer than about sixty words, and
+  abandons multi-part items.
+  Strong output: every item shows 2-3 literal rows of named data, asks
+  exactly ONE thing, stays around sixty words or fewer, and at least one
+  item makes the learner confront the WHERE-on-right-table collapse
+  (predict the vanishing row, or fix it by moving the filter to ON).
+  Weak output: abstract "tables A and B with a foreign key" phrasing, a
+  multi-query showcase item ("write three queries demonstrating each join
+  and explain when..."), long prompts, or short items that only ask for
+  textbook definitions and never touch the recorded confusion.
+seed:
+  campaign:
+    id: sql-fluency
+    name: SQL Fluency
+    mission: "Write correct analytical SQL against production-style data without a safety net or a second reviewer."
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+    topics:
+      - {path: sql, kind: skill, summary: "practical analytical SQL"}
+      - {path: sql.joins, kind: skill, summary: "join types and join semantics"}
+      - {path: sql.joins.outer, kind: skill, summary: "outer join NULL handling; ON vs WHERE filter placement"}
+  insights:
+    - id: ins_leftinner
+      key: joins.left_where_collapse
+      status: active
+      description: "Treats LEFT JOIN as INNER JOIN: filters right-table columns in WHERE and never notices unmatched rows vanishing, especially when moving fast."
+    - id: ins_concrete
+      key: format.abstract_schema_loss
+      status: active
+      description: "Gets lost in abstract schemas (table_a, table_b): reasons reliably only when a tiny dataset with visible rows is in front of them."
+    - id: ins_length
+      key: format.long_prompt_fatigue
+      status: active
+      description: "Abandons prompts longer than about sixty words midway; quality collapses on long or multi-part items."
+steps:
+  - compile:
+      fn: generate
+      difficulty: intermediate
+      topic_path: sql.joins.outer
+      n_items: 3
+judge_rubric:
+  - {id: c1, weight: 4, question: "Does EVERY item include a tiny concrete
+      dataset with literal, visible row values (named people/numbers), never
+      abstract placeholders like 'tables A and B with a foreign key'?"}
+  - {id: c2, weight: 3, question: "Does at least one item confront the
+      WHERE-on-right-table LEFT JOIN collapse concretely — predicting which
+      rows vanish, or moving the filter from WHERE to ON — rather than only
+      asking for join definitions?"}
+  - {id: c3, weight: 2, question: "Is every prompt one single task, roughly
+      sixty words or fewer — no multi-query showcases, no stacked
+      sub-questions, no long schema dumps?"}
+  - {id: c4, weight: 1, question: "Shape: exactly 3 items, every item
+      carries prompt/answer/rubric/skill with a valid skill word, answers
+      within the word cap, no prompt leaking its own answer?"}
+references:
+  good:
+    items:
+      - prompt: "users: (1, ana), (2, bo), (3, cy). orders: (user 1, total 50), (user 3, total 20). Query: SELECT name FROM users LEFT JOIN orders ON id = user_id WHERE total > 10. Which names come back?"
+        answer: "Only ana and cy. bo has no order, so total is NULL, and NULL fails total > 10 — the WHERE filter collapses the LEFT JOIN into an INNER JOIN."
+        rubric: "- says bo disappears\n- explains the NULL row failing the WHERE predicate"
+        skill: apply
+      - prompt: "users: (1, ana), (2, bo). orders: (user 1, total 80). Rewrite this query so bo still appears with a NULL total: SELECT name, total FROM users LEFT JOIN orders ON id = user_id WHERE total > 50."
+        answer: "Move the filter into the join condition: SELECT name, total FROM users LEFT JOIN orders ON id = user_id AND total > 50."
+        rubric: "- filter moved from WHERE to ON\n- keeps the LEFT JOIN so bo survives"
+        skill: produce
+      - prompt: "In one sentence: why does a WHERE filter on a right-table column quietly turn a LEFT JOIN into an INNER JOIN?"
+        answer: "Unmatched left rows carry NULL in every right-table column, and NULL fails the WHERE comparison, so exactly the rows the LEFT JOIN preserved get dropped."
+        rubric: "- mentions NULL in right-table columns\n- links NULL failing the predicate to losing preserved rows"
+        skill: explain
+    note: null
+    intervention: null
+  bad:
+    items:
+      - prompt: "Given two tables A and B where B references A through a foreign key, write three queries demonstrating INNER JOIN, LEFT JOIN, and RIGHT JOIN respectively, then explain in a short paragraph when each join type is appropriate and how NULL handling differs across all three of them."
+        answer: "INNER returns matches only; LEFT keeps all of A with NULLs for missing B; RIGHT keeps all of B. Use INNER for strict matches, outer joins to preserve unmatched rows."
+        rubric: "- three syntactically valid queries\n- paragraph covers NULL handling"
+        skill: produce
+      - prompt: "What is the difference between an INNER JOIN and a LEFT JOIN?"
+        answer: "INNER JOIN returns only matching rows; LEFT JOIN also keeps unmatched left rows with NULLs on the right."
+        rubric: "- states both behaviors"
+        skill: recall
+      - prompt: "Consider a schema with table_a (pk, val) and table_b (fk, amount). Describe the result of LEFT JOIN between them, the result of adding WHERE amount > 0, and the result of moving that predicate into ON."
+        answer: "The bare LEFT JOIN keeps all table_a rows; WHERE amount > 0 drops the NULL rows; in ON the filter applies before preservation, so unmatched rows survive."
+        rubric: "- covers all three cases"
+        skill: explain
+    note: null
+    intervention: null

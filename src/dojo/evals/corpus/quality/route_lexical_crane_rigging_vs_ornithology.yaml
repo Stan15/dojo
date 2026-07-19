@@ -1,0 +1,81 @@
+# LEXICAL-MATCH CAMPAIGN vs SEMANTIC OWNER (trap): the capture's headline
+# token "crane" appears in one campaign's NAME and topic paths (Crane
+# Operator Prep: rigging.crane_setup, rigging.crane_load_charts), but the
+# capture's meaning — migration staging and a crane-vs-heron flight field
+# mark — belongs to the OTHER campaign (Field Ornithology). Shallow token
+# matching routes to the rigging campaign; a semantic router files it under
+# birds.
+category: deliberation
+domain: ornithology
+scenario_context: |
+  The registry holds two campaigns. Crane Operator Prep owns
+  rigging.crane_setup and rigging.crane_load_charts; Field Ornithology owns
+  birds.identification and birds.migration. The capture describes sandhill
+  crane migration staging and how to tell a crane from a heron in flight:
+  its WORDS match the operator campaign (the token "crane" sits in its name
+  and topic paths) but its MEANING is bird identification and migration.
+  Strong output: attach (or new_topic) inside field-ornithology on a birds
+  path — birds.identification or birds.migration copied verbatim, or a
+  clean lowercase leaf under one of them — with seed true (the
+  necks-extended-vs-folded field mark is testable) and a reason grounded in
+  the content. Weak output: routes to crane-operator-prep because the token
+  "crane" matches, proposes a redundant new campaign, or stays in the inbox
+  for material ornithology clearly owns.
+seed:
+  campaign:
+    id: crane-operator-prep
+    name: Crane Operator Prep
+    mission: "Pass the mobile crane operator certification: setup, load charts, hand signals."
+    topics:
+      - {path: rigging, kind: skill, summary: "mobile crane operations"}
+      - {path: rigging.crane_setup, kind: skill, summary: "outriggers, leveling, ground bearing pressure"}
+      - {path: rigging.crane_load_charts, kind: recall, summary: "reading load charts and working ranges"}
+  campaigns:
+    - id: field-ornithology
+      name: Field Ornithology
+      mission: "Identify local birds by sight, call, and behavior in the field."
+      topics:
+        - {path: birds, kind: skill, summary: "field identification"}
+        - {path: birds.identification, kind: skill, summary: "field marks by family"}
+        - {path: birds.migration, kind: recall, summary: "timing and staging of migratory flights"}
+  captures:
+    - id: cap_cranes
+      text: "Sandhill cranes stage on the Platte River by the hundred thousand each March. In flight you separate a crane from a heron instantly: cranes fly with necks fully extended, herons pull the neck back into a tight S-fold."
+steps:
+  - compile:
+      fn: route
+      capture_id: cap_cranes
+      capture_text: "Sandhill cranes stage on the Platte River by the hundred thousand each March. In flight you separate a crane from a heron instantly: cranes fly with necks fully extended, herons pull the neck back into a tight S-fold."
+judge_rubric:
+  - {id: c1, weight: 4, question: "Does the route land inside campaign
+      field-ornithology (attach or new_topic), NOT crane-operator-prep,
+      despite the shared token 'crane'?"}
+  - {id: c2, weight: 3, question: "Is topic_path an existing birds path
+      copied verbatim (birds.identification or birds.migration) or a clean
+      lowercase dotted leaf grown under one of them — never a rigging
+      path?"}
+  - {id: c3, weight: 2, question: "Is seed true, since the
+      necks-extended-vs-folded field mark and the March staging fact are
+      testable?"}
+  - {id: c4, weight: 1, question: "Does the short reason invoke the
+      capture's meaning (bird identification or migration) rather than mere
+      word overlap with the crane campaign?"}
+references:
+  good:
+    action: attach
+    campaign: field-ornithology
+    topic_path: birds.identification
+    new_name: null
+    new_mission: null
+    confidence: high
+    reason: "crane-vs-heron field mark; bird identification, not rigging"
+    seed: true
+  bad:
+    action: attach
+    campaign: crane-operator-prep
+    topic_path: rigging.crane_setup
+    new_name: null
+    new_mission: null
+    confidence: high
+    reason: "capture is about cranes"
+    seed: false

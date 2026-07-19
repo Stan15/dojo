@@ -1,0 +1,87 @@
+# DEADLINE-FORCES-CUTTING-THE-DEPENDENCY-ROOT (trap): the learner volunteers
+# the foundational topic ("boring bookkeeping") as the deadline cut. But every
+# sight reduction is arithmetically impossible without chronometer time +
+# almanac lookup (UT, GHA, declination) — the obvious compression severs the
+# dependency chain the deadline goal needs. The right plan keeps that small
+# recall root and cuts sight-type BREADTH instead (deadline pressure +
+# dependency reasoning + minimal-scope rule composed).
+category: deliberation
+domain: navigation
+scenario_context: |
+  Goal with a hard 3-week deadline: fix a boat's position offshore by sextant
+  for a Yachtmaster Ocean assessment. The learner lists broad wants (sun,
+  star, moon and planet sights, running fixes, compass checks by amplitude)
+  and explicitly offers the time-correction/nautical-almanac material as the
+  thing to cut. Strong output: a compressed sun-sight-only plan that KEEPS a
+  small chronometer-time-and-almanac recall topic as the root of the chain,
+  absorbs the deadline by cutting breadth (no star sights, no moon/planet
+  sights, no compass amplitude), stays well under the topic cap, and names
+  the trade-off in the mission. Weak output: obeys the learner's suggested
+  cut — time/almanac absent while sight-type breadth survives — or pads a
+  full survey of every sight type despite the deadline.
+seed:
+  campaign:
+    id: spanish-verb-drills
+    name: Spanish Verb Drills
+    mission: "Conjugate high-frequency Spanish verbs accurately in conversation."
+    topics:
+      - {path: spanish.verbs, kind: recall, summary: "high-frequency conjugations"}
+steps:
+  - compile:
+      fn: plan
+      goal: "My Yachtmaster Ocean assessment is in 3 weeks: I must fix a boat's position offshore with a sextant. I want sun sights, star sights, moon and planet sights, running fixes, and compass checks by amplitude. The nautical almanac and chronometer time-correction material feels like boring bookkeeping - that is the first thing I would cut. Trim whatever you must to make the deadline."
+judge_rubric:
+  - {id: c1, weight: 4, question: "Does the topic list keep a chronometer-time
+      / nautical-almanac foundation topic (kind recall), even though the
+      learner offered it as the thing to cut?"}
+  - {id: c2, weight: 3, question: "Was the deadline absorbed by cutting
+      breadth — star sights, moon/planet sights, and compass amplitude are
+      absent — rather than by dropping that foundation?"}
+  - {id: c3, weight: 2, question: "Is the plan minimal and well-formed:
+      roughly 6 or fewer topics, lowercase dotted paths no deeper than 4
+      levels, every phase topic declared, and phase 1 a calibration with
+      min_accuracy 0?"}
+  - {id: c4, weight: 1, question: "Does the mission state the ability (fix a
+      position by sun sight) and name the deadline trade-off, rather than
+      listing coverage?"}
+references:
+  good:
+    mission: "Fix the boat's position offshore by sun sight alone before the assessment: correct chronometer time, reduce the sight, and plot a running fix. Star, planet, and compass work are cut for the deadline."
+    name: "Sun Sight Navigator"
+    topics:
+      - {path: celestial.time_and_almanac, kind: recall, summary: "chronometer error, UT, GHA and declination lookup; every sight reduction depends on it"}
+      - {path: celestial.sextant.sun_sight, kind: skill, summary: "taking and correcting a sun altitude: index error, dip, refraction"}
+      - {path: celestial.sight_reduction, kind: skill, summary: "from corrected altitude and time to intercept and azimuth"}
+      - {path: celestial.plotting.running_fix, kind: skill, summary: "advancing a position line to cross a later sun sight"}
+    phases:
+      - topics: [celestial.time_and_almanac, celestial.sextant.sun_sight]
+        criteria: {min_attempts: 5, min_accuracy: 0.0}
+        focus: "calibration: measure current time discipline and sextant familiarity"
+      - topics: [celestial.time_and_almanac, celestial.sextant.sun_sight]
+        criteria: {min_attempts: 10, min_accuracy: 0.7}
+        focus: "time and almanac lookups feeding clean corrected altitudes"
+      - topics: [celestial.sight_reduction, celestial.plotting.running_fix]
+        criteria: {min_attempts: 12, min_accuracy: 0.7}
+        focus: "full chain: sight to intercept to plotted running fix"
+    refinement_questions:
+      - "Do you have a sextant and current almanac aboard to practice with?"
+  bad:
+    mission: "Learn celestial navigation: sun, star, moon and planet sights, running fixes, and compass checks by amplitude, in three weeks."
+    name: "Celestial Navigation Course"
+    topics:
+      - {path: celestial.sextant.sun_sight, kind: skill, summary: "sun altitudes"}
+      - {path: celestial.sextant.star_sights, kind: skill, summary: "twilight star sights"}
+      - {path: celestial.sextant.moon_planet_sights, kind: skill, summary: "moon and planet sights"}
+      - {path: celestial.plotting.running_fix, kind: skill, summary: "running fixes"}
+      - {path: celestial.compass_amplitude, kind: skill, summary: "compass checks by amplitude"}
+    phases:
+      - topics: [celestial.sextant.sun_sight]
+        criteria: {min_attempts: 5, min_accuracy: 0.0}
+        focus: "calibration"
+      - topics: [celestial.sextant.sun_sight, celestial.sextant.star_sights]
+        criteria: {min_attempts: 10, min_accuracy: 0.7}
+        focus: "daytime and twilight sights"
+      - topics: [celestial.sextant.moon_planet_sights, celestial.plotting.running_fix, celestial.compass_amplitude]
+        criteria: {min_attempts: 12, min_accuracy: 0.7}
+        focus: "everything else"
+    refinement_questions: []

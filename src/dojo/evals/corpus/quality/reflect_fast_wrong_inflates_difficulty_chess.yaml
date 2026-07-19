@@ -1,0 +1,121 @@
+# AGGREGATE-VS-DECOMPOSITION + DISTRACTOR (deliberation): window accuracy is
+# 0.43 — the shallow read fires "below 0.50 -> lower difficulty" and calls the
+# material too hard. Decomposed by LATENCY the aggregate is a lie: every miss
+# lands in 5-9 seconds, every success takes 65-110 seconds — the template's
+# earlier rule ("misses fast while successes are slow -> rushing: insight +
+# scaffolding high, difficulty unchanged") must win over the later aggregate
+# clause, because first matching case wins. DISTRACTOR: a salient 1.0 row
+# carries hearsay feedback ("a friend says most club players skip king-and-
+# pawn endings") inviting an unrelated topic retirement — but retirement
+# needs the learner's OWN care-exit or months-scale over-mastery, not a
+# friend's opinion in one row.
+category: deliberation
+domain: chess
+scenario_context: |
+  Ten recent attempts in a chess-endgames campaign. Aggregate window
+  accuracy is 0.43 — but the latency decomposition shows every miss was
+  answered in under ten seconds while every success took over a minute:
+  rushing, a process problem, with the slow successes proving the content
+  is within reach. One salient row (att_09, a 1.0) carries feedback quoting
+  a friend's advice to skip king-and-pawn endings. Strong output:
+  difficulty HELD, scaffolding set high (or a rushing insight with dials
+  held), a create insight naming the fast-wrong/slow-right split citing 2+
+  fast-miss ids, empty topic_retirements, journal citing the seconds.
+  Weak output: difficulty lowered to beginner off the 0.43 aggregate
+  ("endgames too hard"), and/or chess.king_pawn retired on the strength of
+  the hearsay row, no process insight, journal citing only the average.
+seed:
+  campaign:
+    id: chess-endgames
+    name: Chess Endgames
+    mission: "Convert winning endgames reliably: rook endings and king-and-pawn endings calculated to the end."
+    strategy_profile:
+      difficulty: intermediate
+      scaffolding: medium
+    topics:
+      - {path: chess.rook_endgames, kind: skill, summary: "Lucena, Philidor, cutting off the king"}
+      - {path: chess.king_pawn, kind: skill, summary: "opposition, key squares, breakthrough"}
+    attack_plan:
+      - topics: [chess.rook_endgames, chess.king_pawn]
+        criteria: {min_attempts: 12, min_accuracy: 0.7}
+        focus: "calculate to the final position before answering"
+  attempts:
+    - {id: att_01, session_id: s1, exercise_id: ex_rook_a, score: 0.0, latency_seconds: 7,
+       prompt: "White: Kf5, Rf1, pawn e5 vs Ke7, Ra8. Best plan?", user_answer: "Push the pawn immediately.",
+       created_at: "2026-07-17T20:00:00+00:00"}
+    - {id: att_02, session_id: s1, exercise_id: ex_rook_b, score: 1.0, latency_seconds: 95,
+       prompt: "Set up the Lucena bridge from this position.", user_answer: "Rook to the fourth rank first, king out via the file, then the bridge blocks the checks.",
+       created_at: "2026-07-17T20:05:00+00:00"}
+    - {id: att_03, session_id: s1, exercise_id: ex_kp_a, score: 0.0, latency_seconds: 6,
+       prompt: "Kings on e4/e6, white pawn d4. White to move — result?", user_answer: "White wins, just push.",
+       created_at: "2026-07-17T20:07:00+00:00"}
+    - {id: att_04, session_id: s1, exercise_id: ex_rook_c, score: 0.0, latency_seconds: 8,
+       prompt: "Philidor position, black to move. Correct defense?", user_answer: "Check from behind forever.",
+       created_at: "2026-07-17T20:09:00+00:00"}
+    - {id: att_05, session_id: s1, exercise_id: ex_kp_b, score: 1.0, latency_seconds: 70,
+       prompt: "Explain why taking the opposition draws here.", user_answer: "The defending king mirrors every advance, so the pawn can never queen — I walked each square to check.",
+       created_at: "2026-07-17T20:14:00+00:00"}
+    - {id: att_06, session_id: s2, exercise_id: ex_rook_d, score: 1.0, latency_seconds: 110,
+       prompt: "Rook ending: cut off the king along which file and why?", user_answer: "The f-file — I counted the king's tempi to the pawn and the cut wins the race by one move.",
+       created_at: "2026-07-18T20:00:00+00:00"}
+    - {id: att_07, session_id: s2, exercise_id: ex_kp_c, score: 0.3, latency_seconds: 5,
+       prompt: "Name the key squares for a d5 pawn.", user_answer: "d6 and the ones next to it.",
+       created_at: "2026-07-18T20:02:00+00:00"}
+    - {id: att_08, session_id: s2, exercise_id: ex_rook_e, score: 0.0, latency_seconds: 9,
+       prompt: "Short side or long side for the defending king here?", user_answer: "Long side, more room.",
+       created_at: "2026-07-18T20:04:00+00:00"}
+    - {id: att_09, session_id: s2, exercise_id: ex_kp_d, score: 1.0, latency_seconds: 82,
+       prompt: "Breakthrough position: find the winning pawn sacrifice.", user_answer: "b6 first — I calculated both captures to the end, only b6 queens.",
+       feedback: "a friend says most club players just skip king-and-pawn endings entirely",
+       created_at: "2026-07-18T20:09:00+00:00"}
+    - {id: att_10, session_id: s2, exercise_id: ex_rook_f, score: 0.0, latency_seconds: 6,
+       prompt: "Is this rook ending won or drawn for White?", user_answer: "Won, extra pawn.",
+       created_at: "2026-07-18T20:11:00+00:00"}
+steps:
+  - compile:
+      fn: reflect
+judge_rubric:
+  - {id: c1, weight: 4, question: "Does the output HOLD difficulty (no move to
+      beginner) and treat the window as rushing — scaffolding set high and/or
+      a process insight — instead of concluding from the 0.43 aggregate that
+      the material is too hard?"}
+  - {id: c2, weight: 3, question: "Is there an insight naming the fast-wrong /
+      slow-right split (answering before calculating), citing at least two of
+      the fast misses att_01, att_03, att_04, att_07, att_08, att_10?"}
+  - {id: c3, weight: 2, question: "Is topic_retirements empty — the hearsay
+      feedback on att_09 (a friend's opinion, on a row the learner got RIGHT)
+      is not the learner's own care-exit and TRENDS shows no sustained
+      over-mastery?"}
+  - {id: c4, weight: 1, question: "Does the journal cite the seconds pattern
+      (misses under ten seconds, successes over a minute) rather than the
+      aggregate accuracy alone?"}
+references:
+  good:
+    insight_updates:
+      - op: create
+        id: null
+        key: process.rushing
+        text: "Every miss lands in under ten seconds while wins take over a minute: answering before calculating."
+        evidence: [att_01, att_03, att_04, att_08, att_10]
+        reason: "fast-wrong slow-right split across both topics"
+    strategy:
+      difficulty: null
+      scaffolding: high
+      reason: "rushing is a process problem; slow successes show content is within reach"
+    plan_revision: null
+    questions: []
+    topic_retirements: []
+    journal: "Scaffolding to high, difficulty held: every miss under ten seconds, every success over a minute — rushing, not overload. No retirement on hearsay."
+  bad:
+    insight_updates: []
+    strategy:
+      difficulty: beginner
+      scaffolding: null
+      reason: "accuracy 0.43 — endgames are too hard right now"
+    plan_revision: null
+    questions: []
+    topic_retirements:
+      - path: chess.king_pawn
+        reason: "most club players skip these anyway"
+        evidence: [att_09]
+    journal: "Lowered difficulty to beginner and retired king-and-pawn endings per the feedback."

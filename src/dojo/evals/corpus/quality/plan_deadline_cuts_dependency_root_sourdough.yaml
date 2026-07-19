@@ -1,0 +1,89 @@
+# DEADLINE-FORCES-CUTTING-THE-DEPENDENCY-ROOT (trap): the learner's stated
+# problem IS a fermentation-prediction problem ("loaves come out different
+# every bake"), yet they volunteer starter-feeding/fermentation microbiology
+# as "homework" to cut. Proof judgment, shaping consistency, and a market-day
+# schedule all sit downstream of predicting starter activity from feeding
+# ratio and temperature — the obvious compression cuts the root the goal
+# depends on. The right plan keeps that small root and cuts product breadth
+# (bagels, focaccia, scoring art, flour tour) instead.
+category: deliberation
+domain: baking
+scenario_context: |
+  Goal with a hard 2-week deadline: consistently proofed sourdough loaves for
+  a farmers'-market pop-up. The learner also wants bagels, focaccia,
+  decorative scoring, and a heritage-flour tour, and explicitly offers the
+  starter-feeding/fermentation-microbiology material as the thing to cut.
+  Strong output: a compressed loaves-only plan that KEEPS a small
+  starter-health/fermentation recall topic as the root (consistency is
+  impossible without predicting fermentation from feeding ratio and
+  temperature), absorbs the deadline by cutting product breadth (no bagels,
+  focaccia, scoring art, or flour tour), and names the trade-off in the
+  mission. Weak output: obeys the learner's suggested cut — starter and
+  fermentation absent while bagels/focaccia/scoring survive — or pads a
+  survey of every product despite the deadline.
+seed:
+  campaign:
+    id: touch-typing-drills
+    name: Touch Typing Drills
+    mission: "Type 70 words per minute without looking at the keyboard."
+    topics:
+      - {path: typing.home_row, kind: skill, summary: "accuracy before speed"}
+steps:
+  - compile:
+      fn: plan
+      goal: "I am running a sourdough stall at the farmers' market pop-up in 2 weeks and my loaves come out different every single bake. I want consistent loaves, plus bagels, focaccia, decorative scoring, and a tour of heritage flours. The starter-feeding schedules and fermentation microbiology feel like homework - cut that part if anything has to go."
+judge_rubric:
+  - {id: c1, weight: 4, question: "Does the topic list keep a starter-health /
+      fermentation-variables foundation topic (feeding ratios, temperature,
+      peak timing), even though the learner offered it as the thing to cut?"}
+  - {id: c2, weight: 3, question: "Was the deadline absorbed by cutting
+      breadth — bagels, focaccia, decorative scoring, and the flour tour are
+      absent — rather than by dropping that foundation?"}
+  - {id: c3, weight: 2, question: "Is the plan minimal and well-formed:
+      roughly 6 or fewer topics, lowercase dotted paths no deeper than 4
+      levels, every phase topic declared, and phase 1 a calibration with
+      min_accuracy 0?"}
+  - {id: c4, weight: 1, question: "Does the mission state the ability
+      (consistent loaves for the pop-up) and name the deadline trade-off,
+      rather than listing coverage?"}
+references:
+  good:
+    mission: "Bake consistently proofed sourdough loaves for the pop-up in two weeks by controlling starter behavior and proof judgment; bagels, focaccia, scoring art, and the flour tour are cut for the deadline."
+    name: "Market Loaf Consistency"
+    topics:
+      - {path: sourdough.starter_health, kind: recall, summary: "feeding ratios, peak signs, temperature effects on yeast and bacteria activity"}
+      - {path: sourdough.fermentation.proof_judgment, kind: skill, summary: "reading dough state: rise, poke test, timing against dough temperature"}
+      - {path: sourdough.shaping, kind: skill, summary: "consistent tension and shaping so proof reads the same each bake"}
+      - {path: sourdough.bake_schedule, kind: skill, summary: "back-timing feeds, bulk, proof, and bake to a market morning"}
+    phases:
+      - topics: [sourdough.starter_health, sourdough.fermentation.proof_judgment]
+        criteria: {min_attempts: 5, min_accuracy: 0.0}
+        focus: "calibration: measure current starter routine and proof-reading accuracy"
+      - topics: [sourdough.starter_health, sourdough.fermentation.proof_judgment]
+        criteria: {min_attempts: 10, min_accuracy: 0.7}
+        focus: "predict fermentation from feeding ratio and dough temperature"
+      - topics: [sourdough.shaping, sourdough.bake_schedule]
+        criteria: {min_attempts: 10, min_accuracy: 0.7}
+        focus: "repeatable shaping and a back-timed market-morning schedule"
+    refinement_questions:
+      - "What is your kitchen's overnight temperature range?"
+  bad:
+    mission: "Learn sourdough loaves, bagels, focaccia, decorative scoring, and heritage flours for the market in two weeks."
+    name: "Sourdough Baking Survey"
+    topics:
+      - {path: sourdough.loaves, kind: skill, summary: "basic loaves"}
+      - {path: sourdough.bagels, kind: skill, summary: "boiled then baked"}
+      - {path: sourdough.focaccia, kind: skill, summary: "high-hydration pan bread"}
+      - {path: sourdough.scoring_art, kind: skill, summary: "decorative blade patterns"}
+      - {path: sourdough.flour_varieties, kind: recall, summary: "heritage flour traits"}
+    phases:
+      - topics: [sourdough.loaves]
+        criteria: {min_attempts: 5, min_accuracy: 0.0}
+        focus: "calibration"
+      - topics: [sourdough.bagels, sourdough.focaccia]
+        criteria: {min_attempts: 10, min_accuracy: 0.7}
+        focus: "more products"
+      - topics: [sourdough.scoring_art, sourdough.flour_varieties]
+        criteria: {min_attempts: 10, min_accuracy: 0.7}
+        focus: "presentation and flours"
+    refinement_questions: []

@@ -1,0 +1,102 @@
+# INSIGHT-COLLISION ENGINEERING (deliberation): three active learner
+# constraints collide for item design. Insight A (confuses relative vs
+# parallel minor under time pressure) invites "name BOTH minors of key X" —
+# which violates insight B (abandons multi-part prompts). The worked-example
+# preference C invites demonstrating on the very key being asked — leaking
+# the answer. A shallow generator satisfies the single most salient insight
+# and tramples another; the right set composes ALL three at once:
+# single-decision items that still force the relative/parallel
+# discrimination, with worked support on a DIFFERENT key.
+category: deliberation
+domain: music-theory
+scenario_context: |
+  Campaign "Theory Core" (accompanist fluency) requests 3 exercises for
+  topic theory.keys.minor at intermediate difficulty. The learner model
+  carries three ACTIVE constraints that collide: (A) confuses relative
+  minor with parallel minor under time pressure, (B) abandons multi-part
+  prompts — answers only the first sub-question, (C) asked for worked
+  examples before producing.
+  Strong output: every item is a single decision or one short production
+  (no "for each of...", no "name both..."), yet at least one item still
+  forces the relative-vs-parallel discrimination head-on; any worked
+  example demonstrates the method on a DIFFERENT key than the one the item
+  asks about, so support never contains the asked answer.
+  Weak output: targets the confusion with a multi-part prompt ("name both
+  the relative and parallel minor of each key"), or a worked example that
+  walks through the exact key then asks the same key (answer leak), or
+  generic key-signature drill that ignores the recorded confusion entirely.
+seed:
+  campaign:
+    id: theory-core
+    name: Theory Core
+    mission: "Read and use major and minor keys fluently enough to accompany singers at the piano without preparation."
+    strategy_profile: {difficulty: intermediate, scaffolding: medium}
+    topics:
+      - {path: theory, kind: skill, summary: "practical music theory for accompanists"}
+      - {path: theory.keys, kind: skill, summary: "key signatures and key relationships"}
+      - {path: theory.keys.minor, kind: skill, summary: "relative vs parallel minor, minor key signatures"}
+  insights:
+    - id: ins_relpar
+      key: keys.relative_parallel_confusion
+      status: active
+      description: "Confuses relative minor with parallel minor under time pressure: given a major key, names the wrong minor when rushed."
+    - id: ins_multipart
+      key: format.multipart_abandon
+      status: active
+      description: "Abandons multi-part prompts: answers only the first sub-question and skips the rest, even when the parts are short."
+    - id: ins_worked
+      key: feedback.user.worked_examples
+      status: active
+      description: "Learner asked for worked examples: wants to see one instance done in full before producing their own."
+steps:
+  - compile:
+      fn: generate
+      difficulty: intermediate
+      topic_path: theory.keys.minor
+      n_items: 3
+judge_rubric:
+  - {id: c1, weight: 4, question: "Is EVERY item a single decision or one
+      short production — no 'name both', no 'for each of', no stacked
+      sub-questions — respecting the multi-part-abandonment insight?"}
+  - {id: c2, weight: 3, question: "Does at least one item force the
+      relative-vs-parallel discrimination directly (the recorded confusion),
+      rather than generic key-signature or scale drill?"}
+  - {id: c3, weight: 2, question: "Where a worked example or in-prompt
+      support appears, does it demonstrate on a DIFFERENT key than the one
+      the item asks about, so the support never contains the asked answer?"}
+  - {id: c4, weight: 1, question: "Shape: exactly 3 items, every item
+      carries prompt/answer/rubric/skill, prompts stay well under the word
+      cap, and no prompt leaks its own answer?"}
+references:
+  good:
+    items:
+      - prompt: "Worked example on a different key first: G major has one sharp. Its RELATIVE minor keeps that key signature and starts on the sixth degree — E minor. Its PARALLEL minor keeps the tonic — G minor. Your turn, one decision only: name the RELATIVE minor of E-flat major."
+        answer: "C minor — it shares E-flat major's three-flat key signature. E-flat minor would be the parallel minor."
+        rubric: "- names C minor\n- does not give E-flat minor (that is the parallel/relative swap)"
+        skill: apply
+      - prompt: "You are accompanying a singer and the chart says the bridge moves from B-flat major to its PARALLEL minor. Quickly, one key name: what key is the bridge in?"
+        answer: "B-flat minor — the parallel minor keeps the same tonic, B-flat."
+        rubric: "- names B-flat minor\n- not G minor (that would be the relative minor)"
+        skill: apply
+      - prompt: "In one sentence: which single thing does a major key share with its RELATIVE minor — the tonic note, or the key signature?"
+        answer: "The key signature. The tonic is what it shares with its PARALLEL minor instead."
+        rubric: "- picks the key signature\n- distinguishes it from the parallel relationship"
+        skill: explain
+    note: null
+    intervention: null
+  bad:
+    items:
+      - prompt: "For each of C major, G major, and E-flat major, name both the relative minor and the parallel minor, and briefly explain how you told the two apart in each case."
+        answer: "C major: A minor / C minor. G major: E minor / G minor. E-flat major: C minor / E-flat minor. Relative shares the signature; parallel shares the tonic."
+        rubric: "- all six minors named correctly\n- explanation distinguishes the two relationships"
+        skill: apply
+      - prompt: "Worked example: the relative minor of E-flat major is C minor, because C minor shares its three-flat key signature. Now you: name the relative minor of E-flat major."
+        answer: "C minor."
+        rubric: "- names C minor"
+        skill: recall
+      - prompt: "Explain how the circle of fifths generates every key signature, covering both the sharp side and the flat side."
+        answer: "Moving clockwise by fifths adds one sharp per step from C major; moving counterclockwise by fourths adds one flat per step."
+        rubric: "- describes both directions\n- ties each step to one accidental"
+        skill: explain
+    note: null
+    intervention: null

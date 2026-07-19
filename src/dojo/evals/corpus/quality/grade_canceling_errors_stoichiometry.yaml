@@ -1,0 +1,83 @@
+# RIGHT-RESULT-BROKEN-METHOD (deliberation): the learner lands exactly on the
+# rubric's 36 g — via TWO wrong steps that cancel (H2 molar mass taken as
+# 4 g/mol, mole ratio taken as 1:2). A pattern-completing grader matches the
+# final number against the rubric answer and awards 1.0; the right grade
+# composes three non-adjacent constraints: the result IS correct, the method
+# is demonstrably invalid, and the rubric's own wording grants full credit
+# only when every step is valid (invalid step -> core-wrong, 0.3).
+category: deliberation
+domain: chemistry
+scenario_context: |
+  A stoichiometry attempt where the final mass is exactly right (36 g) but
+  the working contains two errors that cancel: molar mass of H2 used as
+  4 g/mol (should be 2), and the 2H2 + O2 -> 2H2O ratio read as "each H2
+  gives two H2O" (should be 1:1). The rubric explicitly restricts full
+  credit to answers where every step is valid and scores a correct mass
+  reached through an invalid step as core-wrong. Strong output: score 0.3,
+  evidence quoting one of the broken steps verbatim (not the final "36 g"),
+  an error_tag naming the method flaw (canceling errors / wrong molar
+  mass), and feedback that teaches the mole method rather than confirming
+  the answer. Weak output: score 1.0 (or 0.7) because the number matches,
+  evidence quoting the correct final result, null error_tag, feedback that
+  praises the answer.
+seed:
+  campaign:
+    id: chem-foundations
+    name: Chemistry Foundations
+    mission: "Master mole-based stoichiometry well enough to check any reaction by hand."
+    topics:
+      - {path: chemistry.stoichiometry, kind: skill, summary: "mole ratios, molar mass, mass-to-mass conversions"}
+  exercise:
+    id: ex_h2o_mass
+    topic_path: chemistry.stoichiometry
+    difficulty: intermediate
+    kind: skill
+    prompt: "When 4.0 g of hydrogen gas (H2) burns completely in excess oxygen, how many grams of water are produced? Show every step: balanced equation, moles of H2, mole ratio, final mass."
+    answer: "36 g of H2O"
+    rubric: |
+      - final answer: 36 g of H2O
+      - molar mass of H2 used as 2 g/mol (4.0 g -> 2.0 mol H2)
+      - mole ratio read from 2H2 + O2 -> 2H2O as 1:1 (2.0 mol H2 -> 2.0 mol H2O)
+      - mass step: 2.0 mol x 18 g/mol = 36 g
+      - full credit ONLY when every step is valid; a correct final mass reached
+        through an invalid step scores as core-wrong (0.3)
+  attempts:
+    - id: att_trap
+      session_id: s1
+      exercise_id: ex_h2o_mass
+      score: 0.0
+      latency_seconds: 210.0
+      grader: null
+      prompt: "When 4.0 g of hydrogen gas (H2) burns completely in excess oxygen, how many grams of water are produced? Show every step: balanced equation, moles of H2, mole ratio, final mass."
+      user_answer: "2H2 + O2 -> 2H2O. Molar mass of H2 is 4 g/mol, so 4.0 g / 4 = 1.0 mol H2. The equation shows each H2 gives two H2O, so 1.0 mol H2 makes 2.0 mol H2O. 2.0 mol x 18 g/mol = 36 g of water."
+steps:
+  - compile:
+      fn: grade
+      attempt_id: att_trap
+judge_rubric:
+  - {id: c1, weight: 4, question: "Is the score exactly 0.3 — not 1.0 or 0.7 —
+      because the rubric grants full credit only when every step is valid and
+      both the molar-mass step (4 g/mol) and the ratio step (1:2) are wrong,
+      even though the final 36 g matches?"}
+  - {id: c2, weight: 3, question: "Does evidence quote verbatim from one of the
+      broken steps (the '4 g/mol' claim or the 'each H2 gives two H2O' claim)
+      rather than the correct final result?"}
+  - {id: c3, weight: 2, question: "Is error_tag a non-null 2-4 word label naming
+      the METHOD flaw (canceling/compensating errors, wrong molar mass, wrong
+      mole ratio) rather than null or an answer-focused tag?"}
+  - {id: c4, weight: 1, question: "Does feedback teach the method — H2 is
+      2 g/mol and the ratio is 1:1 — instead of confirming or praising the
+      36 g answer?"}
+references:
+  good:
+    score: 0.3
+    evidence: "Molar mass of H2 is 4 g/mol"
+    feedback: "Your balanced equation and final mass step are right. But H2 is 2 g/mol and the ratio is 1:1 — two errors cancelled each other; redo the mole steps."
+    error_tag: "canceling errors"
+    knowledge_gap: false
+  bad:
+    score: 1.0
+    evidence: "36 g of water"
+    feedback: "Perfect — 36 g is exactly right and every step is laid out clearly."
+    error_tag: null
+    knowledge_gap: false
