@@ -847,7 +847,16 @@ directive §queue).
   Decision rule: lfm-think route mini ≥4/11 with 4B route cells flat
   (qwen 1/6→≥1, gemma 6/6 stays); README mode-11 candidate if
   adopted. Check other templates for "one word"-style descriptors in
-  the same pass.
+  the same pass. DRAFT READY (draft_w4_route_phrasing.md ~12:10): the
+  descriptor appears in FOUR templates (reflect op, plan kind, both
+  routes); attempt_grade already models the safe enum form. Exact
+  edits + decision rule in the draft; apply when tree unfreezes.
+  TRAP NOTE (bake-off data, n=3): lfm-think passed both
+  dependency-root plan traps that neutral qwen-4b hit, with ~9KB
+  self-generated thinking — thinking-class models need no 6i
+  invitation anchor (their cost is latency, not omission); the
+  sycophancy grade trap still fails (grade weakness, not
+  trap-specific).
 - **W5-EVIDENCE-CORE (pre-registered 2026-07-19 ~11:40, owner
   discussion of verbatim-check cost/value; AFTER R3-LFM adjudicates).**
   Archive taxonomy of the 162 post-W3 verbatim rejections: 128 (79%)
