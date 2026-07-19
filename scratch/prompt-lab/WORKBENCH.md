@@ -1,5 +1,44 @@
 # PROMPT LAB WORKBENCH — live campaign state
 
+## ⟫ RESUME HERE (handoff written 2026-07-20 ~01:20 for a fresh context)
+
+A fresh session pointed at docs/PROMPT_LAB.md does STEP ZERO (arm
+cron heartbeat + wakeup — the old session's schedules died with it),
+then executes THIS list in order:
+
+1. **Reap/resume the in-flight 0.8b probe (R3-sub4B arm B).**
+   Expected: scratch/token-diet/baselines/retryprobe_08b_B.jsonl with
+   45 rows. Check `pgrep -f retry_probe`. If the process is dead with
+   <45 rows, RERUN (output overwrites clean):
+   python scratch/prompt-lab/retry_probe.py "python scratch/token-diet/api_driver.py qwen3.5:0.8b --no-think" B scratch/token-diet/baselines/retryprobe_08b_B.jsonl grade_ generate_ grading_ gen_collision chain_ reflect_ plateau too_easy too_hard overconfident mastery atrophy
+2. **Adjudicate R3-sub4B** (pre-reg in "Pre-registered (open)"):
+   arm A = 17/45 ok, mean 1.76 subs. Rule: B ≥ 53% budget-success OR
+   mean subs ≤ 1.26 → write the owner-gated QUESTIONS proposal for
+   raw-driver retry enrichment; otherwise capability-floor
+   documentation (0.8b: 14% single-shot / 38% budgeted, JSON-
+   sustainment ceiling). Either way: commit the final arm B jsonl
+   (raw-data standing practice, owner directive) + ledger the verdict
+   + REPORT THE NUMBER TO THE OWNER.
+3. **Implement W1 (owner ruling: word caps = strong suggestions).**
+   Full pre-reg in "Pre-registered (open)" — WORD_CAP_TOLERANCE=1.5
+   in limits.py, _cap_words enforces ceil(cap×1.5), teaching message,
+   update cap-pinning tests, full pytest, plan+reflect minis both 4B
+   models (expect question-cap/reason-cap classes to convert to
+   accepts), output-budget rebuild SAME commit, push.
+4. **Standing queue** (directive §queue + entries below): example-
+   bleed hardening; judged spot-sets for adopted arms; judged floors
+   for the 12 realworld scenarios at the next authorized codex spend;
+   the unfixed strong-tier trap pair (P11c negative result — do not
+   blind-retest); P9b-style compiler interpolation ideas.
+
+Ground truth all pushed through commit 5fe032d + this handoff commit:
+corpus 104 (+6 blind holdout, a0452ec), all raw run data archived,
+866+ tests green at every commit. No subagents in flight. The owner's
+account/context switch loses NOTHING except the schedules (STEP ZERO
+re-arms) and possibly the probe process (step 1 detects + reruns).
+Contamination status: CLEAN (holdout never entered any prompt-work
+context; blind lane reported filenames only).
+
 _Directive: docs/PROMPT_LAB.md. This file is the resumption point: a fresh
 or woken session reads the directive, then this, then executes NEXT._
 
@@ -561,6 +600,38 @@ directive §queue).
 
 ## Pre-registered (open)
 
+- **OWNER RULING (2026-07-20 ~00:40): word caps are strong
+  suggestions, never significant penalties.** Implementation W1:
+  the _cap_words validator family enforces at ceil(cap × 1.5)
+  (WORD_CAP_TOLERANCE in limits.py, single source); rejection message
+  names the suggested cap and the actual count. Templates keep
+  stating the suggested cap (statement gate intact; judged rubrics
+  still reward concision). Structural counts/depth/charset/verbatim
+  stay strict (contract shape, not word caps). Precedent: summary
+  clip-never-reject (ArmS 2026-07-17). SEQUENCING: apply AFTER the
+  R3-sub4B probe pair completes (arm comparability), then update
+  cap-pinning tests, full pytest, mini-batteries (plan+reflect both
+  models — expect the question-cap/reason-cap churn classes to
+  convert to accepts), output-budget rebuild same commit. Decision
+  rule: shape ok-rates same-or-better both models (they should RISE);
+  no judged-quality regression at the next codex spend (verbosity
+  guard: judged rubrics + the 1.5× wall).
+
+- **R3-sub4B: retry feedback at 0.8b (2026-07-19 ~23:50; owner
+  re-prioritized sub-4B).** Taxonomy of the 12 no-json fails: 10
+  braces-but-unparseable (escape-poisoning on math content +
+  long-output derailment), 2 truncated. 0.8b STARTS valid JSON and
+  loses it — the R2 syntax hint targets exactly this. The 4B R3
+  negative result left this cell open (baseline non-floor: 14%).
+  Probe: retry_probe.py at qwen3.5:0.8b, arms A (resample) vs B
+  (feedback), grade+generate+reflect stems (where corruption
+  concentrates), after the 4B realworld battery frees the GPU.
+  Decision rule: B budget-success ≥ A+15 points OR B mean-subs ≤
+  A−0.5 (A won't ceiling from a 14% base) → then design the
+  production surface as an owner-gated QUESTIONS proposal (raw-driver
+  retry enrichment); A wins or flat → capability-floor documentation
+  for the caliber line, honest and final for this era.
+
 - **R3 retry-feedback probe (2026-07-19 ~19:00; finding: drain_tasks
   re-sends task.prompt UNCHANGED — raw-driver retries are ERROR-BLIND
   re-samples; R1/R2 messages reach only agent drivers).** Probe
@@ -749,6 +820,13 @@ directive §queue).
   re-test.
 
 ## Results ledger
+
+- **realworld shape baselines (2026-07-20 ~00:20):** qwen 7/12, gemma
+  8/12, 0 infra both — content-hard without shape-broken (fails are
+  pre-existing classes: escape-hatch empties, diagnostic
+  fewer-items-note, word caps, one charset now showing the R1
+  teaching message). Judged floors await the next authorized codex
+  spend. Data: realworld_{qwen35_4b,gemma3_4b}.jsonl.
 
 - **P1 qwen verdict (2026-07-19 ~13:15): PASS per pre-reg.** rep2
   (all-sequential, cleanest methodology) 4/9 ok, ZERO letter-paths —
