@@ -831,6 +831,25 @@ directive §queue).
 
 ## Pre-registered (open)
 
+- **EX-BLEED (pre-registered ~08:25, entry lost in an edit chain and
+  rebuilt ~12:25 — lesson: verify WORKBENCH entries survive into
+  commits). BASELINE NOW MEASURED (bleed_check.py, 5-word spans vs
+  skeleton example values): reflect bleed gemma 16/27 (59%), qwen
+  9/27 (33%); every other kind ≤1 hit. ONE value dominates: the
+  reflect_ops_default.md example insight text "submits without
+  re-reading the prompt" is copied into real ops at scale.**
+  Hypothesis: example VALUES whose domain is orthogonal to any
+  plausible scenario (still realistic-shaped, cap-compliant — e.g. a
+  pottery-domain insight in a corpus with no pottery scenario) reduce
+  verbatim content bleed without shape loss, because copying them is
+  self-evidently wrong for the scenario domain. NOT nonsense strings
+  (README rule 9 requires realistic, imitable values). Metric:
+  bleed_check.py rate + shape ok-rate. Decision rule: bleed drops by
+  ≥half AND ok-rate same-or-better both 4B models (reflect battery
+  pair); shape loss or flat bleed → revert, negative result recorded.
+  Template-fragment edit = full protocol. Runs AFTER W4 (both touch
+  reflect — separate arms, P1 interaction precedent).
+
 - **W4-ROUTE-PHRASING (pre-registered 2026-07-19 ~10:50 from lfm-think
   route transcripts; template edit → full protocol, own battery
   cycle).** Observed: lfm-think route 0/11 fails are RUMINATION LOOPS

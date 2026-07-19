@@ -20,8 +20,11 @@ explanation for the reflect ceiling:
   generations (P4a/P4b/P8/P9b/W1/W2 all measured).
 - Cross-model corroboration: gemma3:4b (27/30) mostly survives the 5-job
   call; every sub-4B model fails it primarily on dropped obligations
-  (lfm-instruct reflect 0/27!). The kind's difficulty is COMPOSITIONAL,
-  exactly what decomposition addresses.
+  (lfm-instruct reflect 0/27: journal omitted 15×, op-requirements
+  dropped 11× — the exact same two classes as qwen-4B's residual, at
+  higher intensity). The kind's difficulty is COMPOSITIONAL, exactly
+  what decomposition addresses, and the failure classes are IDENTICAL
+  across three model families.
 
 Proposal: pilot a two-call decomposition (call 1: ops+strategy with the
 evidence window; call 2: journal+questions+retirements with call 1's output
