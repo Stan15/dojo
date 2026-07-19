@@ -10,15 +10,26 @@ before the open-ended loop starts.
 
 ## NEXT (exact order)
 
-1. WAIT: gemma3:4b battery in flight (bkbns7z5h → scratch/token-diet/
-   baselines/iterW_gemma3_4b.jsonl). ONE battery at a time; tree quiet.
-2. On completion: gemma single-stream speed probe (pp/gen counters, same
-   probe as qwen: reflect payload via /api/chat, think field n/a).
-3. python scratch/token-diet/build_output_budget.py \
-     "api-chat/qwen3.5:4b/--no-think=scratch/token-diet/baselines/iterW_qwen35_4b.jsonl" \
-     "api-chat/gemma3:4b=scratch/token-diet/baselines/iterW_gemma3_4b.jsonl"
+1. FIX letter-path bleed (pre-registered below): campaign_plan.md rule 1 +
+   Check — remove ALL abstract letter-path literals beyond the skeleton's
+   single "a.b.c"; state depth/merge rule in WORDS ("when one more level
+   would exceed the cap, merge the extra idea into the leaf with an
+   underscore — never add a level past {{ topic_depth }}").
+2. rm evals/baselines/token-footprint.json && pytest tests/test_token_footprint.py
+   (regenerate; review diff — plan bytes shift slightly).
+3. Mini-batteries, PLAN SCENARIOS ONLY, one at a time (filters are argv
+   after workers count): 
+   python scratch/token-diet/measure.py "python scratch/token-diet/api_driver.py gemma3:4b" scratch/token-diet/baselines/iterW2_gemma3_4b_plan.jsonl 3 plan_ deadline_compression vague_goal
+   then same for qwen3.5:4b --no-think → iterW2_qwen35_4b_plan.jsonl.
+4. Splice: replace campaign.plan rows in iterW_*.jsonl with iterW2 rows →
+   write iterW2_<model>.jsonl combined (note in this file). Then
+   python scratch/token-diet/build_output_budget.py \
+     "api-chat/qwen3.5:4b/--no-think=scratch/token-diet/baselines/iterW2_qwen35_4b.jsonl" \
+     "api-chat/gemma3:4b=scratch/token-diet/baselines/iterW2_gemma3_4b.jsonl"
    → full pytest → COMMIT 2 (templates+compiler+tests+goldens+footprint+
-   output-budget; message: drop-diagnosis template iteration).
+   output-budget; message: drop-diagnosis template iteration; note the
+   caught-and-fixed letter-bleed regression).
+   (gemma speed probe optional, after commit — nice-to-have only.)
 4. COMMIT 3: cp scratchpad route_url_bleed_near_empty_registry.yaml →
    src/dojo/evals/corpus/quality/; ratchet tests/test_quality_corpus.py
    (MIN_TOTAL 79→80, routing 7→8, dated comment); pytest; commit.
@@ -37,7 +48,21 @@ before the open-ended loop starts.
 
 ## Pre-registered (open)
 
-- (none yet — register before each test, see directive §loop step 3)
+- **P1 letter-path bleed fix (2026-07-19 ~00:55).** Finding: my rule-1
+  rewrite added two abstract letter-path literals (a.b.c.d_e / a.b.c.d.e);
+  gemma iterW plan collapsed 5/9→2/9 with 6/7 failures emitting literal
+  letter paths (even fused: a.pod_b.service_c.deployment); qwen shows one
+  (a.b.c.d_alpha). Mechanism: repetition raised the abstract pattern's
+  salience → 4B models copy it as content (README mode 9, self-inflicted).
+  Hypothesis: stating the depth/merge rule in WORDS with zero new
+  letter-paths removes the bleed without losing the codex-tier depth
+  statement. Decision rule: gemma plan ≥5/9 on the mini-battery
+  (recovery to iterV level), qwen plan ≥4/9 (was 5/9; ±1 on n=9 tolerated
+  only if no letter-path appears in ANY failure), zero letter-path
+  outputs across both; codex depth compliance re-verified in the
+  authorized validation run (plan_extend_not_duplicate must pass).
+  If gemma stays ≤3/9 → revert to a Check-line-only depth statement and
+  re-test.
 
 ## Results ledger
 

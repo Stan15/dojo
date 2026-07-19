@@ -5,22 +5,43 @@ Point any fresh session here; it knows exactly what to do. This file is the
 WHAT and the RULES; `scratch/prompt-lab/WORKBENCH.md` is the LIVE STATE a
 resuming session picks up from._
 
-## Mission
+## Mission — maximize QUALITY-DENSITY
 
-Improve the task prompts so that, across model calibers:
+The single objective (owner refinement 2026-07-19): **judged quality
+delivered per token the user spends, jacked as high as possible** within
+a realistic whole-system budget — across calibers: sub-4B (qwen3.5:0.8b
+~1GB), 4B-class (qwen3.5:4b best-in-class; gemma3:4b robustness point),
+strong tier (codex). Best-in-class rule binds: class verdicts come from
+the strongest model of each resource class.
 
-1. **Output QUALITY improves significantly** — judged rubric scores and
-   single-shot acceptance, per caliber: sub-4B (qwen3.5:0.8b ~1GB),
-   4B-class (qwen3.5:4b best-in-class, gemma3:4b robustness point),
-   strong tier (codex). Best-in-class rule binds: class verdicts come from
-   the strongest model of each resource class, weaker same-class models
-   are robustness points only.
-2. **Output token usage improves significantly** — generation-side bytes
-   per successful task (where the real variance lives): rejection-retries
-   eliminated, deliberation priced, whitespace floors held.
-3. Trading tokens for quality is allowed **where the trade is genuinely
-   good** — priced explicitly (e.g. +486B reflect prefill bought three
-   dropped floors, 2026-07-19) and recorded in the commit message.
+**Quality-density doctrine** (how to reason about every trade):
+
+- **Density = judged quality × single-shot acceptance ÷ whole-trace
+  tokens (input + output + retries).** A rejection is quality zero at
+  full cost, then pays again — first-shot acceptance is the single
+  biggest density lever for weak models, measured repeatedly.
+- **Frequency-weight the budget.** A byte added to `grade` fires on
+  every answer, every day; a byte on `plan` fires once per campaign.
+  System cost = Σ(kind bytes × calls per learner-day). Keep the
+  learner-day cost model per caliber in WORKBENCH and judge prompt
+  growth against IT, not against the single payload.
+- **Optimize the binding constraint per class — never one-size.** A
+  class whose quality is below USABLE justifies spending tokens on
+  quality (support, examples, structure): crossing into usability is
+  worth length, because unusable output has density zero. A class
+  already at its quality ceiling justifies pure token cuts. The same
+  edit can be right for one class and wrong for another — that is what
+  compiler-selected fragments and fulfiller profiles are FOR.
+- **Marginal accounting.** Every adopted trade records Δquality/Δbytes
+  (e.g. +486B reflect prefill bought three dropped floors, 2026-07-19).
+  Diminishing returns are a stop signal, not a challenge.
+- **Tokens are latency.** Local single-stream reality: prefill ~106
+  tok/s, decode ~7.6 tok/s (measured 2026-07-19) — every 100 payload
+  bytes ≈ +0.25s, every 100 output bytes ≈ +3s. Density wins are UX
+  wins for exactly the users who need them.
+- **The numerator is JUDGED quality — that is the anti-gaming guard.**
+  Outputs shrunk below pedagogical usefulness lose more judged quality
+  than they save tokens; terse-but-hollow is a regression, not a win.
 
 ## Hard rails (none of these bend, ever)
 
