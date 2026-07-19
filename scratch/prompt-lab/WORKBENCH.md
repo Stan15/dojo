@@ -6,19 +6,14 @@ A fresh session pointed at docs/PROMPT_LAB.md does STEP ZERO (arm
 cron heartbeat + wakeup — the old session's schedules died with it),
 then executes THIS list in order:
 
-1. **Reap/resume the in-flight 0.8b probe (R3-sub4B arm B).**
-   Expected: scratch/token-diet/baselines/retryprobe_08b_B.jsonl with
-   45 rows. Check `pgrep -f retry_probe`. If the process is dead with
-   <45 rows, RERUN (output overwrites clean):
-   python scratch/prompt-lab/retry_probe.py "python scratch/token-diet/api_driver.py qwen3.5:0.8b --no-think" B scratch/token-diet/baselines/retryprobe_08b_B.jsonl grade_ generate_ grading_ gen_collision chain_ reflect_ plateau too_easy too_hard overconfident mastery atrophy
-2. **Adjudicate R3-sub4B** (pre-reg in "Pre-registered (open)"):
-   arm A = 17/45 ok, mean 1.76 subs. Rule: B ≥ 53% budget-success OR
-   mean subs ≤ 1.26 → write the owner-gated QUESTIONS proposal for
-   raw-driver retry enrichment; otherwise capability-floor
-   documentation (0.8b: 14% single-shot / 38% budgeted, JSON-
-   sustainment ceiling). Either way: commit the final arm B jsonl
-   (raw-data standing practice, owner directive) + ledger the verdict
-   + REPORT THE NUMBER TO THE OWNER.
+1. DONE pre-handoff (~01:55): R3-sub4B ADJUDICATED — arm B 15/45
+   (33%) @1.60 LOST to arm A 17/45 (38%) @1.76 (needed ≥53% or
+   ≤1.26). Error-feedback retries fail at BOTH calibers; blind
+   budget-resampling wins everywhere measured; no retry-contract
+   proposal. 0.8b capability line (pending bake-off re-basing): 14%
+   single-shot / 38% budgeted, JSON-sustainment ceiling. Raw jsonls
+   committed.
+2. (folded into 1 — done)
 3. **Implement W1 (owner ruling: word caps = strong suggestions).**
    Full pre-reg in "Pre-registered (open)" — WORD_CAP_TOLERANCE=1.5
    in limits.py, _cap_words enforces ceil(cap×1.5), teaching message,
@@ -38,11 +33,17 @@ then executes THIS list in order:
    resource footprint; all three fit the ~1GB tier). Re-base every
    sub-4B claim on the winner (incl. README small-model guidance if
    the winner changes, and the R3-sub4B verdict — the retry-feedback
-   question may need re-answering on the winner). Also ASK THE OWNER
-   whether any newer top-tier <4B models should be pulled for the
-   bake-off (the pulled set is 2026-07 vintage; the owner tracks
-   releases). Commit raw jsonls + ledger verdicts per standing
-   practice.
+   question may need re-answering on the winner).
+   **OWNER DIRECTIVE (~01:50): DEEP-RESEARCH the current best <4B
+   models FIRST — never fixate on the already-pulled set.** Use
+   WebSearch: the 2026 sub-4B instruction-following landscape
+   (JSON-output reliability reputation, quantized footprint fitting
+   the ~1-3GB tiers, ollama-pullable). Pick the top 2-3 candidates
+   beyond the pulled set, `ollama pull` them (disk-space check
+   first), include them in the bake-off. The class-representative
+   claim must survive "did you try the best available", not just
+   "the best we had". Commit raw jsonls + ledger verdicts per
+   standing practice.
 4. **Standing queue** (directive §queue + entries below): example-
    bleed hardening; judged spot-sets for adopted arms; judged floors
    for the 12 realworld scenarios at the next authorized codex spend;
