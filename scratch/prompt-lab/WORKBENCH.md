@@ -1,7 +1,18 @@
 # PROMPT LAB WORKBENCH — live campaign state
 
-## ⟫ RESUME HERE (handoff consolidated 2026-07-19 ~23:45; everything
-below this header is the day's detailed ledger, superseded as state)
+## ⟫ RESUME HERE (updated 2026-07-20 ~06:10; detailed ledger below)
+
+**IN FLIGHT: full codex eval validation run (bsv1vjg10, standing-grant
+spend: one targeted run to land ratchets after 9 adopted arms; log →
+scratchpad/codex_eval_run.log, exit code echoed as CODEX-EVAL-EXIT).
+On completion: read the exit + report (evals/reports/quality-*.json,
+VISIBLE only), adjudicate per protocol (per-scenario diff vs previous
+run for drops: variance-vs-regression; floors only move on wins),
+commit updated ratchets + verdicts. Since the 23:45 consolidation:
+RFIX3-LFMI 13/13 (ca7f268), README learning consolidation (cbcc759),
+BLOG pre-session eras (ba15fc3), FINDINGS.md per-template register +
+drift gate (9d7f14a + df4cddd fix — note: 9d7f14a landed red, fixed
+next commit). 9 adopted arms, 950 tests green.**
 
 A fresh session pointed at docs/PROMPT_LAB.md does STEP ZERO (cron
 heartbeat + wakeup), then picks up from THIS summary. Everything is
