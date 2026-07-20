@@ -495,6 +495,15 @@ def compile_reflect(store, campaign: Campaign, *, window_n: int = 15) -> Compile
     `context.attempt_ids` lists exactly the graded rows that FIT the byte
     budget — those are the only citable ids, and the only ones marked
     reflected on apply."""
+    values, context = reflect_section_values(store, campaign, window_n=window_n)
+    return _compile(store, "campaign.reflect", values, context)
+
+
+def reflect_section_values(store, campaign: Campaign, *, window_n: int = 15):
+    """The reflect payload's section values + context, exposed for the
+    split-reflect PILOT (owner-approved 2026-07-20): the pilot renders the
+    ops/voice templates from the same sections the single call compiles, so
+    the two arms differ only in decomposition, never in evidence."""
     plan_rows = []
     for i, p in enumerate(campaign.attack_plan):
         marker = " (done)" if i < campaign.active_phase_index else (
@@ -637,7 +646,7 @@ def compile_reflect(store, campaign: Campaign, *, window_n: int = 15) -> Compile
         "window_n": window_n,
         "attempt_ids": included_ids,
     }
-    return _compile(store, "campaign.reflect", values, context)
+    return values, context
 
 
 def compile_plan(store, *, goal: str, context_notes: str = "", existing_topics: str = "") -> CompiledTask:

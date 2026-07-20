@@ -315,6 +315,44 @@ class TopicRetirement(BaseModel):
     _cap_reason = field_validator("reason")(_cap_words("reason", _limits.REFLECT_REASON_WORDS))
 
 
+class ReflectOpsResult(BaseModel):
+    """Call 1 of the split-reflect pilot (owner-approved 2026-07-20): the
+    DECISIONS — insight ops, dials, plan revision, retirements — without the
+    learner-facing voice (journal/questions live in call 2). Merged with a
+    ReflectVoiceResult into a full ReflectResult before the single apply."""
+
+    insight_updates: List[InsightUpdate] = Field(default_factory=list)
+    strategy: Optional[StrategyChange] = None
+    plan_revision: Optional[PlanRevision] = None
+    topic_retirements: List[TopicRetirement] = Field(
+        default_factory=list, max_length=_limits.REFLECT_MAX_RETIREMENTS
+    )
+
+
+class ReflectVoiceResult(BaseModel):
+    """Call 2 of the split-reflect pilot: journal + questions written over
+    the applied decisions digest. Same caps/coercions as the single call."""
+
+    questions: List[str] = Field(default_factory=list, max_length=_limits.REFLECT_MAX_QUESTIONS)
+    journal: str = Field(min_length=1)
+
+    _cap_journal = field_validator("journal")(
+        _cap_words("journal", _limits.REFLECT_JOURNAL_WORDS)
+    )
+    _coerce_questions = field_validator("questions", mode="before")(_coerce_question_objects)
+
+    @field_validator("questions")
+    @classmethod
+    def _cap_question_words(cls, v: List[str]) -> List[str]:
+        for q in v:
+            if _limits.word_count(q) > _limits.word_cap_hard(_limits.REFLECT_QUESTION_WORDS):
+                raise ValueError(
+                    f"question is {_limits.word_count(q)} words; rewrite it "
+                    f"in at most {_limits.REFLECT_QUESTION_WORDS} words: {q!r}"
+                )
+        return v
+
+
 class ReflectResult(BaseModel):
     """Submission shape for `campaign.reflect`: bounded insight edits (new
     creates capped per run), optional strategy change and plan revision, an
