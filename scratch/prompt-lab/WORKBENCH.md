@@ -1,6 +1,42 @@
 # PROMPT LAB WORKBENCH — live campaign state
 
-## ⟫ RESUME HERE (updated 2026-07-20 ~06:10; detailed ledger below)
+## ⟫ RESUME HERE (consolidated 2026-07-20 ~18:15; ledger below)
+
+Tree clean at origin/main, 952 tests green, no processes in flight,
+contamination CLEAN, holdout untouched. STEP ZERO re-arms on any fresh
+session.
+
+**Campaign totals: 11 adopted arms · 15 closed negatives.** Adopted:
+W1, W2, W3, EX-BLEED, EXB2, RSIMP-infra, RFIX3, DSTATE-2, DOPS-profile,
+6i-profile, realworld corpus. All adoption evidence is shape/mechanical
+(audited); W1's judged harm-guard is PROVISIONAL in FINDINGS.
+
+**The restraint saga (read before ANY reflect-rule arm):** five arms
+(RESTRAINT → SVFT → PLAT-INT → MAINT ×2 gates) produced: a real
+replicated effect (maintenance qualifier lifts plateau 0.125→0.625),
+a retracted-then-corrected noise attribution, the judged-variance band
+(median Δ0.11/max 0.33), plateau marked UNUSABLE below n=5 samples,
+three bar-writing defects recorded (bundling / partition / over-tight),
+and qwen's campaign-best reflect (18/30 under MAINT). MAINT is
+REVERTED on gate-2 target-metric bimodality.
+
+**WAITING ON OWNER:** (1) MAINT standards question — adopt on
+shape-evidence-alone? (campaign-normal practice says yes; its judged
+target is unmeasurable at n=2; I won't relax my own bar). (2) Holdout
+relay — parked on your green-visible-run condition (current: 7
+reliable fails, all pre-existing classes). (3) Mixed-model table
+(parked by default).
+
+**Directive rules minted this campaign (all in PROMPT_LAB.md):**
+7-category exhaustion checklist · one variable per arm · judged deltas
+need replication or PROVISIONAL · bars justified against measured cell
+variance · capture-first BLOG_MATERIAL · no inference during batteries
+· codex needs stdin closed · load-gated launches.
+
+**Next fresh work:** nothing unblocked below the owner items; the
+mechanical seam is mined out (milestone entry). Slow-loop.
+
+## ⟫ PREV-HEADER (2026-07-20 ~06:10; superseded)
 
 **OWNER RULINGS 2026-07-20 ~06:30 (via direct question):**
 (1) **REFLECT-DECOMP PILOT APPROVED** — two-call split (ops+strategy
