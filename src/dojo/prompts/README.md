@@ -58,6 +58,14 @@ Mandatory companions to any edit here:
    The example IS the instruction: skeleton values must be short, realistic,
    cap-compliant text a model can safely imitate (and where a format is
    validated — dotted keys — one example op must demonstrate it).
+   AND: example CONTENT must be domain-ORTHOGONAL to plausible inputs
+   (EX-BLEED 2026-07-19: one plausible example insight appeared verbatim
+   in 59%/33% of gemma/qwen reflect outputs — silent store pollution;
+   calligraphy-domain values halved/cut-78% the bleed with ok-rates UP,
+   because copy-pressure is structural and orthogonal copies are at least
+   VISIBLE). Current orthogonal domain: calligraphy — check the corpus
+   before picking a new one. Where real insights exist the compiler
+   suppresses the create example entirely (EXB2, test-enforced).
 
 10. **Example lists anchor COUNT and TYPE.** An ops example showing two
    `create` entries made models at every tier emit exactly two creates
@@ -67,6 +75,36 @@ Mandatory companions to any edit here:
    skeleton must also satisfy the template's own Check line as a whole:
    a phases literal referencing a topic absent from the topics literal
    was reproduced verbatim as a stable failure (gemma, two samples).
+   For skeletons whose values interact with LIVE DATA (route: registry
+   entries) the trap is THREE-sided — null literals teach omission
+   (qwen 1/8), absent literals teach inventing names (gemma −2, RFIX),
+   real literals invite copying (gemma −2, RFIX2) — and which side bites
+   is caliber-specific: the route skeleton is therefore COMPILER-SELECTED
+   per fulfiller.route_skeleton profile (default nulls = gemma's best;
+   "live" registry interpolation = qwen 12/13, lfm-instruct 13/13). Never
+   hardcode a route skeleton literal; edit the fragments and keep both
+   profiles' measurements (rfix*_ jsonls).
+
+## Measured dead ends (don't re-till without NEW evidence — full ledger
+## in scratch/prompt-lab/WORKBENCH.md negatives + battery jsonls)
+
+- **Stated word caps are ANCHORS, not gates** (W1 2026-07-19): validators
+  reject only past ceil(cap × 1.5); models cluster at the STATED number
+  (only 4 overshoot fields in ~70 accepted outputs). Raising a stated cap
+  moves the whole length distribution — tighten/loosen the anchor and the
+  wall as separate decisions.
+- **Phrase-level fixes don't move rumination cells** (W4): replacing the
+  "is one word" descriptor with enum form left lfm-think route at 0/13 —
+  the spiral re-attaches to the next informal descriptor. Thinking-class
+  route failure is deliberation-budget exhaustion; lfm-think route is a
+  certified capability floor (0/13 across three different surgeries).
+- **Section ORDER is measured null for obligation-omission** (SORD):
+  moving the journal/language rules adjacent to the OUTPUT skeleton left
+  journal-omission exactly at baseline. That class is compositional load;
+  the open lever is the owner-gated reflect decomposition.
+- **Error-feedback retries lose to blind resampling** at every measured
+  caliber (R3 ×4 probes); only a narrow grade-only cell keeps an untested
+  pulse.
 
 ## Before you commit
 
