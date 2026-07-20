@@ -924,8 +924,30 @@ directive §queue).
 
 ## Pre-registered (open)
 
-- **RSIMP-THINK (pre-registered 2026-07-19 ~21:20; NEXT battery
-  cycle).** Evidence: lfm2.5-thinking route 0/11 root-caused to
+- **RFIX-SKELETON (pre-registered 2026-07-19 ~21:20, from RSIMP
+  negative analysis — HIGH-value cross-caliber hypothesis).** The
+  route skeletons are the ONLY kind demonstrating an INVALID example:
+  {"action": "attach", "campaign": null, "topic_path": null} violates
+  the template's own field rules (attach requires both) — README
+  mode 10 (skeleton must satisfy its own Check line; phases-literal
+  precedent). Route is also the weakest kind at every caliber (qwen
+  1/6, granite 2/13, lfm-think 0/13 — all dominated by
+  missing-required-fields, i.e. NULLS LEFT IN PLACE). Fix: skeleton
+  shows a self-consistent attach with realistic filled literals
+  (mode-1 discipline: one realistic literal). NAMED RISK (mode 1
+  enum-echo): filled literals may be copied verbatim when the
+  registry lacks them → applier existence check rejects; measure the
+  copied-literal rate explicitly. Decision rule: lfm-think route
+  ≥4/13; qwen route mini ≥3/8 (from 1/6+0/2); gemma route mini
+  flat-or-better (7/8 baseline); copied-literal fails ≤2 per model.
+  Batteries after spot-run completes. Full template protocol.
+- **RSIMP-THINK — CLOSED NEGATIVE ~21:15: lean profile 0/13 (bar
+  ≥5), failure class IDENTICAL (required fields left null). Rule
+  density was NOT the binding constraint; the skeleton's null-anchor
+  is the new prime suspect (see RFIX above). Infra stays (default
+  byte-identical, opt-in unused, tested) — do not blind-retest lean
+  wording variants.** (pre-registered 2026-07-19 ~21:20; battery
+  cycle executed same evening.) Evidence: lfm2.5-thinking route 0/11 root-caused to
   deliberation-budget exhaustion on route's dense rule block (W4
   negative proved it's not phrasing: rumination migrates to the next
   descriptor). Hypothesis: an opt-in fulfiller profile
