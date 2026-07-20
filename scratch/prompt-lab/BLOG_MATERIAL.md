@@ -341,3 +341,27 @@ reran exactly those scenarios once the machine calmed. Final: create-bleed
 shape-anchor loss never materialized), ok flat. Adopted. Two lessons:
 segment metrics by the path the arm touches, and starved-machine timeouts
 are voids, not failures. Data: iterEXB2_*.jsonl.
+
+## APPENDED ~22:15 — "The example that's wrong both ways" (RFIX arc)
+
+Route is the weakest task kind at every model tier, and three arms in one
+evening traced it to a single line: the JSON skeleton shows
+action="attach" with campaign=null — an example that violates the
+template's own field rules (attach requires the fields). Fix attempt:
+show a filled, realistic literal. But which literal? A name that exists
+in the learner's registry could collide and wrongly pass the existence
+check — so we used a corpus-absent one ("brush-calligraphy"), per the
+example-orthogonality lesson. Result: qwen's route cell jumped 1/8 →
+6/13... and gemma REGRESSED 7→5, inventing registry names ("mixology",
+"cheesemaking") on scenarios it had always passed — the absent literal
+demonstrated that the campaign field may contain new text, contradicting
+the copy-verbatim rule beside it. A skeleton literal at this surface is
+wrong BOTH ways: null breaks one rule, any fixed string breaks another.
+The only self-consistent, copy-consistent, collision-safe value is one
+the COMPILER interpolates from the learner's live registry per payload —
+which is where the arm goes next (and a perfect illustration of craft
+rule 5: the compiler branches, the model executes). Reverted by a
+pre-data amendment's guard; qwen's real gain waits for the fix that
+doesn't break gemma. Also closed: lfm-think route is a capability floor
+(0/13 under three different template surgeries — W4, RSIMP, RFIX).
+Data: rfix_*.jsonl.

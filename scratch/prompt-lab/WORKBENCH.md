@@ -924,6 +924,29 @@ directive §queue).
 
 ## Pre-registered (open)
 
+- **RFIX CLOSED ~22:10 — REVERTED per amendment (gemma guard failed
+  CAUSALLY).** 4B cells: qwen 6/13 (overlap gain, real) BUT gemma
+  7→5 on overlap, all 3 down-flips INVENTED registry names
+  ("mixology", "cheesemaking") matching the skeleton's demonstration
+  — the corpus-absent literal teaches "campaign may be new text",
+  contradicting the copy-verbatim Check. THE TWO-SIDED MODE-10 TRAP
+  (durable finding): a route skeleton literal is wrong BOTH ways —
+  null violates the field rules; any fixed literal either collides
+  with a real registry (wrong-pass) or is absent and teaches
+  invention. The only value satisfying self-consistency +
+  copy-consistency + collision-safety is one interpolated FROM THE
+  LIVE REGISTRY per payload.
+- **RFIX2-LIVE-SKELETON (pre-registered ~22:10; NEXT cycle, compiler
+  work).** compile_route/compile_goal_route inject skeleton example
+  values from the actual registry digest (first campaign + one real
+  topic_path; empty registry → fall back to nulls... no: empty
+  registry has no attach case — fall back to a propose_campaign
+  skeleton example, which IS the valid action there — design detail
+  at implementation). Craft rule 5: the compiler branches. Decision
+  rule: qwen route ≥6/13 sustained AND gemma overlap ≥7 (back to
+  baseline) AND lfm-think measured (no bar — capability floor
+  candidate, 4th arm) AND invented-name fails 0. Full protocol;
+  ceiling test placeholders updated.
 - **RFIX PRIMARY ADJUDICATED ~21:50: lfm-think 0/13 (bar ≥4 MISSED;
   3 infra timeouts; copied-literal fails 2 — at the ≤2 boundary).
   The null-anchor hypothesis fails at lfm-think: it nulls required
