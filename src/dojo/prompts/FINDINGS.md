@@ -38,6 +38,12 @@ WINS TO PRESERVE
   byte-identical (test-pinned); "dops" = parallel lines, opt-in. Editing
   either fragment must keep both measurements valid.
 
+- **plateau_remediation is UNUSABLE as single- or double-sample judged
+  evidence** (2026-07-20, 8 samples across arms: 0.125/0.125 stable at
+  baseline, then 1.00/0.625/0.625/0.125/0.5/1.0 under qualifier arms).
+  Any claim citing it needs ≥5 samples. It is the reason the judged
+  replication rule exists.
+
 CLOSED NEGATIVES
 - Reflect DECOMPOSITION (owner-approved pilot, 2026-07-20): splitting into
   ops+voice calls ELIMINATED journal-omission at all three models (the
