@@ -502,3 +502,27 @@ each holding its measured best. Data: rfix3_lfmi_route_live.jsonl.
   that became the decomp proposal two weeks and ten null levers later.
 - "A rule that partially states a required object teaches omission" — the
   ancestor of mode 7, DSTATE, and the statement gate itself.
+
+## APPENDED 07-20 ~09:35 — "The decomposition that half-worked" (pilot)
+
+The owner-approved experiment: reflect asks a model to do five jobs in one
+call, so split it — decisions in call 1, the learner-facing journal and
+questions in call 2, over a digest of what call 1 decided. Result at three
+models: **journal-omission went to exactly zero everywhere** (it had been
+the single most persistent failure class in the campaign, surviving six
+template generations, three validator arms, an example rewrite, and a
+section-reorder). The attention-budget thesis was right. And the pilot
+still FAILED its adoption bar — because the other half of the residual,
+per-op field composition (resolve-ops missing `reason`, create-ops missing
+evidence ids), moved into call 1 unchanged: qwen 15/30, statistically flat
+against its single-call 14-16. Cost was fine (+30%, inside the +45% bar);
+the acceptance gain simply wasn't there at the deciding model.
+So: no adoption, infra parked opt-in — and a much sharper problem
+statement than we started with. "The mega-task juggles five jobs" was
+half-true; what actually remains is "the model can't reliably compose one
+op's required fields," which is a smaller, cheaper target (and one whose
+obvious fix — demonstrate each op type — collides with the measured
+example-bleed constraint, so it has to be stated, not shown). A negative
+result that upgrades the question is worth more than a win that doesn't.
+Bonus datum: lfm2.5-instruct scored its first-ever reflect passes (2/30
+from 0/27) under the split. Data: decomp_*_reflect.jsonl.

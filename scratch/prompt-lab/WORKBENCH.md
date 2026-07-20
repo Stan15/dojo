@@ -19,6 +19,37 @@ OWNER-ONLY/untouched. Consume ONLY the printed aggregate (holdout
 mean · visible mean · gap verdict); report the one bit to the owner.
 Gap ≤0.1 = generalizes (v1.0.0 bar); >0.2 = broaden visible corpus.
 
+**DECOMP PILOT ADJUDICATED ~09:30 — SPLIT VERDICT (thesis half
+CONFIRMED, bar MISSED, one clean follow-up).**
+- gemma 28/30 (bar ≥26 ✓, matches single-call best), qwen 15/30
+  (bar ≥18 ✗, single-call baseline 14-16/30 = FLAT), lfm-instruct
+  2/30 (from 0/27 single-call — first reflect passes ever, ride-along).
+- **JOURNAL-OMISSION: ZERO at all three models** (qwen baseline 3-6
+  per run; gemma 0; lfm 15 single-call). The pilot's core mechanism —
+  give the narrative obligation its own attention budget — WORKED
+  COMPLETELY. Questions-class fails also zero.
+- **But the op-composition class simply MOVED into call 1** (qwen 8
+  call-1 validation fails; lfm 13 call-1 no-JSON + 8 validation).
+  Sampled errors: resolve-ops missing `reason`, create-ops missing
+  evidence ids, update-ops missing id — the SAME per-op requirement
+  composition, now unmixed with anything else. So the residual is NOT
+  attention dilution across jobs; it is per-op field composition
+  within the ops job itself.
+- TOKEN COST: call2 ≈ 2.0-2.2KB whole-trace (~+30% per scenario,
+  inside the ≤+45% bar). Density verdict: cost bar met, acceptance
+  gain absent at the deciding model → NO ADOPTION.
+- **VERDICT: pilot NEGATIVE for adoption, POSITIVE for diagnosis.**
+  Infra stays (opt-in, unused, default byte-identical); the finding
+  narrows the reflect problem from "5 jobs at once" to "per-op field
+  requirements", which is a DIFFERENT and cheaper lever (candidate:
+  per-op skeleton lines — one literal per op type showing exactly its
+  required fields — pre-register as DOPS next cycle; note EXB2 tension:
+  it removed the create example for bleed reasons, so DOPS must state
+  rather than demonstrate, or demonstrate orthogonally).
+- Owner deliverable: the decomp proposal (QUESTIONS −3) is ANSWERED by
+  measurement — decomposition alone doesn't clear reflect; the journal
+  half is solved and the op half is now precisely characterized.
+
 **CODEX VALIDATION ADJUDICATED ~08:05 (both-samples rule):** 5 of 12
 recovered on resample = VARIANCE (floors hold): gen_collision,
 plan_unrealistic, reflect_diagnostic_voice, reflect_contradicts,
