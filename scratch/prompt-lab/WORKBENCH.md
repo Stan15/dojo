@@ -941,11 +941,20 @@ directive §queue).
   4B models not measured under the profile (it's opt-in,
   thinking-class-targeted) but a gemma spot-run (6 scenarios)
   confirms the lean payload doesn't collapse a strong model, ≥4/6.
-  Fragments live under fragments/route_rules_{default,lean}.md;
-  full template protocol; output-budget unaffected while default-off
-  (hash changes → rebuild same commit anyway). Honest failure mode to
-  record if seen: lean payload trades rule-omission fails for
-  semantic-wrongness fails (validator can't teach judgment).
+  DESIGN CONSTRAINT (statement gate, tests/test_prompts.py:117): cap
+  placeholders must stay in the TEMPLATE FILE — so rule 3 (carries
+  new_name_words/new_mission_words) and the Check line (reason_words)
+  stay in both templates; the swap covers only cap-free guidance:
+  rules 1-2-4-5 → {{ route_guidance }} and the Field-rules block →
+  {{ route_field_rules }}, fragments per kind × {default,lean}, the
+  default fragments byte-verbatim extractions (compiled default
+  payload byte-identical, tested). Lean guidance: one condition line
+  per action, no confidence/seed prose. measure.py gains
+  DOJO_ROUTE_PROFILE env hook (anchor_profile pattern). Full template
+  protocol; output-budget hash changes → rebuild same commit. Honest
+  failure mode to record if seen: lean payload trades rule-omission
+  fails for semantic-wrongness fails (validator can't teach
+  judgment).
 
 - **EXB2-CREATE-SUPPRESSION (pre-registered 2026-07-19 ~18:15).**
   Evidence: 12/14 surviving EX-BLEED copies are the CREATE example op
