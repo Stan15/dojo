@@ -1191,6 +1191,19 @@ directive §queue).
   must clear their floors. Both must pass to adopt. Rule-byte cost is
   measured (rule bytes are not free) — the +30B rides the density
   ledger.
+  **AMENDMENT ~12:15, recorded BEFORE the qwen cell finishes and
+  BEFORE any replication (R3-amendment precedent):** gemma run1 =
+  26/30, ONE UNDER the ≥27 bar — but the TARGET class is at ZERO
+  (strategy/dial fails 0) and all four fails are the orthogonal
+  create-missing-key class (3 in the EXB2-era gemma run → 4 now,
+  inside its own noise). Gemma reflect has sampled 26-29 on adjacent
+  arms → band-edge, and the campaign's standing precedent for a
+  band-edge cell is REPLICATE-before-adjudicate (W1, EXB). Therefore:
+  chain restraint_gemma_reflect_rep2 AFTER the qwen cell (GPU serial).
+  ADJUDICATION: rep2 ≥27 AND dial-fails 0 → gate 1 passes (run1 was
+  sampling), proceed to the codex subset; rep2 ≤26 again → gate 1
+  FAILS as written → REVERT both qualifiers, record negative, NO codex
+  spend. Two samples only — no third bite.
 
 - **DOPS (pre-registered 2026-07-20 ~09:45, from the decomp pilot's
   re-characterized residual).** The op requirements ARE stated —
