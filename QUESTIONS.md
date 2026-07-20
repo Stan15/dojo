@@ -63,7 +63,9 @@ _Statuses: `[x]` shipped · `[~]` standing/in-progress · `[?]` blocked-on-owner
    now has closing evidence: after W1+W2+W3 landed, the reflect residual
    at every measured model is journal-omission + op-requirement
    composition — the 5-job single call itself; identical failure classes
-   across three model families (full case:
+   across three model families; a controlled section-ordering probe (SORD,
+   07-20) also measured NULL on the omission class — every non-decomp lever
+   is now exhausted (full case:
    scratch/prompt-lab/draft_owner_proposals.md §1). Ask: approve a
    two-call decomposition PILOT behind a compiler profile, measured
    against the single call in one battery cycle. **Default: pilot it —
