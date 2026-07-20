@@ -1,5 +1,51 @@
 # PROMPT LAB WORKBENCH — live campaign state
 
+## ⟫ RESUME HERE (handoff consolidated 2026-07-19 ~23:45; everything
+below this header is the day's detailed ledger, superseded as state)
+
+A fresh session pointed at docs/PROMPT_LAB.md does STEP ZERO (cron
+heartbeat + wakeup), then picks up from THIS summary. Everything is
+committed and pushed through 796d4d3; tree clean except the OWNER-ONLY
+__holdout baseline (never touch); no batteries or subagents in flight;
+contamination CLEAN.
+
+**Day's adopted arms (all committed with raw data):** W1 word-cap
+tolerance (9f878e5); W2 questions-object coercion (ea8ff26,
+class-kill confirmed); W3 evidence decoration strip (298ba10);
+EX-BLEED orthogonal example values (871db97, gemma reflect 29/30
+best-ever); EXB2 create-suppression (e3e3504); RSIMP lean-route
+profile infra (adca203, opt-in, unused); RFIX3 route-skeleton
+profile (0f118bc: default legacy-null byte-identical; opt-in "live"
+= qwen route 1/8→12/13, campaign-largest win). Sub-4B bake-off
+CLOSED: lfm2.5-thinking:1.2b is the ~1GB class rep at 51% (README
+re-based).
+
+**Closed negatives (do not blind-retest):** R3 retry-feedback ×4
+probes (incl. R3-LFM +13<+15); W4 enum phrasing (rumination
+migrates); RSIMP lean at lfm-think (0/13); RFIX absent-literal
+(teaches invention); W5 evidence-core (marginal 3 post-W3); W2b type
+coercion (old-era pool). lfm-think route = CAPABILITY FLOOR
+(0/13 × three surgeries). The three-sided skeleton trap is ledgered
+in INSIGHTS.
+
+**Open queue (highest value first):** (1) owner replies on QUESTIONS
+−3/−2 (reflect-decomp pilot, mixed-model table) gate the next big
+arms; (2) grade-only retry-feedback fresh pre-reg (parked: needs its
+own bar + probe cycle); (3) no-insights create-example
+neutralization (parked: no mechanism registered); (4) loop step 1-2:
+generate new theories from the newest full batteries
+(exb2_*_full.jsonl are the current arm-state fulls; route cells now
+have profile-split baselines). Judged spot-sets for adopted arms:
+W1 judged (3/1 SUBSTANTIVE), W2/W3 closed by content-preservation
+argument, EX-BLEED/EXB2/RFIX3 ride the next authorized codex spend
+(visible corpus floors re-check will bootstrap their floors).
+
+**Standing rules refreshed today:** 7-category exhaustion checklist
+(PROMPT_LAB.md) before any wait; BLOG_MATERIAL.md capture-first in
+the same commit as each adjudication; no model inference of any kind
+during a battery; codex exec needs stdin closed; load-gated launches
+(<6) after two starvation voids.
+
 ## ⟫ CURRENT (2026-07-19 ~10:45) — W2 LANDED (ea8ff26, questions
 coercion), W3 LANDED (298ba10, evidence decoration strip), 937 green.
 **IN FLIGHT: W2+W3 confirmation battery** (bfdpcd6pm →
