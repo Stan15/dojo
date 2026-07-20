@@ -81,3 +81,13 @@ Mandatory companions to any edit here:
 
 This file is excluded from the runtime template snapshot (see
 `__init__.py::all_templates`); it costs zero payload bytes.
+
+11. **Escape hatches are stated, typed, capped, and deviation-framed —
+   all four.** A conditional obligation (e.g. "fewer items requires a
+   note") left unstated is tripped blind (mode-7 kin); stated bare, its
+   value gets type-guessed (`"note": true`, qwen) and its condition read
+   as PERMISSION (gemma under-filled and wrote 40-word note essays,
+   3/3 → 2/7). The proven form frames the default as null, the hatch as
+   deviation, with an explicit cap: `"note" stays null unless you
+   returned fewer than {{ n_items }} items (then ≤ {{ note_words }}
+   words saying why)` (DSTATE-2, 2026-07-19: gemma 7/7, qwen 6/7).

@@ -416,3 +416,12 @@ keeps `pipx install --force` from ever seeing real state.
   measured best. Generalizes the 6i lesson: when the same edit helps one
   model and hurts another, the compiler branches per caliber — defaults
   never chase a single model's win.
+- **An escape hatch must be stated, typed, capped, and deviation-framed —
+  all four (2026-07-19, DSTATE).** The fewer-items-requires-note rule was
+  enforced for diagnostics but unstated (models tripped it blind: mode-7).
+  Stating it bare made qwen emit `"note": true` (type must be SHOWN) and
+  read as permission at gemma (under-filling + 40-word essays, 3/3→2/7).
+  The wording that works is generate's proven form: "stays null unless
+  you returned fewer than N items (then ≤ 25 words saying why)" — gemma
+  7/7 best-ever, qwen 6/7. Every conditional obligation in a template
+  needs all four properties or it creates the failure it prevents.
