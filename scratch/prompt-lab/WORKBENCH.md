@@ -1082,6 +1082,19 @@ directive §queue).
 
 ## Pre-registered (open)
 
+- **EXB3-COUNT-STATEMENT (conditional — fires ONLY if the rerun12
+  confirms reflect regressions on both samples).** If EXB2's create-
+  suppression cost the strong tier its count anchor (over-creation:
+  "two insights, not one"), the fix is NOT restoring the example (that
+  re-opens bleed) but a STATED count in the with-insights Field rules:
+  "at most {{ max_new_insights }} creates, usually zero or one — most
+  reviews only update." Statement over demonstration (the reverse of
+  the usual mode-9 direction, justified because the bleed cost of
+  demonstration is measured). Decision rule: confirmed-failing reflect
+  scenarios recover at codex (targeted subset re-run) AND 4B reflect
+  minis stay flat AND bleed_check stays at EXB2 levels. Rides only on
+  confirmed regression — never blind.
+
 - **RFIX3-LFMI (pre-registered 2026-07-20 ~04:15; IN EXECUTION).**
   The live route skeleton was never measured on lfm2.5-1.2b-instruct
   — the sub-4B route CHAMPION (10/13 default-nulls, bake-off) and the
