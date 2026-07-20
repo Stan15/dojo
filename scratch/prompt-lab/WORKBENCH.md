@@ -20,6 +20,17 @@ three bar-writing defects recorded (bundling / partition / over-tight),
 and qwen's campaign-best reflect (18/30 under MAINT). MAINT is
 REVERTED on gate-2 target-metric bimodality.
 
+**VAL2 ADJUDICATION IN PROGRESS (~16:20, owner-authorized spend):**
+full run exit 1 — 94/108, mean 0.845, 14 floor fails (9 rotating
+repeat-offenders + 5 new; restraint scenarios unchanged under MAINT,
+plateau 0.12 again = the certified lottery). Multi-sample re-run of
+the 5 NEW fails in flight (bubpoz837, RERUN5-EXIT). STRUCTURAL
+FINDING FORMING (report to owner with the verdict): with ~100
+scenarios, judged σ≈0.11, and single-sample ratchet floors, a
+rotating ~10% of floors miss EVERY full run — "green" as currently
+defined may be structurally unreachable; the owner will need to pick
+a green definition (variance-adjudicated / margin-widened /
+multi-sample floors) before the holdout condition can ever fire.
 **OWNER RULED (2026-07-20, plain-language exchange): MAINT ADOPTED on
 shape evidence — campaign-normal standard; judged target recorded as
 unmeasured-not-failed (plateau needs n≥5). Campaign: 12 adopted arms.**
