@@ -1204,6 +1204,31 @@ directive §queue).
   sampling), proceed to the codex subset; rep2 ≤26 again → gate 1
   FAILS as written → REVERT both qualifiers, record negative, NO codex
   spend. Two samples only — no third bite.
+  **RESTRAINT CLOSED ~13:10 — REVERTED as pre-registered (gate 2 =
+  2/4, bar ≥3/4).** Gate 1 passed (gemma rep2 27/30 dial-fails 0;
+  qwen 14/30 flat). Gate 2 detail: plateau_remediation 0.125 → **1.00
+  PERFECT** (the fall-through precedence guard, targeting exactly the
+  measured mechanism); atrophy_reentry 0.50 → 0.88 PASS; but
+  no_retirement_from_phase_pass stayed 0.50 (its maintenance guard
+  did NOT work — judge still cites "shifts difficulty despite healthy
+  maintenance") and resolution_amid_active_struggle 0.78 FAIL. Bundle
+  fails → both qualifiers reverted; NO cherry-picking post-hoc.
+  **PRE-REG DESIGN LESSON (recorded): the arm bundled TWO independent
+  qualifiers with independent mechanisms and independent target
+  scenarios behind ONE bar — that is a pre-registration defect, not a
+  reason to break the rule after seeing data. Single-variable arms
+  from here.**
+- **SVFT (pre-registered 2026-07-20 ~13:15; single-variable successor
+  to RESTRAINT).** ONLY the fall-through precedence guard:
+  "otherwise — only if NO case above matched — accuracy below 0.50 →
+  lower difficulty" (+18B). Evidence: its target scenario went 0.125
+  → 1.00 under the bundle; the maintenance qualifier is dropped
+  entirely (measured null on its own target). Gate 1 (local): both 4B
+  reflect minis flat-or-better (gemma ≥27/30, qwen ≥13/30, dial-class
+  fails 0-2). Gate 2 (codex, same 4 scenarios ≈ 8 calls): plateau
+  ≥0.875 AND atrophy ≥0.875 AND neither of the two known-failing
+  scenarios drops BELOW its current run value (0.50 / 0.78) — i.e.
+  preserve the win, harm nothing. Adopt only on both.
 
 - **DOPS (pre-registered 2026-07-20 ~09:45, from the decomp pilot's
   re-characterized residual).** The op requirements ARE stated —

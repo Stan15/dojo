@@ -542,3 +542,31 @@ hurts another of the same size. The architecture answer each time is the
 same: don't average the calibers, branch the compiler and let each keep its
 measured best. What started as a workaround for one weird result is now the
 campaign's most-replicated design principle. Data: dops_*_reflect.jsonl.
+
+## APPENDED 07-20 ~13:20 — "The prompt was wrong and the models were right"
+
+The last open quality debt was a class of strong-tier failures where the
+grader kept "manufacturing change" — raising difficulty on healthy
+maintenance, lowering it on a plateau. Reading the model's outputs against
+the TEMPLATE (never against the rubric — that's the reward-hacking line)
+showed the models were following the instructions correctly and the
+instructions were wrong. The strategy rule is written as an ordered
+decision procedure — "first matching case wins" — but the cases are a
+list of independent triggers, and its qualitative case ("flat scores,
+steady effort, no distress → add support, hold difficulty") competes with
+a numeric fall-through ("accuracy below 0.50 → lower difficulty") that is
+far cheaper to evaluate. Flat 0.3-0.7 scores match both. The model took
+the cheap one. Every time.
+Two guards were written: one restoring precedence at the fall-through,
+one adding a maintenance exemption to the raise case. The precedence guard
+took its target scenario from **0.125 to a perfect 1.00** — the largest
+judged-quality jump of the campaign. The maintenance guard did nothing at
+all. And the bundle still FAILED its pre-registered bar (2 of 4 scenarios
+cleared, bar was 3), so it was reverted whole — because the pre-registered
+rule doesn't get renegotiated after the data arrives, and keeping only the
+winner is precisely the cherry-pick that pre-registration exists to stop.
+The real lesson is about experiment design, not prompts: the arm bundled
+two independent qualifiers with independent mechanisms and independent
+target scenarios behind ONE bar. That's a defect in the pre-registration,
+and the fix is to re-run it as a single-variable arm and let it earn
+adoption on its own — which is exactly what's now in flight.
