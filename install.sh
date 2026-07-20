@@ -179,6 +179,6 @@ if [ "$DOWNLOAD_SUCCESS" -eq 1 ]; then
 else
     warn "Could not fetch precompiled binary from GitHub Releases (repository may be private or release not yet published)."
     warn "Please install Python 3.11+ to run the automated source installer, or build the binary locally using PyInstaller:"
-    echo -e "  \033[1;36mpip install pyinstaller && pyinstaller --onefile --name dojo --paths src --add-data \"skills/dojo:skills/dojo\" run_dojo.py\033[0m"
+    echo -e "  \033[1;36mpip install pyinstaller && pyinstaller dojo.spec\033[0m"
     exit 1
 fi
