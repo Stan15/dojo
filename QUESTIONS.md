@@ -68,9 +68,10 @@ _Statuses: `[x]` shipped · `[~]` standing/in-progress · `[?]` blocked-on-owner
    is now exhausted (full case:
    scratch/prompt-lab/draft_owner_proposals.md §1). Ask: approve a
    two-call decomposition PILOT behind a compiler profile, measured
-   against the single call in one battery cycle. **Default: pilot it —
-   measurement-only, no default change; the proposal dies on its own
-   numbers if the token cost outweighs acceptance gains.**
+   against the single call in one battery cycle. **APPROVED by owner
+   2026-07-20 (direct question): pilot authorized as specified; holdout
+   gate relay also authorized (aggregate-only form) once the in-flight
+   codex visible run lands green. Execution: prompt-lab WORKBENCH.**
 
 -2. **Per-kind mixed-model routing table (2026-07-19, prompt-lab).** The
    bake-off's per-kind divergence makes a routing table a real product

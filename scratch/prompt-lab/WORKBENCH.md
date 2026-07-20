@@ -2,6 +2,23 @@
 
 ## ⟫ RESUME HERE (updated 2026-07-20 ~06:10; detailed ledger below)
 
+**OWNER RULINGS 2026-07-20 ~06:30 (via direct question):**
+(1) **REFLECT-DECOMP PILOT APPROVED** — two-call split (ops+strategy
+with evidence → journal+questions+retirements with call-1 output)
+behind an opt-in profile, measured vs single-call on the same battery
+set; no default change; dies on its own numbers. IMPLEMENT AFTER the
+codex run adjudicates (quiet tree until then); full pre-registration
+required first (bars: reflect acceptance vs 14/27 qwen / 27-28/30
+gemma baselines; whole-trace token cost per scenario recorded; density
+verdict = acceptance gain vs added prefill+decode).
+(2) **HOLDOUT GATE: owner authorizes relay AFTER the codex visible run
+lands green.** Execute as the AGGREGATE-ONLY form (`dojo benchmark
+"codex exec --skip-git-repo-check -s read-only" --holdout`) — never
+the pytest ratchet form: the uncommitted __holdout baseline stays
+OWNER-ONLY/untouched. Consume ONLY the printed aggregate (holdout
+mean · visible mean · gap verdict); report the one bit to the owner.
+Gap ≤0.1 = generalizes (v1.0.0 bar); >0.2 = broaden visible corpus.
+
 **IN FLIGHT: full codex eval validation run (bsv1vjg10, standing-grant
 spend: one targeted run to land ratchets after 9 adopted arms; log →
 scratchpad/codex_eval_run.log, exit code echoed as CODEX-EVAL-EXIT).
