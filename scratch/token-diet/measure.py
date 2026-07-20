@@ -80,6 +80,9 @@ def run_scenario(path: Path, driver: str) -> list[dict]:
         rprofile = os.environ.get("DOJO_ROUTE_PROFILE")
         if rprofile:  # RSIMP arm switch: lean route rules, compiler-side
             store.configs.set_value("fulfiller.route_profile", rprofile)
+        rskel = os.environ.get("DOJO_ROUTE_SKELETON")
+        if rskel:  # RFIX3 arm switch: live-interpolated route skeleton
+            store.configs.set_value("fulfiller.route_skeleton", rskel)
         cid = sc["seed"]["campaign"]["id"]
         for idx, step in enumerate(sc["steps"]):
             try:

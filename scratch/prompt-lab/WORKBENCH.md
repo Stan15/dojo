@@ -1037,6 +1037,17 @@ directive §queue).
 
 ## Pre-registered (open)
 
+- **RFIX3-LFMI (pre-registered 2026-07-20 ~04:15; IN EXECUTION).**
+  The live route skeleton was never measured on lfm2.5-1.2b-instruct
+  — the sub-4B route CHAMPION (10/13 default-nulls, bake-off) and the
+  designated router in the mixed-model proposal (QUESTIONS −2).
+  Arm: same 13 route scenarios, DOJO_ROUTE_SKELETON=live (hook added
+  to measure.py). Decision rule: ≥11/13 AND existence/copied-literal
+  fails ≤1 → the mixed-model proposal's router row upgrades to
+  live-profile guidance; ≤10 flat → default stays its guidance
+  (negative recorded, one battery, no product change either way —
+  profile docs only). Output: rfix3_lfmi_route_live.jsonl.
+
 - **SORD FULL PRE-REG (2026-07-20 ~02:05, supersedes sketch; IN
   EXECUTION).** Arm: in campaign_reflect.md, MOVE rules 6-7 (the
   journal + learner-language obligations) from the RULES block to
