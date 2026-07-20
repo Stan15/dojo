@@ -72,6 +72,15 @@ _Statuses: `[x]` shipped · `[~]` standing/in-progress · `[?]` blocked-on-owner
    2026-07-20 (direct question): pilot authorized as specified; holdout
    gate relay also authorized (aggregate-only form) once the in-flight
    codex visible run lands green. Execution: prompt-lab WORKBENCH.**
+   **ANSWERED BY MEASUREMENT 2026-07-20 (pilot ran same night): the split
+   ELIMINATED journal-omission at all three models (the campaign's most
+   persistent class) but missed its acceptance bar — qwen 15/30 vs the
+   ≥18 bar, flat against single-call — because per-op field composition
+   (resolve missing reason, create missing evidence ids) simply moved
+   into call 1. Cost was inside budget (+30%). NOT ADOPTED; infra parked
+   opt-in/unused. Net: reflect's residual is now precisely "per-op field
+   composition", a smaller lever (DOPS, queued). No further decision
+   needed unless you want the split shipped for the journal half alone.**
 
 -2. **Per-kind mixed-model routing table (2026-07-19, prompt-lab).** The
    bake-off's per-kind divergence makes a routing table a real product
