@@ -101,9 +101,8 @@ OUTPUT — your final output is exactly this JSON (anything before it is ignored
   "topic_retirements": [],
   "journal": "{{ journal_example }}"
 }
-Field rules: "op" is one word — create, update, or resolve. create needs key
-+ text + evidence; update needs id + text; resolve needs id; EVERY op needs a
-reason. Match the examples' brevity — text, reason, and journal all have hard
+{{ reflect_field_rules }}
+Match the examples' brevity — text, reason, and journal all have hard
 word caps (rules 1 and 6). "journal" is never empty. A non-null strategy is {"difficulty": one of beginner/intermediate/
 advanced, "scaffolding": one of high/medium/low, "reason": "why the dial moves"} with at
 least one dial set. A topic retirement (rule 5 only) is {"path": "a.b",

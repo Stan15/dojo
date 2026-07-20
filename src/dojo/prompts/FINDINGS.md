@@ -26,7 +26,22 @@ WINS TO PRESERVE
 - Ops example shows one op per TYPE, update first (mode 10; armJ5 count
   anchoring).
 
+- Per-op field-rule GEOMETRY is a PROFILE (DOPS 2026-07-20,
+  fulfiller.reflect_field_rules): parallel per-op lines gave gemma its
+  best reflect ever (29/30, op-composition fails 0); qwen got WORSE twice
+  (op-fails 10-12 vs 6-8) on the same edit. Default = legacy run-on form,
+  byte-identical (test-pinned); "dops" = parallel lines, opt-in. Editing
+  either fragment must keep both measurements valid.
+
 CLOSED NEGATIVES
+- Reflect DECOMPOSITION (owner-approved pilot, 2026-07-20): splitting into
+  ops+voice calls ELIMINATED journal-omission at all three models (the
+  campaign's most persistent class) but did NOT clear the acceptance bar —
+  per-op field composition moved into call 1 unchanged (qwen 15/30 vs a
+  >=18 bar; gemma 28/30; lfm-instruct 2/30 from 0). Cost +30% (inside the
+  +45% bar). Infra parked opt-in (campaign_reflect_ops/voice templates,
+  ReflectOpsResult/ReflectVoiceResult). The residual is per-op field
+  composition, NOT job-count dilution — target that, not the split.
 - Section ORDER: moving rules 6-7 adjacent to OUTPUT left journal-omission
   EXACTLY at baseline (SORD, sord_*_reflect.jsonl). Omission is
   compositional load; the only open lever is the owner-gated reflect

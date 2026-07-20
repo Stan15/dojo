@@ -629,7 +629,17 @@ def reflect_section_values(store, campaign: Campaign, *, window_n: int = 15):
             feedback_lines.append(
                 f'- [learner resolved insight {ins.key}] "{ins.resolution}"'
             )
+    # Per-op field rules are CALIBER-DIVERGENT (DOPS, measured 2026-07-20):
+    # parallel per-op lines gave gemma3:4b its best reflect ever (29/30,
+    # op-composition fails 0) and made qwen3.5:4b worse twice (op-fails
+    # 10-12 vs 6-8 on the run-on form). Default keeps the run-on text
+    # byte-identical; "dops" is opt-in for models measured to prefer it.
+    _rules_profile = str(store.configs.get_value("fulfiller.reflect_field_rules", "default"))
+    if _rules_profile not in ("default", "dops"):
+        _rules_profile = "default"
     values = {
+        "reflect_field_rules": render(
+            f"fragments/reflect_field_rules_{_rules_profile}.md", {}),
         "window_n": window_n,
         "mission": campaign.mission,
         "strategy_line": strategy_line(campaign),

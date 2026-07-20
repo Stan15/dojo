@@ -293,6 +293,22 @@ class TestCompilerBranches:
         compiled = compiler.compile_goal_route(store, goal="learn to read tide tables")
         assert '"action" is one word' in compiled.prompt
 
+    def test_reflect_field_rules_default_is_legacy_runon(self, store: DojoStore):
+        """DOPS (2026-07-20): per-op field-rule GEOMETRY is caliber-divergent
+        (parallel lines: gemma 29/30 best-ever with op-fails 0; qwen worse
+        twice). Default keeps the run-on form byte-identical; "dops" is
+        opt-in."""
+        compiled = compiler.compile_reflect(store, _campaign(store))
+        assert "create needs key" in compiled.prompt
+        assert "EXACTLY its own fields" not in compiled.prompt
+
+    def test_reflect_field_rules_dops_profile_uses_parallel_lines(self, store: DojoStore):
+        store.configs.set_value("fulfiller.reflect_field_rules", "dops")
+        compiled = compiler.compile_reflect(store, _campaign(store))
+        assert "EXACTLY its own fields" in compiled.prompt
+        assert "  create: key + text + evidence + reason" in compiled.prompt
+        assert "create needs key" not in compiled.prompt
+
     def test_reflect_with_insights_shows_update_example_only(self, store: DojoStore):
         """EXB2 (2026-07-19): with real insights present, the create example
         is suppressed — 12/14 surviving example-bleed copies were the create
@@ -347,7 +363,7 @@ class TestDerivedCeiling:
                        "calibration_rule": "", "window_n": 15,
                        "ops_example": "", "journal_example": "",
                        "route_soft_rules": "", "route_field_rules": "",
-                       "route_skeleton": ""})
+                       "route_skeleton": "", "reflect_field_rules": ""})
         compiled = compiler._compile(store, kind, values, {})
         assert compiled.prompt  # no BudgetExceeded: sections clip, ceiling holds
 

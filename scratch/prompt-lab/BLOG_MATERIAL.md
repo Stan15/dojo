@@ -526,3 +526,19 @@ example-bleed constraint, so it has to be stated, not shown). A negative
 result that upgrades the question is worth more than a win that doesn't.
 Bonus datum: lfm2.5-instruct scored its first-ever reflect passes (2/30
 from 0/27) under the split. Data: decomp_*_reflect.jsonl.
+
+## APPENDED 07-20 ~10:40 — "Same edit, opposite calibers, third time"
+
+DOPS: the reflect template stated per-op requirements as a run-on clause
+chain with `reason` factored out into a trailing global — and the measured
+failures were exactly the ops that drop that trailing clause. Rewriting it
+as parallel per-op lines (zero new content, no example — the bleed
+constraint forbids demonstrating) gave gemma its best reflect of the entire
+campaign: 29/30, target failure class at ZERO. It made qwen worse, twice
+(op-fails 10-12 vs 6-8). That's now the THIRD independent instance of the
+same structural fact — the deliberation anchor, the route skeleton, and now
+field-rule geometry — where an edit that clearly helps one 4B model clearly
+hurts another of the same size. The architecture answer each time is the
+same: don't average the calibers, branch the compiler and let each keep its
+measured best. What started as a workaround for one weird result is now the
+campaign's most-replicated design principle. Data: dops_*_reflect.jsonl.
