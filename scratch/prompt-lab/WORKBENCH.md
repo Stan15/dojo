@@ -924,6 +924,29 @@ directive §queue).
 
 ## Pre-registered (open)
 
+- **RSIMP-THINK (pre-registered 2026-07-19 ~21:20; NEXT battery
+  cycle).** Evidence: lfm2.5-thinking route 0/11 root-caused to
+  deliberation-budget exhaustion on route's dense rule block (W4
+  negative proved it's not phrasing: rumination migrates to the next
+  descriptor). Hypothesis: an opt-in fulfiller profile
+  (fulfiller.route_profile = "lean", compiler-selected — craft rule 5,
+  anchor_profile precedent) that compiles capture_route/goal_route
+  with a MINIMAL rule block (action enum + the one structural rule
+  "attach/new_topic need campaign + topic_path; propose_campaign
+  needs new_name + new_mission" + nulls rule; drop confidence/seed
+  guidance to validator-side messages) raises thinking-class route
+  acceptance materially. Decision rule: lfm-think route battery
+  (same 13-set) ≥5/13 with the lean profile (from 0/13); DEFAULT
+  payload byte-identical (profile off = current bytes, tested);
+  4B models not measured under the profile (it's opt-in,
+  thinking-class-targeted) but a gemma spot-run (6 scenarios)
+  confirms the lean payload doesn't collapse a strong model, ≥4/6.
+  Fragments live under fragments/route_rules_{default,lean}.md;
+  full template protocol; output-budget unaffected while default-off
+  (hash changes → rebuild same commit anyway). Honest failure mode to
+  record if seen: lean payload trades rule-omission fails for
+  semantic-wrongness fails (validator can't teach judgment).
+
 - **EXB2-CREATE-SUPPRESSION (pre-registered 2026-07-19 ~18:15).**
   Evidence: 12/14 surviving EX-BLEED copies are the CREATE example op
   (create key+text copied wholesale as a fake new insight); compiler
