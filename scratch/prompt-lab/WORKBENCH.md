@@ -1131,6 +1131,30 @@ directive §queue).
 
 ## Pre-registered (open)
 
+- **DOPS (pre-registered 2026-07-20 ~09:45, from the decomp pilot's
+  re-characterized residual).** The op requirements ARE stated —
+  as a run-on clause chain: "create needs key + text + evidence;
+  update needs id + text; resolve needs id; EVERY op needs a reason."
+  The measured failures are precisely the clause-chain's weak spots:
+  resolve-ops omit the trailing global `reason` (8 archived), create
+  omits evidence, update omits id. Hypothesis: per-op requirements
+  need PARALLEL LINE GEOMETRY, not a sentence — each op type on its
+  own line carrying its COMPLETE field list (reason repeated per
+  line, not factored out into a trailing global clause). Mode-7 kin:
+  a partially-stated object teaches omission; here the factoring
+  hides the obligation from the op that needs it most.
+  Arm (statement geometry only, zero new bytes of NEW content, no
+  example — EXB2 bleed constraint respected):
+    create: key + text + evidence ids + reason
+    update: id + text + reason
+    resolve: id + reason
+  Decision rule: qwen reflect merged ok ≥18/30 OR op-composition
+  fails ≤3 (from 6-8); gemma flat-or-better (≥27/30); bleed_check
+  unchanged; no new class. Batteries: gemma then qwen reflect minis
+  (single-call path — the pilot's split is parked, so measure the
+  PRODUCTION shape). Full template protocol; output-budget rebuild
+  same commit.
+
 - **EXB3-COUNT-STATEMENT (conditional — fires ONLY if the rerun12
   confirms reflect regressions on both samples).** If EXB2's create-
   suppression cost the strong tier its count anchor (over-creation:
