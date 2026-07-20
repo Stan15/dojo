@@ -45,6 +45,20 @@ W1 judged (3/1 SUBSTANTIVE), W2/W3 closed by content-preservation
 argument, EX-BLEED/EXB2/RFIX3 ride the next authorized codex spend
 (visible corpus floors re-check will bootstrap their floors).
 
+**MILESTONE 2026-07-20 ~01:45 — the visible-corpus mechanical seam is
+MINED OUT for this era.** Every kind swept: grade (W3 adopted; W6
+sized negative; verbatim residual = guard working), reflect (W1/W2/
+EX-BLEED/EXB2 adopted; residual = owner-gated decomp), route (profile
+arc complete; lfm-think floor certified), diagnostic (DSTATE-2
+adopted), plan (healthy 10-13/13), generate (qwen residual = 5×
+output-corruption capability signature, same class as the no-JSON
+mass — no mechanical lever). Remaining levers: (a) owner-gated arms
+(QUESTIONS −3/−2); (b) creative frontier per directive stop-conditions
+— payload composition/section-ordering probes (big-ticket; needs its
+own pre-registered design next cycle); (c) next codex spend
+bootstraps floors for the 5 adopted template arms. Cadence shifts to
+slow-loop until one of those unblocks.
+
 **Theory lanes sized and closed (2026-07-20 ~00:05, do not re-test
 blind):** W6-JSON-QUOTE-REPAIR — naked-inner-quote escaping recovers
 only 7/333 archived no-JSON rejections (2%; caveat: archived raws are
