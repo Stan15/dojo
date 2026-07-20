@@ -109,6 +109,19 @@ class TestInventory:
         )
 
     @pytest.mark.parametrize("name", TASK_TEMPLATES)
+    def test_every_template_has_a_findings_section(self, name: str):
+        """FINDINGS.md (owner directive 2026-07-20) is the per-template
+        register of measured wins and closed negatives — the mechanism that
+        preserves wins across edits. A template without a section there has
+        unprotected measurements; add the section in the same commit that
+        adds the template."""
+        findings = (_templates_dir() / "FINDINGS.md").read_text(encoding="utf-8")
+        assert f"## {name}" in findings, (
+            f"FINDINGS.md has no section for {name} — record its measured "
+            "wins/negatives (or an explicit 'no measurements yet' stub)"
+        )
+
+    @pytest.mark.parametrize("name", TASK_TEMPLATES)
     def test_templates_hold_no_logic(self, name: str):
         text = (_templates_dir() / name).read_text(encoding="utf-8")
         for construct in ("{% ", "{{#", "{{^", "<%"):

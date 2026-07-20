@@ -1,5 +1,11 @@
 # STOP — read this before editing ANY template in this directory
 
+**AND read FINDINGS.md (same directory): the per-template register of
+measured wins to preserve and closed negatives to avoid. This file is the
+cross-cutting failure-mode canon; FINDINGS.md tells you what YOUR template
+has already won and lost. Both are mandatory; a drift gate asserts every
+template has a FINDINGS section.**
+
 These templates are consumed by models from ~0.8B local up to frontier —
 weak-model behavior is measured, not guessed. Every failure mode below was
 OBSERVED in controlled batteries (evidence: `scratch/token-diet/baselines/`,
