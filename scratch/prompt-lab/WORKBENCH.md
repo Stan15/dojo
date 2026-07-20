@@ -182,6 +182,34 @@ own pre-registered design next cycle); (c) next codex spend
 bootstraps floors for the 5 adopted template arms. Cadence shifts to
 slow-loop until one of those unblocks.
 
+**JUDGED-VARIANCE BAND MEASURED (2026-07-20 ~15:30, free — the two
+same-tree codex runs give 10 replication pairs): median Δ 0.111, mean
+0.113, max 0.33; 4/10 identical; 2/10 moved ≥0.25.** So the judged
+band is roughly ±0.11 typical / ±0.33 worst-case — the number the new
+replication rule needed (shape has ±3; judged now has this).
+**AND IT PARTLY OVERTURNS MY OWN RETRACTION — recorded because the
+correction must be as honest as the claim.** plateau_remediation is
+STABLE in that pair (0.12 → 0.12), so "the 1.00 was noise" is the
+WEAKER reading. Three observations, honestly stated: 0.12 twice on
+the baseline tree (stable), 1.00 once under RESTRAINT (BOTH
+qualifiers), 0.12 once under SVFT (fall-through only). Candidate
+explanations now: (a) a rare sampling outlier on an otherwise stable
+scenario, or (b) a genuine INTERACTION effect requiring both
+qualifiers — the P1 letter-bleed precedent (interaction effects are
+real in this system). The retraction of the celebrated WIN stands
+(single sample, never reproduced under the arm that shipped), but the
+"it was noise" attribution is downgraded to UNRESOLVED.
+- **PLAT-INT (pre-registered 2026-07-20 ~15:35; ~4 codex calls).**
+  Re-apply the RESTRAINT bundle (BOTH qualifiers) and sample
+  plateau_remediation TWICE. Bars: both ≥0.875 → interaction
+  CONFIRMED, RESTRAINT re-opens for a proper full adjudication with
+  the maintenance guard's role re-examined; both ≤0.25 → the outlier
+  reading stands, class closed, no further arms; split → the scenario
+  is bimodal under this arm, unusable as single-sample evidence
+  forever (record and require ≥3 samples for any future claim on it).
+  Local gate not required: this is a judged-only question and the
+  bundle already passed gate 1 (gemma 27/30 rep2, qwen 14/30).
+
 **ADOPTION-EVIDENCE AUDIT (2026-07-20 ~15:00, prompted by the SVFT
 retraction — how far does the judged-sample hole reach?): 0 of 11
 adopted arms used a judged-quality delta as its adoption basis.** Every
