@@ -672,6 +672,22 @@ def registry_digest(store) -> str:
     return "\n".join(lines)
 
 
+def _route_rule_fragments(store, kind_slug: str) -> dict:
+    """Route rule blocks are compiler-selected fragments (RSIMP, craft rule 5):
+    the default profile compiles byte-identical to the pre-fragment templates;
+    the opt-in "lean" profile (fulfiller.route_profile) states fewer rules for
+    models measured to exhaust their deliberation budget on rule-dense
+    payloads (thinking-class small models). Cap-bearing lines never move here
+    (statement gate pins them to the template files)."""
+    profile = str(store.configs.get_value("fulfiller.route_profile", "default"))
+    if profile not in ("default", "lean"):
+        profile = "default"
+    return {
+        "route_soft_rules": render(f"fragments/route_soft_{kind_slug}_{profile}.md", {}),
+        "route_field_rules": render(f"fragments/route_field_{kind_slug}_{profile}.md", {}),
+    }
+
+
 def compile_route(store, *, capture_id: str, capture_text: str, learner_note: str = "") -> CompiledTask:
     """Payload for `capture.route`: the capture text (+ learner note) and the
     registry digest."""
@@ -679,6 +695,7 @@ def compile_route(store, *, capture_id: str, capture_text: str, learner_note: st
     values = {
         "text_and_learner_note": text,
         "campaign_lines_and_topic_paths": registry_digest(store) or "(no campaigns yet)",
+        **_route_rule_fragments(store, "capture"),
     }
     return _compile(store, "capture.route", values, {"capture_id": capture_id})
 
@@ -691,5 +708,6 @@ def compile_goal_route(store, *, goal: str) -> CompiledTask:
     values = {
         "goal_verbatim": goal,
         "campaign_lines_and_topic_paths": registry_digest(store) or "(no campaigns yet)",
+        **_route_rule_fragments(store, "goal"),
     }
     return _compile(store, "goal.route", values, {"goal": goal})

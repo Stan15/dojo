@@ -77,6 +77,9 @@ def run_scenario(path: Path, driver: str) -> list[dict]:
         profile = os.environ.get("DOJO_ANCHOR_PROFILE")
         if profile:  # A/B arm switch (QUESTIONS 6i): compiler-side, per seeded store
             store.configs.set_value("fulfiller.anchor_profile", profile)
+        rprofile = os.environ.get("DOJO_ROUTE_PROFILE")
+        if rprofile:  # RSIMP arm switch: lean route rules, compiler-side
+            store.configs.set_value("fulfiller.route_profile", rprofile)
         cid = sc["seed"]["campaign"]["id"]
         for idx, step in enumerate(sc["steps"]):
             try:

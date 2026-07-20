@@ -11,8 +11,7 @@ RULES
 3. No campaign fits → "propose_campaign" (name ≤ {{ new_name_words }} words,
    mission ≤ {{ new_mission_words }} words, in the learner's own framing).
    Never force a bad fit.
-4. Torn between two homes → choose the better one, set confidence "low".
-5. Never "stay_inbox": a goal always takes one of the three actions above.
+{{ route_soft_rules }}
 
 ## GOAL
 {{ goal_verbatim }}
@@ -23,9 +22,6 @@ OUTPUT — your final output is exactly this JSON (anything before it is ignored
 {"action": "attach", "campaign": null,
  "topic_path": null, "new_name": null, "new_mission": null,
  "confidence": "high", "reason": "≤ {{ reason_words }} words", "seed": false}
-Field rules: "action" is one word — attach, new_topic, or propose_campaign.
-attach and new_topic need campaign + topic_path; propose_campaign needs
-new_name + new_mission; the fields your action does not use stay null.
-"confidence" is high or low.
+{{ route_field_rules }}
 Check: campaign and topic_path copied verbatim from REGISTRY (only a new_topic
 leaf or a proposed campaign may be new text); reason ≤ {{ reason_words }} words.

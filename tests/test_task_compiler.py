@@ -244,6 +244,29 @@ class TestCompilerBranches:
         assert '"op": "create"' in compiled.prompt
         assert '"op": "update"' not in compiled.prompt
 
+    def test_route_default_profile_keeps_legacy_rule_text(self, store: DojoStore):
+        """RSIMP (2026-07-19): route rule blocks are compiler-selected
+        fragments; the DEFAULT profile must compile byte-identical legacy
+        text (verified against pre-extraction hashes at landing)."""
+        compiled = compiler.compile_goal_route(store, goal="learn to read tide tables")
+        assert '"action" is one word' in compiled.prompt
+        assert '"confidence" is high or low.' in compiled.prompt
+        assert "Never \"stay_inbox\"" in compiled.prompt
+
+    def test_route_lean_profile_states_fewer_rules(self, store: DojoStore):
+        store.configs.set_value("fulfiller.route_profile", "lean")
+        compiled = compiler.compile_goal_route(store, goal="learn to read tide tables")
+        assert '"action" is exactly one of' in compiled.prompt
+        assert '"confidence" is high or low.' not in compiled.prompt
+        assert "set confidence" not in compiled.prompt
+        # cap-bearing lines never move (statement gate): rule 3 still present
+        assert "propose_campaign" in compiled.prompt
+
+    def test_route_unknown_profile_falls_back_to_default(self, store: DojoStore):
+        store.configs.set_value("fulfiller.route_profile", "bogus")
+        compiled = compiler.compile_goal_route(store, goal="learn to read tide tables")
+        assert '"action" is one word' in compiled.prompt
+
     def test_reflect_with_insights_shows_update_example_only(self, store: DojoStore):
         """EXB2 (2026-07-19): with real insights present, the create example
         is suppressed — 12/14 surviving example-bleed copies were the create
@@ -296,7 +319,8 @@ class TestDerivedCeiling:
         values.update({"n_items": 2, "topic_path": "a.b", "difficulty": "intermediate",
                        "grounding_rule": "", "encounter_rule": "",
                        "calibration_rule": "", "window_n": 15,
-                       "ops_example": "", "journal_example": ""})
+                       "ops_example": "", "journal_example": "",
+                       "route_soft_rules": "", "route_field_rules": ""})
         compiled = compiler._compile(store, kind, values, {})
         assert compiled.prompt  # no BudgetExceeded: sections clip, ceiling holds
 
