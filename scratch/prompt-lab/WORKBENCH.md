@@ -9,6 +9,11 @@ committed and pushed through 796d4d3; tree clean except the OWNER-ONLY
 __holdout baseline (never touch); no batteries or subagents in flight;
 contamination CLEAN.
 
+**UPDATE 2026-07-20 ~01:30: DSTATE-2 adopted (966fd35, diagnostic
+escape-hatch statement — gemma diag 7/7 best-ever, README mode 11
+minted); W6 json-repair sized+closed negative (b0afd67). Adopted-arm
+count: 8. Queue unchanged below (owner-gated arms + step 1-2).**
+
 **Day's adopted arms (all committed with raw data):** W1 word-cap
 tolerance (9f878e5); W2 questions-object coercion (ea8ff26,
 class-kill confirmed); W3 evidence decoration strip (298ba10);
