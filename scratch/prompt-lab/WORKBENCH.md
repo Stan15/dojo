@@ -19,7 +19,24 @@ OWNER-ONLY/untouched. Consume ONLY the printed aggregate (holdout
 mean · visible mean · gap verdict); report the one bit to the owner.
 Gap ≤0.1 = generalizes (v1.0.0 bar); >0.2 = broaden visible corpus.
 
-**IN FLIGHT: full codex eval validation run (bsv1vjg10, standing-grant
+**CODEX RUN ADJUDICATION IN PROGRESS (~07:30):** full run exit 1 —
+96 pass / 12 floor fails, mean 0.875→0.856. NOT green → holdout relay
+PARKED per owner condition. Split: 6 unchanged-payload fails (plan ×2,
+route_new_leaf, sycophancy_trap, verbatim_poetry, gen_collision —
+several repeat offenders) = variance candidates; 6 reflect fails on
+CHANGED payloads (bleed fragments) — verdicts are pedagogy-judgment
+misses, no calligraphy content cited; plateau's "two creates"
+complaint PREDATES today (armJ-era) but EXB2's create-suppression
+removing the count anchor is a plausible strong-tier mechanism (no
+count demonstration → over-creation). MULTI-SAMPLE RE-RUN of the 12
+in flight (bhrhs13aw, log scratchpad/codex_rerun12.log,
+RERUN12-EXIT). Adjudication rule: both-samples-fail = regression
+candidate (reflect ones → consider count-anchor restoration arm:
+re-add a create example line WITHOUT a second create — or a stated
+count rule); single-sample-pass = variance (floors hold, NO ratchet
+moves). 8 of the prior run's 11 fails RECOVERED (the P-series fixes
+held at strong tier).
+**PREV: full codex eval validation run (bsv1vjg10, standing-grant
 spend: one targeted run to land ratchets after 9 adopted arms; log →
 scratchpad/codex_eval_run.log, exit code echoed as CODEX-EVAL-EXIT).
 On completion: read the exit + report (evals/reports/quality-*.json,
