@@ -399,3 +399,17 @@ returned fewer than N items (then ≤ 25 words saying why)" — gemma 7/7
 must be stated (or models trip it blind), typed (or they guess), capped
 (or they essay), and framed as deviation (or they take it as an
 invitation). Data: dstate*_diag.jsonl.
+
+## APPENDED ~02:50 — "Order was not the missing lever" (SORD negative)
+
+The one payload-geometry axis never varied — section ORDER — got its
+first controlled datum: moving the journal/language obligations from the
+rules block to directly above the JSON skeleton (order-only diff, zero
+content change) left qwen's journal-omission count exactly where it was
+(3/30 before, 3/30 after) and nudged nothing else. The obligation isn't
+being forgotten because it's far away; it's being dropped under
+compositional load — which is precisely the reflect-decomposition
+proposal's thesis, now supported by the null result of every non-decomp
+lever tried against it (wording ×6 template generations, validators ×3,
+examples ×2, and now geometry ×1). Reverted in 4 minutes; the negative
+is the payload. Data: sord_*_reflect.jsonl.
