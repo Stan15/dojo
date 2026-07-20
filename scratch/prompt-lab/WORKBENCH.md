@@ -209,6 +209,37 @@ real in this system). The retraction of the celebrated WIN stands
   forever (record and require ≥3 samples for any future claim on it).
   Local gate not required: this is a judged-only question and the
   bundle already passed gate 1 (gemma 27/30 rep2, qwen 14/30).
+  **PLAT-INT RESULT ~16:05: 0.625 and 0.625 — IDENTICAL twice, and
+  NONE of my three bars covered the middle band. Second
+  pre-registration partition defect of the day (recorded as such).**
+  Adjudicating on what the data actually says, all readings now
+  replicated: baseline 0.125/0.125 (stable) · fall-through ONLY
+  (SVFT) 0.125 · BOTH qualifiers 0.625/0.625 (stable, EXACTLY its
+  floor → passes) · the celebrated 1.00 was a single outlier ABOVE
+  the bundle's true level (~0.625).
+  CONCLUSIONS (three, all better than what I claimed before):
+  (1) the bundle DOES lift this scenario materially and reproducibly
+      (0.125 → 0.625, +0.50, two samples agreeing exactly);
+  (2) the MAINTENANCE qualifier is the load-bearing one — the
+      fall-through guard alone did nothing (0.125), so my original
+      "precedence guard is the winner" reading was backwards;
+  (3) RESTRAINT still fails its own ≥3/4 gate-2 bar (plateau PASS,
+      atrophy PASS, no_retirement FAIL, resolution FAIL = 2/4) → the
+      revert STANDS; the bundle is NOT adopted on a missed bar even
+      though one of its effects is now proven real.
+- **MAINT (pre-registered ~16:10; single-variable successor, with
+  judged replication BUDGETED per the new rule).** Apply ONLY the
+  maintenance qualifier ("accuracy above 0.85 on ACTIVE practice (not
+  maintenance reviews of a passed phase) → raise difficulty"). Gate 1
+  (local, free): gemma ≥27/30, qwen ≥13/30, dial-fails ≤2. Gate 2
+  (codex, ~12 calls): plateau_remediation ×2 samples both ≥0.625 AND
+  no_retirement_from_phase_pass ×2 both ≥0.50 (its own current level;
+  it is the qualifier's nominal target — if it does not move, say so)
+  AND atrophy_reentry ×1 ≥0.875 as a no-harm check. Adopt only if
+  every sample clears; a split on any scenario = record bimodal, no
+  adoption. Explicitly NOT claiming the qualifier fixes its nominal
+  target — the measured effect so far is on plateau, which is the
+  honest headline.
 
 **ADOPTION-EVIDENCE AUDIT (2026-07-20 ~15:00, prompted by the SVFT
 retraction — how far does the judged-sample hole reach?): 0 of 11

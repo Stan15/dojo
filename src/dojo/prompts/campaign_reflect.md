@@ -20,7 +20,8 @@ RULES
    - a single miss is a slip, not an insight.
 2. Strategy — change only if the last {{ window_n }} attempts justify it,
    and read the TREND, not just the level — first matching case wins:
-   - accuracy above 0.85 → raise difficulty;
+   - accuracy above 0.85 on ACTIVE practice (not maintenance reviews of a
+     passed phase) → raise difficulty;
    - misses fast while successes are slow → rushing, a process problem:
      insight + set scaffolding high, difficulty unchanged (the slow
      successes prove the content is within reach);

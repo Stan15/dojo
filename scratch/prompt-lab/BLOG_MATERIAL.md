@@ -595,3 +595,31 @@ like a shape delta, or it needs to be labelled provisional in the ledger.
 The system had the discipline to catch this only because the successor arm
 happened to re-measure the same scenario. That's luck, not process — so
 the process changes.
+
+## APPENDED 07-20 ~16:15 — "Correcting the correction (and being wrong twice)"
+
+Sequence, in order, because the shape of it is the point:
+1. A two-qualifier arm made a stubborn scenario jump 0.125 → 1.00. I
+   called it the campaign's biggest judged win.
+2. The single-variable successor scored 0.125 on the same scenario. I
+   retracted the win and attributed it to single-sample noise — and
+   patched the methodology so judged deltas need replication.
+3. Then the free variance analysis showed that scenario is one of the
+   STABLE ones (0.12 → 0.12 across same-tree runs). "Noise" suddenly
+   looked like the weaker story, so I downgraded my own correction to
+   "unresolved" and ran the missing experiment: the bundle, that scenario,
+   twice.
+4. Result: 0.625 and 0.625. Identical. So the truth was none of my three
+   readings — the bundle DOES lift the scenario reliably (+0.50, to exactly
+   its floor), the 1.00 was an outlier ABOVE the real effect, and the
+   qualifier I'd credited (precedence) did nothing on its own; the one I'd
+   written off (a maintenance exemption) is the load-bearing half.
+Three claims, two of them wrong, each corrected by the next measurement.
+The arm STILL doesn't ship — it misses its pre-registered 3-of-4 bar and
+reverting on a missed bar is the rule that makes the other numbers worth
+anything. What ships instead is a single-variable successor testing the
+half that actually carries the effect, with replication budgeted up front.
+Worth noting what made the self-correction possible: every claim was
+written to a ledger with its evidence attached, so each new number had
+something specific to contradict. Confidence that isn't pinned to a
+recorded number can't be caught being wrong.
