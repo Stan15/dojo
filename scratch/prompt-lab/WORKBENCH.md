@@ -1033,6 +1033,24 @@ directive §queue).
 
 ## Pre-registered (open)
 
+- **SORD-SKETCH (design seed 2026-07-20 ~01:50; full pre-reg needed
+  before any test — next cycle's creative frontier).** Hypothesis
+  family: section ORDER inside compiled payloads is an unmeasured
+  lever — e.g. reflect places RULES (7 rules, ~1.5KB) before the
+  evidence sections; recency effects suggest rules-last (or
+  rules-split: mechanical rules near the skeleton, judgment rules up
+  top) could cut the journal-omission class that survives every
+  wording fix (the obligation is 1.5KB+ from the skeleton when the
+  model writes its JSON). Cheap first probe: ONE reordering arm
+  (reflect: move rule 6-7 — the journal/language obligations — to
+  directly above the OUTPUT block), reflect minis both 4B models,
+  journal-omission count as the primary metric (qwen residual class,
+  6×/run). Must pre-register exact bars + confounds (byte-identical
+  content, order-only diff; goldens/footprint rebuild). Rationale for
+  optimism: every failure the campaign fixed was a payload-geometry
+  effect (anchors, examples, statements) — ordering is the one
+  geometry axis never varied.
+
 - **RFIX CLOSED ~22:10 — REVERTED per amendment (gemma guard failed
   CAUSALLY).** 4B cells: qwen 6/13 (overlap gain, real) BUT gemma
   7→5 on overlap, all 3 down-flips INVENTED registry names
