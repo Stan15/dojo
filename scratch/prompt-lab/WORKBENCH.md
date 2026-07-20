@@ -20,7 +20,17 @@ three bar-writing defects recorded (bundling / partition / over-tight),
 and qwen's campaign-best reflect (18/30 under MAINT). MAINT is
 REVERTED on gate-2 target-metric bimodality.
 
-**VAL2 ADJUDICATION IN PROGRESS (~16:20, owner-authorized spend):**
+**VAL2 ADJUDICATED ~16:45: 4 of the 5 new fails PASSED on resample
+(in-band variance, floors hold); gen_collision_sql_left_join failed
+both samples → joins the reliable-hard set. Post-adjudication visible
+tier: ~9 genuinely hard scenarios (restraint ×4 incl. the plateau
+lottery, route_new_leaf, verbatim_poetry, gen_collision_sql, and the
+plan_unrealistic / reflect_diagnostic_voice pair that hovers at its
+floor), everything else in-band churn; mean 0.845-0.856 across runs.
+No ratchet moves (floors only move on wins). GREEN-DEFINITION
+question presented to the owner in plain language — holdout relay
+waits on their pick.**
+**PREV (in progress):**
 full run exit 1 — 94/108, mean 0.845, 14 floor fails (9 rotating
 repeat-offenders + 5 new; restraint scenarios unchanged under MAINT,
 plateau 0.12 again = the certified lottery). Multi-sample re-run of
