@@ -182,6 +182,18 @@ own pre-registered design next cycle); (c) next codex spend
 bootstraps floors for the 5 adopted template arms. Cadence shifts to
 slow-loop until one of those unblocks.
 
+**ADOPTION-EVIDENCE AUDIT (2026-07-20 ~15:00, prompted by the SVFT
+retraction — how far does the judged-sample hole reach?): 0 of 11
+adopted arms used a judged-quality delta as its adoption basis.** Every
+adoption rests on shape ok-rates (replicated per the ±3 rule) or on
+mechanical counters (bleed rate, class-kill counts, byte-identity,
+trap-avoidance). The ONLY single-sample judged read in the adopted set
+is W1's verbosity spot-check (3 SUBSTANTIVE / 1 PADDED), which was a
+HARM-GUARD confirming no verbosity drift, not a win claim — relabelled
+PROVISIONAL in FINDINGS, no revert warranted. **The retraction is
+therefore CONTAINED: it invalidated one celebrated number inside a
+REVERTED arm, not any shipped change.** Audit table in the commit body.
+
 **Theory lanes sized and closed (2026-07-20 ~00:05, do not re-test
 blind):** W6-JSON-QUOTE-REPAIR — naked-inner-quote escaping recovers
 only 7/333 archived no-JSON rejections (2%; caveat: archived raws are

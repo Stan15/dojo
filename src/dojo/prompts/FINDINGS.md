@@ -19,6 +19,11 @@ WINS TO PRESERVE
 - The create example is SUPPRESSED when real insights exist (EXB2,
   compiler-side, test-enforced: test_reflect_with_insights_shows_update_
   example_only). 12/14 surviving bleed copies were the create op.
+- W1's verbosity guard (codex judged 3 SUBSTANTIVE / 1 PADDED on the
+  overshoot tail) is a SINGLE-SAMPLE judged read → PROVISIONAL under the
+  2026-07-20 replication rule. It was a harm-guard, never the adoption
+  basis (that was shape ok-rates across 4 replicated cells), so W1 stands;
+  re-sample the guard at the next authorized codex spend.
 - Word caps in rules 1/6 are ANCHORS (models cluster at the stated number;
   4 overshoot fields in ~70 accepted outputs); the validator wall is
   ceil(cap×1.5). Raising a stated cap moves the whole distribution.
