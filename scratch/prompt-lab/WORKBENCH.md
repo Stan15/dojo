@@ -957,6 +957,15 @@ directive §queue).
   further — no arm pre-registered). Both adjudications recorded;
   the as-written failure stands in the ledger as a drafting lesson:
   segment the metric by the path the arm actually touches.**
+  **QWEN RUN ~20:25 VOIDED — 11/30 rows are 240s driver timeouts
+  (machine starved: 1-min load spiked to 60 during the run; owner's
+  browser + transient). On actually-driven rows: 11/19 ok = 58%,
+  FLAT vs rep2 60%; corrected-scope create-bleed 0 ✓; create-fails
+  3 vs rep2 6 ✓ (named risk absent). Adjudication PENDING the fill:
+  load-gated watcher reruns the 11 voided scenarios →
+  iterEXB2_qwen35_4b_reflect_fill.jsonl (waits for 1-min load <6),
+  merge over infra rows, then apply the corrected rule to the merged
+  run. If merged ok ≥15 (rep2 18 −3): ADOPT EXB2.**
 
 - **EX-BLEED (pre-registered ~08:25, entry lost in an edit chain and
   rebuilt ~12:25 — lesson: verify WORKBENCH entries survive into
