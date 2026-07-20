@@ -77,7 +77,8 @@ _Statuses: `[x]` shipped · `[~]` standing/in-progress · `[?]` blocked-on-owner
    option for ~1GB learners (plan/diag on lfm-thinking, route on
    lfm-instruct, grade/reflect on a bigger tier); the fulfiller-profile
    machinery already branches per kind, and the new
-   fulfiller.route_skeleton="live" profile (qwen route 1/8→12/13) shows
+   fulfiller.route_skeleton="live" profile (qwen route 1/8→12/13; the designated
+   router lfm2.5-instruct hits 13/13 PERFECT under it, from 10/13) shows
    the per-model win pattern concretely (full case: draft_owner_proposals.md
    §2). Ask: is a per-kind model table (store config + CLI surface) worth
    a design slot? **Default: park until a real mixed-deployment user

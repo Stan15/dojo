@@ -413,3 +413,14 @@ proposal's thesis, now supported by the null result of every non-decomp
 lever tried against it (wording ×6 template generations, validators ×3,
 examples ×2, and now geometry ×1). Reverted in 4 minutes; the negative
 is the payload. Data: sord_*_reflect.jsonl.
+
+## APPENDED 07-20 ~04:30 — the router hits ceiling (RFIX3-LFMI)
+
+Closing datum on the route arc: the live-interpolated skeleton, measured
+on the sub-4B route champion (lfm2.5-instruct, the mixed-model proposal's
+designated router), scored 13/13 — perfect, from 10/13, zero copy-class
+fails. Combined with qwen's 1/8→12/13, the profile that interpolates the
+learner's real registry into the example turns routing from the system's
+weakest kind into a solved one for every model measured to want it —
+while gemma keeps the null default it prefers. Per-caliber profiles,
+each holding its measured best. Data: rfix3_lfmi_route_live.jsonl.
