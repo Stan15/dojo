@@ -595,3 +595,11 @@ evals/reports/holdout-* — all off-limits to any prompt-work context.
   tail). W2/W3 judged debts closed by content-preservation argument.
   BLOG_MATERIAL.md dossier established + wired into the loop (capture-
   first standing directive). 937 tests green; all raw data committed.
+- 07-19 (prompt-lab, EXB2): create-example suppression on the with-insights
+  reflect path ADOPTED (e3e3504) — create-bleed 0/0 both models on the
+  target path, create-fails down (the feared shape-anchor loss never
+  materialized), ok flat. Ledger holds the full honest arc: as-written
+  rule FAILED on a mis-scoped bar → mechanical path-attribution proved the
+  mis-scoping → corrected rule pre-committed before the second model's
+  data → adopted under it. Second load-starvation void handled by a
+  load-gated fill watcher (11 timeouts at system load 60, reran at <6).
