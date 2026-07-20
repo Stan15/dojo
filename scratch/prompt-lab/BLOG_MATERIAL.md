@@ -320,3 +320,24 @@ fail classes showed zero example-tied errors, replication ruled (rep2:
 18/30, adopt). Copy-pressure itself is structural — the follow-up arm is
 compiler-side example suppression when real insights exist. Data:
 iterEXB_*.jsonl, exb_*_full.jsonl.
+
+## APPENDED ~21:10 — "Adjudicating your own drafting error" (EXB2)
+
+Follow-up to the example-bleed win: 12/14 surviving copies were the CREATE
+example specifically, so the arm suppressed it where real insights exist
+(the compiler already branched on that). The battery then FAILED the
+pre-registered bar — and the investigation showed the bar itself was
+mis-scoped: 6 of the 8 "surviving" copies came from scenarios on the
+no-insights path, whose fragment keeps its create example BY DESIGN (it's
+the only valid op there); they could never stop bleeding under this arm.
+The honest sequence that followed is the story: record the as-written
+FAIL; prove the mis-scoping mechanically (recompile every payload, segment
+bleed by fragment path); state the corrected rule BEFORE the second
+model's data existed (timestamped in git); then adjudicate under it.
+En route, a second void-and-fill: the qwen run ate 11 driver timeouts when
+system load spiked to 60 (the owner's browser), so a load-gated watcher
+reran exactly those scenarios once the machine calmed. Final: create-bleed
+0 on the suppressed path at both models, create-fails IMPROVED (the feared
+shape-anchor loss never materialized), ok flat. Adopted. Two lessons:
+segment metrics by the path the arm touches, and starved-machine timeouts
+are voids, not failures. Data: iterEXB2_*.jsonl.

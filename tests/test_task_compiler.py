@@ -244,10 +244,15 @@ class TestCompilerBranches:
         assert '"op": "create"' in compiled.prompt
         assert '"op": "update"' not in compiled.prompt
 
-    def test_reflect_with_insights_keeps_update_first_example(self, store: DojoStore):
+    def test_reflect_with_insights_shows_update_example_only(self, store: DojoStore):
+        """EXB2 (2026-07-19): with real insights present, the create example
+        is suppressed — 12/14 surviving example-bleed copies were the create
+        op copied wholesale as a fake new insight. Create shape stays stated
+        in the Field rules prose; ops_no_insights keeps its create example."""
         compiled = compiler.compile_reflect(store, _campaign(store))
         assert "create is the only valid op" not in compiled.prompt
-        assert compiled.prompt.index('"op": "update"') < compiled.prompt.index('"op": "create"')
+        assert '"op": "update"' in compiled.prompt
+        assert '"op": "create"' not in compiled.prompt
 
 
 class TestGoldenPayload:

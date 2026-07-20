@@ -1,11 +1,11 @@
 {
   "note": "output bytes per successful task (whole trace) + single-shot ok-rates, per driver; ratchet gates in tests/test_output_budget.py",
-  "template_hash": "e7bf6b8b5f86c9c5",
+  "template_hash": "c6d64817a3b88ef2",
   "ok_noise_band": 3,
   "bytes_tolerance": 0.1,
   "drivers": {
     "api-chat/qwen3.5:4b/--no-think": {
-      "source_battery": "exb_qwen35_4b_full.jsonl",
+      "source_battery": "exb2_qwen35_4b_full.jsonl",
       "kinds": {
         "attempt.grade": {
           "n": 16,
@@ -19,8 +19,8 @@
         },
         "campaign.reflect": {
           "n": 27,
-          "ok": 16,
-          "bytes_ok_median": 898
+          "ok": 14,
+          "bytes_ok_median": 877
         },
         "capture.route": {
           "n": 6,
@@ -45,7 +45,7 @@
       }
     },
     "api-chat/gemma3:4b": {
-      "source_battery": "exb_gemma3_4b_full.jsonl",
+      "source_battery": "exb2_gemma3_4b_full.jsonl",
       "kinds": {
         "attempt.grade": {
           "n": 16,
@@ -59,8 +59,8 @@
         },
         "campaign.reflect": {
           "n": 27,
-          "ok": 27,
-          "bytes_ok_median": 717
+          "ok": 26,
+          "bytes_ok_median": 656
         },
         "capture.route": {
           "n": 6,
