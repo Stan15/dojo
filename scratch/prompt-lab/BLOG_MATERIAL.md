@@ -424,3 +424,81 @@ learner's real registry into the example turns routing from the system's
 weakest kind into a solved one for every model measured to want it —
 while gemma keeps the null default it prefers. Per-caliber profiles,
 each holding its measured best. Data: rfix3_lfmi_route_live.jsonl.
+
+## PRE-SESSION ERAS — consolidated from committed artifacts (07-20 sweep;
+## sources: docs/INSIGHTS.md, docs/STATE.md changelog, QUESTIONS ledger,
+## docs/design/*, git history — so this file is the ONE quarry)
+
+**Design era (July wk1) — decisions that aged well:**
+- "The priority user is an AI harness" inverted the whole connector
+  architecture — the CLI serves agents (`--json`) and humans as co-equals,
+  with a tested tripwire that agent mode can never hit interactive input.
+- Weak models follow a concrete example skeleton better than a formal JSON
+  Schema — the finding that seeded the entire template style (and later,
+  every example-anchoring failure mode: the skeleton IS the schema, for
+  better and worse).
+- Mandatory free-form "thinking" fields are a generation-token tax (cut in
+  the prototype era; vindicated by the decode-latency math: 7.6 tok/s).
+- Scheduling state attaches to stable nodes, never ephemeral items — or it
+  bloats without bound. Campaign-level scheduling is an allocation problem,
+  not a memory problem.
+
+**Eval-craft era — the judge is a system too:**
+- A judge can fail a driver HONESTLY (set-level criteria vs verbatim-quote
+  mechanics); judge-evidence checks must decode JSON escapes (LaTeX/regex
+  content broke naive substring checks); the ensure_ascii bug once made
+  the judge silently mis-score unicode answers. "Judge mechanics honesty"
+  became its own fix category with free-tier tests.
+- Single-sample floor bootstraps are noise-prone → the multi-sample rule
+  (a floor drop needs BOTH samples failing).
+- A shape-pass can be a VACUOUS pass — reading passing outputs (not just
+  fails) caught hollow successes; ancestor of judged-quality spot-sets.
+- Codex grades rubrics excellently but must never see the visible corpus
+  it floors — the driver/judge separation story.
+
+**Token-diet era (dev/token-diet) — measurement infrastructure war stories:**
+- The ollama 0.32 CLI writes its terminal WORD-REWRAP rendering into piped
+  stdout — ANSI erase sequences and re-printed fragments landing INSIDE
+  JSON strings, doubling closing quotes. 48/64 "no JSON found" on a model
+  whose API output was clean. The fix (api_driver.py, HTTP API) is why
+  "the driver is part of the measurement" is a ruling, not a slogan.
+- think=false only actually disables deliberation via /api/chat — the
+  /api/generate endpoint ignores it and emits full reasoning ending in a
+  stray </think> (timing out batteries). Endpoint choice = measurement.
+- Model-side conditional branches in templates don't fire at ANY caliber
+  ("if X then Y" prose is dead weight) → craft rule 5: the compiler
+  branches, the model executes. The skeleton-final anchor pattern-locks
+  token one to `{` (55/62 outputs) — geometry beats instruction.
+- Rule bytes aren't free even when semantically right; battery latency is
+  not product latency (single-stream counters vs parallel workers).
+
+**Field-bug era — the owner's install as the best test rig:**
+- Day-one bombardment (packet flooding on first install), the diagnostic
+  dead-loop, the French-accents encoding bug, the store deadlock, FSRS
+  non-determinism, the attempt-filename overwrite — every one field-caught
+  by the owner mid-session and turned into a pinned regression test.
+  "Treat owner field reports as the highest-signal tests you have" is a
+  standing rule because it kept being true.
+
+**Product-design stories worth full posts someday:**
+- The Anki SATELLITE model (QUESTIONS §2/design doc §9): dojo keeps sole
+  scheduling authority; Anki becomes a rendering device — content and due
+  dates push out, revlog outcomes flow back as origin:"anki" attempts
+  feeding dojo's FSRS. "Your memories transfer intact" is a pitch no
+  non-FSRS competitor can make.
+- Review-debt as the disease that kills learning tools (growth-strategy):
+  the debt-guard, packet caps, and no-guilt framing are all downstream of
+  one epidemiological claim about why users quit Anki.
+- The consent-gated attack plan (authority.py): AI restructures of a
+  learner's plan never apply without cited learner evidence — "the AI
+  proposes, the applier disposes" at the product-trust level.
+- Push surfaces get principles, pull surfaces get numbers (owner ruling):
+  the information-architecture rule behind every CLI surface.
+
+**Method meta (pre-campaign origins of this campaign's discipline):**
+- "Contamination is contextual, not intentional" (owner ruling 07-11) —
+  the epistemics that make the holdout REAL; fired once, scenario burnt.
+- "Reflect variance is an architecture smell" (07-16) — the observation
+  that became the decomp proposal two weeks and ten null levers later.
+- "A rule that partially states a required object teaches omission" — the
+  ancestor of mode 7, DSTATE, and the statement gate itself.
