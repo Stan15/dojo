@@ -59,6 +59,36 @@ _Statuses: `[x]` shipped · `[~]` standing/in-progress · `[?]` blocked-on-owner
 
 ## Open — decisions actually waiting on you
 
+-3. **Reflect decomposition pilot (2026-07-19, prompt-lab).** STATE 7d
+   now has closing evidence: after W1+W2+W3 landed, the reflect residual
+   at every measured model is journal-omission + op-requirement
+   composition — the 5-job single call itself; identical failure classes
+   across three model families (full case:
+   scratch/prompt-lab/draft_owner_proposals.md §1). Ask: approve a
+   two-call decomposition PILOT behind a compiler profile, measured
+   against the single call in one battery cycle. **Default: pilot it —
+   measurement-only, no default change; the proposal dies on its own
+   numbers if the token cost outweighs acceptance gains.**
+
+-2. **Per-kind mixed-model routing table (2026-07-19, prompt-lab).** The
+   bake-off's per-kind divergence makes a routing table a real product
+   option for ~1GB learners (plan/diag on lfm-thinking, route on
+   lfm-instruct, grade/reflect on a bigger tier); the fulfiller-profile
+   machinery already branches per kind, and the new
+   fulfiller.route_skeleton="live" profile (qwen route 1/8→12/13) shows
+   the per-model win pattern concretely (full case: draft_owner_proposals.md
+   §2). Ask: is a per-kind model table (store config + CLI surface) worth
+   a design slot? **Default: park until a real mixed-deployment user
+   exists; the profiles land per-kind wins without new config surface.**
+
+-1. **Retry-feedback enrichment — CLOSED NEGATIVE, FYI only
+   (2026-07-19).** Four R3 probes (qwen 4B ×2 cells, 0.8b, lfm-think)
+   all failed pre-registered bars; the drafted proposal was retired
+   (draft_questions_retry_enrichment.md holds the record). One narrow
+   grade-only hypothesis stays parked pending a fresh pre-registered
+   replication. **No decision needed; recorded so the idea isn't
+   re-litigated from scratch.**
+
 0. **Token-diet: 4-scenario codex bootstrap recheck (2026-07-18).** The
    authorized eval run passed 64/64 baselined scenarios but four newer
    scenarios (no committed floor for this driver pair) scored ZERO —
