@@ -425,3 +425,25 @@ keeps `pipx install --force` from ever seeing real state.
   you returned fewer than N items (then ≤ 25 words saying why)" — gemma
   7/7 best-ever, qwen 6/7. Every conditional obligation in a template
   needs all four properties or it creates the failure it prevents.
+- **Caliber-divergence is the rule, not the exception — branch, don't
+  average (2026-07-20, third measured instance).** The same edit helping
+  one 4B model and hurting another of the same size has now been measured
+  three independent times: the deliberation anchor (qwen trap-avoidance
+  44%→75%, gemma slightly worse), the route skeleton (three-sided trap,
+  each caliber preferring a different literal), and per-op field-rule
+  geometry (DOPS: gemma 29/30 campaign-best with the target class at zero;
+  qwen worse across two runs). The architecture answer each time is the
+  same and it scales: compiler-selected fragments behind a fulfiller
+  profile, default byte-identical, each caliber keeping its measured best.
+  A prompt "improvement" without a per-caliber measurement is a coin flip
+  on everyone who isn't the model you tested.
+- **A negative result that re-characterizes the problem beats a win that
+  doesn't (2026-07-20, decomp pilot).** Splitting reflect into
+  decisions+voice eliminated journal-omission everywhere — the class that
+  survived six template generations, three validator arms, an example
+  rewrite and a section reorder — yet missed its adoption bar because the
+  per-op composition failures simply moved into the first call. The
+  measurement turned "the mega-task juggles five jobs" into "the model
+  can't compose one op's required fields", which pointed straight at a
+  factored-out `reason` clause in the field rules and produced the DOPS
+  arm the same hour. Bars are for adoption; mechanisms are the payload.

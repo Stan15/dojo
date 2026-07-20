@@ -19,7 +19,16 @@ OWNER-ONLY/untouched. Consume ONLY the printed aggregate (holdout
 mean · visible mean · gap verdict); report the one bit to the owner.
 Gap ≤0.1 = generalizes (v1.0.0 bar); >0.2 = broaden visible corpus.
 
-**DOPS RUN1 ~10:15 — SPLIT SIGNAL, REPLICATING.** gemma 29/30
+**DOPS CLOSED ~10:45 — PROFILE-SPLIT per the pre-data rule (rep2:
+ok 14 ✓ but op-fails 10 > 6 ✗ → second branch fired). Landed 5dbd533
+as fulfiller.reflect_field_rules: default = legacy run-on
+byte-identical (qwen's measured best), "dops" = parallel per-op lines
+(gemma 29/30 campaign-best, op-composition fails 0). 952 tests.
+Docs closed after: FINDINGS pilot-template section, INSIGHTS ×2
+(caliber-divergence-is-the-rule; negative-that-recharacterizes),
+STATE 07-20 entry. CAMPAIGN TOTALS: 11 adopted arms, 10 closed
+negatives.**
+**PREV DOPS RUN1 ~10:15 — SPLIT SIGNAL, REPLICATING.** gemma 29/30
 (campaign-best reflect, op-composition fails 0 ✓ both sub-bars).
 qwen 10/30 with op-fails 12 — WORSE than baseline on both bars, and
 the failure classes changed shape (journal-omission returned 3×, a

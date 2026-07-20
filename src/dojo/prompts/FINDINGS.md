@@ -152,6 +152,20 @@ profiles, same negatives). Differences to preserve: no stay_inbox in the
 action set (rule 5 guards it — kept even in the lean fragment because
 single-shot has no retry to teach it); 3-line skeleton wrap.
 
+## campaign_reflect_ops.md / campaign_reflect_voice.md (PILOT, opt-in)
+
+Split-reflect pilot templates (owner-approved 2026-07-20), NOT on any
+production path — no compiler function renders them by default; the probe
+(scratch/prompt-lab/decomp_probe.py) drives them. Findings: the split
+ELIMINATED journal-omission at all three measured models (gemma 28/30,
+qwen 15/30, lfm-instruct 2/30 from 0) but missed its acceptance bar
+because per-op field composition moved into the ops call. Preserve if
+editing: the voice call must stay TINY (~1.2KB: digest + rules 1-3 +
+skeleton) — its attention isolation is the mechanism that worked; the ops
+call carries ALL evidence sections and inherits campaign_reflect's wins
+(orthogonal examples, create-suppression, cap anchors). Do not wire to
+production without a fresh owner decision + a new measurement.
+
 ## fragments/ (cross-cutting)
 
 - reflect_ops_default.md / reflect_ops_no_insights.md: orthogonal-domain

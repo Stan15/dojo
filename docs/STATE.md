@@ -610,3 +610,16 @@ evals/reports/holdout-* — all off-limits to any prompt-work context.
   byte-identical, opt-in "live" interpolates the learner's real registry
   (qwen route 1/8 → 12/13, campaign-largest cell win). RSIMP lean-route
   profile infra in tree (opt-in, unused, gemma spot 6/6). 943 tests green.
+- 07-20 (prompt-lab, owner-approved pilot + follow-ups): codex validation
+  run adjudicated (96/108; 5 variance / 7 reliable fails, none causally
+  traceable to the day's adopted arms — EXB3 parked, holdout relay stays
+  parked per the owner's green-run condition). REFLECT-DECOMP PILOT ran
+  (approved 07-20): the ops/voice split ELIMINATED journal-omission at all
+  three models but missed its acceptance bar (qwen 15/30 vs ≥18; per-op
+  composition moved into call 1) — not adopted, infra opt-in, QUESTIONS −3
+  answered by measurement. That diagnosis produced DOPS: per-op field-rule
+  geometry landed as fulfiller.reflect_field_rules (gemma 29/30
+  campaign-best, op-composition fails 0; qwen worse twice → profile, not
+  default). Third measured instance of caliber-divergence (INSIGHTS).
+  FINDINGS.md per-template register created + drift-gated; README carries
+  every win/dead-end for future editors. 952 tests green.
