@@ -50,6 +50,40 @@ is a capability signature, not a syntax-repair opportunity. Grade's
 remaining qwen fails: 8 no-json (this closed lane) + verbatim
 (guard working) — no unmined mechanical class found at grade.
 
+**DSTATE (pre-registered 2026-07-20 ~00:20; IN EXECUTION).** Mode-7
+understatement found mechanically: the applier requires a note when
+returning fewer than n_items for BOTH generate and diagnostic
+(service.py:275), generate states it 3×, diagnostic NEVER states it —
+2 realworld diagnostic fails are exactly under-count-with-null-note.
+Fix: diagnostic Check line gains "(or fewer + note explaining why)"
+mirroring generate's statement. Decision rule: diagnostic-driving
+scenarios mini (visible + realworld, both 4B models): note-class
+fails convert, ok same-or-better, no new class; byte cost ~+40B on a
+once-per-campaign kind. Full template protocol; output-budget hash
+rebuild same commit.
+QWEN RESULT ~00:40: 6/7 — decay converted; caregiver ADVANCED from
+missing-note to "note": true (boolean — statement worked, TYPE
+under-specified; generate's "≤ N words" phrasing makes textness
+explicit). GEMMA RESULT ~00:55: 2/7 — REGRESSED (baseline 3/3): permission-framed
+statement invited under-filling + 40-42-word note essays past even the
+W1 wall; axis_coverage went degenerate. SECOND MECHANISM: escape
+hatches must be DEVIATION-FRAMED (generate's "stays null unless"
+survives; "or fewer + note" reads as permission). DSTATE-2 APPLIED
+~01:00 (in flight: dstate2_gemma (b80hzbo11) then chained dstate2_qwen
+(b6d1wrj13, DSTATE2-DONE)): Field rules gains '"note" stays null
+unless you returned fewer than {{ n_items }} items (then ≤
+{{ note_words }} words saying why)'; Check reverts to 'exactly N';
+limits TEMPLATE_CAPS diagnostic gains note_words. Decision rule
+unchanged: both models same-or-better vs PRE-DSTATE baselines (qwen
+2/3+2 note-fails; gemma 3/3+1), note-class converts, no new class.
+Original DSTATE-2 note (superseded by the above):
+(1) limits TEMPLATE_CAPS["exercise.diagnostic"]["note_words"] =
+GENERATE_NOTE_WORDS (the schema's note cap IS trippable from
+diagnostic submissions — statement-gate completeness); (2) Check
+line → 'exactly {{ n_items }} items (or fewer, with "note" ≤
+{{ note_words }} words explaining why)'. Re-run qwen mini after;
+gemma per its own result.
+
 **Standing rules refreshed today:** 7-category exhaustion checklist
 (PROMPT_LAB.md) before any wait; BLOG_MATERIAL.md capture-first in
 the same commit as each adjudication; no model inference of any kind

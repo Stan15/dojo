@@ -36,6 +36,7 @@ OUTPUT — your final output is exactly this JSON (anything before it is ignored
   "note": null
 }
 Field rules: in EVERY item, "skill" is exactly the word diagnostic, and
-"answer" and "rubric" stay null.
+"answer" and "rubric" stay null. "note" stays null unless you returned
+fewer than {{ n_items }} items (then ≤ {{ note_words }} words saying why).
 Check before returning: valid JSON; exactly {{ n_items }} items; every skill is
 "diagnostic"; answers and rubrics are null.

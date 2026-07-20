@@ -382,3 +382,20 @@ opt-in profile; each caliber keeps its measured best. The evening also
 minted a capability-floor certificate: lfm2.5-thinking route survived
 three different template surgeries at exactly 0/13 — some cells are the
 model, not the prompt. Data: rfix*_*.jsonl, iterW4, rsimp_*.
+
+## APPENDED ~01:20 — "Stating a rule is not one decision but three" (DSTATE)
+
+A validator demanded a note when returning fewer diagnostic items than
+asked; the diagnostic template never mentioned it (its sibling template
+states it three times). Adding the statement took three tries, each
+teaching a different lesson: (1) "or fewer + note explaining why" — qwen
+now wrote the note... as a boolean (`"note": true`); type must be shown,
+not implied. (2) Same wording at gemma read as PERMISSION — it started
+under-filling and writing 40-word note essays, regressing a perfect cell
+to 2/7. (3) The wording that works is the sibling's proven form,
+deviation-framed with an explicit cap: "note stays null unless you
+returned fewer than N items (then ≤ 25 words saying why)" — gemma 7/7
+(best ever, realworld conversion included), qwen 6/7. An escape hatch
+must be stated (or models trip it blind), typed (or they guess), capped
+(or they essay), and framed as deviation (or they take it as an
+invitation). Data: dstate*_diag.jsonl.

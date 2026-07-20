@@ -101,6 +101,7 @@ TEMPLATE_CAPS: dict[str, dict[str, int]] = {
     },
     "exercise.diagnostic": {
         "diagnostic_prompt_words": DIAGNOSTIC_PROMPT_WORDS,
+        "note_words": GENERATE_NOTE_WORDS,  # shared GenerateResult validator: trippable here too
     },
     "attempt.grade": {
         "feedback_words": GRADE_FEEDBACK_WORDS,
