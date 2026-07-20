@@ -1156,6 +1156,42 @@ directive §queue).
 
 ## Pre-registered (open)
 
+- **RESTRAINT (pre-registered 2026-07-20 ~11:30; the last open quality
+  debt).** The 4 reliable strong-tier restraint fails share ONE root,
+  found by reading judged outputs against the template (NOT the
+  rubrics — no reward-hack territory; the rubrics ask for exactly what
+  rule 2 already says):
+  · plateau_remediation: model lowered difficulty + left scaffolding
+    medium. Rule 2's PLATEAU case (qualitative: "FLAT, effort steady,
+    no distress") and its FALL-THROUGH case (numeric: "accuracy below
+    0.50") BOTH match flat 0.3-0.7 scores — and the model took the
+    numeric one. "First matching case wins" is stated once at the top
+    and not enforced where it matters.
+  · no_retirement_from_phase_pass: model raised difficulty to advanced
+    on a PASSED phase in long-interval maintenance. Rule 2's raise case
+    ("accuracy above 0.85 → raise difficulty") carries no maintenance
+    guard, so applying it literally is CORRECT per the template — the
+    template is under-qualified (mode-7 kin, applied to a branch
+    CONDITION instead of a field).
+  MECHANISM: ordered decision procedures degrade into independent
+  trigger lists; qualitative conditions lose to numeric ones because
+  numeric ones are cheaper to evaluate.
+  ARM (two qualifier additions, ~30B, no new rules):
+    (a) fall-through gains its guard: "otherwise — only if NO case
+        above matched — accuracy below 0.50 → lower difficulty";
+    (b) raise case gains the maintenance guard: "accuracy above 0.85
+        on ACTIVE practice (not maintenance reviews of a passed
+        phase) → raise difficulty".
+  DECISION RULE (cheap-first): (1) 4B reflect minis BOTH models
+  flat-or-better (dial-class fails must not rise; gemma ≥27/30, qwen
+  ≥13/30) — if they regress, revert, no codex spend; (2) only then a
+  TARGETED codex subset (plateau_remediation,
+  no_retirement_from_phase_pass, atrophy_reentry,
+  resolution_amid_active_struggle ≈ 8 calls, standing grant): ≥3/4
+  must clear their floors. Both must pass to adopt. Rule-byte cost is
+  measured (rule bytes are not free) — the +30B rides the density
+  ledger.
+
 - **DOPS (pre-registered 2026-07-20 ~09:45, from the decomp pilot's
   re-characterized residual).** The op requirements ARE stated —
   as a run-on clause chain: "create needs key + text + evidence;
