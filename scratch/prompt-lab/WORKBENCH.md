@@ -19,6 +19,22 @@ OWNER-ONLY/untouched. Consume ONLY the printed aggregate (holdout
 mean · visible mean · gap verdict); report the one bit to the owner.
 Gap ≤0.1 = generalizes (v1.0.0 bar); >0.2 = broaden visible corpus.
 
+**DOPS RUN1 ~10:15 — SPLIT SIGNAL, REPLICATING.** gemma 29/30
+(campaign-best reflect, op-composition fails 0 ✓ both sub-bars).
+qwen 10/30 with op-fails 12 — WORSE than baseline on both bars, and
+the failure classes changed shape (journal-omission returned 3×, a
+176-word insight text appeared, plan criteria fields dropped) —
+i.e. the qwen cell looks like the wide-variance regime documented
+all campaign (same arm sampled 12/16/18 historically), not a clean
+geometry effect. Pre-reg says replicate before adjudicating an
+unstable cell → rep2 in flight (beg0xou6e,
+dops_qwen_reflect_rep2.jsonl). ADJUDICATION RULE (stated now,
+pre-data): rep2 op-fails ≤6 AND ok ≥14 → run1 was a sampling
+outlier, ADOPT on gemma's clean win + qwen-flat; rep2 op-fails >6
+again → DOPS is caliber-divergent (helps gemma, hurts qwen) →
+make it a compiler-selected fragment (profile precedent) rather
+than revert, since gemma's gain is real and measured twice-adjacent
+(29/30 vs 28/30 EXB2).
 **DECOMP PILOT ADJUDICATED ~09:30 — SPLIT VERDICT (thesis half
 CONFIRMED, bar MISSED, one clean follow-up).**
 - gemma 28/30 (bar ≥26 ✓, matches single-call best), qwen 15/30
