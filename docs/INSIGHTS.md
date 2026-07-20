@@ -402,3 +402,17 @@ keeps `pipx install --force` from ever seeing real state.
   copy-pressure under uncertainty is structural and the design choice is
   only whether copies are visible. (Follow-up: compiler-side example
   suppression when real insights exist.)
+- **Route skeleton content is a three-sided trap; the binding side is
+  caliber-specific — so it's a profile, never a default (2026-07-19,
+  RFIX/RFIX2/RFIX3).** One battery cycle each proved: a null example
+  teaches field omission (qwen 1/8), a registry-ABSENT literal teaches
+  inventing names (gemma 7→5, invented "mixology"/"cheesemaking"), and a
+  REAL registry value invites copying it into answers (gemma 7→5 again,
+  "already exists" fails). No fixed choice wins everywhere — but qwen
+  under the live-interpolated skeleton hit 12/13 (from 1/8, its largest
+  measured jump) while gemma's best remains the null default. Resolution:
+  fulfiller.route_skeleton profile ("default"=legacy nulls byte-identical,
+  "live"=compiler-interpolated real entry), each caliber keeping its
+  measured best. Generalizes the 6i lesson: when the same edit helps one
+  model and hurts another, the compiler branches per caliber — defaults
+  never chase a single model's win.

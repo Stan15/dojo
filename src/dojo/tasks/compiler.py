@@ -672,6 +672,39 @@ def registry_digest(store) -> str:
     return "\n".join(lines)
 
 
+def _route_skeleton(store, kind_slug: str) -> str:
+    """Route skeleton content is a THREE-SIDED trap (RFIX/RFIX2, measured
+    2026-07-19): a null example teaches field omission (qwen 1/8), a
+    registry-absent literal teaches inventing names (gemma −2), a real
+    registry value invites copying it into answers (gemma −2 again). Which
+    failure bites is CALIBER-SPECIFIC — so the choice is a fulfiller
+    profile (6i precedent), never a default: "default" compiles the legacy
+    null skeleton byte-identical (gemma's measured-best payload); opt-in
+    "live" interpolates a real registry entry (qwen's measured-best,
+    12/13); empty registry under "live" → the propose_campaign skeleton
+    (the only valid action when nothing exists to attach to)."""
+    from .. import limits as _limits
+    profile = str(store.configs.get_value("fulfiller.route_skeleton", "default"))
+    if profile == "live":
+        for camp in store.campaigns.list():
+            topic_paths = sorted(
+                {e.topic_path for e in store.exercises.list(camp.id)}
+                | {t["path"] for t in (camp.topics or []) if t.get("path")}
+            )
+            if topic_paths:
+                return render(f"fragments/route_skeleton_{kind_slug}_attach.md", {
+                    "example_campaign": camp.id,
+                    "example_topic_path": topic_paths[0],
+                    "reason_words": _limits.ROUTE_REASON_WORDS,
+                })
+        return render(f"fragments/route_skeleton_{kind_slug}_propose.md", {
+            "reason_words": _limits.ROUTE_REASON_WORDS,
+        })
+    return render(f"fragments/route_skeleton_{kind_slug}_default.md", {
+        "reason_words": _limits.ROUTE_REASON_WORDS,
+    })
+
+
 def _route_rule_fragments(store, kind_slug: str) -> dict:
     """Route rule blocks are compiler-selected fragments (RSIMP, craft rule 5):
     the default profile compiles byte-identical to the pre-fragment templates;
@@ -685,6 +718,7 @@ def _route_rule_fragments(store, kind_slug: str) -> dict:
     return {
         "route_soft_rules": render(f"fragments/route_soft_{kind_slug}_{profile}.md", {}),
         "route_field_rules": render(f"fragments/route_field_{kind_slug}_{profile}.md", {}),
+        "route_skeleton": _route_skeleton(store, kind_slug),
     }
 
 

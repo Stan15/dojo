@@ -936,8 +936,38 @@ directive §queue).
   invention. The only value satisfying self-consistency +
   copy-consistency + collision-safety is one interpolated FROM THE
   LIVE REGISTRY per payload.
-- **RFIX2-LIVE-SKELETON (pre-registered ~22:10; NEXT cycle, compiler
-  work).** compile_route/compile_goal_route inject skeleton example
+- **RFIX2 ADJUDICATED ~23:05 — DEFAULT-ADOPTION FAILS, PROFILE
+  ADOPTION FOLLOWS (RFIX3).** qwen 12/13 (bar ≥6 smashed; from 1/8
+  baseline — largest single-cell win of the campaign). gemma 10/13
+  total but overlap-8 7→5 (rule ≥7 FAILED, causal: down-flips fail
+  "already exists" — the model copies the skeleton's REAL path into
+  answers). lfm-think 2/13 (first route passes ever; 4 infra; floor
+  status unchanged). THREE-SIDED TRAP COMPLETE (durable): null
+  skeleton teaches omission (qwen 1/8); absent literal teaches
+  invention (gemma −2, RFIX); real literal invites copying (gemma −2,
+  RFIX2). Only the failure SIGNATURE changes per choice; which one
+  bites is caliber-specific → THE PROFILE PATTERN (6i precedent:
+  same edit helps one 4B, hurts the other → opt-in, never default).
+  RFIX3 (amendment recorded post-gemma-data, honestly flagged):
+  fulfiller.route_profile gains "live" — default compiles the LEGACY
+  null skeleton byte-identical (gemma's measured 7/8 baseline
+  payload); profile "live" compiles the interpolated skeleton
+  (qwen's measured 12/13 payload). NO new batteries needed: every
+  payload variant already carries a measurement; adoption = both
+  cells keep their measured best. Byte-identity of default verified
+  at implementation. Owner-facing config doc rides the commit.**
+- **RFIX2 WAS IN EXECUTION ~22:40 (tree = RFIX2 overlay, uncommitted;
+  942 green incl. 2 new tests):** skeleton example is now
+  compiler-interpolated from the live registry (first campaign with
+  topics + its first topic_path); empty registry → propose_campaign
+  skeleton ("Brush Calligraphy"). Fragments route_skeleton_{capture,
+  goal}_{attach,propose}.md; ceiling-test placeholder added.
+  BATTERIES: (1) rfix2_qwen_route.jsonl (bjj77nqou); (2)+(3) chained
+  gemma + lfm-think (b33t00kgh, RFIX2-ALL-DONE). Decision rule (from
+  pre-reg): qwen ≥6/13 sustained AND gemma overlap ≥7 AND
+  invented-name fails 0 (lfm-think measured, no bar). If dead: rerun
+  recorded commands. ADOPT → output-budget rebuild same commit.** (pre-registered ~22:10; compiler
+  work). compile_route/compile_goal_route inject skeleton example
   values from the actual registry digest (first campaign + one real
   topic_path; empty registry → fall back to nulls... no: empty
   registry has no attach case — fall back to a propose_campaign

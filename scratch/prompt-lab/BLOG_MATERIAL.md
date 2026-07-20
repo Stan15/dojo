@@ -365,3 +365,20 @@ pre-data amendment's guard; qwen's real gain waits for the fix that
 doesn't break gemma. Also closed: lfm-think route is a capability floor
 (0/13 under three different template surgeries — W4, RSIMP, RFIX).
 Data: rfix_*.jsonl.
+
+## APPENDED ~23:30 — "The three-sided trap" (route arc finale)
+
+Four arms in one evening on the weakest task kind, each falsifying its
+predecessor's theory: phrase surgery (rumination migrated), rule-density
+reduction (0/13 unchanged), skeleton self-consistency with an absent
+literal (taught gemma to invent names), skeleton with a REAL value
+(taught gemma to copy it — "already exists"). The complete finding: a
+JSON example's value slot has NO safe fixed content — null teaches
+omission, absent teaches invention, real teaches copying — and which
+failure bites depends on the model. qwen went 1/8 → 12/13 under the
+live-interpolated skeleton while gemma's best stayed the null default.
+Resolution: the compiler interpolates per learner registry behind an
+opt-in profile; each caliber keeps its measured best. The evening also
+minted a capability-floor certificate: lfm2.5-thinking route survived
+three different template surgeries at exactly 0/13 — some cells are the
+model, not the prompt. Data: rfix*_*.jsonl, iterW4, rsimp_*.

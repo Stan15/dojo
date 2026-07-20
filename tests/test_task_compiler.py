@@ -244,6 +244,32 @@ class TestCompilerBranches:
         assert '"op": "create"' in compiled.prompt
         assert '"op": "update"' not in compiled.prompt
 
+    def test_route_skeleton_default_keeps_legacy_null_example(self, store: DojoStore):
+        """RFIX3 (2026-07-19): skeleton content is a three-sided trap whose
+        binding side is caliber-specific (null→omission, absent→invention,
+        real→copying) — default stays the legacy null skeleton (gemma's
+        measured-best payload), byte-identical."""
+        compiled = compiler.compile_goal_route(store, goal="learn to read tide tables")
+        assert '"campaign": null' in compiled.prompt
+        assert '"action": "attach"' in compiled.prompt
+
+    def test_route_skeleton_live_profile_interpolates_registry(self, store: DojoStore):
+        """Opt-in "live" profile: qwen's measured-best payload (12/13)."""
+        camp = store.campaigns.list()[0]
+        camp.topics = [{"path": "french.grammar.conditional"}]
+        store.campaigns.save(camp)
+        store.configs.set_value("fulfiller.route_skeleton", "live")
+        compiled = compiler.compile_goal_route(store, goal="learn to read tide tables")
+        assert f'"campaign": "{camp.id}"' in compiled.prompt
+        assert '"topic_path": "french.grammar.conditional"' in compiled.prompt
+
+    def test_route_skeleton_live_empty_registry_shows_propose(self, tmp_path):
+        empty = DojoStore(tmp_path / "dojo")
+        empty.configs.set_value("fulfiller.route_skeleton", "live")
+        compiled = compiler.compile_goal_route(empty, goal="learn to read tide tables")
+        assert '"action": "propose_campaign"' in compiled.prompt
+        assert '"new_name": "Brush Calligraphy"' in compiled.prompt
+
     def test_route_default_profile_keeps_legacy_rule_text(self, store: DojoStore):
         """RSIMP (2026-07-19): route rule blocks are compiler-selected
         fragments; the DEFAULT profile must compile byte-identical legacy
@@ -320,7 +346,8 @@ class TestDerivedCeiling:
                        "grounding_rule": "", "encounter_rule": "",
                        "calibration_rule": "", "window_n": 15,
                        "ops_example": "", "journal_example": "",
-                       "route_soft_rules": "", "route_field_rules": ""})
+                       "route_soft_rules": "", "route_field_rules": "",
+                       "route_skeleton": ""})
         compiled = compiler._compile(store, kind, values, {})
         assert compiled.prompt  # no BudgetExceeded: sections clip, ceiling holds
 

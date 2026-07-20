@@ -603,3 +603,10 @@ evals/reports/holdout-* — all off-limits to any prompt-work context.
   mis-scoping → corrected rule pre-committed before the second model's
   data → adopted under it. Second load-starvation void handled by a
   load-gated fill watcher (11 timeouts at system load 60, reran at <6).
+- 07-19 (prompt-lab, route arc): W4/RSIMP/RFIX/RFIX2 route arms adjudicated
+  in one evening — lfm-think route confirmed capability-floor (0/13 under
+  three surgeries); the three-sided skeleton trap measured (see INSIGHTS);
+  RFIX3 landed: fulfiller.route_skeleton profile — default legacy-null
+  byte-identical, opt-in "live" interpolates the learner's real registry
+  (qwen route 1/8 → 12/13, campaign-largest cell win). RSIMP lean-route
+  profile infra in tree (opt-in, unused, gemma spot 6/6). 943 tests green.

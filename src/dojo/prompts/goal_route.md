@@ -19,9 +19,7 @@ RULES
 {{ campaign_lines_and_topic_paths }}
 
 OUTPUT — your final output is exactly this JSON (anything before it is ignored):
-{"action": "attach", "campaign": null,
- "topic_path": null, "new_name": null, "new_mission": null,
- "confidence": "high", "reason": "≤ {{ reason_words }} words", "seed": false}
+{{ route_skeleton }}
 {{ route_field_rules }}
 Check: campaign and topic_path copied verbatim from REGISTRY (only a new_topic
 leaf or a proposed campaign may be new text); reason ≤ {{ reason_words }} words.
