@@ -40,6 +40,16 @@ W1 judged (3/1 SUBSTANTIVE), W2/W3 closed by content-preservation
 argument, EX-BLEED/EXB2/RFIX3 ride the next authorized codex spend
 (visible corpus floors re-check will bootstrap their floors).
 
+**Theory lanes sized and closed (2026-07-20 ~00:05, do not re-test
+blind):** W6-JSON-QUOTE-REPAIR — naked-inner-quote escaping recovers
+only 7/333 archived no-JSON rejections (2%; caveat: archived raws are
+6KB-clipped, sizing is a lower bound but the gap to any useful bar is
+10×). No-JSON taxonomy: 295 balanced-unparseable (mostly weak-model
+derailment/corruption), 32 truncation, 6 no-braces. The no-JSON mass
+is a capability signature, not a syntax-repair opportunity. Grade's
+remaining qwen fails: 8 no-json (this closed lane) + verbatim
+(guard working) — no unmined mechanical class found at grade.
+
 **Standing rules refreshed today:** 7-category exhaustion checklist
 (PROMPT_LAB.md) before any wait; BLOG_MATERIAL.md capture-first in
 the same commit as each adjudication; no model inference of any kind
