@@ -1,6 +1,6 @@
 {
   "note": "output bytes per successful task (whole trace) + single-shot ok-rates, per driver; ratchet gates in tests/test_output_budget.py",
-  "template_hash": "eaebc2e59b21d7fc",
+  "template_hash": "f307a4da85668c4b",
   "ok_noise_band": 3,
   "bytes_tolerance": 0.1,
   "drivers": {

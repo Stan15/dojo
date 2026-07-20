@@ -623,3 +623,20 @@ Worth noting what made the self-correction possible: every claim was
 written to a ledger with its evidence attached, so each new number had
 something specific to contradict. Confidence that isn't pinned to a
 recorded number can't be caught being wrong.
+
+## APPENDED 07-20 ~19:30 — "The owner as error-correction layer" (MAINT lands)
+
+The maintenance-guard qualifier finally shipped — arm #12 — and the path
+it took is the story: the autonomous loop found the mechanism, measured a
+campaign-best result under it, and then nearly discarded it TWICE on
+self-imposed bars (one demanding an above-mean score to prove "no harm";
+one waiting on a judged scenario that turns out to be a coin-flip below
+five samples). Both times the human owner, reading summaries and asking
+short questions — "why reject something that worked on what it touched?",
+"are we losing wins instead of improving?" — caught what the process
+couldn't see from inside: rigor pointed at a broken ruler is just a slow
+way of flipping coins. The final ruling came only after translating the
+whole saga out of campaign jargon into plain language. Autonomy did the
+measuring; the human did the calibration of standards; the ledger let each
+challenge land on a specific recorded number. That division of labor is
+the actual design lesson of the whole campaign.

@@ -31,6 +31,15 @@ WINS TO PRESERVE
 - Ops example shows one op per TYPE, update first (mode 10; armJ5 count
   anchoring).
 
+- The raise-difficulty case is MAINTENANCE-GUARDED (MAINT, adopted on
+  owner ruling 2026-07-20): "accuracy above 0.85 on ACTIVE practice (not
+  maintenance reviews of a passed phase) → raise difficulty". Adopted on
+  shape evidence — qwen 18/30 (campaign-best reflect; baseline 10-16),
+  gemma 25/30 in-band with dial-fails 0 — the same evidence class as
+  every other adopted arm. Its judged target (plateau 0.125→0.625
+  replicated under the two-qualifier bundle) is UNMEASURED-NOT-FAILED:
+  plateau_remediation is bimodal below n=5 (see entry below); re-sample
+  at a future ≥5-sample codex spend before citing judged numbers.
 - Per-op field-rule GEOMETRY is a PROFILE (DOPS 2026-07-20,
   fulfiller.reflect_field_rules): parallel per-op lines gave gemma its
   best reflect ever (29/30, op-composition fails 0); qwen got WORSE twice

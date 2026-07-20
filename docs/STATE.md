@@ -623,3 +623,11 @@ evals/reports/holdout-* — all off-limits to any prompt-work context.
   default). Third measured instance of caliber-divergence (INSIGHTS).
   FINDINGS.md per-template register created + drift-gated; README carries
   every win/dead-end for future editors. 952 tests green.
+- 07-20 (MAINT adopted, owner ruling): the raise-difficulty rule gains its
+  maintenance guard ("on ACTIVE practice, not maintenance reviews of a
+  passed phase") — adopted on shape evidence after a plain-language owner
+  exchange (qwen 18/30 campaign-best reflect; gemma in-band; the stricter
+  judged gate recorded as unmeasured-not-failed since its key scenario is
+  bimodal below n=5). The owner's two challenges today — the over-tight
+  gate-1 bar and "are we losing wins?" — each preserved a real win the
+  process would have discarded. 12 adopted arms; 952 tests green.

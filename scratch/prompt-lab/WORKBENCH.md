@@ -20,9 +20,10 @@ three bar-writing defects recorded (bundling / partition / over-tight),
 and qwen's campaign-best reflect (18/30 under MAINT). MAINT is
 REVERTED on gate-2 target-metric bimodality.
 
-**WAITING ON OWNER:** (1) MAINT standards question — adopt on
-shape-evidence-alone? (campaign-normal practice says yes; its judged
-target is unmeasurable at n=2; I won't relax my own bar). (2) Holdout
+**OWNER RULED (2026-07-20, plain-language exchange): MAINT ADOPTED on
+shape evidence — campaign-normal standard; judged target recorded as
+unmeasured-not-failed (plateau needs n≥5). Campaign: 12 adopted arms.**
+**WAITING ON OWNER:** (1) ~~MAINT~~ RESOLVED. (2) Holdout
 relay — parked on your green-visible-run condition (current: 7
 reliable fails, all pre-existing classes). (3) Mixed-model table
 (parked by default).
