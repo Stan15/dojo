@@ -9,10 +9,14 @@ committed and pushed through 796d4d3; tree clean except the OWNER-ONLY
 __holdout baseline (never touch); no batteries or subagents in flight;
 contamination CLEAN.
 
-**UPDATE 2026-07-20 ~01:30: DSTATE-2 adopted (966fd35, diagnostic
-escape-hatch statement — gemma diag 7/7 best-ever, README mode 11
-minted); W6 json-repair sized+closed negative (b0afd67). Adopted-arm
-count: 8. Queue unchanged below (owner-gated arms + step 1-2).**
+**UPDATE 2026-07-20 ~03:00 (cycle end): DSTATE-2 adopted (966fd35,
+gemma diag 7/7 best-ever, README mode 11 minted); W6 json-repair
+closed negative; SORD section-ordering closed negative (0bc3b99 —
+journal-omission EXACTLY at baseline under order-only reorder; the
+geometry axis has its datum; reflect-decomp is the only lever left
+for that class and QUESTIONS −3 now says so). Adopted arms: 8.
+Closed negatives: 8. Mechanical seam mined out; SLOW-LOOP until an
+owner reply or the next creative pre-registration.**
 
 **Day's adopted arms (all committed with raw data):** W1 word-cap
 tolerance (9f878e5); W2 questions-object coercion (ea8ff26,
@@ -1033,8 +1037,22 @@ directive §queue).
 
 ## Pre-registered (open)
 
-- **SORD-SKETCH (design seed 2026-07-20 ~01:50; full pre-reg needed
-  before any test — next cycle's creative frontier).** Hypothesis
+- **SORD FULL PRE-REG (2026-07-20 ~02:05, supersedes sketch; IN
+  EXECUTION).** Arm: in campaign_reflect.md, MOVE rules 6-7 (the
+  journal + learner-language obligations) from the RULES block to
+  directly above the OUTPUT line — order-only diff, zero content
+  change (byte-count preserved minus position). Mechanism: the
+  journal obligation sits ~1.5KB+ of evidence sections away from
+  where the model writes its JSON; recency should cut omission.
+  Baselines (newest runs): qwen reflect merged 16/30 ok /
+  journal-omission 3; gemma 28/30 / 0. DECISION RULE: qwen
+  journal-omission ≤1 AND ok ≥15 (±3 of 16, but omission is primary);
+  gemma ok ≥25 AND journal-omission stays 0-1; no new class. Minis:
+  same 30-scenario reflect set, gemma then qwen chained. Adopt →
+  goldens (reflect golden if exists) + footprint + output-budget same
+  commit. Revert → checkout template. Do NOT touch rule numbering
+  references elsewhere (check rules 1-7 cross-refs before edit).
+  (design seed ~01:50 superseded.) Hypothesis
   family: section ORDER inside compiled payloads is an unmeasured
   lever — e.g. reflect places RULES (7 rules, ~1.5KB) before the
   evidence sections; recency effects suggest rules-last (or
