@@ -924,8 +924,32 @@ directive §queue).
 
 ## Pre-registered (open)
 
-- **RFIX-SKELETON (pre-registered 2026-07-19 ~21:20, from RSIMP
-  negative analysis — HIGH-value cross-caliber hypothesis).** The
+- **RFIX PRIMARY ADJUDICATED ~21:50: lfm-think 0/13 (bar ≥4 MISSED;
+  3 infra timeouts; copied-literal fails 2 — at the ≤2 boundary).
+  The null-anchor hypothesis fails at lfm-think: it nulls required
+  fields for non-attach actions regardless of skeleton. AMENDMENT
+  (recorded BEFORE qwen/gemma battery data exists — R3-amendment
+  precedent): the skeleton's self-inconsistency is a README mode-10
+  defect independent of lfm's ceiling; IF qwen ≥3/8 AND gemma
+  flat-or-better (7/8 ±1) AND copied-literal fails ≤2 per 4B model,
+  ADOPT the fix on defect-repair grounds with lfm-think route
+  recorded as CAPABILITY-FLOOR for this era (three arms — W4, RSIMP,
+  RFIX — all 0/13 with the same class: the cell does not move by
+  prompt surgery). If qwen <3/8 or gemma drops or literals bleed >2:
+  REVERT and record that even defect-repair loses to literal-bleed
+  risk at this surface.**
+- **RFIX-SKELETON IN EXECUTION ~21:30 (tree = RFIX overlay,
+  uncommitted; hash gate red by design): both route skeletons now
+  show a SELF-CONSISTENT attach with corpus-absent realistic literals
+  (campaign "brush-calligraphy"; topic_path calligraphy.strokes.
+  thin_upstrokes / calligraphy.ink.grinding — orthogonal per the
+  EX-BLEED lesson: a copied literal FAILS the registry existence
+  check visibly instead of colliding). 939+1hash pytest. Batteries:
+  (1) rfix_lfmthink_route.jsonl (bkwa9tba6); (2)+(3) chained qwen +
+  gemma route minis (bj2pdmu06, RFIX-ALL-DONE). Decision rule in
+  pre-reg below; copied-literal rate measured via "brush-calligraphy"
+  grep in outputs. If dead: rerun recorded commands.** (pre-registered 2026-07-19 ~21:20, from RSIMP
+  negative analysis — HIGH-value cross-caliber hypothesis). The
   route skeletons are the ONLY kind demonstrating an INVALID example:
   {"action": "attach", "campaign": null, "topic_path": null} violates
   the template's own field rules (attach requires both) — README
