@@ -135,7 +135,17 @@ the strongest model of each resource class.
 3. **Pre-register** — write the hypothesis + decision rule in WORKBENCH
    BEFORE testing: what metric must move, by how much (kind-level
    single-run variance is ±3 — replicate before adjudicating), what must
-   stay flat, which calibers.
+   stay flat, which calibers. **One variable per arm**: bundling two
+   independent changes behind one bar makes an ambiguous result
+   un-adjudicable without cherry-picking (measured 2026-07-20, RESTRAINT).
+   **JUDGED-QUALITY DELTAS NEED REPLICATION TOO** (measured 2026-07-20:
+   a scenario scored 0.125 → 1.00 → 0.125 across near-identical arms;
+   the middle sample was briefly celebrated as the campaign's biggest
+   win). Shape metrics have a measured ±3 band and a two-sample rule;
+   judged quality was being read single-sample because samples cost
+   money. Symmetric rule now: a judged delta cited as evidence for
+   adoption must be replicated, or recorded as PROVISIONAL and never
+   used to justify a template change on its own.
 4. **Test cheap-first** — free gates → local batteries (ONE at a time,
    quiet tree during: no template/corpus writes; template overlays only
    between batteries) → codex validation for strong-tier claims and

@@ -31,8 +31,7 @@ RULES
      BOTH dials: difficulty lowered AND scaffolding set high;
    - FEEDBACK contradicts the window's evidence → hold both dials, name
      the mismatch (insight or question);
-   - otherwise — only if NO case above matched — accuracy below 0.50 →
-     lower difficulty.
+   - otherwise accuracy below 0.50 → lower difficulty.
    Dials are GLOBAL: struggle confined to ONE topic while another
    thrives is an insight naming that topic — hold difficulty; a
    scaffolding raise (set high) names the topic in its reason.

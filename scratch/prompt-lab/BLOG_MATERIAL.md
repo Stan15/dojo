@@ -559,9 +559,11 @@ far cheaper to evaluate. Flat 0.3-0.7 scores match both. The model took
 the cheap one. Every time.
 Two guards were written: one restoring precedence at the fall-through,
 one adding a maintenance exemption to the raise case. The precedence guard
-took its target scenario from **0.125 to a perfect 1.00** — the largest
-judged-quality jump of the campaign. The maintenance guard did nothing at
-all. And the bundle still FAILED its pre-registered bar (2 of 4 scenarios
+appeared to take its target scenario from **0.125 to a perfect 1.00** —
+seemingly the largest judged-quality jump of the campaign. The maintenance
+guard did nothing at all. **[CORRECTED a few hours later — see the
+follow-up entry: that 1.00 did NOT reproduce. It was single-sample noise,
+and the correction is the better story.]** And the bundle still FAILED its pre-registered bar (2 of 4 scenarios
 cleared, bar was 3), so it was reverted whole — because the pre-registered
 rule doesn't get renegotiated after the data arrives, and keeping only the
 winner is precisely the cherry-pick that pre-registration exists to stop.
@@ -570,3 +572,26 @@ two independent qualifiers with independent mechanisms and independent
 target scenarios behind ONE bar. That's a defect in the pre-registration,
 and the fix is to re-run it as a single-variable arm and let it earn
 adoption on its own — which is exactly what's now in flight.
+
+## APPENDED 07-20 ~14:10 — "The largest win of the campaign was noise"
+
+Correction to the entry above, and the most useful thing measured all day.
+The precedence guard's target scenario had jumped 0.125 → 1.00 under the
+bundled arm — a result I described in the ledger as the campaign's biggest
+judged-quality gain. Re-run with the single-variable arm (the guard alone,
+everything else identical), the same scenario scored **0.125 again**. Three
+samples of near-identical prompts: 0.125, 1.00, 0.125. The "win" was a
+single-sample judged-quality lottery on a scenario whose rubric has four
+weighted criteria that can cascade.
+Two things follow. First, the arm is reverted and the class stays open —
+honestly, with no story about a fix that worked. Second, and more
+important: the campaign's multi-sample rule already existed for SHAPE
+metrics (ok-rates), where variance was measured at ±3 — but judged
+quality was being treated as a single-sample read because each sample
+costs money. That asymmetry is a methodological hole, and it silently
+inflated at least one celebrated result. The rule going forward has to be
+symmetric: a judged-quality delta cited as evidence needs replication just
+like a shape delta, or it needs to be labelled provisional in the ledger.
+The system had the discipline to catch this only because the successor arm
+happened to re-measure the same scenario. That's luck, not process — so
+the process changes.

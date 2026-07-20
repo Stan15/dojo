@@ -1229,6 +1229,27 @@ directive §queue).
   ≥0.875 AND atrophy ≥0.875 AND neither of the two known-failing
   scenarios drops BELOW its current run value (0.50 / 0.78) — i.e.
   preserve the win, harm nothing. Adopt only on both.
+  **SVFT CLOSED NEGATIVE ~14:15 — REVERTED, and the RESTRAINT "win" is
+  RETRACTED.** Gate 1 passed handsomely (gemma 27/30 dial-0; qwen
+  17/30, its campaign-best reflect). Gate 2 FAILED because
+  plateau_remediation scored **0.125 again** — the same scenario that
+  scored 1.00 under the bundled arm hours earlier, and 0.125 before
+  that. Three samples of near-identical prompts: 0.125 / 1.00 / 0.125.
+  **The celebrated "largest judged-quality jump of the campaign" was
+  single-sample noise.** (Also noted: my resolution_amid bar of 0.78
+  vs the actual 0.7777 was a rounding defect in my own bar-writing —
+  immaterial here since plateau decided it, but recorded.)
+  CONSEQUENCES: (1) template reverted, output-budget hash rebuilt, 952
+  green; (2) the restraint class stays OPEN and unfixed — no story
+  about a fix that worked; (3) DIRECTIVE PATCHED (loop step 3):
+  judged-quality deltas now require replication or a PROVISIONAL
+  label, symmetric with the ±3 shape rule — the asymmetry existed
+  because judged samples cost money, and it silently inflated a
+  result; (4) BLOG entry corrected in place + a follow-up entry
+  written, because the dossier must not carry a false story.
+  DO NOT re-run this arm without a replication budget for the judged
+  cells (≥2 samples per scenario, ~16 calls) — that is the real cost
+  of adjudicating this class honestly.
 
 - **DOPS (pre-registered 2026-07-20 ~09:45, from the decomp pilot's
   re-characterized residual).** The op requirements ARE stated —
