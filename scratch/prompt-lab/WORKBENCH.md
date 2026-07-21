@@ -1296,6 +1296,33 @@ directive §queue).
 8. LOOP: start experiment queue (directive §queue) — first: 6i trap
    scenarios (~2/kind, visible) + anchor-profile config + A/B batteries.
 
+## HARD-SET TRIAGE (2026-07-20 ~21:40 — full trace analysis, free)
+
+1. gen_collision_sql: seed↔rubric contradiction FIXED; judged ×2 in
+   flight (bjohjljjj).
+2. route_new_leaf: TWO mechanisms — ROUTE-CHARSET (pre-registered,
+   validator gap, ready to apply) then ROUTE-REASON (statement arm).
+3. verbatim_poetry_recall: mixed — real content mechanism (recall
+   items cue stanza NUMBERS not exact wording; rubrics don't reject
+   paraphrase) + a brutal 1.0 floor where any single-criterion wobble
+   fails. ARM VERB-RECALL: generate template's recall guidance states
+   exact-wording cue + verbatim-rejecting rubric (statement, single
+   variable). Floor stays (ratchets never lower).
+4. plan_unrealistic_timeline: RECLASSIFIED NOISE-FAMILY — 0.88/1.00
+   across samples, different single criterion each time, floor 1.0;
+   clears on re-test per the owner's green definition. No arm.
+5. reflect_diagnostic_voice_revision: REAL and replicated (c1/c3
+   identical both samples): plan_revision keeps the old scope instead
+   of implementing the learner's diagnostic-voice ask. Rule 3 already
+   states scope-exactness → statement is NOT the gap; next step is
+   payload inspection (is the learner's ask legible in the compiled
+   evidence?). Queued after the route arms.
+6. restraint ×4: MAINT shipped; plateau needs n≥5 sampling budget;
+   no new mechanism identified — parked pending fresh evidence.
+
+ARM ORDER: ROUTE-CHARSET → VERB-RECALL → ROUTE-REASON →
+reflect_diagnostic payload inspection → restraint sampling block.
+
 ## Pre-registered (open)
 
 - **ROUTE-CHARSET (pre-registered 2026-07-20 ~21:20; hard-set scenario
