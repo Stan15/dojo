@@ -30,6 +30,19 @@ floor), everything else in-band churn; mean 0.845-0.856 across runs.
 No ratchet moves (floors only move on wins). GREEN-DEFINITION
 question presented to the owner in plain language — holdout relay
 waits on their pick.**
+**OWNER RULED ~17:00: GREEN = NOISE-ONLY FAILS — every failure must
+pass an immediate re-test; the ~9 hard scenarios BLOCK green until
+actually fixed. Consequence: the holdout gate stays parked behind
+real fixes, and the campaign's next phase is the HARD SET:
+restraint ×4 (MAINT shipped but judged-unproven; plateau needs n≥5),
+route_new_leaf (judged route content), verbatim_poetry_recall
+(verbatim fidelity), gen_collision_sql (per-item constraint
+composition — the P12-era ceiling), plan_unrealistic +
+reflect_diagnostic_voice (floor-hoverers). NOTE FOR PLANNING: this
+is a JUDGED-tier campaign — every arm needs replication-budgeted
+codex spend under the new rule (~10-20 calls/arm); local shape
+batteries no longer discriminate on these. Closed lanes stay closed;
+new mechanisms only.**
 **PREV (in progress):**
 full run exit 1 — 94/108, mean 0.845, 14 floor fails (9 rotating
 repeat-offenders + 5 new; restraint scenarios unchanged under MAINT,
