@@ -50,6 +50,20 @@ seed:
       key: format.long_prompt_fatigue
       status: active
       description: "Abandons prompts longer than about sixty words midway; quality collapses on long or multi-part items."
+  # Practice history: the topic is ALREADY ENCOUNTERED (one graded attempt),
+  # so the compiler's no-present branch fires — this scenario tests 3-item
+  # PRACTICE constraint composition (its design comment above), and without
+  # history the introduce-branch legitimately commanded a present card that
+  # the rubric then punished (payload↔rubric contradiction, found 2026-07-20).
+  exercises:
+    - {id: ex_lj1, topic_path: sql.joins.outer, difficulty: intermediate,
+       prompt: "Orders LEFT JOIN payments — why can a WHERE filter on payments.status drop unpaid orders?",
+       answer: "Filtering right-table columns in WHERE removes NULL-extended rows; move the filter into ON to keep unmatched left rows.",
+       rubric: "- names WHERE-on-right-table as the cause"}
+  attempts:
+    - {id: att_lj1, session_id: s1, exercise_id: ex_lj1, score: 0.3,
+       latency_seconds: 55.0, error_tag: where_collapse,
+       user_answer: "Because the join only returns rows where both sides match, I think."}
 steps:
   - compile:
       fn: generate
