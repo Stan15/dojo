@@ -1298,8 +1298,11 @@ directive §queue).
 
 ## HARD-SET TRIAGE (2026-07-20 ~21:40 — full trace analysis, free)
 
-1. gen_collision_sql: seed↔rubric contradiction FIXED; judged ×2 in
-   flight (bjohjljjj).
+1. gen_collision_sql: **CLEARED — 1.00 and [s2] both samples post-fix
+   (one infra void rerun clean). The 'P12-era constraint-composition
+   ceiling' was substantially this seed bug: with the payload no
+   longer commanding a present card, codex composes all three
+   constraints perfectly. Leaves the hard set.**
 2. route_new_leaf: TWO mechanisms — ROUTE-CHARSET (pre-registered,
    validator gap, ready to apply) then ROUTE-REASON (statement arm).
 3. verbatim_poetry_recall: mixed — real content mechanism (recall
