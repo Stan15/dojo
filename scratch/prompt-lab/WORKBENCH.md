@@ -1298,6 +1298,27 @@ directive §queue).
 
 ## Pre-registered (open)
 
+- **ROUTE-CHARSET (pre-registered 2026-07-20 ~21:20; hard-set scenario
+  route_new_leaf, mechanism 1 of 2; APPLY AFTER GCSQL-DONE frees the
+  tree).** Mechanical gap, evidence independent of score: RouteResult
+  ACCEPTS topic_path with spaces ("git.data migration") while
+  PlanTopic enforces the store-wide charset — route-created topics can
+  pollute the namespace plan/reflect reference. Judge fails c3 on
+  exactly this (2/3 samples, gemma-tier emits spaces). SINGLE
+  VARIABLE: path charset on route topic_path. Edits: (1) schemas —
+  RouteResult topic_path gains the SAME charset validator + taught
+  message as PlanTopic ("lowercase words joined by underscores, dots
+  only"); (2) both route templates' rule 2 states the leaf format
+  (statement gate: a trippable floor must be stated). Validator is
+  monotone-STRICTER: local route shape may dip ONLY where models emit
+  space-paths — those were FALSE shape-passes (judged-failing
+  anyway). Decision rule: local route minis (gemma default + qwen
+  live, 13-set each): ok same-or-better OR every dip row shows the
+  new charset rejection (1:1 accounting); then judged ×2 on
+  route_new_leaf: c3 passes both samples, total ≥0.8 both. Then
+  ROUTE-REASON (mechanism 2: reason justifies newness) as a separate
+  single-variable arm.
+
 - **RESTRAINT (pre-registered 2026-07-20 ~11:30; the last open quality
   debt).** The 4 reliable strong-tier restraint fails share ONE root,
   found by reading judged outputs against the template (NOT the
