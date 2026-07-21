@@ -1325,6 +1325,23 @@ reflect_diagnostic payload inspection → restraint sampling block.
 
 ## Pre-registered (open)
 
+- **DIAGVOICE (pre-registered 2026-07-20 ~22:20; hard-set scenario
+  reflect_diagnostic_voice, replicated fail). Mechanism with
+  independent evidence: the compiler's 48-char answer-glimpse clips
+  the learner's diagnostic ask mid-word — "please drop machi…" — while
+  rule 3 orders scope-exact implementation and rule 4 promises
+  diagnostic answers "return to you as citable evidence". Every token
+  the judge checks (patches/buttons/field hems) is in the clipped
+  half; the model cannot comply. SINGLE VARIABLE (compiler, craft
+  rule 5, no template change): attempt rows whose exercise skill is
+  "diagnostic" render user_answer UNCLIPPED up to 240 chars (ordinary
+  rows keep the 48-char glimpse; section row_budget still bounds the
+  whole). Decision rule: local reflect minis both 4B flat (band);
+  judged ×2 on reflect_diagnostic_voice: c1+c3 pass both samples,
+  total ≥0.75 both; byte cost measured (+~150B on diagnostic-bearing
+  payloads only). Apply AFTER ROUTE-CHARSET (serial arms, one
+  variable in flight at a time).
+
 - **ROUTE-CHARSET (pre-registered 2026-07-20 ~21:20; hard-set scenario
   route_new_leaf, mechanism 1 of 2; APPLY AFTER GCSQL-DONE frees the
   tree).** Mechanical gap, evidence independent of score: RouteResult
