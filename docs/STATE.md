@@ -631,3 +631,12 @@ evals/reports/holdout-* — all off-limits to any prompt-work context.
   bimodal below n=5). The owner's two challenges today — the over-tight
   gate-1 bar and "are we losing wins?" — each preserved a real win the
   process would have discarded. 12 adopted arms; 952 tests green.
+- 07-22/23 (prompt-lab, hard-set phase): owner ruled green = noise-only
+  fails; hard set 9→7 — gen_collision_sql cleared (seed↔rubric
+  contradiction fixed, 1.00/0.80) and route_new_leaf cleared at 1.00/1.00
+  via two single-variable arms (ROUTE-CHARSET #13: store-wide path
+  validator + stated leaf format; ROUTE-REASON #14: reason names the
+  coverage gap). VERB-RECALL mid-gate at session handoff (WORKBENCH
+  RESUME header has exact resumption); DIAGVOICE pre-registered;
+  restraint parked pending an n≥5 sampling budget. 14 adopted arms
+  total; 952 tests green.

@@ -1,75 +1,66 @@
 # PROMPT LAB WORKBENCH — live campaign state
 
-## ⟫ RESUME HERE (consolidated 2026-07-20 ~18:15; ledger below)
+## ⟫ RESUME HERE (handoff written 2026-07-23 ~13:30 for a FRESH session;
+everything below this header is history, superseded as state)
 
-Tree clean at origin/main, 952 tests green, no processes in flight,
-contamination CLEAN, holdout untouched. STEP ZERO re-arms on any fresh
-session.
+STEP ZERO first (cron heartbeat + wakeup — the old session's schedulers
+are dead). Then execute THIS, in order. Ollama note: if batteries all
+infra-fail, the server died — restart:
+`pkill -f "ollama serve"; OLLAMA_NUM_PARALLEL=4 OLLAMA_MAX_LOADED_MODELS=1 nohup ollama serve >/tmp/ollama-serve.log 2>&1 &`
 
-**Campaign totals: 11 adopted arms · 15 closed negatives.** Adopted:
-W1, W2, W3, EX-BLEED, EXB2, RSIMP-infra, RFIX3, DSTATE-2, DOPS-profile,
-6i-profile, realworld corpus. All adoption evidence is shape/mechanical
-(audited); W1's judged harm-guard is PROVISIONAL in FINDINGS.
+**CAMPAIGN STATE: 14 adopted arms · 17 closed negatives · 952 tests
+green · all pushed through da99375+ · contamination CLEAN · holdout
+untouched (uncommitted __holdout baseline = OWNER-ONLY, never touch).**
 
-**The restraint saga (read before ANY reflect-rule arm):** five arms
-(RESTRAINT → SVFT → PLAT-INT → MAINT ×2 gates) produced: a real
-replicated effect (maintenance qualifier lifts plateau 0.125→0.625),
-a retracted-then-corrected noise attribution, the judged-variance band
-(median Δ0.11/max 0.33), plateau marked UNUSABLE below n=5 samples,
-three bar-writing defects recorded (bundling / partition / over-tight),
-and qwen's campaign-best reflect (18/30 under MAINT). MAINT is
-REVERTED on gate-2 target-metric bimodality.
+**HARD-SET SCOREBOARD (owner ruling: green = noise-only fails; these
+block the holdout gate):** CLEARED: gen_collision_sql (seed bug fix,
+1.00/0.80), route_new_leaf (ROUTE-CHARSET #13 + ROUTE-REASON #14,
+1.00/1.00). REMAINING 7: verbatim_poetry (arm IN FLIGHT, below),
+reflect_diagnostic_voice (DIAGVOICE pre-registered, next),
+plan_unrealistic (reclassified noise-family — clears on re-test),
+restraint ×4 (MAINT #12 shipped; plateau needs n≥5 judged samples;
+no new mechanism — parked).
 
-**VAL2 ADJUDICATED ~16:45: 4 of the 5 new fails PASSED on resample
-(in-band variance, floors hold); gen_collision_sql_left_join failed
-both samples → joins the reliable-hard set. Post-adjudication visible
-tier: ~9 genuinely hard scenarios (restraint ×4 incl. the plateau
-lottery, route_new_leaf, verbatim_poetry, gen_collision_sql, and the
-plan_unrealistic / reflect_diagnostic_voice pair that hovers at its
-floor), everything else in-band churn; mean 0.845-0.856 across runs.
-No ratchet moves (floors only move on wins). GREEN-DEFINITION
-question presented to the owner in plain language — holdout relay
-waits on their pick.**
-**OWNER RULED ~17:00: GREEN = NOISE-ONLY FAILS — every failure must
-pass an immediate re-test; the ~9 hard scenarios BLOCK green until
-actually fixed. Consequence: the holdout gate stays parked behind
-real fixes, and the campaign's next phase is the HARD SET:
-restraint ×4 (MAINT shipped but judged-unproven; plateau needs n≥5),
-route_new_leaf (judged route content), verbatim_poetry_recall
-(verbatim fidelity), gen_collision_sql (per-item constraint
-composition — the P12-era ceiling), plan_unrealistic +
-reflect_diagnostic_voice (floor-hoverers). NOTE FOR PLANNING: this
-is a JUDGED-tier campaign — every arm needs replication-budgeted
-codex spend under the new rule (~10-20 calls/arm); local shape
-batteries no longer discriminate on these. Closed lanes stay closed;
-new mechanisms only.**
-**PREV (in progress):**
-full run exit 1 — 94/108, mean 0.845, 14 floor fails (9 rotating
-repeat-offenders + 5 new; restraint scenarios unchanged under MAINT,
-plateau 0.12 again = the certified lottery). Multi-sample re-run of
-the 5 NEW fails in flight (bubpoz837, RERUN5-EXIT). STRUCTURAL
-FINDING FORMING (report to owner with the verdict): with ~100
-scenarios, judged σ≈0.11, and single-sample ratchet floors, a
-rotating ~10% of floors miss EVERY full run — "green" as currently
-defined may be structurally unreachable; the owner will need to pick
-a green definition (variance-adjudicated / margin-widened /
-multi-sample floors) before the holdout condition can ever fire.
-**OWNER RULED (2026-07-20, plain-language exchange): MAINT ADOPTED on
-shape evidence — campaign-normal standard; judged target recorded as
-unmeasured-not-failed (plateau needs n≥5). Campaign: 12 adopted arms.**
-**WAITING ON OWNER:** (1) ~~MAINT~~ RESOLVED. (2) Holdout
-relay — parked on your green-visible-run condition (current: 7
-reliable fails, all pre-existing classes). (3) Mixed-model table
-(parked by default).
+**1. FINISH VERB-RECALL (mid-gate-1 at handoff).** Template edit is
+COMMITTED (exercise_generate.md rule 3: verbatim items ask FOR exact
+words, rubrics word-for-word; pre-reg in "Pre-registered (open)").
+gemma cell DONE: vrec_gemma_gen.jsonl 10/11 (flat, one pre-existing
+class fail). qwen cell was mid-run — CHECK vrec_qwen_gen.jsonl row
+count (11 scenarios expected); if short/missing rerun:
+`python scratch/token-diet/measure.py "python scratch/token-diet/api_driver.py qwen3.5:4b --no-think" scratch/token-diet/baselines/vrec_qwen_gen.jsonl 2 gen_ generate_ verbatim_ math_scaffolded pure_recall`
+Adjudicate flat ±band (qwen generate era-baseline 17/22-scale ≈ 8-9/11).
+Then gate 2 (judged ×2):
+`DOJO_EVAL_DRIVER="codex exec --skip-git-repo-check -s read-only" python -m pytest -m eval -q -k "verbatim_poetry_recall"` (×2, log each)
+Bars: c1+c2 pass BOTH samples; q=1.0 both → leaves hard set; a
+1.0/sub-1.0-on-OTHER-criterion split = one noise re-test. Adopt →
+FINDINGS + BLOG + commit jsonls/reports by name. Miss → revert the
+rule-3 sentence, record negative.
 
-**Directive rules minted this campaign (all in PROMPT_LAB.md):**
-7-category exhaustion checklist · one variable per arm · judged deltas
-need replication or PROVISIONAL · bars justified against measured cell
-variance · capture-first BLOG_MATERIAL · no inference during batteries
-· codex needs stdin closed · load-gated launches.
+**2. DIAGVOICE (pre-registered, ready).** Compiler: attempt rows whose
+exercise skill is "diagnostic" render user_answer UNCLIPPED ≤240 chars
+(48-char glimpse amputates the learner's ask — see pre-reg for
+evidence + bars: local reflect minis flat; judged ×2
+reflect_diagnostic_voice c1+c3 both, total ≥0.75 both).
 
-**Next fresh work:** nothing unblocked below the owner items; the
-mechanical seam is mined out (milestone entry). Slow-loop.
+**3. Restraint sampling block (needs explicit spend decision):**
+plateau_remediation ×5 judged samples to make it measurable at all;
+then any new-mechanism arm. ~20 calls; confirm with owner if in doubt.
+
+**4. After the hard set: re-run the full validation; under the
+owner's green rule (every fail passes immediate re-test) a green run
+activates the HOLDOUT RELAY (aggregate-only form ONLY:
+`dojo benchmark "codex exec --skip-git-repo-check -s read-only" --holdout`
+— consume ONLY the printed gap; never the pytest ratchet form).**
+
+**STANDING RULES (all in docs/PROMPT_LAB.md + FINDINGS.md, both
+MANDATORY before any template edit):** one variable per arm ·
+judged deltas need replication or PROVISIONAL · bars justified
+against measured cell variance (judged band: median Δ0.11/max 0.33;
+shape band ±3) · 7-category exhaustion checklist before any wait ·
+BLOG_MATERIAL.md capture-first each adjudication · no model inference
+during batteries · codex needs stdin closed · load-gated launches
+(1-min <6) · plateau_remediation unusable below n=5 · raw jsonls
+commit with every adjudication · stage files by name.
 
 ## ⟫ PREV-HEADER (2026-07-20 ~06:10; superseded)
 
