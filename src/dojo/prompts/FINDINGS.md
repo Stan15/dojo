@@ -158,6 +158,13 @@ WINS TO PRESERVE
   the leaf format. Judged: route_new_leaf 0.60→0.80/0.80 stable with
   the snake_case criterion clean both samples (rchar_* jsonls,
   gate-1 minis above baseline both models).
+- Rule 2's new_topic case states BOTH the leaf format AND that the
+  reason names the coverage gap (ROUTE-REASON 2026-07-22, adopted):
+  the judge expected justification the template never asked for
+  (mode-7 at the judged tier). route_new_leaf: 0.60 → 0.80/0.80
+  (charset arm) → 1.00/1.00 (reason arm) — both samples perfect,
+  scenario left the hard set. Two single-variable arms, each fixing
+  its own criterion; rreason_*/rchar_* jsonls.
 - Rule blocks are fragments too (route_soft/_field × default/lean);
   default compiles byte-identical to legacy (pinned hashes in
   test_route_default_profile_keeps_legacy_rule_text).

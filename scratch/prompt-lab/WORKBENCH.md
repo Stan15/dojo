@@ -1303,8 +1303,10 @@ directive §queue).
    ceiling' was substantially this seed bug: payload no longer
    commands a present card. s2's one miss is a two-part item (c3,
    minor). Leaves the hard set (9→8).**
-2. route_new_leaf: TWO mechanisms — ROUTE-CHARSET (pre-registered,
-   validator gap, ready to apply) then ROUTE-REASON (statement arm).
+2. route_new_leaf: **CLEARED — LEAVES THE HARD SET (8→7).** Two
+   single-variable arms: ROUTE-CHARSET (validator + format statement,
+   0.60→0.80/0.80) then ROUTE-REASON (reason names the coverage gap,
+   →1.00/1.00 both samples, clears the 1.0 floor twice).
 3. verbatim_poetry_recall: mixed — real content mechanism (recall
    items cue stanza NUMBERS not exact wording; rubrics don't reject
    paraphrase) + a brutal 1.0 floor where any single-criterion wobble

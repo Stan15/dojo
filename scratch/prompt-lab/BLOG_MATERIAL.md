@@ -640,3 +640,19 @@ whole saga out of campaign jargon into plain language. Autonomy did the
 measuring; the human did the calibration of standards; the ledger let each
 challenge land on a specific recorded number. That division of labor is
 the actual design lesson of the whole campaign.
+
+## APPENDED 07-22 — "Two criteria, two arms, two clean landings" (route_new_leaf clears)
+
+The route new-leaf scenario had judged-failed for days at 0.60 with two
+complaints: leaves with spaces in them, and reasons that never said why a
+new topic was needed. Old campaign would have shipped one combined fix;
+the new rules (one variable per arm, judged replication) forced two
+sequential arms — and each landed exactly its own criterion: the charset
+validator+statement took it to 0.80/0.80 (snake_case clean both samples,
+justification still failing), then the eight-word reason statement took it
+to 1.00/1.00. Textbook decomposition of a judged failure into stated
+principles: no rubric was touched, both fixes generalize (the validator
+guards the whole store's namespace; the reason rule applies to every
+routing decision), and the scenario cleared its hardest-in-corpus 1.0
+floor twice in a row. First hard-set scenario fixed by prompt work rather
+than scenario repair. Data: rchar_*, rreason_* jsonls.
