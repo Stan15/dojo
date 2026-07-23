@@ -508,6 +508,20 @@ class RouteResult(BaseModel):
     new_mission: Optional[str] = None
     confidence: Literal["high", "low"]
     reason: str = Field(min_length=1)
+
+    @field_validator("topic_path")
+    @classmethod
+    def _route_path_shape(cls, v):
+        """Route-created paths land in the SAME store namespace plan paths
+        do — same charset, same taught message (ROUTE-CHARSET 2026-07-20:
+        spaces were accepted here while PlanTopic rejected them; judged tier
+        failed exactly those leaves)."""
+        if v is not None and not re.fullmatch(r"[a-z0-9_]+(\.[a-z0-9_]+)*", v):
+            raise ValueError(
+                "path must be lowercase words joined by underscores, dots only "
+                "between levels (e.g. git.bisect_run) — no hyphens, spaces, or slashes"
+            )
+        return v
     seed: bool = False
 
     _cap_reason = field_validator("reason")(_cap_words("reason", _limits.ROUTE_REASON_WORDS))

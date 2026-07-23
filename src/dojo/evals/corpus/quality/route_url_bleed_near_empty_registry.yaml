@@ -58,7 +58,10 @@ references:
   bad:
     action: new_topic
     campaign: git-mastery
-    topic_path: git/bisect run
+    # (charset bleed like "git/bisect run" is now VALIDATOR-caught at shape
+    # time — ROUTE-CHARSET 2026-07-20; the judged residual is semantic URL
+    # bleed in a charset-legal leaf:)
+    topic_path: git.bisect_run_automation_blog_post
     new_name: null
     new_mission: null
     confidence: high
