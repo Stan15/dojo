@@ -6,7 +6,8 @@ RULES
 1. Prefer attaching to an existing topic. Copy campaign and topic path EXACTLY as
    written in REGISTRY.
 2. Fits a campaign but no listed topic → "new_topic" with the closest existing
-   parent path and a new leaf (≤ 3 words, lowercase joined by underscores).
+   parent path and a new leaf (≤ 3 words, lowercase joined by underscores),
+   the reason naming what the existing topics miss.
 3. Fits no campaign → "propose_campaign" (name ≤ {{ new_name_words }} words,
    mission ≤ {{ new_mission_words }} words). Never force a bad fit.
 {{ route_soft_rules }}

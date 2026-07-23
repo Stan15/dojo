@@ -1,0 +1,29 @@
+{
+  "driver": "codex exec --skip-git-repo-check -s read-only",
+  "judge": "codex exec --skip-git-repo-check -s read-only",
+  "date": "2026-07-23T03:36:33.460594+00:00",
+  "margin": 0.1,
+  "scenarios": {
+    "route_new_leaf_when_warranted": {
+      "quality": 0.8,
+      "verdicts": {
+        "c1": "pass",
+        "c2": "pass",
+        "c3": "pass",
+        "c4": "fail: Reason does not state existing topics fail to cover migration."
+      },
+      "discarded": [],
+      "judged_output": "{\n \"action\": \"new_topic\",\n \"campaign\": \"backyard-birding\",\n \"topic_path\": \"birds.behavior.migration\",\n \"new_name\": \"migration\",\n \"new_mission\": null,\n \"confidence\": \"high\",\n \"reason\": \"Migration timing and conditions fit local bird behavior.\",\n \"seed\": true\n}",
+      "judge_trace": "{\"verdicts\":[{\"id\":\"c1\",\"verdict\":\"pass\",\"evidence\":\"\\\"action\\\": \\\"new_topic\\\"\",\"why\":null},{\"id\":\"c2\",\"verdict\":\"pass\",\"evidence\":\"\\\"topic_path\\\": \\\"birds.behavior.migration\\\"\",\"why\":null},{\"id\":\"c3\",\"verdict\":\"pass\",\"evidence\":\"\\\"new_name\\\": \\\"migration\\\"\",\"why\":null},{\"id\":\"c4\",\"verdict\":\"fail\",\"evidence\":null,\"why\":\"Reason does not state existing topics fail to cover migration.\"}]}\n",
+      "driver_trace": [
+        {
+          "kind": "capture.route",
+          "prompt": "You are filing one captured note into a learner's existing learning system.\n\nTASK: Decide where CAPTURE belongs, using only REGISTRY.\n\nRULES\n1. Prefer attaching to an existing topic. Copy campaign and topic path EXACTLY as\n   written in REGISTRY.\n2. Fits a campaign but no listed topic \u2192 \"new_topic\" with the closest existing\n   parent path and a new leaf (\u2264 3 words, lowercase joined by underscores).\n3. Fits no campaign \u2192 \"propose_campaign\" (name \u2264 4 words,\n   mission \u2264 15 words). Never force a bad fit.\n4. Torn between two homes \u2192 choose the better one, set confidence \"low\".\n5. \"seed\": true if the capture states a testable fact or technique that should\n   become a practice item now.\n\n## CAPTURE\nWarbler migration peaks here around mid-May; the best window is the first hour after dawn along the river, and a cold front can stall the whole movement for days.\n## REGISTRY\ncampaign \"backyard-birding\": Identify the local birds by sight and song.\n  birds.behavior.feeding\n  birds.id.plumage\n  birds.id.songs\n\nOUTPUT \u2014 your final output is exactly this JSON (anything before it is ignored):\n{\"action\": \"attach\", \"campaign\": null, \"topic_path\": null, \"new_name\": null,\n \"new_mission\": null, \"confidence\": \"high\", \"reason\": \"\u2264 12 words\", \"seed\": false}\nField rules: \"action\" is one word \u2014 attach, new_topic, propose_campaign, or\nstay_inbox. attach and new_topic need campaign + topic_path; propose_campaign\nneeds new_name + new_mission; the fields your action does not use stay null.\n\"confidence\" is high or low.\nCheck: campaign and topic_path copied verbatim from REGISTRY (only a new_topic\nleaf or a proposed campaign may be new text); reason \u2264 12 words.",
+          "ok": true,
+          "raw": "{\"action\":\"new_topic\",\"campaign\":\"backyard-birding\",\"topic_path\":\"birds.behavior.migration\",\"new_name\":\"migration\",\"new_mission\":null,\"confidence\":\"high\",\"reason\":\"Migration timing and conditions fit local bird behavior.\",\"seed\":true}\n"
+        }
+      ]
+    }
+  },
+  "mean_quality": 0.8
+}

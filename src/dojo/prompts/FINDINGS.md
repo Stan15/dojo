@@ -152,6 +152,12 @@ WINS TO PRESERVE
   default nulls (gemma 6/6-era), fulfiller.route_skeleton="live"
   (qwen 12/13; lfm2.5-instruct 13/13 PERFECT, rfix3_lfmi). Edit the
   route_skeleton_* fragments, keep both profiles' measurements.
+- topic_path is CHARSET-VALIDATED like plan paths (ROUTE-CHARSET
+  2026-07-22, adopted): spaces were accepted here while PlanTopic
+  rejected them — same regex, same taught message now; rule 2 states
+  the leaf format. Judged: route_new_leaf 0.60→0.80/0.80 stable with
+  the snake_case criterion clean both samples (rchar_* jsonls,
+  gate-1 minis above baseline both models).
 - Rule blocks are fragments too (route_soft/_field × default/lean);
   default compiles byte-identical to legacy (pinned hashes in
   test_route_default_profile_keeps_legacy_rule_text).

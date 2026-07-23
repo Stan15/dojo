@@ -1328,6 +1328,20 @@ reflect_diagnostic payload inspection → restraint sampling block.
 
 ## Pre-registered (open)
 
+- **ROUTE-REASON (pre-registered 2026-07-22, IN EXECUTION; mechanism
+  2 of route_new_leaf, single variable).** Rule 2 in both route
+  templates gains: "the reason naming what the existing topics miss"
+  (~8 words) — principle: the reason field justifies the CHOSEN
+  action; for new_topic that is the coverage gap (judge c4 expects
+  exactly this and it was never stated — mode-7 at the judged tier).
+  Gate 1 (local, chained): gemma default + qwen live route minis
+  flat-or-better (11/13 each ±band; reason-cap fails must not rise —
+  the statement adds reason CONTENT pressure against an 18-word
+  wall). Gate 2 (judged ×2 on route_new_leaf): c4 passes BOTH samples
+  AND q clears the 1.0 floor in both (that is the leave-the-hard-set
+  bar; a 1.0/0.8-on-another-criterion split = noise disposition per
+  the owner's green rule, re-test once).
+
 - **DIAGVOICE (pre-registered 2026-07-20 ~22:20; hard-set scenario
   reflect_diagnostic_voice, replicated fail). Mechanism with
   independent evidence: the compiler's 48-char answer-glimpse clips

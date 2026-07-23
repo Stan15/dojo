@@ -7,7 +7,8 @@ RULES
 1. A listed topic already covers the goal → "attach". Copy campaign and topic
    path EXACTLY as written in REGISTRY.
 2. Goal fits a campaign's mission but no listed topic → "new_topic" with the
-   closest existing parent path and a new leaf (≤ 3 words, lowercase joined by underscores).
+   closest existing parent path and a new leaf (≤ 3 words, lowercase joined by underscores),
+   the reason naming what the existing topics miss.
 3. No campaign fits → "propose_campaign" (name ≤ {{ new_name_words }} words,
    mission ≤ {{ new_mission_words }} words, in the learner's own framing).
    Never force a bad fit.
