@@ -25,8 +25,10 @@ no new mechanism — parked).
 COMMITTED (exercise_generate.md rule 3: verbatim items ask FOR exact
 words, rubrics word-for-word; pre-reg in "Pre-registered (open)").
 gemma cell DONE: vrec_gemma_gen.jsonl 10/11 (flat, one pre-existing
-class fail). qwen cell was mid-run — CHECK vrec_qwen_gen.jsonl row
-count (11 scenarios expected); if short/missing rerun:
+class fail). **[SESSION 2026-07-23 ~00:05] qwen cell RELAUNCHED as
+task bkpiwbtqp** (old file was 1 truncated row, deleted; load 3.99/8
+pre-launch OK; STEP ZERO re-armed: cron e3b0a12b @ :11/:34/:57 +
+wakeup ~00:29). If dead on resume rerun:
 `python scratch/token-diet/measure.py "python scratch/token-diet/api_driver.py qwen3.5:4b --no-think" scratch/token-diet/baselines/vrec_qwen_gen.jsonl 2 gen_ generate_ verbatim_ math_scaffolded pure_recall`
 Adjudicate flat ±band (qwen generate era-baseline 17/22-scale ≈ 8-9/11).
 Then gate 2 (judged ×2):

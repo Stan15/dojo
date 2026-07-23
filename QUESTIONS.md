@@ -59,6 +59,19 @@ _Statuses: `[x]` shipped · `[~]` standing/in-progress · `[?]` blocked-on-owner
 
 ## Open — decisions actually waiting on you
 
+-4. **Restraint sampling spend (2026-07-23, prompt-lab step 3).** The
+   restraint hard-set residual (plateau_remediation + 3 siblings) is
+   parked on "no new mechanism"; the standing rule says
+   plateau_remediation is unusable as evidence below n=5 judged samples.
+   Ask: authorize the MINIMAL sampling block — plateau_remediation ×5
+   (~5 codex judged calls, not the 20-call full-class form) to establish
+   its median reference level. Pre-registered decision rule + full plan:
+   scratch/prompt-lab/draft_restraint_sampling.md (measurement only —
+   no template edit or ratchet move follows from it directly).
+   **Default: WAIT for explicit approval — the header marks this an
+   explicit spend decision, and spend policy says sparingly; the
+   campaign proceeds to the full-validation step without it.**
+
 -3. **Reflect decomposition pilot (2026-07-19, prompt-lab).** STATE 7d
    now has closing evidence: after W1+W2+W3 landed, the reflect residual
    at every measured model is journal-omission + op-requirement
