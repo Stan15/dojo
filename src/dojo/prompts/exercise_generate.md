@@ -30,7 +30,9 @@ RULES
    short production per item — never multi-part prompts, never open-ended
    composition. Verbatim material (poems, quotes,
    exact lists) stays verbatim under every cue: cloze, next-line, whole —
-   recognition is never recall.
+   recognition is never recall, and neither are structure questions (which
+   stanza, how many lines): each verbatim item's prompt asks FOR the exact
+   words, and its rubric requires them word-for-word (no paraphrase credit).
 4. {{ grounding_rule }}
 5. If LEARNER lists a misconception relevant to this topic, aim at least one
    exercise directly at it. When several insights or preferences apply,

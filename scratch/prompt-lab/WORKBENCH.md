@@ -1330,6 +1330,19 @@ reflect_diagnostic payload inspection → restraint sampling block.
 
 ## Pre-registered (open)
 
+- **VERB-RECALL (pre-registered 2026-07-22, IN EXECUTION; hard-set
+  scenario verbatim_poetry, single variable).** Rule 3's verbatim
+  sentence extends: structure questions are not recall; verbatim
+  items' prompts ask FOR the exact words; rubrics require them
+  word-for-word (no paraphrase credit). Principle: the judge's c1/c2
+  expectations are the recall CONTRACT (FSRS repeats verbatim items —
+  a paraphrase-crediting rubric corrupts scheduling evidence), never
+  stated. Gate 1 (local): generate-driving minis both models
+  (gen_/generate_/verbatim_/math_/pure_recall stems) flat ±band.
+  Gate 2 (judged ×2 verbatim_poetry): c1+c2 pass both samples; q=1.0
+  both = leaves the hard set; 1.0/sub-1.0-on-other-criterion split =
+  one noise re-test per the green rule.
+
 - **ROUTE-REASON (pre-registered 2026-07-22, IN EXECUTION; mechanism
   2 of route_new_leaf, single variable).** Rule 2 in both route
   templates gains: "the reason naming what the existing topics miss"
