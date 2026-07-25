@@ -28,7 +28,35 @@ gemma cell DONE: vrec_gemma_gen.jsonl 10/11 (flat, one pre-existing
 class fail). **[SESSION 2026-07-23 ~00:05] qwen cell RELAUNCHED as
 task bkpiwbtqp** (old file was 1 truncated row, deleted; load 3.99/8
 pre-launch OK; STEP ZERO re-armed: cron e3b0a12b @ :11/:34/:57 +
-wakeup ~00:29). If dead on resume rerun:
+wakeup ~00:29). **~00:25 INTERIM: bkpiwbtqp DONE — 7 driven / 5 ok /
+4 INFRA (240s driver timeouts: running llama-server has -np 1, so
+workers=2 queues → timeout; completed rows ran 79-235s). Genuine
+fails: gen_collision_sql_left_join (transcript read: missing comma
+after item-3 prompt string → whole JSON invalid; span-extractor
+salvaged an inner object → misleading "no items" validator msg; TRUE
+class = qwen JSON output-corruption, the closed W6 capability lane) +
+generate_false_cognate_dialogue (same corruption class mid-string;
+no baseline row — scenario absent from exb2 full). BOTH qwen fails
+one pre-existing class, zero rule-3 relation. Overlap-9 driven so
+far: 4/5 ok vs baseline 9/9. REFILL task bvxq9boea in flight
+(workers=1, 4 timed-out scenarios →
+vrec_qwen_gen_fill.jsonl); adjudicate merged 11: flat = overlap-9
+ok ≥6 AND no NEW rule-3-attributable class (neither fail class is —
+both pre-existing). If dead: rerun refill command:
+`python scratch/token-diet/measure.py "python scratch/token-diet/api_driver.py qwen3.5:4b --no-think" scratch/token-diet/baselines/vrec_qwen_gen_fill.jsonl 1 gen_collision_music_relative_parallel generate_downward_calibration math_scaffolded_generation pure_recall_grounded`
+**~2026-07-24 23:20 GATE 1 ADJUDICATED — PASS both models.** Refill
+bvxq9boea DONE (4 rows, 0 infra): music/downward/pure_recall now ok,
+math_scaffolded still no-JSON. MERGED qwen cell 8/11 (pre-reg band
+8-9/11 → PASS low edge). Overlap-9 7/9 vs 9/9 baseline (−2, within
+±3): both down-flips (gen_collision_sql, math_scaffolded) are no-JSON/
+structural = the closed W6 qwen output-corruption capability lane, NOT
+rule-3-attributable. 3rd fail generate_false_cognate = same class, no
+baseline. verbatim_poetry_recall (arm TARGET) ok on qwen AND gemma
+(gemma cell 10/11, lone fail = pre-existing empty-result). NO new
+rule-3 class anywhere. → PROCEED to gate 2. DIAGVOICE draft-ahead READY
+(scratch/prompt-lab/draft_diagvoice.md, filters verified);
+restraint spend ask posted as QUESTIONS -4 (default WAIT).**
+Original rerun command (superseded by refill):
 `python scratch/token-diet/measure.py "python scratch/token-diet/api_driver.py qwen3.5:4b --no-think" scratch/token-diet/baselines/vrec_qwen_gen.jsonl 2 gen_ generate_ verbatim_ math_scaffolded pure_recall`
 Adjudicate flat ±band (qwen generate era-baseline 17/22-scale ≈ 8-9/11).
 Then gate 2 (judged ×2):
