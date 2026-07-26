@@ -1,16 +1,67 @@
 # PROMPT LAB WORKBENCH — live campaign state
 
-## ⟫ RESUME HERE (handoff written 2026-07-23 ~13:30 for a FRESH session;
+## ⟫ RESUME HERE (handoff refreshed 2026-07-25 ~21:10 for a FRESH session;
 everything below this header is history, superseded as state)
 
 STEP ZERO first (cron heartbeat + wakeup — the old session's schedulers
-are dead). Then execute THIS, in order. Ollama note: if batteries all
-infra-fail, the server died — restart:
+are dead). Then execute from "NEXT ACTIONS" below. Ollama note: run
+batteries with OLLAMA_NUM_PARALLEL=4 (workers=2 else timeouts w/ -np1);
+if all infra-fail the server died — restart:
 `pkill -f "ollama serve"; OLLAMA_NUM_PARALLEL=4 OLLAMA_MAX_LOADED_MODELS=1 nohup ollama serve >/tmp/ollama-serve.log 2>&1 &`
 
-**CAMPAIGN STATE: 15 adopted arms · 17 closed negatives · contamination
-CLEAN · holdout untouched (uncommitted __holdout baseline = OWNER-ONLY,
-never touch).**
+**THIS SESSION (2026-07-25) LANDED TWO ARMS, both pushed (through 140860d):**
+- **VERB-RECALL #15 (f5b1e61):** generate rule 3 — verbatim items ask FOR
+  exact words, rubrics word-for-word. Gate 2 judged 1.00/1.00 all crit.
+  verbatim_poetry LEFT hard set. Also fixed the tree, which had been RED
+  since da99375/0798a45 (generate golden + output-budget hash gates-pending
+  for ROUTE-REASON + VERB-RECALL) — golden regen + hash bump (a444839
+  exb2-reference practice). Token-side check clean (advisor-caught gap).
+- **DIAGVOICE #16 (140860d):** compiler renders diagnostic-quality attempt
+  answers up to 240 chars (was 48, amputating the learner's ask). Gate 1
+  PASS-by-mechanism (25/26 payloads byte-identical), gate 2 judged
+  1.00/0.889 c1+c3 both. reflect_diagnostic_voice LEFT hard set.
+  Compiler-only, no output-budget change.
+
+**NEXT ACTIONS (in order):**
+1. **Endgame is OWNER-GATED.** Hard set is down to 5: plan_unrealistic
+   (noise, clears on re-test) + restraint ×4. The ONLY non-noise block is
+   restraint ×4, and resolving it needs the QUESTIONS-4 restraint-sampling
+   spend (plateau_remediation ×5 judged, ~5 codex calls; plan in
+   draft_restraint_sampling.md). DEFAULT = WAIT for owner. Do NOT run it
+   unprompted (header-marked explicit spend decision + spend policy).
+2. **Holdout relay (step 4) stays BLOCKED** until restraint resolves: a
+   full validation run won't be green while restraint fails reliably (owner
+   green rule = noise-only fails). When unblocked: aggregate-only form
+   `dojo benchmark "codex exec --skip-git-repo-check -s read-only" --holdout`
+   — consume ONLY the printed gap; NEVER the pytest ratchet form.
+3. **Approval-free lane while waiting = loop step 1-2:** generate NEW
+   testable theories from the newest committed batteries (diagvoice_*,
+   vrec_*, exb2_* fulls). Pre-register any before testing (one variable,
+   bars vs measured variance, judged deltas replicated).
+   **EARNED-WAIT ENUMERATION (2026-07-25 ~21:10, per never-idle doctrine —
+   each candidate considered + rejected, so a fresh session doesn't
+   re-walk it blind):**
+   · glimpse-clip transfer (DIAGVOICE insight → other paths): grade passes
+     FULL user_answer (compiler.py:480, no clip); generate-context glimpses
+     (:256,:282) clip exercise PROMPTS not answers, no measured failure →
+     no evidence-grounded arm.
+   · op-composition (DOMINANT residual, 15 fails both models: create
+     missing key/evidence, update missing id, missing reason): already
+     diagnosed (decomp pilot = "per-op field composition") + DOPS profile
+     SHIPPED (opt-in; parallel-lines helped gemma, hurt qwen → caliber-
+     divergent, can't be default). NO new mechanism → blind re-test banned.
+   · journal-omission (4): SORD section-order = closed negative; decomp
+     journal-half is owner-gated (QUESTIONS-3, answered-by-measurement).
+   · questions-object (1) = W2 residual noise.
+   CONCLUSION: no NEW evidence-grounded, single-variable, approval-free
+   theory is available this cycle. Every lever is shipped, closed-negative,
+   or owner-gated (restraint spend QUESTIONS-4). Campaign correctly RESTS on
+   owner input; cron+wakeup keep it resumable. Re-open loop step 1-2 when
+   NEW battery data or an owner directive lands.
+
+**CAMPAIGN STATE: 16 adopted arms · 17 closed negatives · 953 tests green
+· pushed through 140860d · contamination CLEAN · holdout untouched
+(uncommitted __holdout baseline = OWNER-ONLY, never touch).**
 **CORRECTION 2026-07-25 (advisor-caught): the RESUME header's "952 tests
 green · pushed through da99375+" was FALSE — the tree had been RED since
 da99375 on test_output_budget (ROUTE-REASON landed gates-pending, hash
