@@ -447,3 +447,36 @@ keeps `pipx install --force` from ever seeing real state.
   can't compose one op's required fields", which pointed straight at a
   factored-out `reason` clause in the field rules and produced the DOPS
   arm the same hour. Bars are for adoption; mechanisms are the payload.
+
+## 2026-07-26 — the compositional-load floor: a residual bounded by two opposing constraints
+
+- **"State the missing field" is not why a required field is missing —
+  fixing one field costs another (CKEY, 2026-07-25).** The 2026-07-20
+  decomp insight ended pointing at "a factored-out `reason` clause" as the
+  op-composition culprit. That was tested directly: two wordings adding the
+  create id/key contrast (once inside the create clause, once as a
+  byte-identical-preserving trailing sentence) BOTH fixed the id/key error
+  (gemma create-key 4→0) and BOTH relocated it to `reason`-omission (net
+  26→26 flat). At baseline these creates failed on key WITH reason present;
+  after the fix they get key right and drop reason. The model has a FIXED
+  attention budget per op — clarifying one required field displaces another.
+  A composition failure is not a statement gap you can close with more
+  words; adding words is the mechanism that moves the failure. This is why
+  the DOPS parallel-line GEOMETRY helps (it reduces per-op parsing load)
+  where prose does not — and why it's caliber-divergent (opt-in).
+- **A residual can be a genuine floor because two opposing constraints
+  close every lever (OCRE eliminated by analysis, 2026-07-25).** The create
+  op is simultaneously the HARDEST to compose (compositional load, above)
+  AND the WORST bleed vector (EXB2: 12/14 surviving example-bleed copies
+  were creates; EX-BLEED orthogonal residual 6–8/27). So the two obvious
+  fixes are mutually exclusive: a prose CLARIFICATION relocates the failure
+  (CKEY), and a DEMONSTRATION/skeleton — which might reduce composition load
+  — re-introduces the bleed EXB2 removed by suppressing the create example.
+  The bleed is the worse half: it trades a VISIBLE retryable rejection for
+  SILENT fake-insight store pollution that validates (quality-negative on
+  the judged numerator, unretryable). You can eliminate an arm by MEASURED
+  reasoning across prior findings without spending a battery — and the
+  honest output is "this residual is a floor for the default profile",
+  which closes the lever instead of leaving it as false hope. When every
+  lever is bounded by a measured opposing constraint, the seam is mined;
+  say so, and rest the loop on the owner-gated levers.
