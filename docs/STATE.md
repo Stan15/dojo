@@ -1,6 +1,6 @@
 # STATE
 
-_Last updated: 2026-07-25 (prompt-lab, VERB-RECALL adopted #15). Trust
+_Last updated: 2026-07-25 (prompt-lab, DIAGVOICE adopted #16). Trust
 this snapshot; git history carries the detail._
 
 ## Phase
@@ -640,6 +640,19 @@ evals/reports/holdout-* — all off-limits to any prompt-work context.
   RESUME header has exact resumption); DIAGVOICE pre-registered;
   restraint parked pending an n≥5 sampling budget. 14 adopted arms
   total; 952 tests green.
+- 07-25 (prompt-lab, hard-set phase cont.): DIAGVOICE adopted (#16) —
+  compiler branches the reflect evidence-window glimpse by exercise
+  quality: a diagnostic attempt renders its answer up to 240 chars
+  (ordinary stay 48), because the 48-char clip amputated the learner's
+  diagnostic scope ask that rule 4 promises as citable evidence. Gate 1
+  PASS by mechanism (25/26 reflect payloads byte-identical to baseline;
+  only the diagnostic scenario changed +62B — the arm is surgical, qwen
+  13/30 deficit proven sampling-noise on unchanged inputs). Gate 2 judged
+  ×2 = 1.00/0.889, c1+c3 (plan implements+honors learner scope) pass BOTH
+  — the replicated defect fixed; c4 journal wobble = noise. Compiler-only,
+  no output-budget change. reflect_diagnostic_voice_revision left the hard
+  set (6→5); the only non-noise block left is restraint ×4 (owner spend,
+  QUESTIONS-4). 16 adopted arms total; tests green.
 - 07-25 (prompt-lab, hard-set phase cont.): VERB-RECALL adopted (#15) —
   generate rule 3 makes verbatim items self-describe their contract
   (prompt asks FOR exact words; rubric requires them word-for-word, no

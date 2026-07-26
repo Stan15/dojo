@@ -678,3 +678,31 @@ rubric that credits only the exact Dylan Thomas words. Third hard-set scenario
 cleared by prompt work (after gen_collision's seed-bug and route_new_leaf's
 two arms); the block is down to six. Data: vrec_*_gen.jsonl,
 evals/reports/quality-*-20260725-111024.json + -121136.json.
+
+## APPENDED 07-25 — "The learner's ask, cut off at 48 characters" (DIAGVOICE)
+
+A reflection scenario kept failing on the two criteria that mattered most:
+does the revised plan implement what the learner explicitly asked for, and
+does it honor their stated scope? The learner had answered a diagnostic
+question — "I need hand repairs while traveling; please drop machine sewing
+and fitting, focus on patches, buttons, and field hems" — and strong
+reflection is supposed to cite that answer as the authority and rebuild the
+plan around it. But the model couldn't: the compiler rendered every prior
+answer as a 48-character glimpse, and 48 characters into that sentence you
+have exactly "Hand repairs while traveling; please drop machi…". Every token
+the judge checks — patches, buttons, field hems — was in the amputated half.
+The template's own rule 4 promised that diagnostic answers "return to you as
+citable evidence"; the compiler was quietly breaking that promise. The fix
+(arm #16) is four lines of compiler code, not a prompt change: an attempt on
+a diagnostic-quality exercise renders up to 240 characters instead of 48;
+everything else still clips at 48. The surgical-ness is provable — of 26
+reflect payloads measured, 25 came out byte-identical to baseline and exactly
+one changed, by 62 bytes. So when the local shape battery showed a noisy qwen
+dip, it wasn't a regression: the arm literally cannot alter the 29 scenarios
+whose bytes it never touched. Judged twice: the replicated defect (plan
+keeping the old scope) fixed both times, scores 1.00 and 0.889. The lesson is
+that a "glimpse" budget is a content decision in disguise — truncating the
+learner's own words is not neutral when those words are the evidence. Fourth
+hard-set scenario cleared; the block is down to five, and everything left is
+either noise or waiting on a spend decision. Data: diagvoice_*_reflect.jsonl,
+evals/reports/quality-*-20260726-005907.json + -005956.json.

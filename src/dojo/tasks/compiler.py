@@ -575,7 +575,8 @@ def reflect_section_values(store, campaign: Campaign, *, window_n: int = 15):
     # compiled — overconfidence and plateau patterns were structurally
     # invisible): topic (not opaque exercise ids), seconds taken, the
     # grader's error tag, skip reason, and the appetite-mode label.
-    topic_of = {ex.id: ex.topic_path for ex in store.exercises.list(campaign.id)}
+    exercises_by_id = {ex.id: ex for ex in store.exercises.list(campaign.id)}
+    topic_of = {ex_id: ex.topic_path for ex_id, ex in exercises_by_id.items()}
     rows: list[str] = []
     included_ids: list[str] = []
     used = 0
@@ -595,10 +596,17 @@ def reflect_section_values(store, campaign: Campaign, *, window_n: int = 15):
         ]))
         # A short answer glimpse (never the full body, blueprint §9): patterns
         # like "uses avoir for motion verbs" or "misreads the null" live in
-        # WHAT the learner wrote, not in scores alone.
+        # WHAT the learner wrote, not in scores alone. EXCEPT a diagnostic
+        # exercise's answer IS the learner's stated scope/voice — rule 4 promises
+        # it returns as citable evidence, and a 48-char clip amputates the ask
+        # ("please drop machi…"). Diagnostic-quality attempts get a fuller
+        # 240-char rendering; row_budget still bounds the whole section
+        # (DIAGVOICE 2026-07-25).
         glimpse = (a.user_answer or "").strip().replace("\n", " ")
-        if len(glimpse) > 48:
-            glimpse = glimpse[:47] + "…"
+        ex = exercises_by_id.get(a.exercise_id)
+        limit = 240 if ex is not None and ex.quality == "diagnostic" else 48
+        if len(glimpse) > limit:
+            glimpse = glimpse[: limit - 1] + "…"
         row = (
             f"{a.id} · {topic_of.get(a.exercise_id, a.exercise_id)} · "
             + ("(ungraded — ignore the score)" if pending else f"score {a.score}")

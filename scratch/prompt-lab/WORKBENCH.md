@@ -33,11 +33,16 @@ block the holdout gate):** CLEARED: gen_collision_sql (seed bug fix,
 1.00/0.80), route_new_leaf (ROUTE-CHARSET #13 + ROUTE-REASON #14,
 1.00/1.00), **verbatim_poetry (VERB-RECALL #15, rule-3; gate 2
 2026-07-25 = 1.00/1.00, ALL c1-c4 pass BOTH samples — LEFT the set).**
-REMAINING 6:
-reflect_diagnostic_voice (DIAGVOICE pre-registered, NEXT),
+reflect_diagnostic_voice (DIAGVOICE #16, compiler answer-visibility; gate
+2 2026-07-25 = 1.00/0.889, c1+c3 pass BOTH — replicated defect FIXED,
+LEFT the set). REMAINING 5:
 plan_unrealistic (reclassified noise-family — clears on re-test),
 restraint ×4 (MAINT #12 shipped; plateau needs n≥5 judged samples;
 no new mechanism — parked; spend ask = QUESTIONS -4).
+**ENDGAME: the only NON-noise remaining block is restraint ×4, gated on
+the QUESTIONS-4 restraint-sampling spend decision (default WAIT). Once
+that resolves (or owner rules restraint acceptable), a full validation
+run under the green rule activates the holdout relay (step 4).**
 
 **VERB-RECALL ADOPTED 2026-07-25 (#15). Template rule-3 committed
 0798a45. Gate 1 (local shape, 4866d67): qwen 8/11 band-low PASS, gemma
@@ -94,11 +99,42 @@ Bars: c1+c2 pass BOTH samples; q=1.0 both → leaves hard set; a
 FINDINGS + BLOG + commit jsonls/reports by name. Miss → revert the
 rule-3 sentence, record negative.
 
-**2. DIAGVOICE (pre-registered, ready).** Compiler: attempt rows whose
-exercise skill is "diagnostic" render user_answer UNCLIPPED ≤240 chars
-(48-char glimpse amputates the learner's ask — see pre-reg for
-evidence + bars: local reflect minis flat; judged ×2
-reflect_diagnostic_voice c1+c3 both, total ≥0.75 both).
+**2. DIAGVOICE — IN EXECUTION 2026-07-25.** Compiler edit APPLIED
+(uncommitted overlay, compiler.py: exercises_by_id map; diagnostic-quality
+attempts render user_answer up to 240 chars, ordinary stay 48). Behavioral
+test added (test_reflect_diagnostic_answer_renders_unclipped, PASSES);
+full pytest 952 green with overlay. compiler-only → output-budget
+template_hash UNCHANGED (hash is over template TEXT), no rebuild needed.
+GATE 1 IN FLIGHT (task b09i0x80v, /tmp/diagvoice_gate1.log,
+scratch/prompt-lab/diagvoice_gate1.sh = qwen then gemma reflect minis,
+workers 2; ollama restarted NUM_PARALLEL=4 to avoid the vrec -np1 timeout;
+load 3.57/8 at launch). Baselines MAINT-era: qwen 18/30, gemma 25/30;
+flat = within ±3 both + no NEW class (DIAGVOICE only adds answer bytes on
+diagnostic-bearing payloads, shape-neutral). TREE QUIET until it exits.
+**GATE 1 DONE 2026-07-25 ~20:48 — PASS by mechanism (0 infra).** Gemma
+26/30 (baseline 25, +1, flat; 4 fails all pre-existing op=create-key
+class). Qwen 13/30 — BELOW band (15-21) BUT PROVEN NOISE: per-scenario
+prompt_bytes vs MAINT baseline = 25/26 BYTE-IDENTICAL, only
+reflect_diagnostic_voice_revision changed (+62B, the fuller answer,
+<150B pre-reg cap). DIAGVOICE touches exactly ONE payload, so down-flips
+on 29 unchanged-payload scenarios are sampling variance (qwen reflect
+historically 9/12/16/18); ALL fails pre-existing (journal-omission,
+op-composition, questions-object) — ZERO new class. Payload-identity
+proof > replication (proves causation-absence). GATE 1 CLEARS.
+**GATE 2 DONE 2026-07-25 ~21:00 — PASS, DIAGVOICE ADOPTED (#16).**
+Judged ×2 (reports 20260726-005907 + -005956): sample1 q1.00 (c1-c4 all
+pass), sample2 q0.889 (c1/c2/c3 pass, c4 fail = journal omits att_4).
+BARS MET: c1+c3 pass BOTH samples ✓, total ≥0.75 both ✓ (1.00, 0.889).
+The REPLICATED defect (c1/c3: plan kept old scope) is FIXED — the fuller
+diagnostic answer let the model implement + honor the learner's scope +
+cite att_4. Residual c4 = journal-omission single-criterion wobble on a
+1.0 floor = noise-family (same as plan_unrealistic), clears under owner
+green rule. reflect_diagnostic_voice_revision LEFT the hard set (6→5).
+Compiler-only → NO output-budget change. Adopted commit: compiler.py +
+test + gate1/2 raws + reports + FINDINGS/BLOG/STATE by name.
+Original pre-reg: attempt rows whose exercise skill is "diagnostic"
+render user_answer UNCLIPPED ≤240 chars (48-char glimpse amputates the
+learner's ask — evidence + bars in draft_diagvoice.md).
 
 **3. Restraint sampling block (needs explicit spend decision):**
 plateau_remediation ×5 judged samples to make it measurable at all;

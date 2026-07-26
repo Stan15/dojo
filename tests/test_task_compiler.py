@@ -319,6 +319,39 @@ class TestCompilerBranches:
         assert '"op": "update"' in compiled.prompt
         assert '"op": "create"' not in compiled.prompt
 
+    def test_reflect_diagnostic_answer_renders_unclipped(self, tmp_path):
+        """DIAGVOICE (2026-07-25): a diagnostic exercise's answer IS the
+        learner's stated scope — the 48-char glimpse amputates the ask
+        ("please drop machi…") while rule 4 promises it returns as citable
+        evidence. Diagnostic-quality attempts render up to 240 chars; ordinary
+        attempts still clip at 48 (row_budget bounds the whole section)."""
+        s, camp = self._fresh(tmp_path, topics=[{"path": "sewing", "kind": "skill"}])
+        s.exercises.save(camp.id, Exercise(
+            id="ex_diag", topic_path="sewing.plan_diagnostic", difficulty="intermediate",
+            quality="diagnostic", prompt="What do you actually need this campaign to support?",
+        ))
+        s.exercises.save(camp.id, Exercise(
+            id="ex_norm", topic_path="sewing.machine_basics", difficulty="intermediate",
+            prompt="A seam has loops underneath. What to check first?",
+        ))
+        s.attempts.save(camp.id, Attempt(
+            id="att_diag", session_id="s1", exercise_id="ex_diag", campaign_id=camp.id,
+            score=1.0, latency_seconds=42.0, grader="self",
+            user_answer="Hand repairs while traveling; please drop machine sewing "
+                        "and fitting, focus on patches, buttons, and field hems.",
+        ))
+        s.attempts.save(camp.id, Attempt(
+            id="att_norm", session_id="s1", exercise_id="ex_norm", campaign_id=camp.id,
+            score=0.3, latency_seconds=70.0, grader="ai",
+            user_answer="I would loosen the bobbin tension screw and then "
+                        "REACHTHESECRETTAIL rethread the whole path.",
+        ))
+        compiled = compiler.compile_reflect(s, camp, window_n=15)
+        # Diagnostic answer's far tail (well beyond char 48) survives:
+        assert "field hems" in compiled.prompt
+        # Ordinary answer still clips at 48 — its beyond-48 sentinel is gone:
+        assert "REACHTHESECRETTAIL" not in compiled.prompt
+
 
 class TestGoldenPayload:
     """Byte-level pin of the full compiled generate payload (ADR 016 Tier 1).

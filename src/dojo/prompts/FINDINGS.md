@@ -30,6 +30,17 @@ WINS TO PRESERVE
 - The output anchor line is reasoning-neutral (owner ruling 2026-07-11).
 - Ops example shows one op per TYPE, update first (mode 10; armJ5 count
   anchoring).
+- The reflect evidence-window glimpse is COMPILER-BRANCHED by exercise
+  quality (DIAGVOICE #16, 2026-07-25, compiler.py): a diagnostic-quality
+  attempt renders its user_answer up to 240 chars, ordinary attempts stay
+  clipped at 48. Root cause: the 48-char clip amputated the learner's
+  diagnostic scope ask ("please drop machi…") — rule 4 promises that answer
+  returns as citable evidence, so the plan-revision criteria (c1/c3) were
+  unmeetable. Judged ×2: the replicated c1/c3 defect (plan kept old scope)
+  FIXED, total 1.00/0.889 (c4 journal wobble = noise). +62B on the ONE
+  diagnostic-bearing payload only (row_budget still bounds the section);
+  25/26 reflect payloads byte-identical → the arm is surgical. Test:
+  test_reflect_diagnostic_answer_renders_unclipped.
 
 - The raise-difficulty case is MAINTENANCE-GUARDED (MAINT, adopted on
   owner ruling 2026-07-20): "accuracy above 0.85 on ACTIVE practice (not
