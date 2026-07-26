@@ -8,18 +8,46 @@ are dead). Then execute THIS, in order. Ollama note: if batteries all
 infra-fail, the server died — restart:
 `pkill -f "ollama serve"; OLLAMA_NUM_PARALLEL=4 OLLAMA_MAX_LOADED_MODELS=1 nohup ollama serve >/tmp/ollama-serve.log 2>&1 &`
 
-**CAMPAIGN STATE: 14 adopted arms · 17 closed negatives · 952 tests
-green · all pushed through da99375+ · contamination CLEAN · holdout
-untouched (uncommitted __holdout baseline = OWNER-ONLY, never touch).**
+**CAMPAIGN STATE: 15 adopted arms · 17 closed negatives · contamination
+CLEAN · holdout untouched (uncommitted __holdout baseline = OWNER-ONLY,
+never touch).**
+**CORRECTION 2026-07-25 (advisor-caught): the RESUME header's "952 tests
+green · pushed through da99375+" was FALSE — the tree had been RED since
+da99375 on test_output_budget (ROUTE-REASON landed gates-pending, hash
+stale) and since 0798a45 on the generate golden (VERB-RECALL
+gates-pending). Both FIXED this session in the VERB-RECALL adoption
+commit: golden regenerated (rule-3 diff only, verified), output-budget
+hash bumped 0078bed2→ad786cca via build_output_budget.py from exb2 fulls
+(HASH-ONLY diff, matching a444839's established practice: exb2 is the
+stable byte-median reference, template edits re-assert coherence by hash
+bump; real byte-regression check = manual eval_tokens ratchet). VERB-RECALL
+token-side check DONE (mutual non-regression both directions): generate
+raw_bytes old→new tree, qwen −16.6% (clean), gemma verbatim_poetry −400B
+(target clean); gemma non-verbatim rises (+278/+511/+512 on
+gen_collision/physical_skill) are single-sample free-generation variance,
+NOT rule-3 (which only touches verbatim items). No median written higher
+→ nothing laundered.**
 
 **HARD-SET SCOREBOARD (owner ruling: green = noise-only fails; these
 block the holdout gate):** CLEARED: gen_collision_sql (seed bug fix,
 1.00/0.80), route_new_leaf (ROUTE-CHARSET #13 + ROUTE-REASON #14,
-1.00/1.00). REMAINING 7: verbatim_poetry (arm IN FLIGHT, below),
-reflect_diagnostic_voice (DIAGVOICE pre-registered, next),
+1.00/1.00), **verbatim_poetry (VERB-RECALL #15, rule-3; gate 2
+2026-07-25 = 1.00/1.00, ALL c1-c4 pass BOTH samples — LEFT the set).**
+REMAINING 6:
+reflect_diagnostic_voice (DIAGVOICE pre-registered, NEXT),
 plan_unrealistic (reclassified noise-family — clears on re-test),
 restraint ×4 (MAINT #12 shipped; plateau needs n≥5 judged samples;
-no new mechanism — parked).
+no new mechanism — parked; spend ask = QUESTIONS -4).
+
+**VERB-RECALL ADOPTED 2026-07-25 (#15). Template rule-3 committed
+0798a45. Gate 1 (local shape, 4866d67): qwen 8/11 band-low PASS, gemma
+10/11, target ok both, down-flips = closed W6 no-JSON lane. Gate 2
+(judged ×2, codex, reports 20260725-111024 + -121136): q=1.00/1.00,
+verdicts c1-c4 ALL pass both — outputs generate verbatim items that
+ask FOR exact words w/ word-for-word rubrics (Dylan Thomas refrains).
+Not reward-hack: template states the PRINCIPLE, generalizes, judge
+checks pedagogy. DOC-CLOSE: FINDINGS register row, BLOG, STATE, commit
+reports by name. NEXT: DIAGVOICE (draft_diagvoice.md ready).**
 
 **1. FINISH VERB-RECALL (mid-gate-1 at handoff).** Template edit is
 COMMITTED (exercise_generate.md rule 3: verbatim items ask FOR exact

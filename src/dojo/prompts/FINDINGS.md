@@ -116,6 +116,16 @@ CLOSED NEGATIVES
 ## exercise_generate.md
 
 WINS TO PRESERVE
+- Rule 3 makes verbatim items SELF-DESCRIBE their contract: each verbatim
+  item's prompt asks FOR the exact words, and its rubric requires them
+  word-for-word with no paraphrase credit (VERB-RECALL #15, 2026-07-25).
+  Root cause it fixes: without this, the model generated recall items whose
+  rubrics gave partial/paraphrase credit — so a "verbatim" item wasn't
+  actually graded verbatim. verbatim_poetry_recall was a hard-set repeat
+  offender; post-edit it clears gate 2 codex judged ×2 at q=1.00/1.00 (all
+  c1-c4 pass both) and left the hard set. States the PRINCIPLE, not a
+  scenario phrase — generalizes (not reward-hack). Shape-flat both 4B
+  models (gate 1 4866d67).
 - The fewer-items escape hatch is stated, TYPED, CAPPED, and
   DEVIATION-FRAMED ('"note" stays null unless you deviated (then ≤ N
   words)') — the proven form that diagnostic now mirrors (mode 11).

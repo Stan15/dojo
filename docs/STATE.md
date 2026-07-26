@@ -1,7 +1,7 @@
 # STATE
 
-_Last updated: 2026-07-17 (learn ride-along field session). Trust this
-snapshot; git history carries the detail._
+_Last updated: 2026-07-25 (prompt-lab, VERB-RECALL adopted #15). Trust
+this snapshot; git history carries the detail._
 
 ## Phase
 
@@ -640,3 +640,11 @@ evals/reports/holdout-* — all off-limits to any prompt-work context.
   RESUME header has exact resumption); DIAGVOICE pre-registered;
   restraint parked pending an n≥5 sampling budget. 14 adopted arms
   total; 952 tests green.
+- 07-25 (prompt-lab, hard-set phase cont.): VERB-RECALL adopted (#15) —
+  generate rule 3 makes verbatim items self-describe their contract
+  (prompt asks FOR exact words; rubric requires them word-for-word, no
+  paraphrase credit), fixing recall items that were silently graded
+  non-verbatim. Gate 1 shape-flat both 4B models (qwen down-flips = the
+  documented no-JSON capability lane, not the edit); gate 2 codex judged
+  ×2 = q1.00/1.00, all c1-c4 pass both samples. verbatim_poetry_recall
+  LEFT the hard set (7→6). 15 adopted arms total; tests green.

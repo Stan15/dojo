@@ -656,3 +656,25 @@ guards the whole store's namespace; the reason rule applies to every
 routing decision), and the scenario cleared its hardest-in-corpus 1.0
 floor twice in a row. First hard-set scenario fixed by prompt work rather
 than scenario repair. Data: rchar_*, rreason_* jsonls.
+
+## APPENDED 07-25 — "A 'verbatim' item that wasn't graded verbatim" (VERB-RECALL clears)
+
+The hard-set scenario verbatim_poetry_recall asks the system to generate
+recitation-practice items for a poem's refrains — where the whole point is
+word-for-word recall. It kept judged-failing intermittently for a subtle
+reason the transcripts made plain: the model generated the RIGHT items, but
+wrote rubrics that gave partial or paraphrase credit. A "verbatim" item was
+being graded non-verbatim — the contract silently contradicted itself. The
+fix (arm #15) is one sentence in rule 3 of the generate template: each
+verbatim item's prompt must ask FOR the exact words, and its rubric must
+require them word-for-word with no paraphrase credit. It states a PRINCIPLE
+about what a verbatim item IS, not a phrase from any one scenario's rubric —
+so it generalizes to every recall item, which is exactly the anti-reward-hack
+bar. Result: local shape flat on both 4B models (the down-flips were the
+already-documented qwen no-JSON capability lane, not the edit); then codex
+judged twice at q=1.00/1.00 with all four criteria passing both samples. The
+model now emits items like "write Refrain A exactly as a full line" with a
+rubric that credits only the exact Dylan Thomas words. Third hard-set scenario
+cleared by prompt work (after gen_collision's seed-bug and route_new_leaf's
+two arms); the block is down to six. Data: vrec_*_gen.jsonl,
+evals/reports/quality-*-20260725-111024.json + -121136.json.
