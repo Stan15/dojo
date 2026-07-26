@@ -1,7 +1,7 @@
 # STATE
 
-_Last updated: 2026-07-25 (prompt-lab, DIAGVOICE adopted #16). Trust
-this snapshot; git history carries the detail._
+_Last updated: 2026-07-26 (prompt-lab, seam-mined milestone; 16 arms).
+Trust this snapshot; git history carries the detail._
 
 ## Phase
 
@@ -640,6 +640,17 @@ evals/reports/holdout-* — all off-limits to any prompt-work context.
   RESUME header has exact resumption); DIAGVOICE pre-registered;
   restraint parked pending an n≥5 sampling budget. 14 adopted arms
   total; 952 tests green.
+- 07-25/26 (prompt-lab, seam-mined milestone): CKEY explored and closed
+  (2 negatives) — the create-op id/key confusion is real (71% vs 13%
+  insight-presence correlation) but every default-profile fix is bounded:
+  prose clarification relocates to reason-omission (compositional load),
+  demonstration re-introduces bleed (create is the bleed vector, EXB2),
+  geometry is caliber-divergent (DOPS opt-in). OCRE eliminated by analysis
+  (no battery). Durable learnings → INSIGHTS (the compositional-load floor).
+  The approval-free mechanical seam is now MINED across every kind;
+  remaining levers are owner-gated (QUESTIONS-2 mixed-model, -3 decomp,
+  -4 restraint spend → holdout relay) or capability/load floors. 16 adopted
+  arms, 18 closed negatives; 953 tests green; pushed through 01bf172.
 - 07-25 (prompt-lab, hard-set phase cont.): DIAGVOICE adopted (#16) —
   compiler branches the reflect evidence-window glimpse by exercise
   quality: a diagnostic attempt renders its answer up to 240 chars
