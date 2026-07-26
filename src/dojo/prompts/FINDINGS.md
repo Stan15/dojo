@@ -103,11 +103,18 @@ CLOSED NEGATIVES
   distinction is NOT conveyable as a DEFAULT PROSE sentence (2 wordings,
   same relocation). It IS conveyable via DOPS PARALLEL GEOMETRY (gemma
   29/30) which regressed qwen → stays opt-in. Consistent with the
-  decomp-pilot residual (per-op field composition). Only UNTESTED angle:
-  a minimal ORTHOGONAL create SKELETON (demonstrate not describe, mode 9)
-  kept when insights exist — but that re-opens the EXB2 bleed tradeoff and
-  needs its own bleed-measured pre-reg; NOT a default-prose fix. Data:
-  ckey_*_reflect.jsonl, ckey_v2_*_reflect.jsonl.
+  decomp-pilot residual (per-op field composition). The one remaining
+  angle — a minimal orthogonal create SKELETON kept when insights exist
+  (OCRE) — is ELIMINATED by measured evidence (no battery, draft_ocre.md):
+  the create op IS the bleed vector (EXB2: 12/14 bleed copies were creates;
+  EX-BLEED orthogonal residual 6-8/27), so any create demonstration where
+  insights exist re-introduces silent fake-insight pollution — trading a
+  VISIBLE retryable rejection for SILENT quality-NEGATIVE store corruption.
+  Every create-side lever is now accounted for: prose relocates (CKEY),
+  demonstration bleeds (EXB2), geometry is caliber-divergent (DOPS opt-in),
+  decomposition is owner-gated. The reflect DEFAULT-profile create-
+  composition residual is a genuine FLOOR. Data: ckey_*_reflect.jsonl,
+  ckey_v2_*_reflect.jsonl.
 
 ## campaign_plan.md
 

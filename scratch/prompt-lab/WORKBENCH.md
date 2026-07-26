@@ -140,15 +140,23 @@ create SKELETON (re-opens EXB2 bleed; needs own pre-reg; NOT pursued now).
 **CAMPAIGN STATE: 16 adopted arms · 18 closed negatives · 953 tests green
 · pushed through 4a57694 · contamination CLEAN · holdout untouched
 (uncommitted __holdout baseline = OWNER-ONLY, never touch).**
-**NEXT (approval-free queue re-earned-empty 2026-07-25 ~22:40): CKEY —
-the one new theory the deeper scan found — is now closed. The only
-untested approval-free angle is OCRE (orthogonal create skeleton kept
-when insights exist) which RE-OPENS the adopted EXB2 arm's bleed tradeoff
-and needs its own bleed-measured pre-reg — a careful build for a FRESH
-session with budget, not a rushed one. Everything else is owner-gated
-(restraint spend QUESTIONS-4 → holdout relay) or closed/noise. Campaign
-correctly RESTS on owner input; cron+wakeup keep it resumable. A fresh
-session with budget may take up OCRE per the FINDINGS caveat.**
+**NEXT (approval-free reflect seam DEFINITIVELY MINED 2026-07-25 ~23:25):
+CKEY closed (compositional load); OCRE ELIMINATED BY ANALYSIS (draft_ocre.md
++ FINDINGS) — the create op is the bleed vector (EXB2 12/14), so any create
+demonstration where insights exist re-introduces silent store pollution;
+trading a visible retryable rejection for silent quality-negative corruption
+is a worse trade. Every create-side lever accounted for: prose relocates,
+demonstration bleeds, geometry is caliber-divergent (DOPS opt-in), decomp is
+owner-gated. The reflect default-profile residual is a genuine FLOOR.
+ALL remaining levers are owner-gated (restraint spend QUESTIONS-4 → holdout
+relay; reflect-decomp QUESTIONS-3; mixed-model QUESTIONS-2) or capability/
+compositional-load floors. The approval-free mechanical seam is mined across
+EVERY kind (grade/generate = capability signatures; plan/route = healthy/
+floor-certified; reflect = this closure; diagnostic = DSTATE/DIAGVOICE
+adopted). Campaign correctly RESTS on owner input. To re-open loop step 1-2
+a fresh session needs NEW battery data or an owner directive — not a re-walk
+of closed levers (CKEY prose, OCRE, SORD, glimpse-transfer, decomp, DOPS
+geometry). cron+wakeup keep it resumable.**
 **CORRECTION 2026-07-25 (advisor-caught): the RESUME header's "952 tests
 green · pushed through da99375+" was FALSE — the tree had been RED since
 da99375 on test_output_budget (ROUTE-REASON landed gates-pending, hash
