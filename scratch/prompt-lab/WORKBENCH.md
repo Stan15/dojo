@@ -53,11 +53,64 @@ if all infra-fail the server died — restart:
    · journal-omission (4): SORD section-order = closed negative; decomp
      journal-half is owner-gated (QUESTIONS-3, answered-by-measurement).
    · questions-object (1) = W2 residual noise.
-   CONCLUSION: no NEW evidence-grounded, single-variable, approval-free
-   theory is available this cycle. Every lever is shipped, closed-negative,
-   or owner-gated (restraint spend QUESTIONS-4). Campaign correctly RESTS on
-   owner input; cron+wakeup keep it resumable. Re-open loop step 1-2 when
-   NEW battery data or an owner directive lands.
+   CONCLUSION (SUPERSEDED ~21:50): the deeper re-scan FOUND a new arm —
+   the earned-wait was premature on op-composition. See CKEY below.
+
+**CKEY — pre-registered 2026-07-25 ~21:50 (loop step 1-2 deeper scan
+found it; approval-free, in-scope fragment wording).** MECHANISM (evidence
+independent of any score): create-op composition fails correlate HARD with
+insight-presence — 5/7 (71%) insight-present reflect scenarios fail create
+vs 3/23 (13%) insight-absent (diagvoice_* batteries). Transcripts show the
+EXACT error: the model writes a correct `update` op (id set, key null) then
+produces the `create` op by MIMICKING that shape — `"id": "ins_x", "key":
+null` — failing "op=create requires a key". EXB2 suppresses the create
+example when insights exist (anti-bleed), so the surviving UPDATE example
+anchors the WRONG field shape for create. The default field-rules fragment
+states "create needs key" (positive) but NEVER that create carries NO id.
+DOPS states the contrast (parallel lines) but its GEOMETRY regressed qwen
+(10/30) — CKEY isolates the id/key CONTENT from the geometry.
+SINGLE VARIABLE: reflect_field_rules_default.md gains an explicit negative
+contrast — "a create has NO id; its label is the key. id is only for
+update/resolve (which point at an existing insight)". Prose-only, NO
+example re-addition → NO bleed risk (the key EXB2 constraint). Mode-7-safe
+(schemas.py: id optional-unused for create; statement matches schema).
+BARS (gate 1 local, both 4B, 30-reflect set, ollama NUM_PARALLEL=4):
+create-op-composition fails DROP (baseline this run: 8 create-fail
+scenarios across both models) AND reflect ok same-or-better (qwen ~13-18,
+gemma ~25-26 band ±3) AND no NEW class AND qwen NOT regressed (the DOPS
+content-vs-geometry question). Adopt → output-budget hash bump (fragment
+is in all_templates) + FINDINGS + commit raws by name; judged spot-check
+optional (not a hard-set scenario — shape ok-rate IS the metric). Miss →
+git checkout the fragment, record negative. APPLIED wording (uncommitted overlay): "create needs key + text +
+evidence, and has NO id — its label IS the key; update needs id + text;
+resolve needs id (id is only for update/resolve, which reference an
+existing insight). EVERY op needs a reason." Hash bumped
+ad786cca→ff7829e8 (exb2 reference). Full pytest 953 green with overlay.
+**GATE 1 DONE 2026-07-25 ~22:11 — CKEY v1 MISSED (no-new-class bar
+VIOLATED), REVERTED.** create-op id/key fix WORKED (gemma create-key
+4→0, qwen 5→3) BUT the failure MIGRATED: inserting the id/key contrast
+INTO the create clause made "create needs key + text + evidence [+ NO
+id...]" read as COMPLETE → `reason` dropped (mode 7). Gemma gained 4
+reason-omission fails (2 on previously-PASSING scenarios) net 26→25;
+qwen 13→18 (within variance) with create-fail churn (5 fixed, 3 new).
+Reverted fragment + hash; gates green. Finding is REAL (id/key confusion
+mechanical, from EXB2 create-suppression → update-shape mimicry) — see
+FINDINGS closed-negative. Raws committed: ckey_*_reflect.jsonl.
+
+**CKEY-v2 — pre-registered 2026-07-25 ~22:15 (isolates the fix from the
+mode-7 side effect).** SAME mechanism/evidence as v1. FIX: add the id/key
+contrast as a SEPARATE TRAILING sentence, leaving the field-list line
+(incl. "EVERY op needs a reason") BYTE-IDENTICAL so the reason
+association is undisturbed. Wording: append after "...EVERY op needs a
+reason." → "A create's label is its key, NOT an id — id is only for
+update/resolve, which reference an existing insight." SINGLE VARIABLE
+(one appended clarifying sentence; nothing existing changed). BARS (gate
+1 both 4B, 30-set): create-key fails DROP (gemma was 4, qwen 5 at
+diagvoice base) AND reason-omission fails DO NOT appear (the v1 failure
+mode — explicit guard) AND reflect ok same-or-better AND qwen not
+regressed. Adopt → hash bump + FINDINGS + commit raws. Miss → revert,
+close the id/key lever as "stateable only via geometry (DOPS), not a
+default sentence" and stop.
 
 **CAMPAIGN STATE: 16 adopted arms · 17 closed negatives · 953 tests green
 · pushed through 140860d · contamination CLEAN · holdout untouched

@@ -79,6 +79,22 @@ CLOSED NEGATIVES
   decomposition (QUESTIONS −3).
 - Wording variants for journal/op obligations: null across 6 template
   generations (P4a/P4b/P8/P9b/W1/W2 ledger).
+- CKEY v1 (2026-07-25): the create-op id/key CONFUSION is real and its
+  root is mechanical — with the create example suppressed (EXB2, insights
+  present), the model mimics the surviving UPDATE op's field shape
+  (`"id": "ins_x", "key": null`) for creates, failing "requires a key".
+  Evidence: 71% of insight-present scenarios fail create vs 13% absent;
+  transcripts show the mimicry directly. But adding the id/key contrast
+  INTO the create clause ("create needs key + text + evidence, and has NO
+  id — its label IS the key") REINTRODUCED mode 7: the lengthened clause
+  read as a COMPLETE create field list, so `reason` dropped — gemma
+  create-key 4→0 but 4 NEW reason-omission fails (2 on previously-passing
+  scenarios), net 26→25; qwen 13→18 (within its variance) with create-fail
+  churn. REVERTED (missed the no-new-class bar). LESSON: the id/key fix
+  must NOT disturb the reason association — state it as a SEPARATE trailing
+  sentence, leaving the byte-identical field-list line (incl. "EVERY op
+  needs a reason") intact. v2 pre-registered (WORKBENCH). Data:
+  ckey_*_reflect.jsonl.
 
 ## campaign_plan.md
 
