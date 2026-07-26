@@ -9,7 +9,20 @@ batteries with OLLAMA_NUM_PARALLEL=4 (workers=2 else timeouts w/ -np1);
 if all infra-fail the server died — restart:
 `pkill -f "ollama serve"; OLLAMA_NUM_PARALLEL=4 OLLAMA_MAX_LOADED_MODELS=1 nohup ollama serve >/tmp/ollama-serve.log 2>&1 &`
 
-**THIS SESSION (2026-07-25) LANDED TWO ARMS, both pushed (through 140860d):**
+**THIS SESSION (2026-07-25): 2 ARMS ADOPTED + 1 THEORY EXPLORED-&-CLOSED,
+all pushed through 4a57694. Campaign: 16 adopted arms · 18 closed
+negatives · 953 tests green.**
+- **CKEY (closed negative, c8fe878 + 4a57694):** loop step 1-2 found the
+  create-op id/key confusion (71% vs 13% insight-presence correlation;
+  transcripts show update-shape mimicry when EXB2 suppresses the create
+  example). BOTH prose wordings (v1 inside-clause, v2 append-sentence)
+  fixed create-key (gemma 4→0) but RELOCATED it to reason-omission —
+  create-op composition is COMPOSITIONAL LOAD (fixed per-op attention
+  budget), not a statement gap. Default-prose lever CLOSED; only DOPS
+  parallel geometry conveys it (opt-in). Only untested angle = orthogonal
+  create SKELETON (re-opens EXB2 bleed; needs own bleed-measured pre-reg).
+
+**PRIOR TWO ARMS this session, both pushed (through 140860d):**
 - **VERB-RECALL #15 (f5b1e61):** generate rule 3 — verbatim items ask FOR
   exact words, rubrics word-for-word. Gate 2 judged 1.00/1.00 all crit.
   verbatim_poetry LEFT hard set. Also fixed the tree, which had been RED
@@ -124,9 +137,18 @@ Committed raws: ckey_v2_*_reflect.jsonl. Only untested angle = orthogonal
 create SKELETON (re-opens EXB2 bleed; needs own pre-reg; NOT pursued now).
 17→18 closed negatives; still 16 adopted arms.
 
-**CAMPAIGN STATE: 16 adopted arms · 17 closed negatives · 953 tests green
-· pushed through 140860d · contamination CLEAN · holdout untouched
+**CAMPAIGN STATE: 16 adopted arms · 18 closed negatives · 953 tests green
+· pushed through 4a57694 · contamination CLEAN · holdout untouched
 (uncommitted __holdout baseline = OWNER-ONLY, never touch).**
+**NEXT (approval-free queue re-earned-empty 2026-07-25 ~22:40): CKEY —
+the one new theory the deeper scan found — is now closed. The only
+untested approval-free angle is OCRE (orthogonal create skeleton kept
+when insights exist) which RE-OPENS the adopted EXB2 arm's bleed tradeoff
+and needs its own bleed-measured pre-reg — a careful build for a FRESH
+session with budget, not a rushed one. Everything else is owner-gated
+(restraint spend QUESTIONS-4 → holdout relay) or closed/noise. Campaign
+correctly RESTS on owner input; cron+wakeup keep it resumable. A fresh
+session with budget may take up OCRE per the FINDINGS caveat.**
 **CORRECTION 2026-07-25 (advisor-caught): the RESUME header's "952 tests
 green · pushed through da99375+" was FALSE — the tree had been RED since
 da99375 on test_output_budget (ROUTE-REASON landed gates-pending, hash
