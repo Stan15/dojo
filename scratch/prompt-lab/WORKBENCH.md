@@ -111,6 +111,18 @@ mode — explicit guard) AND reflect ok same-or-better AND qwen not
 regressed. Adopt → hash bump + FINDINGS + commit raws. Miss → revert,
 close the id/key lever as "stateable only via geometry (DOPS), not a
 default sentence" and stop.
+**CKEY-v2 RESULT 2026-07-25 ~22:38 — MISS, REVERTED, LEVER CLOSED.**
+gemma create-key 4→0 (fix works) BUT +3 reason-omission AGAIN, net 26→26
+flat; qwen +2 (13→15, within variance). Guard bar VIOLATED (reason-
+omission reappeared) EVEN with the field-list line byte-identical —
+FALSIFYING the wording hypothesis. ROOT CAUSE: create-op composition is
+COMPOSITIONAL LOAD (fixed per-op attention budget) — fixing key costs
+reason, the failure RELOCATES not clears. Both prose wordings closed.
+id/key info only conveyable via DOPS parallel geometry (opt-in, caliber-
+divergent). CKEY fully closed (2 negatives). Reverted, gates green.
+Committed raws: ckey_v2_*_reflect.jsonl. Only untested angle = orthogonal
+create SKELETON (re-opens EXB2 bleed; needs own pre-reg; NOT pursued now).
+17→18 closed negatives; still 16 adopted arms.
 
 **CAMPAIGN STATE: 16 adopted arms · 17 closed negatives · 953 tests green
 · pushed through 140860d · contamination CLEAN · holdout untouched

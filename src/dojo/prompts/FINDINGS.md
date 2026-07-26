@@ -90,11 +90,24 @@ CLOSED NEGATIVES
   read as a COMPLETE create field list, so `reason` dropped — gemma
   create-key 4→0 but 4 NEW reason-omission fails (2 on previously-passing
   scenarios), net 26→25; qwen 13→18 (within its variance) with create-fail
-  churn. REVERTED (missed the no-new-class bar). LESSON: the id/key fix
-  must NOT disturb the reason association — state it as a SEPARATE trailing
-  sentence, leaving the byte-identical field-list line (incl. "EVERY op
-  needs a reason") intact. v2 pre-registered (WORKBENCH). Data:
-  ckey_*_reflect.jsonl.
+  churn. REVERTED (missed the no-new-class bar). CKEY v2 tested the
+  wording fix (id/key as a SEPARATE trailing sentence, field-list line
+  byte-identical) and it ALSO failed the SAME way (gemma create-key 4→0
+  but +3 reason-omission, net 26→26 flat; qwen +2 within variance) —
+  FALSIFYING the wording hypothesis. ROOT CAUSE (both versions): create-op
+  composition is COMPOSITIONAL LOAD, not a statement gap — the model has a
+  fixed attention budget per op, so clarifying one field (key) causes
+  another (reason) to drop; at baseline these creates failed on key WITH
+  reason present, after the fix they get key right but drop reason. The
+  failure RELOCATES, it does not clear. LEVER CLOSED: the id/key
+  distinction is NOT conveyable as a DEFAULT PROSE sentence (2 wordings,
+  same relocation). It IS conveyable via DOPS PARALLEL GEOMETRY (gemma
+  29/30) which regressed qwen → stays opt-in. Consistent with the
+  decomp-pilot residual (per-op field composition). Only UNTESTED angle:
+  a minimal ORTHOGONAL create SKELETON (demonstrate not describe, mode 9)
+  kept when insights exist — but that re-opens the EXB2 bleed tradeoff and
+  needs its own bleed-measured pre-reg; NOT a default-prose fix. Data:
+  ckey_*_reflect.jsonl, ckey_v2_*_reflect.jsonl.
 
 ## campaign_plan.md
 
