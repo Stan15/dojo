@@ -59,6 +59,44 @@ _Statuses: `[x]` shipped · `[~]` standing/in-progress · `[?]` blocked-on-owner
 
 ## Open — decisions actually waiting on you
 
+-5. **Teaching, coverage, and rich content (your directive 2026-07-28: "it can
+   actually teach things, and know what it has taught the user… currently
+   **extremely** exercise-centric").** Investigation + proposal delivered:
+   `docs/design/teaching-and-coverage.md`. Headline findings, all mechanical:
+   (F1) dojo can teach exactly ONCE per campaign, at birth — `compiler.py:395`
+   gates the present-card fragment on the campaign having zero attempts
+   anywhere, so after the learner's first answer ever, teaching is
+   structurally unreachable; (F2) what was taught is not state, it is a 768 B
+   / 8-row recency window, so "what have I taught across generations" is
+   unanswerable by construction; (F3) **the actual gap you felt** —
+   `api.py:2454` clears diagnostic mode on phase-1 advancement unconditionally,
+   so a learner who answered every calibration question and one who answered
+   "I don't know" to all of them land in an identical state; (F4) teaching
+   capacity is capped at 80 words. NOT the gap: the encoding cap (2/packet is
+   correct spacing; the proposal does not raise it, so ADR 017's debt-pricing
+   argument and I3 survive intact).
+   Design: coverage state on the stable node (ADR 012's anti-bloat shape, ADR
+   017 §6's trend-digest pattern — the core computes, the model judges);
+   deterministic `acquisition` mode as a third `strategy_profile.mode` value
+   with entry/exit symmetric to the existing diagnostic→practice transition;
+   **a presentation is a Source dojo authored** (concept count stays at eight
+   — nothing new, one missing edge); a `topic.teach` kind whose schema cannot
+   express a taught section without its probe (I11 enforced structurally, which
+   is the direct answer to ADR 017's "drift from retention-first"); rich
+   content pre-fetched by capable drivers into Sources with locators, never
+   inside the task contract (QUESTIONS 6j's strong form and ADR 017's
+   tool-calling rejection both stay rejected — §4.D routes around them).
+   **Reopens by name: ADR 017's teaching-task-kind rejection (which conflicts
+   with `pedagogy-foundation.md`'s standing references requirement — §2
+   resolves it rather than picking a side).**
+   Five sub-decisions in §10, each with a default. Staged in §9 so you can gate
+   a slice: stage 1 is coverage state alone — pure core + one payload section,
+   no new task kind, no new template, no holdout enrichment.
+   **Default: NOTHING built until you gate it — except OPEN-PROBLEMS #19 (the
+   async-latency honesty fix, §6), which is a live correctness bug in shipped
+   code and is independent of this proposal.**
+   NOTES:
+
 -4. **Restraint sampling spend (2026-07-23, prompt-lab step 3).** The
    restraint hard-set residual (plateau_remediation + 3 siblings) is
    parked on "no new mechanism"; the standing rule says

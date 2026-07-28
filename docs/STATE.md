@@ -447,6 +447,29 @@ committed work, not proposals awaiting an answer. Item numbering is stable
    the standing experiment queue (6i traps first). Holdout gate:
    ready for the owner whenever they choose — drops dispositioned.
 
+12. **DIRECTED 2026-07-28 (owner) — teaching, coverage & rich content:
+   INVESTIGATION + PROPOSAL DELIVERED, awaiting the owner gate. Nothing
+   built.** Deliverable: `docs/design/teaching-and-coverage.md`
+   (+ QUESTIONS −5). The owner asked for a first-principles rethink: the
+   system must be able to TEACH, know what it has taught across
+   generations, plan exercises from that, support richer lessons via
+   tool-capable driver agents, and work across every surface (messengers
+   included). Mechanical findings: teaching is reachable exactly once per
+   campaign (compiler.py:395 gates on zero attempts anywhere); taught
+   content is a 768 B recency window, not state; calibration measures the
+   learner's level and NOTHING consumes the measurement (api.py:2454
+   clears diagnostic mode unconditionally) — that last one is the gap.
+   Design keeps the concept count at eight (a presentation is a Source
+   dojo authored), does NOT raise the encoding cap (ADR 017's debt pricing
+   survives), enforces "no teaching without retrieval debt" in the result
+   SCHEMA rather than the prompt, and keeps both prior tool-calling
+   rejections (ADR 017, QUESTIONS 6j) intact by pre-fetching into Sources.
+   Staged so stage 1 (coverage state) needs no new task kind, template, or
+   holdout enrichment. **Ride-along, gate-independent: OPEN-PROBLEMS #19 —
+   async surfaces record wall-clock latency, which is benign for FSRS but
+   manufactures hesitation beliefs in reflect rows; fix designed (sessions
+   declare timing validity), not built.**
+
 ## RELEASE GATE STATUS (2026-07-18) + CONTAMINATION HANDOFF
 
 The v1.0.0 holdout release gate was RUN (owner-approved) and FAILED — v1.0.0
