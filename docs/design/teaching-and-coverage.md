@@ -290,9 +290,33 @@ retention-first" objection: drift is unrepresentable.
 
 **The applier** (one path, idempotent per task id, like every other):
 writes the taught Source; registers one coverage key per section on the topic
-node; creates one `present` exercise per section (material = `body`) and one
-`grounded` probe exercise per section, both through the existing candidate
-gate (I2 unchanged); stamps `generation_run` for provenance.
+node, carrying that section's `probe`/`answer` text; creates one `present`
+exercise per section (material = `body`) through the existing candidate gate
+(I2 unchanged); stamps `generation_run` for provenance.
+
+**The ordering constraint — the design's sharpest edge, closed.** A probe
+generated from a taught Source is `provenance: "grounded"`, so
+`first_encounter` returns False (`outcomes.py:32`) and its first miss is a
+genuine lapse. That is correct **only after the presentation has actually been
+served**. If the applier created the probe exercise in the same transaction as
+the present card, the packet could schedule the probe first — the encoding cap
+defers presentations, probes are not capped — and the learner would be
+lapse-graded on material never shown: **precisely the ADR 017 field failure
+this design exists to honor.**
+
+So the probe is not an exercise until its presentation is spent. The probe text
+lives on the coverage key from apply time (I11 is satisfied at the validation
+boundary — the obligation is recorded the moment teaching is accepted), and the
+probe *exercise* is materialized deterministically by the present-spend path
+(`outcomes.land_score`, which already spends presentations and already runs for
+every final score — two callers, one truth). An exercise the learner cannot
+fairly be asked therefore never exists in the store.
+
+*(Alternative considered and rejected: create both up front and filter unspent
+probes out of `_due_exercises`. It works, but it needs a new quality value and
+a new packet filter to protect an invariant that materialization enforces by
+construction — and blueprint §12's doctrine is that anything which must be
+true is made unrepresentable, not guarded.)*
 
 `TEACH_SECTION_WORDS = 150` × 3 answers F4 — enough for a worked example with
 its failure modes, still bounded, still nowhere near a payload.
@@ -530,12 +554,22 @@ without that.
 
 **NOW — Stage 1: coverage state, no new AI surface.** Coverage on the topic
 node; the digest section on `exercise.generate`; the never-probed gate in
-`_stock_requests`; coverage populated from the *existing* `present` path.
-Pure core plus one payload section. It delivers "the system knows what it has
-taught" and "generation probes what was taught" **without a new task kind,
-without a new template, and without holdout enrichment** — and it makes F1's
-one-shot teaching actually accumulate. This is the slice that pays for itself
-even if the owner never opens stage 2.
+`_stock_requests`; coverage populated from the existing `present` path — **and
+the F1 gate relaxed so that path can fire more than once per campaign.** That
+last clause is load-bearing and was nearly left implicit: at `compiler.py:395`
+as written, teaching happens once per campaign ever, so coverage state alone
+would accumulate at most one key and the slice would not pay for itself. The
+relaxation is compiler-only (invite a presentation when the *topic* has no
+coverage, rather than when the *campaign* has no attempts) — no new task kind,
+no new template, no holdout enrichment, and it is the same craft-rule-5 shape
+the branch already has.
+
+So stage 1 delivers recurrence plus memory: teaching can happen again, and what
+was taught becomes durable, queryable state that generation probes. What it
+does **not** deliver is depth — F4's 80-word ceiling stands until stage 2, so
+stage 1 teaches in flashcards. That is a real limit, stated plainly rather than
+smoothed over; the slice is still worth landing alone, because every later
+stage depends on coverage state existing and none of it depends on the reverse.
 
 **NEXT — Stage 2: `topic.teach` + acquisition mode.** The new kind, its
 template and corpus, the applier, the taught-Source lifecycle, the deterministic
