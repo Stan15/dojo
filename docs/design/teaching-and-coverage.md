@@ -13,6 +13,189 @@ that quietly contradicts a decided ADR is a method violation; this one argues._
 
 ---
 
+## 0. The architecture in six pictures
+
+_Added 2026-07-29 at the owner's request. This section is the executive view;
+the sections after it are the argument. Nothing here is new design — every
+diagram is a projection of §1–§6._
+
+### 0.1 — Today's loop, and the two breaks in it
+
+Everything below the dotted line already exists and works. The two red nodes
+are the whole problem: teaching is reachable once per campaign lifetime, and
+what it produced is thrown away.
+
+```mermaid
+flowchart TD
+    goal["dojo learn '<goal>'"] --> plan["campaign.plan"]
+    plan --> reg[("topic registry<br/>+ phased plan")]
+    reg --> diag["exercise.diagnostic<br/>(calibration)"]
+    diag --> calib{"what did calibration<br/>reveal?"}
+    calib -->|"mode := practice<br/>UNCONDITIONALLY (F3)"| gen["exercise.generate"]
+
+    gen --> ex["exercise"] --> att["attempt"] --> grade["attempt.grade"]
+    grade --> refl["campaign.reflect"]
+    refl --> ins[("insights")] --> gen
+    grade --> sr[("FSRS state<br/>on the stable node")] --> packet["daily packet"]
+    packet --> ex
+
+    gen -.->|"ONLY if the campaign has<br/>zero attempts anywhere (F1)"| pres["present card<br/>≤80 words (F4)"]
+    pres --> spent["quality = spent<br/>content forgotten (F2)"]
+    spent -.->|"survives only as<br/>90 chars in a 768B window"| gen
+
+    classDef broken fill:#fdd,stroke:#c00,stroke-width:2px
+    class pres,spent,calib broken
+```
+
+### 0.2 — Where the new state lives (one file, one node)
+
+Coverage sits **beside** mastery state on the stable node — same place, same
+anti-bloat argument (ADR 012): bounded by the syllabus, not by practice
+history. The lesson body is a Source, so it is groundable by machinery that
+already exists.
+
+```mermaid
+flowchart TB
+    subgraph vault["campaigns/camp_x/ — the learner's vault"]
+        camp["campaign.md<br/>mission · strategy.mode"]
+        planf["plan.yaml<br/>phases · criteria"]
+        topics["topics.yaml"]
+        exd["exercises/"]
+        attd["attempts/"]
+        insd["insights/"]
+    end
+
+    subgraph node["ONE topic node inside topics.yaml"]
+        p["path: git.bisect"]
+        srn["sr: FSRS mastery state<br/>— exists today"]
+        cov["coverage: NEW<br/>keys[] · probes · best · overflow"]
+    end
+
+    topics --> node
+    cov -->|"key.src points at"| src[("sources/src_9f2a.md<br/>kind: taught · origin: dojo<br/>THE LESSON BODY")]
+    src -->|"grounding.py resolves<br/>heading windows (existing)"| pay["future generate payloads"]
+
+    classDef new fill:#dfd,stroke:#080,stroke-width:2px
+    class cov,src new
+```
+
+### 0.3 — The teach lifecycle, and why the probe waits
+
+This is the subtle one. A probe built from taught material is `grounded`, so
+its first miss is a **real lapse** — correct only once the presentation has
+actually been served. So the probe *text* is recorded at apply time (the
+obligation, I11) but the probe *exercise* does not exist until the present card
+is spent. An exercise the learner cannot fairly be asked never exists.
+
+```mermaid
+sequenceDiagram
+    participant Core as dojo core (deterministic)
+    participant Drv as driver agent (any model)
+    participant St as store
+    participant L as learner
+
+    Core->>Core: _stock_requests: active-phase topic<br/>has no coverage key
+    Core->>Drv: topic.teach task (payload carries coverage digest)
+    Drv-->>Core: TeachResult{ sections[ {key, body, probe, answer} ] }
+    Note over Core: I5 validation: a section CANNOT<br/>be submitted without its probe (I11)
+    Core->>St: taught Source + coverage key (holds probe text)<br/>+ ONE present card per section
+    Note over St: the probe EXERCISE does not exist yet
+
+    Core->>L: packet serves the present card (encoding cap = 2, unchanged)
+    L-->>Core: acknowledges (never graded)
+    Core->>St: exposure lands on topic SR · present spent<br/>→ NOW materialize the probe exercise
+
+    Core->>L: probe comes due in a later packet
+    L-->>Core: answers → attempt.grade
+    Core->>St: coverage.probes++ · coverage.best = max(...)
+    Note over St: never-probed gate now released<br/>for this topic
+```
+
+### 0.4 — Mode: one new value, deterministic edges
+
+`strategy_profile.mode` already carries `diagnostic → practice` with a
+deterministic transition. `acquisition` is a third value in the same machine —
+no new mechanism, and the dashed edge is the one that exists today and
+discards the calibration result.
+
+```mermaid
+stateDiagram-v2
+    [*] --> diagnostic: campaign created
+    diagnostic --> practice: today's ONLY edge —<br/>fires regardless of what<br/>calibration showed (F3)
+    diagnostic --> acquisition: NEW — calibration graded AND<br/>(mean < 0.3 OR ≥half flagged<br/>knowledge_gap / exposure)
+    acquisition --> practice: every active-phase topic covered AND<br/>every key retrieved once at ≥0.7
+    acquisition --> practice: learner: dojo campaign mode practice
+    practice --> maintenance: phase criteria met (ADR 005)
+    maintenance --> practice: dojo learn extend
+```
+
+### 0.5 — What the model actually sees (unchanged discipline)
+
+The core computes; the model judges. Coverage reaches a model the same way the
+trend digest does — as a byte-budgeted **projection of state**, never as more
+history, and never as something the model has to remember.
+
+```mermaid
+flowchart LR
+    subgraph state["stored state — the truth"]
+        A["attempts"]
+        T["topics.yaml<br/>sr + coverage"]
+        I["insights"]
+        S["sources<br/>captured + taught"]
+    end
+
+    subgraph comp["compiler — byte-budgeted sections"]
+        R["recent_rows 768B<br/>a WINDOW"]
+        C["coverage_rows ~400B<br/>NEW: a STATE projection"]
+        D["trend_rows 640B<br/>a STATE projection"]
+        G["source slice 4096B"]
+    end
+
+    A --> R
+    T --> C
+    T --> D
+    S --> G
+    I --> comp
+
+    comp --> P["compiled payload"] --> M(("any model<br/>1GB local → frontier"))
+    M --> V{"I5 validation<br/>boundary"}
+    V -->|valid| MUT[("state mutation<br/>via one typed applier")]
+    V -->|invalid| RJ["rejected · state unchanged<br/>≤2 retries · then honest failure"]
+
+    classDef new fill:#dfd,stroke:#080,stroke-width:2px
+    class C new
+```
+
+### 0.6 — Surfaces: why "works on Telegram" needs no Telegram code
+
+Dojo ships no messenger code and should not (ADR 003). The agent uses its own
+gateway and drives the CLI. What makes that work is one invariant: **every
+asset carries text sufficient alone (I13)**, so each surface renders what it
+can and loses no pedagogy.
+
+```mermaid
+flowchart TB
+    core[("dojo core<br/>CLI · markdown store · deterministic pedagogy<br/>ships NO messenger code")]
+
+    core --- ag["agent in terminal<br/>--json envelopes"]
+    core --- hm["human CLI<br/>dojo daily (rich panels)"]
+    core --- msg["messenger<br/>via the AGENT's own gateway"]
+    core --- cron["headless cron<br/>dojo task run"]
+    core --- app["future app"]
+
+    ag --> altA["renders alt text<br/>or opens the file"]
+    hm --> altB["alt text + 'open: <path>' hint"]
+    msg --> altC["uploads the image;<br/>alt text is the fallback"]
+    cron --> altD["authors ahead of need;<br/>serves nothing"]
+
+    msg -.->|"BROKEN TODAY: wall-clock latency<br/>manufactures hesitation beliefs"| op19["OPEN-PROBLEMS #19<br/>sessions declare timing validity"]
+
+    classDef bug fill:#fdd,stroke:#c00,stroke-width:2px
+    class op19 bug
+```
+
+---
+
 ## 1. The gap, measured
 
 The owner's statement: the system is "**extremely** exercise-centric", and when

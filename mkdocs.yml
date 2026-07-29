@@ -58,5 +58,12 @@ markdown_extensions:
   - toc:
       permalink: true
   - pymdownx.highlight
-  - pymdownx.superfences
+  # Mermaid fences render as diagrams on the site (Material bundles mermaid.js)
+  # instead of as code blocks. GitHub renders the same fences natively, so a
+  # design doc's diagrams read correctly in both places from one source.
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - tables
